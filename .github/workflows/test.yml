@@ -1,0 +1,21 @@
+name: Run test data
+# This workflow can be triggered manually with GitHub actions workflow dispatch button.
+# It runs the -profile 'test'
+
+on:
+  workflow_dispatch:
+jobs:
+  run-test-full:
+    name: Run test data
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Nextflow
+        run: |
+          export NXF_VER='21.10.6'
+          wget -qO- get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
+      - name: Run test profile
+        run: |
+          nextflow run main.nf -profile docker,test
+          cat .nextflow.log
