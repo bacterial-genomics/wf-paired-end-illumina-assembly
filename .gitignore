@@ -1,1 +1,7 @@
+.nextflow*
+work/
+results/
+.log
+*.img
+*.gz
 assets/*.img
