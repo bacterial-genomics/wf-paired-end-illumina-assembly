@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+#$ -cwd
+
+# This script is to run the wf-paired-end-illumina-assembly workflow on the UGE cluster
+
+# Define script usage
+
+usage() {
+  echo "
+Usage: ${0##*/} InputDirectory [OutputDirectory] [-h|--help]
+  
+Required:
+  <InputDirectory>   Path containing PE Illumina 1.8+ files as *.fastq.gz
+  
+  Sample names are extracted from the first underscore of read files. Hyphens,
+  periods, and commas are automatically discarded from the name to avoid errors.
+  WARNING: If you have HiSeq data where samples are ran on more than one lane, 
+  be sure to concatenate them.
+  Sample pairing of sister reads is done by consecutively using filenames sorted
+  with \`ls\`, which flexibly allows for naming other than traditional R1 and R2.
+  Verify that files properly will pair by checking the output order of \`ls\`
+  within the <InputDirectory>.
+Optional:
+  -h | --help        Show this help message and exit.
+  <OutputDirectory>  Location for the output files, which
+                     includes job logfiles. Output files
+                     will be overwritten if already present.
+                     Default: current working directory.
+  
+  "
+}
+
+# Check requirements
+[[ $1 == "--help" || $1 == "-h" ]] && { usage; exit 0; }
+if [[ $# -lt 1  || $# -gt 2 ]]; then
+  echo "ERROR: improper number ("$#") of arguments provided" >&2
+  usage
+  exit 1
+fi
+
+# I/O handling
+IN=$(readlink -f "$1")
+if [[ -z "$2" ]]; then
+  OUT="${PWD}"
+else
+  OUT=$(readlink -f "$2")
+fi
+
+# Get basename
+filename=$(basename $IN/*R1* | cut -d _ -f 1 | sed 's/[-.,]//g')
+
+# Set up tmp and cache directories for Singularity
+mkdir -p $HOME/tmp && export TMPDIR=$HOME/tmp
+mkdir -p /scicomp/scratch/$USER/singularity.cache && export NXF_SINGULARITY_CACHEDIR=/scicomp/scratch/$USER/singularity.cache
+
+# Get LAB_HOME or custom tmp/cache variables from .bashrc
+source $HOME/.bashrc
+
+# Run the nextflow workflow
+qsub \
+    -v NXF_SINGULARITY_CACHEDIR=$NXF_SINGULARITY_CACHEDIR \
+    -v TMPDIR=$TMPDIR \
+    -v OUT=$OUT \
+    -v IN=$IN \
+    -v LAB_HOME=$LAB_HOME \
+    -o $OUT/ \
+    -e $OUT/ \
+    -M $USER@cdc.gov \
+    -m bae \
+    -N Assemble_$filename \
+    -q all.q \
+    -pe smp 16-128 \
+    $LAB_HOME/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow

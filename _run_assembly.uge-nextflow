@@ -1,0 +1,14 @@
+#!/bin/bash -l
+#$ -wd /scicomp/groups/OID/NCEZID/DHCPP/BSPB/ZSAL/workflows/wf-paired-end-illumina-assembly
+
+module load nextflow
+
+nextflow \
+  -log /scicomp/scratch/$USER/nextflow_log.txt \
+  run \
+  -profile singularity \
+  $LAB_HOME/workflows/wf-paired-end-illumina-assembly/main.nf \
+  --outpath $OUT \
+  --inpath $IN \
+  -w /scicomp/scratch/$USER/work \
+  -N $USER@cdc.gov
