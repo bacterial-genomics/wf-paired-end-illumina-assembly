@@ -20,7 +20,6 @@ process CLEAN_READS {
         path R1_paired_gz
         path R2_paired_gz
         path single_gz
-        path outpath
         val base
         val size
 

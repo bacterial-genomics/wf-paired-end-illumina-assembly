@@ -17,7 +17,6 @@ process FILTER_BLAST {
         path filter_blast
         path blast_tsv
         path base_fna
-        path outpath
         val base
 
     output:

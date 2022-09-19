@@ -16,7 +16,6 @@ process TRIMMOMATIC {
         path ADAPTERS
         path noPhiX_R1
         path noPhiX_R2
-        path outpath
         val base
         val size
 

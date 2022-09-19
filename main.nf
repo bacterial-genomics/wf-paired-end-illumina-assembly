@@ -176,7 +176,6 @@ workflow {
         adapters_ch,
         REMOVE_PHIX.out.noPhiX_R1,
         REMOVE_PHIX.out.noPhiX_R2,
-        output_ch,
         INFILE_HANDLING.out.base,
         INFILE_HANDLING.out.size
     )
@@ -231,7 +230,6 @@ workflow {
         filter_contigs_ch,
         SPADES.out.contigs,
         EXTRACT_SINGLETONS.out.R1_paired_gz,
-        output_ch,
         INFILE_HANDLING.out.base
     )
 
@@ -243,7 +241,6 @@ workflow {
         EXTRACT_SINGLETONS.out.R1_paired_gz,
         EXTRACT_SINGLETONS.out.R2_paired_gz,
         EXTRACT_SINGLETONS.out.single_gz,
-        output_ch,
         INFILE_HANDLING.out.base,
         INFILE_HANDLING.out.size
     )
@@ -308,7 +305,6 @@ workflow {
         filter_blast_ch,
         BLAST.out.blast_tsv,
         CLEAN_READS.out.base_fna,
-        output_ch,
         INFILE_HANDLING.out.base
     )
 

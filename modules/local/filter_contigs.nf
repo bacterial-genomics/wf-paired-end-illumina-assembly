@@ -11,7 +11,6 @@ process FILTER_CONTIGS {
         path filter_contigs
         path contigs
         path R1_paired_gz
-        path outpath
         val base
 
     output:
