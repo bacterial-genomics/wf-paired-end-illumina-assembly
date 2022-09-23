@@ -2,6 +2,10 @@
 
 send_mail=true
 
+# Get path of this directory
+DIR="$(dirname "${BASH_SOURCE[0]}")"
+DIR="$(realpath "${DIR}")"
+
 msg() {
   # A function, designed for logging, that prints current date and timestamp
   #  as a prefix to the rest of the message. Default sends to stdout but can
