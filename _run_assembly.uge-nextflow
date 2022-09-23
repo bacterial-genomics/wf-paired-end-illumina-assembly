@@ -1,5 +1,4 @@
 #!/bin/bash -l
-#$ -wd /scicomp/groups/OID/NCEZID/DHCPP/BSPB/ZSAL/workflows/wf-paired-end-illumina-assembly
 
 module load nextflow
 
