@@ -13,7 +13,6 @@ process TRIMMOMATIC {
     container "snads/trimmomatic@sha256:afbb19fdf540e6bd508b657e8dafffb6b411b5b0bf0e302347889220a0b571f1"
 
     input:
-        path ADAPTERS
         path noPhiX_R1
         path noPhiX_R2
         val base
@@ -32,17 +31,20 @@ process TRIMMOMATIC {
         '''
 
         source bash_functions.sh
+        
+        # Get Adapters, check if it exists, and verify file size
+        ADAPTERS="${DIR}/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas"
+        check_if_file_exists_allow_seconds ${ADAPTERS} '60'
+        verify_file_minimum_size ${ADAPTERS} 'adapters' '10k'
 
         # Adapter clip and quality trim
-        verify_file_minimum_size !{ADAPTERS} 'adapters' '10k'
-
         msg "INFO: Running trimmomatic with !{task.cpus} threads"
 
         trimmomatic PE -phred33 -threads !{task.cpus}\
         !{noPhiX_R1} !{noPhiX_R2}\
         !{base}_R1.paired.fq !{base}_R1.unpaired.fq\
         !{base}_R2.paired.fq !{base}_R2.unpaired.fq\
-        ILLUMINACLIP:!{ADAPTERS}:2:20:10:8:TRUE\
+        ILLUMINACLIP:${ADAPTERS}:2:20:10:8:TRUE\
         SLIDINGWINDOW:6:30 LEADING:10 TRAILING:10 MINLEN:50
 
         TRIMMO_DISCARD=$(grep '^Input Read Pairs: ' .command.err \

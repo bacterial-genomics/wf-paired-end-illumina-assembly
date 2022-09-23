@@ -14,7 +14,6 @@ process FILTER_BLAST {
     container "snads/biopython@sha256:bb041f55fd45d0fb577656e2d1f1a9f477d3ba80878b3b42218adff3322ae06e"
 
     input:
-        path filter_blast
         path blast_tsv
         path base_fna
         val base
@@ -32,7 +31,11 @@ process FILTER_BLAST {
 
         source bash_functions.sh
 
-        python3 !{filter_blast} -i "!{blast_tsv}" \
+        # Get filter.blast.py and check if it exists
+        filter_blast="${DIR}/filter.blast.py"
+        check_if_file_exists_allow_seconds ${filter_blast} '60'
+
+        python3 ${filter_blast} -i "!{blast_tsv}" \
         -o "!{base}.blast.tab"
 
         verify_file_minimum_size "!{base}.blast.tab" 'filtered 16S blastn nr file' '10c'

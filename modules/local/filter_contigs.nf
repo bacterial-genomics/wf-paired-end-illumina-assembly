@@ -8,7 +8,6 @@ process FILTER_CONTIGS {
     container "snads/biopython@sha256:bb041f55fd45d0fb577656e2d1f1a9f477d3ba80878b3b42218adff3322ae06e"
 
     input:
-        path filter_contigs
         path contigs
         path R1_paired_gz
         val base
@@ -22,7 +21,13 @@ process FILTER_CONTIGS {
     shell:
         '''
 
-        python3 !{filter_contigs} \
+        source bash_functions.sh
+
+        # Get filter.contigs.py and check if it exists
+        filter_contigs="${DIR}/filter.contigs.py"
+        check_if_file_exists_allow_seconds ${filter_contigs} '60'
+
+        python3 ${filter_contigs} \
         -i !{contigs}\
         -b "!{base}" -l 1000 -o !{base}.uncorrected.fna
 

@@ -13,7 +13,6 @@ process REMOVE_PHIX {
     container "snads/bbtools@sha256:9f2a9b08563839cec87d856f0fc7607c235f464296fd71e15906ea1d15254695"
     
     input:
-        path PHIX
         path input
         val base
         val size
@@ -31,14 +30,17 @@ process REMOVE_PHIX {
         '''
 
         source bash_functions.sh
-        
+
+        # Get PhiX, check if it exists, and verify file size
+        PHIX="${DIR}/PhiX_NC_001422.1.fasta"
+        check_if_file_exists_allow_seconds ${PHIX} '60'
+        verify_file_minimum_size ${PHIX} 'PhiX genome' '5k'
+
         # Remove PhiX
-        verify_file_minimum_size !{PHIX} 'PhiX genome' '5k'
-
         msg "INFO: Running bbduk with !{task.cpus} threads"
-
+        
         bbduk.sh threads=!{task.cpus} k=31 hdist=1\
-        ref="!{PHIX}" in="!{input[0]}" in2="!{input[1]}"\
+        ref="${PHIX}" in="!{input[0]}" in2="!{input[1]}"\
         out=!{base}_noPhiX-R1.fsq out2=!{base}_noPhiX-R2.fsq\
         qin=auto qout=33 overwrite=t
 

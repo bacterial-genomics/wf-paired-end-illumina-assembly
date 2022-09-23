@@ -8,7 +8,6 @@ process EXTRACT_RECORDS {
     container "snads/biopython@sha256:bb041f55fd45d0fb577656e2d1f1a9f477d3ba80878b3b42218adff3322ae06e"
 
     input:
-        path extract_record
         path annotation
         val base
 
@@ -21,9 +20,15 @@ process EXTRACT_RECORDS {
     shell:
         '''
 
+        source bash_functions.sh
+
+        # Get extract.record.from.genbank.py and check if it exists
+        extract_record="${DIR}/extract.record.from.genbank.py"
+        check_if_file_exists_allow_seconds ${extract_record} '60'
+
         # 16S extraction
         if [[ -s "!{annotation}" ]]; then
-            python3 !{extract_record} -i "!{annotation}" \
+            python3 ${extract_record} -i "!{annotation}" \
             -u product -o "16S.!{base}.fa" -q '16S ribosomal RNA' \
             --search-type any_q_is_rec -f rRNA
         fi
