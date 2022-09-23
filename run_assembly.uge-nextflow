@@ -67,7 +67,7 @@ qsub \
     -v IN=$IN \
     -v LAB_HOME=$LAB_HOME \
     -o $OUT/log/ \
-    -e $OUT/log/y \
+    -e $OUT/log/ \
     -M $USER@cdc.gov \
     -m bae \
     -N Assemble_$filename \
