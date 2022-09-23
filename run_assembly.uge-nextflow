@@ -56,6 +56,9 @@ mkdir -p /scicomp/scratch/$USER/singularity.cache && export NXF_SINGULARITY_CACH
 # Get LAB_HOME or custom tmp/cache variables from .bashrc
 source $HOME/.bashrc
 
+# Set up log directory in OUT directory
+mkdir -p $OUT/log
+
 # Run the nextflow workflow
 qsub \
     -v NXF_SINGULARITY_CACHEDIR=$NXF_SINGULARITY_CACHEDIR \
@@ -63,8 +66,8 @@ qsub \
     -v OUT=$OUT \
     -v IN=$IN \
     -v LAB_HOME=$LAB_HOME \
-    -o $OUT/ \
-    -e $OUT/ \
+    -o $OUT/log/ \
+    -e $OUT/log/y \
     -M $USER@cdc.gov \
     -m bae \
     -N Assemble_$filename \
