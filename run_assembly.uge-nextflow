@@ -25,14 +25,14 @@ Optional:
   <OutputDirectory>  Location for the output files, which
                      includes job logfiles. Output files
                      will be overwritten if already present.
-                     Default: current working directory.
+                     Default: current working directory.     
   
   "
 }
 
 # Check requirements
 [[ $1 == "--help" || $1 == "-h" ]] && { usage; exit 0; }
-if [[ $# -lt 1  || $# -gt 2 ]]; then
+if [[ $# -lt 1  || $# -gt 3 ]]; then
   echo "ERROR: improper number ("$#") of arguments provided" >&2
   usage
   exit 1
@@ -46,9 +46,6 @@ else
   OUT=$(readlink -f "$2")
 fi
 
-# Get basename
-filename=$(basename $IN/*R1* | cut -d _ -f 1 | sed 's/[-.,]//g')
-
 # Set up tmp and cache directories for Singularity
 mkdir -p $HOME/tmp && export TMPDIR=$HOME/tmp
 mkdir -p /scicomp/scratch/$USER/singularity.cache && export NXF_SINGULARITY_CACHEDIR=/scicomp/scratch/$USER/singularity.cache
@@ -56,11 +53,11 @@ mkdir -p /scicomp/scratch/$USER/singularity.cache && export NXF_SINGULARITY_CACH
 # Get LAB_HOME or custom tmp/cache variables from .bashrc
 source $HOME/.bashrc
 
-# Set up log directory in OUT directory
-mkdir -p $OUT/log
-
-# Run the nextflow workflow
-qsub \
+# Check to see if FastQ file is present in IN
+if [[ -f "$IN/*R1*.fastq.gz" ]]; then
+  # Get basename
+  BASENAME=$(basename $IN/*R1* | cut -d _ -f 1 | sed 's/[-.,]//g')
+  qsub \
     -v NXF_SINGULARITY_CACHEDIR=$NXF_SINGULARITY_CACHEDIR \
     -v TMPDIR=$TMPDIR \
     -v OUT=$OUT \
@@ -70,7 +67,36 @@ qsub \
     -e $OUT/log/ \
     -M $USER@cdc.gov \
     -m bae \
-    -N Assemble_$filename \
+    -N ASM_$BASENAME \
     -q all.q \
     -pe smp 16-128 \
     $LAB_HOME/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+
+# Loops over all folders in current directory
+# and runs assembly on PE FastQ files within them
+else
+  for DIR in $IN/*;
+  do
+    if [ -d "$DIR" ]; then
+      # Get basename
+      BASENAME=$(basename $DIR/*R1* | cut -d _ -f 1 | sed 's/[-.,]//g')
+      qsub \
+      -v NXF_SINGULARITY_CACHEDIR=$NXF_SINGULARITY_CACHEDIR \
+      -v TMPDIR=$TMPDIR \
+      -v OUT=$OUT \
+      -v IN=$DIR \
+      -v LAB_HOME=$LAB_HOME \
+      -o $OUT/log/ \
+      -e $OUT/log/ \
+      -M $USER@cdc.gov \
+      -m bae \
+      -N ASM_$BASENAME \
+      -q all.q \
+      -pe smp 16-128 \
+      $LAB_HOME/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+    fi
+  done
+fi
+
+# Set up log directory in OUT directory
+mkdir -p $OUT/log
