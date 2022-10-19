@@ -69,9 +69,9 @@ process TRIMMOMATIC {
         msg "INFO: $CNT_BROKEN total broken read pairs were saved as singletons" >&2
         
         echo -e "!{base}\t${TRIMMO_DISCARD} reads Discarded\t${CNT_BROKEN} reads Singletons" \
-        > !{base}_trimmo.tsv
+        > !{base}.trimmo.tsv
 
-        cat !{base}_R1.unpaired.fq !{base}_R2.unpaired.fq > !{base}_single.fq
+        cat !{base}_R1.unpaired.fq !{base}_R2.unpaired.fq > !{base}.single.fq
 
         rm -f !{base}_R1.unpaired.fq !{base}_R2.unpaired.fq
 

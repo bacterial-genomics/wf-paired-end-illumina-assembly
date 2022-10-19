@@ -68,9 +68,9 @@ process REMOVE_PHIX {
         msg "INFO: ${PHIX_BASES:-0} bp of PhiX were detected and removed in ${PHIX_READS:-0} reads"
 
         echo -e "!{base}\t${TOT_BASES} bp Raw\t${TOT_READS} reads Raw" \
-        > !{base}_raw.tsv
+        > !{base}.raw.tsv
         echo -e "!{base}\t${PHIX_BASES:-0} bp PhiX\t${PHIX_READS:-0} reads PhiX" \
-        > !{base}_phix.tsv
+        > !{base}.phix.tsv
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml

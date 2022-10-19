@@ -66,13 +66,13 @@ process EXTRACT_SINGLETONS {
                 CNT_READS_OVERLAPPED=$(awk '{lines++} END{print lines/4}' \
                 flash.extendedFrags.fastq)
 
-                cat flash.extendedFrags.fastq >> !{base}_single.fq
+                cat flash.extendedFrags.fastq >> !{base}.single.fq
                 rm flash.extendedFrags.fastq
             fi
 
             msg "INFO: ${CNT_READS_OVERLAPPED:-0} pairs overlapped into singleton reads" >&2
             echo -e "!{base}\t${CNT_READS_OVERLAPPED:-0} reads Overlapped" \
-            > !{base}_overlap.tsv
+            > !{base}.overlap.tsv
         fi
 
         # Summarize final read set and compress
@@ -81,15 +81,15 @@ process EXTRACT_SINGLETONS {
         CNT_CLEANED_PAIRS=$(echo $((${count_R1}/4)))
         msg "INFO: CNT_CLEANED_PAIRS ${CNT_CLEANED_PAIRS}"
 
-        count_single=$(echo $(cat !{base}_single.fq | wc -l))
+        count_single=$(echo $(cat !{base}.single.fq | wc -l))
         CNT_CLEANED_SINGLETON=$(echo $((${count_single}/4)))
         msg "INFO: CNT_CLEANED_SINGLETON ${CNT_CLEANED_SINGLETON}"
         
 
         echo -e "!{base}\t${CNT_CLEANED_PAIRS} cleaned pairs\t${CNT_CLEANED_SINGLETON} cleaned singletons" \
-        > !{base}_clean-reads.tsv
+        > !{base}.clean-reads.tsv
 
-        gzip !{base}_single.fq\
+        gzip !{base}.single.fq\
         !{base}_R1.paired.fq\
         !{base}_R2.paired.fq
 

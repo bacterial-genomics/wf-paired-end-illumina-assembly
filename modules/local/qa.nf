@@ -51,7 +51,7 @@ process QA {
         for (( i=0; i<3; i+=3 )); do
             R1=$(basename "!{R1_paired_gz}" _R1.paired.fq.gz)
             R2=$(basename "!{R2_paired_gz}" _R2.paired.fq.gz)
-            single=$(basename "!{single_gz}" _single.fq.gz)
+            single=$(basename "!{single_gz}" .single.fq.gz)
 
             # Verify each set of reads groups properly
             nr_uniq_str=$(echo -e "${R1}\n${R2}\n${single}" | sort -u | wc -l)

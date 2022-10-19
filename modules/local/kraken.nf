@@ -38,7 +38,7 @@ process KRAKEN_ONE {
         fi
         echo "KRAKEN 1 DATABASE = ${database}"
         # Investigate taxonomic identity of cleaned reads
-        if [ ! -s !{base}_taxonomy1-reads.tab ]; then
+        if [ ! -s !{base}.taxonomy1-reads.tab ]; then
             msg "INFO: Running Kraken1 with !{task.cpus} threads"
             kraken --db ${database} --threads !{task.cpus} --fastq-input --gzip-compressed \
             !{R1_paired_gz} !{R2_paired_gz} !{single_gz} > !{base}_kraken.output
@@ -47,7 +47,7 @@ process KRAKEN_ONE {
             kraken-report --db ${database} !{base}_kraken.output > kraken.tab 2>&1 | tr '^M' '\n' 1>&2
 
             msg "INFO: Summarizing Kraken1"
-            summarize_kraken 'kraken.tab' > !{base}_taxonomy1-reads.tab
+            summarize_kraken 'kraken.tab' > !{base}.taxonomy1-reads.tab
 
             mv kraken.tab !{base}_kraken1.tab
             gzip !{base}_kraken1.tab
@@ -101,14 +101,14 @@ process KRAKEN_TWO {
             database=!{params.kraken2_db}
         fi
         echo "KRAKEN 2 DATABASE = ${database}"
-        if [ ! -s !{base}_taxonomy2-reads.tab ]; then
+        if [ ! -s !{base}.taxonomy2-reads.tab ]; then
             msg "INFO: Running Kraken2 with !{task.cpus} threads"
             kraken2 --db "${database}" --threads !{task.cpus} --gzip-compressed --output /dev/null \
             --use-names --report kraken2.tab \
             !{R1_paired_gz} !{R2_paired_gz} !{single_gz}
 
             msg "INFO: Summarizing Kraken2"
-            summarize_kraken 'kraken2.tab' > !{base}_taxonomy2-reads.tab
+            summarize_kraken 'kraken2.tab' > !{base}.taxonomy2-reads.tab
 
             mv kraken2.tab !{base}_kraken2.tab
             gzip !{base}_kraken2.tab
