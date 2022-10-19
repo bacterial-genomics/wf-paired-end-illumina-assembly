@@ -6,7 +6,7 @@ process CLEANED_COVERAGE {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${task.process}${filename}"}
+        saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     container "snads/bedtools@sha256:9b80fb5c5ef1b6f4a4a211d8739fa3fe107da34d1fb6609d6b70ddc7afdce12c"
 

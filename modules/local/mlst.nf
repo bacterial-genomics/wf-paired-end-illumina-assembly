@@ -6,12 +6,13 @@ process MLST {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${task.process}${filename}"}
+        saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     container "snads/mlst@sha256:27f290753760c44204d6e04b6ead7935d03b48d5f0a5ccce068def9ce33babe6"
 
     input:
         path base_fna
+        val base
 
     output:
         path "Summary.MLST.tab"

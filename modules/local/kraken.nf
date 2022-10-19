@@ -6,7 +6,7 @@ process KRAKEN_ONE {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${task.process}${filename}"}
+        saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     label "process_high"
 
@@ -70,7 +70,7 @@ process KRAKEN_TWO {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${task.process}${filename}"}
+        saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     label "process_high"
 

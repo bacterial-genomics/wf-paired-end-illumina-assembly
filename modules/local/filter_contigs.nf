@@ -3,7 +3,7 @@ process FILTER_CONTIGS {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${task.process}${filename}"}
+        saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     container "snads/biopython@sha256:bb041f55fd45d0fb577656e2d1f1a9f477d3ba80878b3b42218adff3322ae06e"
 

@@ -3,7 +3,7 @@ process INFILE_HANDLING {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${task.process}${filename}" }
+        saveAs: { filename -> "${basename}.${task.process}${filename}" }
 
     input:
         tuple val(basename), path(input)

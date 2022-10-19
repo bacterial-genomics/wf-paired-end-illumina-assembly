@@ -9,7 +9,7 @@ process EXTRACT_SINGLETONS {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${task.process}${filename}"}
+        saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     label "process_low"
 
