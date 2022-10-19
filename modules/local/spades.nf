@@ -68,8 +68,8 @@ process SPADES {
         if [[ $(find -L !{outpath}/asm/!{base}.fna -type f -size +2M 2> /dev/null) ]] && \
         [ -s !{outpath}/asm/!{base}.InDels-corrected.cnt.txt ] && \
         [ -s !{outpath}/asm/!{base}.SNPs-corrected.cnt.txt ] && \
-        $(grep -P -q "^!{base}\t" !{outpath}/qa/Summary.Illumina.CleanedReads-AlnStats.tab) && \
-        $(grep -P -q "!{outpath}/asm/!{base}.fna\t" !{outpath}/qa/Summary.MLST.tab) && \
+        $(grep -P -q "^!{base}\t" !{outpath}/qa/!{base}.Summary.Illumina.CleanedReads-AlnStats.tab) && \
+        $(grep -P -q "!{outpath}/asm/!{base}.fna\t" !{outpath}/qa/!{base}.Summary.MLST.tab) && \
         [[ $(find -L !{outpath}/annot/!{base}.gbk -type f -size +3M 2> /dev/null) ]]; then
             msg "INFO: found polished assembly for !{base}" >&2
             exit 0

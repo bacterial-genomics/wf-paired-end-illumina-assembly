@@ -15,7 +15,7 @@ process MLST {
         val base
 
     output:
-        path "Summary.MLST.tab"
+        path "*.Summary.MLST.tab"
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions
@@ -30,7 +30,7 @@ process MLST {
 
         if [ -s !{base_fna} ]; then
             mlst --threads !{task.cpus} "!{base_fna}" \
-            >> Summary.MLST.tab
+            >> !{base}.Summary.MLST.tab
         fi
 
         # Get process version

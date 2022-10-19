@@ -15,7 +15,7 @@ process GENOME_COVERAGE {
         val base
 
     output:
-        path "Summary.Illumina.GenomeCoverage.tab"
+        path "*.Summary.Illumina.GenomeCoverage.tab"
         path ".command.out"
         path ".command.err"
 
@@ -25,7 +25,7 @@ process GENOME_COVERAGE {
         source bash_functions.sh
 
         # Report coverage
-        echo -n '' > Summary.Illumina.GenomeCoverage.tab
+        echo -n '' > !{base}.Summary.Illumina.GenomeCoverage.tab
         i=0
         while IFS=$'\t' read -r -a ln; do
             if grep -q -e "skesa_" -e "unicyc_" -e ".uncorrected" <<< "${ln[0]}"; then
@@ -48,7 +48,7 @@ process GENOME_COVERAGE {
             msg "INFO: cov = $cov"
             
             if [[ "${cov}" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
-                echo -e "${ln[0]}\t${cov}x" >> Summary.Illumina.GenomeCoverage.tab
+                echo -e "${ln[0]}\t${cov}x" >> !{base}.Summary.Illumina.GenomeCoverage.tab
                 ((i=i+1))
             fi
         done < <(grep -v 'Total length' !{summary_assemblies})

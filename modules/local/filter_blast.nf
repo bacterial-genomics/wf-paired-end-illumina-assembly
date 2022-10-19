@@ -19,7 +19,7 @@ process FILTER_BLAST {
         val base
 
     output:
-        path "Summary.16S.tab"
+        path "*.Summary.16S.tab"
         path "*.blast.tsv.gz"
         path "*species.tsv"
         path ".command.out"
@@ -43,7 +43,7 @@ process FILTER_BLAST {
         awk -F $'\t' 'BEGIN{OFS=FS}; {print $1, $3 "% identity", $13 "% alignment", $14}' "!{base}.blast.tab" \
         > "!{base}.16S-top-species.tsv"
 
-        cat "!{base}.16S-top-species.tsv" >> "Summary.16S.tab"
+        cat "!{base}.16S-top-species.tsv" >> "!{base}.Summary.16S.tab"
         gzip -f !{blast_tsv}
 
         # Get process version

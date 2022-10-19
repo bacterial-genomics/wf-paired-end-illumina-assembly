@@ -16,7 +16,7 @@ process CLEANED_COVERAGE {
         val base
 
     output:
-        path "Summary.Illumina.CleanedReads-AlnStats.tab", emit: summary_stats
+        path "*.Summary.Illumina.CleanedReads-AlnStats.tab", emit: summary_stats
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions
@@ -40,7 +40,7 @@ process CLEANED_COVERAGE {
             print sum " bp Paired Reads Mapped (" sum/NR "x)\t" SEcov NR " bp Genome"}')
 
         echo -e "!{base}\t${cov_nfo}" >> \
-        Summary.Illumina.CleanedReads-AlnStats.tab
+        !{base}.Summary.Illumina.CleanedReads-AlnStats.tab
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml

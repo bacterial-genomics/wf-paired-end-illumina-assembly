@@ -20,8 +20,8 @@ process QA {
         val base
 
     output:
-        path "Summary.Assemblies.tab", emit: summary_assemblies
-        path "Summary.Illumina.CleanedReads-Bases.tab", emit: summary_bases
+        path "*.Summary.Assemblies.tab", emit: summary_assemblies
+        path "*.Summary.Illumina.CleanedReads-Bases.tab", emit: summary_bases
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions
@@ -38,12 +38,12 @@ process QA {
         --no-html --gene-finding --gene-thresholds 300 --contig-thresholds 500,1000 \
         --ambiguity-usage one --strict-NA --silent "!{base_fna}" >&2
 
-        mv -f quast/transposed_report.tsv Summary.Assemblies.tab
+        mv -f quast/transposed_report.tsv !{base}.Summary.Assemblies.tab
 
         # Quast modifies basename. Need to check and modify if needed.
-        assemblies_name=$(awk '{print $1}' Summary.Assemblies.tab | awk 'NR!=1 {print}')
+        assemblies_name=$(awk '{print $1}' !{base}.Summary.Assemblies.tab | awk 'NR!=1 {print}')
         if [ ${assemblies_name} != !{base} ]; then
-            sed -i "s|${assemblies_name}|!{base}|g" Summary.Assemblies.tab
+            sed -i "s|${assemblies_name}|!{base}|g" !{base}.Summary.Assemblies.tab
         fi
 
         # Count nucleotides per read set
@@ -59,10 +59,10 @@ process QA {
                 msg "ERROR: improperly grouped ${R1} ${R2} ${single}" >&2
                 exit 1
             fi
-            echo -ne "${R1}\t" >> Summary.Illumina.CleanedReads-Bases.tab
+            echo -ne "${R1}\t" >> !{base}.Summary.Illumina.CleanedReads-Bases.tab
             zcat "!{R1_paired_gz}" "!{R2_paired_gz}" "!{single_gz}" | \
             awk 'BEGIN{SUM=0} {if(NR%4==2){SUM+=length($0)}} END{print SUM}' \
-            >> Summary.Illumina.CleanedReads-Bases.tab
+            >> !{base}.Summary.Illumina.CleanedReads-Bases.tab
         done
 
         # Get process version
