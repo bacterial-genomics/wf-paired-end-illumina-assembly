@@ -2,7 +2,7 @@ process SPADES {
 
     publishDir "${params.outpath}/asm",
         mode: "${params.publish_dir_mode}",
-        pattern: "spades/"
+        pattern: "${base}"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
@@ -21,8 +21,8 @@ process SPADES {
         val size
 
     output:
-        path "spades/"
-        path "spades/contigs.fasta", emit: contigs
+        path "${base}/"
+        path "${base}/contigs.fasta", emit: contigs
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions
@@ -37,29 +37,29 @@ process SPADES {
 
         msg "INFO: Running SPAdes with !{task.cpus} threads"
 
-        while [[ ! -f tmp/contigs.fasta ]] && [ ${failed} -lt 2 ]; do
+        while [[ ! -f !{base}_tmp/contigs.fasta ]] && [ ${failed} -lt 2 ]; do
             RAMSIZE_TOT=$(echo !{task.memory} | cut -d ' ' -f 1)
             msg "INFO: RAMSIZE = ${RAMSIZE_TOT}"
             if [ ${failed} -gt 0 ]; then
                 msg "ERROR: assembly file not produced by SPAdes for !{base}" >&2
-                mv -f tmp/spades.log \
-                tmp/"${failed}"of3-asm-attempt-failed.spades.log 2> /dev/null
+                mv -f !{base}_tmp/spades.log \
+                !{base}_tmp/"${failed}"of3-asm-attempt-failed.spades.log 2> /dev/null
                 msg "INFO: SPAdes failure ${failed}; retrying assembly for !{base}" >&2
-                spades.py --restart-from last -o tmp -t !{task.cpus} >&2
+                spades.py --restart-from last -o !{base}_tmp -t !{task.cpus} >&2
             else
                 spades.py --pe1-1 !{R1_paired_gz}\
                 --pe1-2 !{R2_paired_gz}\
                 --pe1-s !{single_gz}\
                 --memory "${RAMSIZE_TOT}"\
-                -o tmp --phred-offset 33\
+                -o !{base}_tmp --phred-offset 33\
                 -t !{task.cpus} --only-assembler >&2
             fi
             failed=$(( ${failed}+1 ))
         done
 
         minimum_size=$(( !{size}/1000 ))
-        verify_file_minimum_size "tmp/contigs.fasta" 'SPAdes output assembly' ${minimum_size}c
-        if grep -E -q 'N{60}' "tmp/contigs.fasta"; then
+        verify_file_minimum_size "!{base}_tmp/contigs.fasta" 'SPAdes output assembly' ${minimum_size}c
+        if grep -E -q 'N{60}' "!{base}_tmp/contigs.fasta"; then
             # avoid this again: https://github.com/ablab/spades/issues/273
             msg "ERROR: contigs.fasta contains 60+ Ns" >&2
             exit 1
@@ -75,14 +75,14 @@ process SPADES {
             exit 0
         fi
 
-        gzip tmp/spades.log\
-        tmp/params.txt
+        gzip !{base}_tmp/spades.log\
+        !{base}_tmp/params.txt
 
-        mkdir spades
-        mv tmp/spades.log.gz tmp/params.txt.gz tmp/contigs.fasta tmp/assembly_graph_with_scaffolds.gfa spades/
+        mkdir !{base}
+        mv !{base}_tmp/spades.log.gz !{base}_tmp/params.txt.gz !{base}_tmp/contigs.fasta !{base}_tmp/assembly_graph_with_scaffolds.gfa !{base}/
         
-        if [ -f tmp/warnings.log ]; then
-            mv tmp/warnings.log spades/
+        if [ -f !{base}_tmp/warnings.log ]; then
+            mv !{base}_tmp/warnings.log !{base}/
         fi
 
         # Get process version
