@@ -250,7 +250,8 @@ workflow {
 
     // PROCESS: Run MLST to find MLST for each assembly
     MLST (
-        CLEAN_READS.out.base_fna
+        CLEAN_READS.out.base_fna,
+        INFILE_HANDLING.out.base
     )
 
     ch_versions = ch_versions.mix(MLST.out.versions)
@@ -315,7 +316,8 @@ workflow {
     GENOME_COVERAGE (
         CLEANED_COVERAGE.out.summary_stats,
         QA.out.summary_assemblies,
-        QA.out.summary_bases
+        QA.out.summary_bases,
+        INFILE_HANDLING.out.base
     )
     
     // PATTERN: Collate method version information
