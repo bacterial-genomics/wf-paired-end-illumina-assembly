@@ -78,7 +78,7 @@ if (outpathFileObj.exists()){
     // Check that outpath only contains a trace file created this hour
     dayAndHour = new java.util.Date().format('yyyy-MM-dd_HH-mm-ss')
     outFiles = outpathFileObj.list()
-    if (!(outFiles[0] ==~ /trace.($dayAndHour):\d\d:\d\d.txt/ && outFiles.size() == 1)) {
+    if (!(outFiles[0] ==~ /trace.($dayAndHour).txt/ && outFiles.size() == 1)) {
         // If it contains an older trace file or other files, warn the user
         System.out.println "WARNING: $params.outpath already exists. Output files will be overwritten."
     }
