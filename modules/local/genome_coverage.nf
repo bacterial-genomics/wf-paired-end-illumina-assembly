@@ -7,6 +7,8 @@ process GENOME_COVERAGE {
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
         saveAs: { filename -> "${base}.${task.process}${filename}"}
+
+    container "ubuntu:focal"
     
     input:
         path summary_stats
@@ -18,6 +20,7 @@ process GENOME_COVERAGE {
         path "*.Summary.Illumina.GenomeCoverage.tab"
         path ".command.out"
         path ".command.err"
+        path "versions.yml", emit: versions
 
     shell:
         '''
@@ -52,6 +55,11 @@ process GENOME_COVERAGE {
                 ((i=i+1))
             fi
         done < <(grep -v 'Total length' !{summary_assemblies})
+
+        cat <<-END_VERSIONS > versions.yml
+        "!{task.process}":
+            ubuntu: $(cat /etc/issue)
+        END_VERSIONS
         
         '''
 }
