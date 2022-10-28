@@ -156,6 +156,8 @@ workflow {
         input_ch
     )
 
+    ch_versions = ch_versions.mix(INFILE_HANDLING.out.versions)
+
     // PROCESS: Run bbduk to remove PhiX reads
     REMOVE_PHIX (
         INFILE_HANDLING.out.input,
@@ -319,6 +321,8 @@ workflow {
         QA.out.summary_bases,
         INFILE_HANDLING.out.base
     )
+
+    ch_versions = ch_versions.mix(GENOME_COVERAGE.out.versions)
     
     // PATTERN: Collate method version information
     ch_versions.collectFile(name: 'software_versions.yml', storeDir: params.logpath)
