@@ -16,7 +16,6 @@ process SPADES {
         path R1_paired_gz
         path R2_paired_gz
         path single_gz
-        path outpath
         val base
         val size
 
@@ -65,12 +64,12 @@ process SPADES {
             exit 1
         fi
 
-        if [[ $(find -L !{outpath}/asm/!{base}.fna -type f -size +2M 2> /dev/null) ]] && \
-        [ -s !{outpath}/asm/!{base}.InDels-corrected.cnt.txt ] && \
-        [ -s !{outpath}/asm/!{base}.SNPs-corrected.cnt.txt ] && \
-        $(grep -P -q "^!{base}\t" !{outpath}/qa/!{base}.Summary.Illumina.CleanedReads-AlnStats.tab) && \
-        $(grep -P -q "!{outpath}/asm/!{base}.fna\t" !{outpath}/qa/!{base}.Summary.MLST.tab) && \
-        [[ $(find -L !{outpath}/annot/!{base}.gbk -type f -size +3M 2> /dev/null) ]]; then
+        if [[ $(find -L !{params.outpath}/asm/!{base}.fna -type f -size +2M 2> /dev/null) ]] && \
+        [ -s !{params.outpath}/asm/!{base}.InDels-corrected.cnt.txt ] && \
+        [ -s !{params.outpath}/asm/!{base}.SNPs-corrected.cnt.txt ] && \
+        $(grep -P -q "^!{base}\t" !{params.outpath}/qa/!{base}.Summary.Illumina.CleanedReads-AlnStats.tab) && \
+        $(grep -P -q "!{params.outpath}/asm/!{base}.fna\t" !{params.outpath}/qa/!{base}.Summary.MLST.tab) && \
+        [[ $(find -L !{params.outpath}/annot/!{base}.gbk -type f -size +3M 2> /dev/null) ]]; then
             msg "INFO: found polished assembly for !{base}" >&2
             exit 0
         fi

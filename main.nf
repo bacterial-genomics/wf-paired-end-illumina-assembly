@@ -213,7 +213,6 @@ workflow {
         EXTRACT_SINGLETONS.out.R1_paired_gz,
         EXTRACT_SINGLETONS.out.R2_paired_gz,
         EXTRACT_SINGLETONS.out.single_gz,
-        output_ch,
         INFILE_HANDLING.out.base,
         INFILE_HANDLING.out.size
     )
