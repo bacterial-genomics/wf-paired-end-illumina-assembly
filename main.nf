@@ -147,15 +147,23 @@ include { GENOME_COVERAGE } from "./modules/local/genome_coverage.nf"
 workflow {
 
     // SETUP: Define input, output, and dependency channels
-    input_ch = Channel.fromFilePairs(params.inpath+'/*R{1,2}*.{fastq,fq}.gz', checkIfExists: true)
+    // Double asterisk looks in specified directory and recursively all subdirectories
+    input_ch = Channel.fromFilePairs(params.inpath+'/*R{1,2}*.fastq.gz', checkIfExists: true)
     output_ch = Channel.fromPath(params.outpath)
     ch_versions = Channel.empty()
+    alnstats_summary_ch = Channel.empty()
+    blast_summary_ch = Channel.empty()
+    genome_cov_summary_ch = Channel.empty()
+    mlst_summary_ch = Channel.empty()
+    assembly_summary_ch = Channel.empty()
+    cleaned_summary_ch = Channel.empty()
 
     // PROCESS: Read files from input directory, validate and stage input files
     INFILE_HANDLING (
         input_ch
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(INFILE_HANDLING.out.versions)
 
     // PROCESS: Run bbduk to remove PhiX reads
@@ -165,6 +173,7 @@ workflow {
         INFILE_HANDLING.out.size
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(REMOVE_PHIX.out.versions)
 
     // PROCESS: Run trimmomatic to clip adapters and do quality trimming
@@ -175,6 +184,7 @@ workflow {
         INFILE_HANDLING.out.size
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions)
 
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
@@ -186,6 +196,7 @@ workflow {
         INFILE_HANDLING.out.size
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(EXTRACT_SINGLETONS.out.versions)
 
     // PROCESS: Run kraken1 on paired reads
@@ -196,6 +207,7 @@ workflow {
         INFILE_HANDLING.out.base
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(KRAKEN_ONE.out.versions)
 
     // PROCESS: Run kraken2 on paired reads
@@ -206,6 +218,7 @@ workflow {
         INFILE_HANDLING.out.base
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(KRAKEN_TWO.out.versions)
 
     // PROCESS: Run SPAdes to assemble contigs
@@ -217,6 +230,7 @@ workflow {
         INFILE_HANDLING.out.size
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(SPADES.out.versions)
 
     // PROCESS: Filter contigs based on length, coverage, GC skew, and compositional complexity
@@ -226,6 +240,7 @@ workflow {
         INFILE_HANDLING.out.base
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(FILTER_CONTIGS.out.versions)
 
     // PROCESS: Use BWA/Samtools/Pilon to correct contigs with PE reads
@@ -238,6 +253,7 @@ workflow {
         INFILE_HANDLING.out.size
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(CLEAN_READS.out.versions)
 
     // PROCESS: Run Bedtools to calculate coverage
@@ -247,6 +263,11 @@ workflow {
         INFILE_HANDLING.out.base
     )
 
+    // Collect all Summary Stats and concatenate into one file
+    alnstats_summary_ch = alnstats_summary_ch.mix(CLEANED_COVERAGE.out.summary_stats)
+    alnstats_summary_ch.collectFile(name: 'Summary.Illumina.CleanedReads-AlnStats.tab', storeDir: "${params.outpath}/qa")
+
+    // Collect version info
     ch_versions = ch_versions.mix(CLEANED_COVERAGE.out.versions)
 
     // PROCESS: Run MLST to find MLST for each assembly
@@ -255,6 +276,11 @@ workflow {
         INFILE_HANDLING.out.base
     )
 
+    // Collect all MLST Summaries and concatenate into one file
+    mlst_summary_ch = mlst_summary_ch.mix(MLST.out.summary_mlst)
+    mlst_summary_ch.collectFile(name: 'Summary.MLST.tab', storeDir: "${params.outpath}/qa")
+
+    // Collect version info
     ch_versions = ch_versions.mix(MLST.out.versions)
 
     // PROCESS: Run Prokka to annotate reads
@@ -264,6 +290,7 @@ workflow {
         INFILE_HANDLING.out.size
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(ANNOTATE.out.versions)
 
     // PROCESS: Extract records from annotation file
@@ -272,6 +299,7 @@ workflow {
         INFILE_HANDLING.out.base
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(EXTRACT_RECORDS.out.versions)
 
     // PROCESS: Run Barrnap to predict ribosomal RNA genes
@@ -282,6 +310,7 @@ workflow {
         INFILE_HANDLING.out.base
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(BARRNAP.out.versions)
 
     // PROCESS: Run Blast on predicted ribosomal RNA genes
@@ -291,6 +320,7 @@ workflow {
         INFILE_HANDLING.out.base
     )
 
+    // Collect version info
     ch_versions = ch_versions.mix(BLAST.out.versions)
 
     // PROCESS: Filter Blast output for best score
@@ -300,6 +330,11 @@ workflow {
         INFILE_HANDLING.out.base
     )
 
+    // Collect all BLAST Summaries and concatenate into one file
+    blast_summary_ch = blast_summary_ch.mix(FILTER_BLAST.out.blast_summary)
+    blast_summary_ch.collectFile(name: 'Summary.16S.tab', storeDir: "${params.outpath}/qa")
+
+    // Collect version info
     ch_versions = ch_versions.mix(FILTER_BLAST.out.versions)
 
     // PROCESS: Run QUAST for quality assessment 
@@ -311,16 +346,30 @@ workflow {
         INFILE_HANDLING.out.base
     )
 
+    // Collect all Assembly Summaries and concatenate into one file
+    assembly_summary_ch = assembly_summary_ch.mix(QA.out.summary_assemblies)
+    assembly_summary_ch.collectFile(name: 'Summary.Assemblies.tab', keepHeader: true, storeDir: "${params.outpath}/qa")
+
+    // Collect all Cleaned Read/Base Summaries and concatenate into one file
+    cleaned_summary_ch = cleaned_summary_ch.mix(QA.out.summary_reads)
+    cleaned_summary_ch.collectFile(name: 'Summary.Illumina.CleanedReads-Bases.tab', storeDir: "${params.outpath}/qa")
+
+    // Collect version info
     ch_versions = ch_versions.mix(QA.out.versions)
 
     // PROCESS: Calculate genome coverage
     GENOME_COVERAGE (
         CLEANED_COVERAGE.out.summary_stats,
         QA.out.summary_assemblies,
-        QA.out.summary_bases,
+        QA.out.summary_reads,
         INFILE_HANDLING.out.base
     )
 
+    // Collect all Genome Coverage Summaries and concatenate into one file
+    genome_cov_summary_ch = genome_cov_summary_ch.mix(GENOME_COVERAGE.out.genome_coverage)
+    genome_cov_summary_ch.collectFile(name: 'Summary.Illumina.GenomeCoverage.tab', storeDir: "${params.outpath}/qa")
+
+    // Collect version info
     ch_versions = ch_versions.mix(GENOME_COVERAGE.out.versions)
     
     // PATTERN: Collate method version information
