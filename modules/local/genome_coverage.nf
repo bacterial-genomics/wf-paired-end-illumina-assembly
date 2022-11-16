@@ -55,7 +55,7 @@ process GENOME_COVERAGE {
 
         cat <<-END_VERSIONS > versions.yml
         "!{task.process}":
-            ubuntu: $(cat /etc/issue)
+            ubuntu: $(awk -F ' ' '{print $1,$2,$3}' /etc/issue)
         END_VERSIONS
         
         '''

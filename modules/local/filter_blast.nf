@@ -46,7 +46,8 @@ process FILTER_BLAST {
         # Get process version
         cat <<-END_VERSIONS > versions.yml
         "!{task.process}":
-            biopython: $(grep "version" /usr/local/lib/python*/dist-packages/Bio/__init__.py | head -n 1 | awk 'NF>1{print $NF}' | tr -d '"')
+            python: $(python --version 2>&1 | awk '{print $2}')
+            biopython: $(python -c 'import Bio; print(Bio.__version__)' 2>&1)
         END_VERSIONS
 
         '''
