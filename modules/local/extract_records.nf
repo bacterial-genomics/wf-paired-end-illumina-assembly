@@ -5,7 +5,7 @@ process EXTRACT_RECORDS {
         pattern: ".command.*",
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
-    container "snads/biopython@sha256:bb041f55fd45d0fb577656e2d1f1a9f477d3ba80878b3b42218adff3322ae06e"
+    container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
         path annotation
@@ -28,7 +28,7 @@ process EXTRACT_RECORDS {
 
         # 16S extraction
         if [[ -s "!{annotation}" ]]; then
-            python3 ${extract_record} -i "!{annotation}" \
+            python ${extract_record} -i "!{annotation}" \
             -u product -o "16S.!{base}.fa" -q '16S ribosomal RNA' \
             --search-type any_q_is_rec -f rRNA
         fi

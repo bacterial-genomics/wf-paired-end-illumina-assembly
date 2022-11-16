@@ -5,7 +5,7 @@ process FILTER_CONTIGS {
         pattern: ".command.*",
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
-    container "snads/biopython@sha256:bb041f55fd45d0fb577656e2d1f1a9f477d3ba80878b3b42218adff3322ae06e"
+    container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
         path contigs
@@ -27,7 +27,7 @@ process FILTER_CONTIGS {
         filter_contigs="${DIR}/filter.contigs.py"
         check_if_file_exists_allow_seconds ${filter_contigs} '60'
 
-        python3 ${filter_contigs} \
+        python ${filter_contigs} \
         -i !{contigs}\
         -b "!{base}" -l 1000 -o !{base}.uncorrected.fna
 

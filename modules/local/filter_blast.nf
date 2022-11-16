@@ -8,7 +8,7 @@ process FILTER_BLAST {
         pattern: ".command.*",
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
-    container "snads/biopython@sha256:bb041f55fd45d0fb577656e2d1f1a9f477d3ba80878b3b42218adff3322ae06e"
+    container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
         path blast_tsv
@@ -32,7 +32,7 @@ process FILTER_BLAST {
         filter_blast="${DIR}/filter.blast.py"
         check_if_file_exists_allow_seconds ${filter_blast} '60'
 
-        python3 ${filter_blast} -i "!{blast_tsv}" \
+        python ${filter_blast} -i "!{blast_tsv}" \
         -o "!{base}.blast.tab"
 
         verify_file_minimum_size "!{base}.blast.tab" 'filtered 16S blastn nr file' '10c'
