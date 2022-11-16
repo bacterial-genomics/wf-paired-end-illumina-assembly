@@ -148,7 +148,7 @@ workflow {
 
     // SETUP: Define input, output, and dependency channels
     // Double asterisk looks in specified directory and recursively all subdirectories
-    input_ch = Channel.fromFilePairs(params.inpath+'/*R{1,2}*.fastq.gz', checkIfExists: true)
+    input_ch = Channel.fromFilePairs(params.inpath+'/**R{1,2}*.fastq.gz', checkIfExists: true)
     output_ch = Channel.fromPath(params.outpath)
     ch_versions = Channel.empty()
     alnstats_summary_ch = Channel.empty()
