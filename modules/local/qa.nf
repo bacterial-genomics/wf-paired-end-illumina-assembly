@@ -1,8 +1,5 @@
 process QA {
 
-    publishDir "${params.outpath}/qa",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.tab"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
@@ -21,7 +18,7 @@ process QA {
 
     output:
         path "*.Summary.Assemblies.tab", emit: summary_assemblies
-        path "*.Summary.Illumina.CleanedReads-Bases.tab", emit: summary_bases
+        path "*.Summary.Illumina.CleanedReads-Bases.tab", emit: summary_reads
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

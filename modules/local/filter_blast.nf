@@ -3,9 +3,6 @@ process FILTER_BLAST {
     publishDir "${params.outpath}/ssu",
         mode: "${params.publish_dir_mode}",
         pattern: "*.tsv*"
-    publishDir "${params.outpath}/qa",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.tab"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
@@ -19,7 +16,7 @@ process FILTER_BLAST {
         val base
 
     output:
-        path "*.Summary.16S.tab"
+        path "*.Summary.16S.tab", emit: blast_summary
         path "*.blast.tsv.gz"
         path "*species.tsv"
         path ".command.out"

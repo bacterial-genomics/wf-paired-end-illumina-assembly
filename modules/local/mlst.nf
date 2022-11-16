@@ -1,8 +1,5 @@
 process MLST {
 
-    publishDir "${params.outpath}/qa",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.tab"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
@@ -15,7 +12,7 @@ process MLST {
         val base
 
     output:
-        path "*.Summary.MLST.tab"
+        path "*.Summary.MLST.tab", emit: summary_mlst
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

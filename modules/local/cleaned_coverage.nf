@@ -1,8 +1,5 @@
 process CLEANED_COVERAGE {
 
-    publishDir "${params.outpath}/qa",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.tab"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",

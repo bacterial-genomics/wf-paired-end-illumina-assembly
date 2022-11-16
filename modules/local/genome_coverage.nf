@@ -1,8 +1,5 @@
 process GENOME_COVERAGE {
 
-    publishDir "${params.outpath}/qa",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.tab"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
@@ -17,7 +14,7 @@ process GENOME_COVERAGE {
         val base
 
     output:
-        path "*.Summary.Illumina.GenomeCoverage.tab"
+        path "*.Summary.Illumina.GenomeCoverage.tab", emit: genome_coverage
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions
