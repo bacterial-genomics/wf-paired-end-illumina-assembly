@@ -29,7 +29,6 @@ process TRIMMOMATIC {
 
     shell:
         '''
-
         source bash_functions.sh
         
         # Get Adapters, check if it exists, and verify file size
@@ -85,6 +84,5 @@ process TRIMMOMATIC {
         "!{task.process}":
             trimmomatic: $(trimmomatic -version)
         END_VERSIONS
-
         '''
 }

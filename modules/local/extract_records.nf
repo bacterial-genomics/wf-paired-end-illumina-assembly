@@ -19,7 +19,6 @@ process EXTRACT_RECORDS {
 
     shell:
         '''
-
         source bash_functions.sh
 
         # Get extract.record.from.genbank.py and check if it exists
@@ -39,6 +38,5 @@ process EXTRACT_RECORDS {
             python: $(python --version 2>&1 | awk '{print $2}')
             biopython: $(python -c 'import Bio; print(Bio.__version__)' 2>&1)
         END_VERSIONS
-
         '''
 }

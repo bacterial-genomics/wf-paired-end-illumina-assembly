@@ -19,28 +19,25 @@ process INFILE_HANDLING {
         path "versions.yml", emit: versions
         
     shell:
-    
-    if (params.size) {
-        size=params.size
-    }
-    else {
-        size=input[0].size();
-    }
+        if (params.size) {
+            size=params.size
+        }
+        else {
+            size=input[0].size();
+        }
+        '''
+        source bash_functions.sh
+        
+        msg "INFO: R1 = !{input[0]}"
+        msg "INFO: R2 = !{input[1]}"
 
-    '''
+        verify_file_minimum_size !{input[0]} 'fastq' '10M'
+        verify_file_minimum_size !{input[1]} 'fastq' '10M'
 
-    source bash_functions.sh
-    
-    msg "INFO: R1 = !{input[0]}"
-    msg "INFO: R2 = !{input[1]}"
-
-    verify_file_minimum_size !{input[0]} 'fastq' '10M'
-    verify_file_minimum_size !{input[1]} 'fastq' '10M'
-
-    cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        ubuntu: $(awk -F ' ' '{print $1,$2,$3}' /etc/issue)
-    END_VERSIONS
-
-    '''
+        # Get process version
+        cat <<-END_VERSIONS > versions.yml
+        "!{task.process}":
+            ubuntu: $(awk -F ' ' '{print $1,$2,$3}' /etc/issue | tr -d '\\n')
+        END_VERSIONS
+        '''
 }

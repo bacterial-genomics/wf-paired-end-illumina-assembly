@@ -25,7 +25,6 @@ process ANNOTATE {
 
     shell:
         '''
-
         source bash_functions.sh
         
         # Annotate cleaned and corrected assembly
@@ -52,6 +51,5 @@ process ANNOTATE {
         "!{task.process}":
             prokka: $(prokka --version 2>&1 | awk 'NF>1{print $NF}')
         END_VERSIONS
-
         '''
 }

@@ -25,7 +25,6 @@ process QA {
 
     shell:
         '''
-
         source bash_functions.sh
 
         # Run Quast
@@ -67,6 +66,5 @@ process QA {
         "!{task.process}":
             quast: $(quast.py --version | awk 'NF>1{print $NF}')
         END_VERSIONS
-
         '''
 }

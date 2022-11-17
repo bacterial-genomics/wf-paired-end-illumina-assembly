@@ -28,7 +28,6 @@ process REMOVE_PHIX {
 
     shell:
         '''
-
         source bash_functions.sh
 
         # Get PhiX, check if it exists, and verify file size
@@ -77,6 +76,5 @@ process REMOVE_PHIX {
         "!{task.process}":
             bbduk: $(bbduk.sh --version 2>&1 | head -n 2 | tail -1 | awk 'NF>1{print $NF}')
         END_VERSIONS
-
         '''
 }

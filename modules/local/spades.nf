@@ -28,7 +28,6 @@ process SPADES {
 
     shell:
         '''
-
         source bash_functions.sh
 
         # Assemble with SPAdes
@@ -89,6 +88,5 @@ process SPADES {
         "!{task.process}":
             spades: $(spades.py --version 2>&1 | awk 'NF>1{print $NF}')
         END_VERSIONS
-
         '''
 }

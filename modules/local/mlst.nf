@@ -19,7 +19,6 @@ process MLST {
 
     shell:
         '''
-
         source bash_functions.sh
 
         # MLST for each assembly
@@ -35,6 +34,5 @@ process MLST {
         "!{task.process}":
             mlst: $(mlst --version | awk 'NF>1{print $NF}')
         END_VERSIONS
-
         '''
 }

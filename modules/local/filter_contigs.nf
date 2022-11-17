@@ -20,7 +20,6 @@ process FILTER_CONTIGS {
 
     shell:
         '''
-
         source bash_functions.sh
 
         # Get filter.contigs.py and check if it exists
@@ -37,6 +36,5 @@ process FILTER_CONTIGS {
             python: $(python --version 2>&1 | awk '{print $2}')
             biopython: $(python -c 'import Bio; print(Bio.__version__)' 2>&1)
         END_VERSIONS
-
         '''
 }

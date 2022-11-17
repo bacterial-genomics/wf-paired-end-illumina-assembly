@@ -19,40 +19,38 @@ process BLAST {
         path "versions.yml", emit: versions
 
     shell:
-    '''
+        '''
+        source bash_functions.sh
 
-    source bash_functions.sh
+        # Classify each 16S sequence record
+        if [ !{params.blast_db} == null ]; then
+            mkdir db
+            cd db
+            wget https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz -O db.tar.gz
+            tar -xvf db.tar.gz
+            rm db.tar.gz
+            cd ..
+            database=db
+            export BLASTDB=${database}
+        else
+            database=!{params.blast_db}
+            export BLASTDB=${database}
+        fi
+        echo "BLAST DB = ${database}"
+        msg "INFO: Running blastn with !{task.cpus} threads"
 
-    # Classify each 16S sequence record
-    if [ !{params.blast_db} == null ]; then
-        mkdir db
-        cd db
-        wget https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz -O db.tar.gz
-        tar -xvf db.tar.gz
-        rm db.tar.gz
-        cd ..
-        database=db
-        export BLASTDB=${database}
-    else
-        database=!{params.blast_db}
-        export BLASTDB=${database}
-    fi
-    echo "BLAST DB = ${database}"
-    msg "INFO: Running blastn with !{task.cpus} threads"
+        blastn -word_size 10 -task blastn -db 16S_ribosomal_RNA \
+        -num_threads "!{task.cpus}" \
+        -query "!{extracted_base}" \
+        -out "!{base}.blast.tsv" \
+        -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovhsp ssciname"
 
-    blastn -word_size 10 -task blastn -db 16S_ribosomal_RNA \
-    -num_threads "!{task.cpus}" \
-    -query "!{extracted_base}" \
-    -out "!{base}.blast.tsv" \
-    -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovhsp ssciname"
+        verify_file_minimum_size "!{base}.blast.tsv" '16S blastn nr output file' '10c'
 
-    verify_file_minimum_size "!{base}.blast.tsv" '16S blastn nr output file' '10c'
-
-    # Get process version
-    cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        blast: $(blastn -version | head -n 1 | awk '{print $2}')
-    END_VERSIONS
-
-    '''
+        # Get process version
+        cat <<-END_VERSIONS > versions.yml
+        "!{task.process}":
+            blast: $(blastn -version | head -n 1 | awk '{print $2}')
+        END_VERSIONS
+        '''
 }

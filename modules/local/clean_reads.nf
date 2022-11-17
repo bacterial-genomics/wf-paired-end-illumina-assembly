@@ -35,7 +35,6 @@ process CLEAN_READS {
 
     shell:
         '''
-
         source bash_functions.sh
 
         # Correct cleaned SPAdes contigs with cleaned PE reads
@@ -103,6 +102,5 @@ process CLEAN_READS {
             samtools: $(samtools --version | head -n 1 | awk 'NF>1{print $NF}')
             pilon: $(pilon --version | cut -d ' ' -f 3)
         END_VERSIONS
-
         '''
 }

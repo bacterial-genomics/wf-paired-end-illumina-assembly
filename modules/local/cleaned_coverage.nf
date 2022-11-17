@@ -20,7 +20,6 @@ process CLEANED_COVERAGE {
 
     shell:
         '''
-
         source bash_functions.sh
 
         # Calculate coverage
@@ -44,6 +43,5 @@ process CLEANED_COVERAGE {
         "!{task.process}":
             bedtools: $(bedtools --version | awk 'NF>1{print $NF}')
         END_VERSIONS
-        
         '''
 }

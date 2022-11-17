@@ -24,7 +24,6 @@ process BARRNAP {
 
     shell:
         '''
-
         source bash_functions.sh
 
         if [[ ! -f "!{extracted_rna}" ]] || [[ ! -s "!{extracted_rna}" ]]; then
@@ -57,6 +56,5 @@ process BARRNAP {
         "!{task.process}":
             barrnap: $(barrnap --version 2>&1 | awk 'NF>1{print $NF}')
         END_VERSIONS
-
         '''
 }

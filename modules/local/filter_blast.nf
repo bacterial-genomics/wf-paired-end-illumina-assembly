@@ -25,7 +25,6 @@ process FILTER_BLAST {
 
     shell:
         '''
-
         source bash_functions.sh
 
         # Get filter.blast.py and check if it exists
@@ -49,6 +48,5 @@ process FILTER_BLAST {
             python: $(python --version 2>&1 | awk '{print $2}')
             biopython: $(python -c 'import Bio; print(Bio.__version__)' 2>&1)
         END_VERSIONS
-
         '''
 }

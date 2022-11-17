@@ -34,7 +34,6 @@ process EXTRACT_SINGLETONS {
 
     shell:
         '''
-
         source bash_functions.sh
 
         # Determine read length based on the first 100 reads
@@ -98,6 +97,5 @@ process EXTRACT_SINGLETONS {
         "!{task.process}":
             flash: $(flash --version | head -n 1 | awk 'NF>1{print $NF}')
         END_VERSIONS
-
         '''
 }

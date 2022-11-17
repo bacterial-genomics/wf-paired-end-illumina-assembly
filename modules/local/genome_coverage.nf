@@ -21,7 +21,6 @@ process GENOME_COVERAGE {
 
     shell:
         '''
-
         source bash_functions.sh
 
         # Report coverage
@@ -55,8 +54,7 @@ process GENOME_COVERAGE {
 
         cat <<-END_VERSIONS > versions.yml
         "!{task.process}":
-            ubuntu: $(awk -F ' ' '{print $1,$2,$3}' /etc/issue)
+            ubuntu: $(awk -F ' ' '{print $1,$2,$3}' /etc/issue | tr -d '\\n')
         END_VERSIONS
-        
         '''
 }

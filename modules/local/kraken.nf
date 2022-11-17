@@ -27,7 +27,6 @@ process KRAKEN_ONE {
 
     shell:
         '''
-
         source bash_functions.sh
         source summarize_kraken.sh
 
@@ -58,7 +57,6 @@ process KRAKEN_ONE {
         "!{task.process}":
             kraken: $(kraken --version | head -n 1 | awk 'NF>1{print $NF}')
         END_VERSIONS
-
         '''
 }
 
@@ -91,7 +89,6 @@ process KRAKEN_TWO {
 
     shell:
         '''
-
         source bash_functions.sh
         source summarize_kraken.sh
 
@@ -120,6 +117,5 @@ process KRAKEN_TWO {
         "!{task.process}":
             kraken2: $(kraken2 --version | head -n 1 | awk 'NF>1{print $NF}')
         END_VERSIONS
-        
         '''
 }
