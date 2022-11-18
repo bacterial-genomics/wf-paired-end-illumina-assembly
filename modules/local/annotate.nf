@@ -27,6 +27,10 @@ process ANNOTATE {
         '''
         source bash_functions.sh
         
+        # Remove seperator characters from basename for future processes
+        short_base=$(echo !{base} |  sed 's/[-._].*//g')
+        sed -i "s/!{base}/${short_base}/g" !{base_fna}
+
         # Annotate cleaned and corrected assembly
         msg "INFO: Running prokka with !{task.cpus} threads"
 
@@ -34,17 +38,16 @@ process ANNOTATE {
         --force --addgenes --locustag "!{base}" --mincontiglen 1\
         --evalue 1e-08 --cpus !{task.cpus} !{base_fna}
 
-        for ext in gb gbf gbff gbk ; do
-        if [ -s "prokka/!{base}.${ext}" ]; then
-
-            mv -f prokka/!{base}.${ext} !{base}.gbk
-            rm -rf !{base}
-            break
-        fi
+        for ext in gb gbf gbff gbk;
+        do
+            if [ -s "prokka/!{base}.${ext}" ]; then
+                mv -f prokka/!{base}.${ext} !{base}.gbk
+                break
+            fi
         done
-        
+
         minimum_size=$(( !{size}/600 ))
-        verify_file_minimum_size "!{base}.${ext}" 'annotated assembly' ${minimum_size}c
+        verify_file_minimum_size "!{base}.gbk" 'annotated assembly' ${minimum_size}c
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml
