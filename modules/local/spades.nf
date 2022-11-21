@@ -9,6 +9,7 @@ process SPADES {
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     label "process_high"
+    tag { "${base}" }
 
     container "staphb/spades@sha256:e9c50ffb4b6f0ce4d3c504dd0ce1cb3381ae942ff4d5bac24dc78119b3bfd0dd"
 

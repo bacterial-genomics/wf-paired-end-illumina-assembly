@@ -5,6 +5,8 @@ process GENOME_COVERAGE {
         pattern: ".command.*",
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
+    tag { "${base}" }
+
     container "ubuntu:focal"
     
     input:

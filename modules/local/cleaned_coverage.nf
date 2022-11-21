@@ -5,6 +5,8 @@ process CLEANED_COVERAGE {
         pattern: ".command.*",
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
+    tag { "${base}" }
+    
     container "snads/bedtools@sha256:9b80fb5c5ef1b6f4a4a211d8739fa3fe107da34d1fb6609d6b70ddc7afdce12c"
 
     input:

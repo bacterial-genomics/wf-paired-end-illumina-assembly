@@ -8,6 +8,8 @@ process FILTER_BLAST {
         pattern: ".command.*",
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
+    tag { "${base}" }
+
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:

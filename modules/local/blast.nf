@@ -5,6 +5,8 @@ process BLAST {
         pattern: ".command.*",
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
+    tag { "${base}" }
+
     container "snads/ncbi-blast-plus@sha256:9200ea627a96b6640e6fdd1b128c08d44b92b34e51e586d5bbf817cfaf540d10"
 
     input:

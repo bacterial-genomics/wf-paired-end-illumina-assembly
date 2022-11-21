@@ -12,6 +12,7 @@ process EXTRACT_SINGLETONS {
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     label "process_low"
+    tag { "${base}" }
 
     container "snads/flash@sha256:363b2f44d040c669191efbc3d3ba99caf5efd3fdef370af8f00f3328932143a6"
 

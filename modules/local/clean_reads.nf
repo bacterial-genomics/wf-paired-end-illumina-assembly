@@ -12,6 +12,7 @@ process CLEAN_READS {
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     label "process_high"
+    tag { "${base}" }
 
     container "gregorysprenger/bwa-samtools-pilon@sha256:209ac13b381188b4a72fe746d3ff93d1765044cbf73c3957e4e2f843886ca57f"
     

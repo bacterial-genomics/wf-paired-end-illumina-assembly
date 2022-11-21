@@ -8,6 +8,8 @@ process BARRNAP {
         pattern: ".command.*",
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
+    tag { "${base}" }
+    
     container "snads/barrnap@sha256:e22cbd789c36d5626460feb6c7e5f6f7d55c8628dacae68ba0da30884195a837"
 
     input:

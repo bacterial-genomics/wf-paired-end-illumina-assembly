@@ -9,6 +9,7 @@ process KRAKEN_ONE {
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     label "process_high"
+    tag { "${base}" }
 
     container "staphb/kraken@sha256:d372099288c3a7c0cc90ea7e516c643e7096c90a551b45d531bd26b4e7f46255"
 
@@ -69,6 +70,7 @@ process KRAKEN_TWO {
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     label "process_high"
+    tag { "${base}" }
 
     container "staphb/kraken2@sha256:5b107d0141d6042a6b0ac6a5852990dc541fbff556a85eb0c321a7771200ba56"
 

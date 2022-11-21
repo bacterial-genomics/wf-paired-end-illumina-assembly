@@ -6,6 +6,7 @@ process INFILE_HANDLING {
         saveAs: { filename -> "${basename}.${task.process}${filename}" }
 
     container "ubuntu:focal"
+    tag { "${basename}" }
 
     input:
         tuple val(basename), path(input)

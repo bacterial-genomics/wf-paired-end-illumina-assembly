@@ -9,6 +9,7 @@ process TRIMMOMATIC {
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     label "process_high"
+    tag { "${base}" }
     
     container "snads/trimmomatic@sha256:afbb19fdf540e6bd508b657e8dafffb6b411b5b0bf0e302347889220a0b571f1"
 

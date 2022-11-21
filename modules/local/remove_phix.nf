@@ -9,6 +9,7 @@ process REMOVE_PHIX {
         saveAs: { filename -> "${base}.${task.process}${filename}"}
 
     label "process_low"
+    tag { "${base}" }
     
     container "snads/bbtools@sha256:9f2a9b08563839cec87d856f0fc7607c235f464296fd71e15906ea1d15254695"
     
