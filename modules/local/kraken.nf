@@ -53,10 +53,8 @@ process KRAKEN_ONE {
         fi
 
         # Get process version
-        cat <<-END_VERSIONS > versions.yml
-        "!{task.process}":
-            kraken: $(kraken --version | head -n 1 | awk 'NF>1{print $NF}')
-        END_VERSIONS
+        echo -e "\"!{task.process}\":" > versions.yml
+        echo -e "    kraken: $(kraken --version | head -n 1 | awk 'NF>1{print $NF}')" >> versions.yml
         '''
 }
 
