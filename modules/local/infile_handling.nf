@@ -31,8 +31,9 @@ process INFILE_HANDLING {
         msg "INFO: R1 = !{input[0]}"
         msg "INFO: R2 = !{input[1]}"
 
-        verify_file_minimum_size !{input[0]} 'fastq' '10M'
-        verify_file_minimum_size !{input[1]} 'fastq' '10M'
+        for fastq in !{input}; do
+            verify_file_minimum_size ${fastq} 'fastq' '10M'
+        done
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml
