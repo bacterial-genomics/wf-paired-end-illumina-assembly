@@ -27,7 +27,7 @@ process BARRNAP {
         source bash_functions.sh
 
         if [[ ! -f "!{extracted_rna}" ]] || [[ ! -s "!{extracted_rna}" ]]; then
-            msg "INFO: absent 16S rRNA gene annotation in !{annotation};" >&2
+            msg "INFO: absent 16S rRNA gene annotation in !{annotation}" >&2
             msg 'Running barrnapp' >&2
             barrnap !{base_fna} > !{base}.gff
             bedtools getfasta \
