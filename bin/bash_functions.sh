@@ -8,15 +8,15 @@ DIR="$(realpath "${DIR}")"
 
 msg() {
   # A function, designed for logging, that prints current date and timestamp
-  #  as a prefix to the rest of the message. Default sends to stdout but can
-  #  redirected during execution.
+  # as a prefix to the rest of the message. Default sends to stdout but can
+  # redirected during execution.
   echo "[$(date '+%Y-%b-%d %a %H:%M:%S')] $@"
 }
 
 check_if_file_exists_allow_seconds() {
   # Parameters:
-  #              $1 = file
-  #              $2 = maximum seconds to wait for file to appear
+  # $1 = file
+  # $2 = maximum seconds to wait for file to appear
   elapsed=0
   while [ ! -f "${1}" ]; do
     sleep 1
@@ -37,7 +37,7 @@ verify_file_minimum_size()
   if [ -f  "${1}" ]; then
     if [ -s  "${1}" ]; then
       if [[ $(find -L "${1}" -type f -size +"${3}") ]]; then
-        return
+        return 0
       else
         size=$(echo ${3} | sed 's/c//g')
         msg "ERROR: ${2} file ${1} present but too small (less than ${size} bytes)" >&2
@@ -52,4 +52,3 @@ verify_file_minimum_size()
     false
   fi
 }
-
