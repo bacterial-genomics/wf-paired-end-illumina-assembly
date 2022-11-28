@@ -66,9 +66,9 @@ if [[ $(find ${IN} -name "*fastq.gz" | wc -l) -ge 2 ]]; then
   # Loop over find command for fastq.gz files
   while IFS='' read -r line;
   do
-    base=$(basename ${line} | cut -d 'R' -f 1) # Cut filename at 'R' or else x_ and x1_ will show submitted
+    base=$(basename ${line} | sed -r 's/(_R).*$//') # Cut filename at 'R' or else x_ and x1_ will show submitted
     clean_base=$(echo $base | sed 's/[-._]*$//') # Remove trailing separators to display later
-    count=$(find ${IN} -name "*${base}*" | wc -l)
+    count=$(find ${IN} -name "${base}*" | wc -l)
     (( counter[${base}]++ )) || \
     if [[ $(( ${count}/2 )) -ge 1 ]]; then
       submitted+=(${clean_base})
