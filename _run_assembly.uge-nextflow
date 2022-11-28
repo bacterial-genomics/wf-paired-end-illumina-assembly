@@ -3,11 +3,23 @@
 module load nextflow
 
 nextflow \
-  -log /scicomp/scratch/$USER/nextflow_log.txt \
+  -log /scicomp/scratch/${USER}/nextflow_log.txt \
   run \
-  -profile singularity \
-  $LAB_HOME/workflows/wf-paired-end-illumina-assembly/main.nf \
-  --outpath $OUT \
-  --inpath $IN \
-  -w /scicomp/scratch/$USER/work \
-  -N $USER@cdc.gov
+  -profile singularity,sge \
+  ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
+  --outpath ${OUT} \
+  --inpath ${IN} \
+  -w /scicomp/scratch/${USER}/work \
+  -N ${USER}@cdc.gov
+
+# Count lines in Summary.Illumina.GenomeCoverage.tab
+num_assemblies=$(wc -l ${OUT}/qa/Summary.Illumina.GenomeCoverage.tab | awk '{print $1}')
+
+# E-mail completion status
+if [[ -f "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" ]]; then
+  echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
+  -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
+  -S smtp="smtpgw.cdc.gov" \
+  -a "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" \
+  "${USER}@cdc.gov"
+fi
