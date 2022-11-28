@@ -54,7 +54,7 @@ mkdir -p /scicomp/scratch/$USER/singularity.cache && export NXF_SINGULARITY_CACH
 source ${HOME}/.bashrc
 
 # Check to see if FastQ files are present in IN
-if [[ $(find ${IN} -type f -name "*fastq.gz" | wc -l) -ge 2 ]]; then
+if [[ $(find ${IN} -name "*fastq.gz" | wc -l) -ge 2 ]]; then
   # Arrays for submissions
   submitted=()
   not_submitted=()
@@ -68,7 +68,7 @@ if [[ $(find ${IN} -type f -name "*fastq.gz" | wc -l) -ge 2 ]]; then
   do
     base=$(basename ${line} | cut -d 'R' -f 1) # Cut filename at 'R' or else x_ and x1_ will show submitted
     clean_base=$(echo $base | sed 's/[-._]*$//') # Remove trailing separators to display later
-    count=$(find ${IN} -type f -name "*${base}*" | wc -l)
+    count=$(find ${IN} -name "*${base}*" | wc -l)
     (( counter[${base}]++ )) || \
     if [[ $(( ${count}/2 )) -ge 1 ]]; then
       submitted+=(${clean_base})
