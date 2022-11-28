@@ -47,56 +47,84 @@ else
 fi
 
 # Set up tmp and cache directories for Singularity
-mkdir -p $HOME/tmp && export TMPDIR=$HOME/tmp
-mkdir -p /scicomp/scratch/$USER/singularity.cache && export NXF_SINGULARITY_CACHEDIR=/scicomp/scratch/$USER/singularity.cache
+mkdir -p ${HOME}/tmp && export TMPDIR=${HOME}/tmp
+mkdir -p /scicomp/scratch/$USER/singularity.cache && export NXF_SINGULARITY_CACHEDIR=/scicomp/scratch/${USER}/singularity.cache
 
 # Get LAB_HOME or custom tmp/cache variables from .bashrc
-source $HOME/.bashrc
+source ${HOME}/.bashrc
 
-# Check to see if FastQ file is present in IN
-if [[ -f "$IN/*R1*.fastq.gz" ]]; then
-  # Get basename
-  BASENAME=$(basename $IN/*R1* | cut -d _ -f 1 | sed 's/[-.,]//g')
-  qsub \
-    -v NXF_SINGULARITY_CACHEDIR=$NXF_SINGULARITY_CACHEDIR \
-    -v TMPDIR=$TMPDIR \
-    -v OUT=$OUT \
-    -v IN=$IN \
-    -v LAB_HOME=$LAB_HOME \
-    -o $OUT/log/ \
-    -e $OUT/log/ \
-    -M $USER@cdc.gov \
-    -m bae \
-    -N ASM_$BASENAME \
-    -q all.q \
-    -pe smp 16-128 \
-    $LAB_HOME/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+# Check to see if FastQ files are present in IN
+if [[ $(find ${IN} -type f -name "*fastq.gz" | wc -l) -ge 2 ]]; then
+  # Arrays for submissions
+  submitted=()
+  not_submitted=()
 
-# Loops over all folders in current directory
-# and runs assembly on PE FastQ files within them
-else
-  for DIR in $IN/*;
+  # Counter to count basename - if >=1, skips following lines
+  unset counter
+  declare -A counter
+
+  # Loop over find command for fastq.gz files
+  while IFS='' read -r line;
   do
-    if [ -d "$DIR" ]; then
-      # Get basename
-      BASENAME=$(basename $DIR/*R1* | cut -d _ -f 1 | sed 's/[-.,]//g')
-      qsub \
-      -v NXF_SINGULARITY_CACHEDIR=$NXF_SINGULARITY_CACHEDIR \
-      -v TMPDIR=$TMPDIR \
-      -v OUT=$OUT \
-      -v IN=$DIR \
-      -v LAB_HOME=$LAB_HOME \
-      -o $OUT/log/ \
-      -e $OUT/log/ \
-      -M $USER@cdc.gov \
-      -m bae \
-      -N ASM_$BASENAME \
-      -q all.q \
-      -pe smp 16-128 \
-      $LAB_HOME/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+    base=$(basename ${line} | cut -d 'R' -f 1) # Cut filename at 'R' or else x_ and x1_ will show submitted
+    clean_base=$(echo $base | sed 's/[-._]*$//') # Remove trailing separators to display later
+    count=$(find ${IN} -type f -name "*${base}*" | wc -l)
+    (( counter[${base}]++ )) || \
+    if [[ $(( ${count}/2 )) -ge 1 ]]; then
+      submitted+=(${clean_base})
+    else
+      not_submitted+=(${clean_base})
     fi
+  done < <(find ${IN} -name "*fastq.gz")
+
+# Give error message if FastQ files are not found
+else
+  echo -e "FastQ files are not found in ${IN}"
+  exit 1
+fi
+
+# Color output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+RESET='\033[0m'
+
+# If FastQ files are able to be submitted, submit and display basenames
+if [[ ${#submitted[@]} -ge 1 ]]; then
+  # Submit Nextflow pipeline to HPC
+  qsub \
+    -v NXF_SINGULARITY_CACHEDIR=${NXF_SINGULARITY_CACHEDIR} \
+    -v TMPDIR=${TMPDIR} \
+    -v OUT=${OUT} \
+    -v IN=${IN} \
+    -v LAB_HOME=${LAB_HOME} \
+    -o ${OUT}/log/ \
+    -e ${OUT}/log/ \
+    -M ${USER}@cdc.gov \
+    -m ba \
+    -N ASM_${#submitted[@]} \
+    -q all.q \
+    ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+
+  # Display basename of FastQ files submitted
+  echo -e "\nInput directory: ${IN}"
+  echo -e "Output directory: ${OUT}"
+  echo -e "\n${GREEN}Generating annotated assemblies for:"
+
+  for elem in "${submitted[@]}"; do
+    echo "${elem}"
   done
+  echo -e "${RESET}"
+fi
+
+# Display basename of FastQ files that weren't submitted
+if [[ ${#not_submitted[@]} -ge 1 ]]; then
+  echo -e "${RED}Cannot generate assemblies for:"
+
+  for elem in "${not_submitted[@]}"; do
+    echo "${elem}"
+  done
+  echo -e "${RESET}"
 fi
 
 # Set up log directory in OUT directory
-mkdir -p $OUT/log
+mkdir -p ${OUT}/log
