@@ -17,18 +17,12 @@ process EXTRACT_SINGLETONS {
     container "snads/flash@sha256:363b2f44d040c669191efbc3d3ba99caf5efd3fdef370af8f00f3328932143a6"
 
     input:
-        path input
-        path R1_paired
-        path R2_paired
-        val base
-        val size
+        tuple val(base), val(size), path(input), path(R1_paired), path(R2_paired)
 
     output:
-        path "*R1.paired.fq.gz", emit: R1_paired_gz
-        path "*R2.paired.fq.gz", emit: R2_paired_gz
-        path "*single.fq.gz", emit: single_gz
-        path "*overlap.tsv"
-        path "*clean-reads.tsv"
+        tuple val(base), val(size), path("${base}_R1.paired.fq.gz"), path("${base}_R2.paired.fq.gz"), path("${base}.single.fq.gz"), emit: gzip_reads
+        path "${base}.overlap.tsv"
+        path "${base}.clean-reads.tsv"
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

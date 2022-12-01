@@ -14,15 +14,12 @@ process REMOVE_PHIX {
     container "snads/bbtools@sha256:9f2a9b08563839cec87d856f0fc7607c235f464296fd71e15906ea1d15254695"
     
     input:
-        path input
-        val base
-        val size
+        tuple val(base), val(size), path(input)
 
     output:
-        path "*noPhiX-R1.fsq", emit: noPhiX_R1
-        path "*noPhiX-R2.fsq", emit: noPhiX_R2
-        path "*raw.tsv"
-        path "*phix.tsv"
+        tuple val(base), val(size), path("${base}_noPhiX-R1.fsq"), path("${base}_noPhiX-R2.fsq"), emit: nophix
+        path "${base}.raw.tsv"
+        path "${base}.phix.tsv"
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

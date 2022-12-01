@@ -14,16 +14,12 @@ process TRIMMOMATIC {
     container "snads/trimmomatic@sha256:afbb19fdf540e6bd508b657e8dafffb6b411b5b0bf0e302347889220a0b571f1"
 
     input:
-        path noPhiX_R1
-        path noPhiX_R2
-        val base
-        val size
+        tuple val(base), val(size), path(noPhiX_R1), path(noPhiX_R2)
 
     output:
-        path "*R1.paired.fq", emit: R1_paired
-        path "*R2.paired.fq", emit: R2_paired
-        path "*trimmo.tsv"
-        path "*single.fq"
+        tuple val(base), path("${base}_R1.paired.fq"), path("${base}_R2.paired.fq"), emit: trimmo
+        path "${base}.trimmo.tsv"
+        path "${base}.single.fq"
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

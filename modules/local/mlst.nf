@@ -10,11 +10,10 @@ process MLST {
     container "snads/mlst@sha256:27f290753760c44204d6e04b6ead7935d03b48d5f0a5ccce068def9ce33babe6"
 
     input:
-        path base_fna
-        val base
+        tuple val(base), val(size), path(paired_bam), path(single_bam), path(base_fna)
 
     output:
-        path "*.Summary.MLST.tab", emit: summary_mlst
+        path "${base}.Summary.MLST.tab", emit: summary_mlst
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

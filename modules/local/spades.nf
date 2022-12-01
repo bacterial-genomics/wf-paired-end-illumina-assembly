@@ -14,15 +14,11 @@ process SPADES {
     container "staphb/spades@sha256:e9c50ffb4b6f0ce4d3c504dd0ce1cb3381ae942ff4d5bac24dc78119b3bfd0dd"
 
     input:
-        path R1_paired_gz
-        path R2_paired_gz
-        path single_gz
-        val base
-        val size
+        tuple val(base), val(size), path(R1_paired_gz), path(R2_paired_gz), path(single_gz)
 
     output:
         path "${base}/"
-        path "${base}/contigs.fasta", emit: contigs
+        tuple val(base), path("${base}/contigs.fasta"), emit: contigs
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

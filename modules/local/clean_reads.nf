@@ -17,19 +17,13 @@ process CLEAN_READS {
     container "gregorysprenger/bwa-samtools-pilon@sha256:209ac13b381188b4a72fe746d3ff93d1765044cbf73c3957e4e2f843886ca57f"
     
     input:
-        path uncorrected_contigs
-        path R1_paired_gz
-        path R2_paired_gz
-        path single_gz
-        val base
-        val size
+        tuple val(base), val(size), path(R1_paired_gz), path(R2_paired_gz), path(single_gz), path(uncorrected_contigs)
 
     output:
-        path "*.InDels-corrected.cnt.txt"
-        path "*.SNPs-corrected.cnt.txt"
-        path "*.fna", emit: base_fna
-        path "*.paired.bam", emit: paired_bam
-        path "*.single.bam", emit: single_bam
+        tuple val(base), val(size), path("${base}.paired.bam"), path("${base}.single.bam"), emit: bam
+        tuple val(base), path("${base}.fna"), emit: base_fna
+        path "${base}.InDels-corrected.cnt.txt"
+        path "${base}.SNPs-corrected.cnt.txt"
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

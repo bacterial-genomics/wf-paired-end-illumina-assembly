@@ -10,12 +10,11 @@ process CLEANED_COVERAGE {
     container "snads/bedtools@sha256:9b80fb5c5ef1b6f4a4a211d8739fa3fe107da34d1fb6609d6b70ddc7afdce12c"
 
     input:
-        path single_bam
-        path paired_bam
-        val base
+        tuple val(base), val(size), path(paired_bam), path(single_bam)
 
     output:
-        path "*.Summary.Illumina.CleanedReads-AlnStats.tab", emit: summary_stats
+        tuple val(base), path("${base}.Summary.Illumina.CleanedReads-AlnStats.tab"), emit: summary_stats
+        path "${base}.Summary.Illumina.CleanedReads-AlnStats.tab", emit: summary_alnstats
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

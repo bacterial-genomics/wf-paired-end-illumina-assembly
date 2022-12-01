@@ -12,9 +12,7 @@ process INFILE_HANDLING {
         tuple val(basename), path(input)
 
     output:
-        path input, emit: input
-        val basename, emit: base
-        val size, emit: size
+        tuple val(basename), val(size), path(input), emit: input
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

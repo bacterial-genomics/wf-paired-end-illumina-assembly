@@ -10,12 +10,10 @@ process FILTER_CONTIGS {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-        path contigs
-        path R1_paired_gz
-        val base
+        tuple val(base), val(size), path(R1_paired_gz), path(R2_paired_gz), path(single_gz), path(contigs)
 
     output:
-        path "*.uncorrected.fna", emit: uncorrected_contigs
+        tuple val(base), path("${base}.uncorrected.fna"), emit: uncorrected_contigs
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

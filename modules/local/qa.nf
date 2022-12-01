@@ -11,15 +11,12 @@ process QA {
     container "snads/quast@sha256:c8147a279feafbc88bafeeda3817ff32d43db87d31dd0978df1cd2f8022d324c"
 
     input:
-        path base_fna
-        path R1_paired_gz
-        path R2_paired_gz
-        path single_gz
-        val base
+        tuple val(base), val(size), path(R1_paired_gz), path(R2_paired_gz), path(single_gz), path(base_fna)
 
     output:
-        path "*.Summary.Assemblies.tab", emit: summary_assemblies
-        path "*.Summary.Illumina.CleanedReads-Bases.tab", emit: summary_reads
+        tuple val(base), val(size), path("${base}.Summary.Assemblies.tab"), path("${base}.Summary.Illumina.CleanedReads-Bases.tab"), emit: qa_summaries
+        path "${base}.Summary.Assemblies.tab", emit: summary_assemblies
+        path "${base}.Summary.Illumina.CleanedReads-Bases.tab", emit: summary_reads
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

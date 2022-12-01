@@ -13,14 +13,12 @@ process FILTER_BLAST {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-        path blast_tsv
-        path base_fna
-        val base
+        tuple val(base), val(size), path(blast_tsv), path(base_fna)
 
     output:
-        path "*.Summary.16S.tab", emit: blast_summary
-        path "*.blast.tsv.gz"
-        path "*species.tsv"
+        path "${base}.Summary.16S.tab", emit: blast_summary
+        path "${base}.blast.tsv.gz"
+        path "${base}.16S-top-species.tsv"
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

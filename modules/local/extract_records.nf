@@ -10,11 +10,10 @@ process EXTRACT_RECORDS {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-        path annotation
-        val base
+        tuple val(base), val(size), path(annotation), path(base_fna)
 
     output:
-        path "16S.*.fa", emit: extracted_rna
+        tuple val(base), path("16S.${base}.fa"), emit: extracted_rna
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

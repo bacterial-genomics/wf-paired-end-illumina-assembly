@@ -10,12 +10,10 @@ process BLAST {
     container "snads/ncbi-blast-plus@sha256:9200ea627a96b6640e6fdd1b128c08d44b92b34e51e586d5bbf817cfaf540d10"
 
     input:
-        path extracted_base
-        path base_fna
-        val base
+        tuple val(base), val(size), path(extracted_base), path(base_fna)
 
     output:
-        path "*.blast.tsv", emit: blast_tsv
+        tuple val(base), val(size), path("${base}.blast.tsv"), emit: blast_tsv
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

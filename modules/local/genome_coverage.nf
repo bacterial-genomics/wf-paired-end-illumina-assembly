@@ -10,13 +10,10 @@ process GENOME_COVERAGE {
     container "ubuntu:focal"
     
     input:
-        path summary_stats
-        path summary_assemblies
-        path summary_bases
-        val base
+        tuple val(base), val(size), path(summary_assemblies), path(summary_reads), path(summary_stats)
 
     output:
-        path "*.Summary.Illumina.GenomeCoverage.tab", emit: genome_coverage
+        path "${base}.Summary.Illumina.GenomeCoverage.tab", emit: genome_coverage
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions
@@ -39,7 +36,7 @@ process GENOME_COVERAGE {
             if [[ "${basepairs}" =~ ^[0-9]+$ ]]; then
                 msg "INFO: read alignment data for ${ln[0]} used for coverage" >&2
             else
-                basepairs=$(grep ${ln[0]} !{summary_bases} | cut -f 2)
+                basepairs=$(grep ${ln[0]} !{summary_reads} | cut -f 2)
                 msg "INFO: read alignment data absent for ${ln[0]}, so cleaned bases" >&2
                 msg "      given to the assembler were used to calculate coverage" >&2
             fi
