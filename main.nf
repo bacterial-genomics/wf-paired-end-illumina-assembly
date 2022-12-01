@@ -168,9 +168,7 @@ workflow {
 
     // PROCESS: Run bbduk to remove PhiX reads
     REMOVE_PHIX (
-        INFILE_HANDLING.out.input,
-        INFILE_HANDLING.out.base,
-        INFILE_HANDLING.out.size
+        INFILE_HANDLING.out.input
     )
 
     // Collect version info
@@ -178,10 +176,7 @@ workflow {
 
     // PROCESS: Run trimmomatic to clip adapters and do quality trimming
     TRIMMOMATIC (
-        REMOVE_PHIX.out.noPhiX_R1,
-        REMOVE_PHIX.out.noPhiX_R2,
-        INFILE_HANDLING.out.base,
-        INFILE_HANDLING.out.size
+        REMOVE_PHIX.out.nophix
     )
 
     // Collect version info
@@ -189,11 +184,7 @@ workflow {
 
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
     EXTRACT_SINGLETONS (
-        INFILE_HANDLING.out.input,
-        TRIMMOMATIC.out.R1_paired,
-        TRIMMOMATIC.out.R2_paired,
-        INFILE_HANDLING.out.base,
-        INFILE_HANDLING.out.size
+        INFILE_HANDLING.out.input.join(TRIMMOMATIC.out.trimmo)
     )
 
     // Collect version info
@@ -201,10 +192,7 @@ workflow {
 
     // PROCESS: Run kraken1 on paired reads
     KRAKEN_ONE (
-        EXTRACT_SINGLETONS.out.R1_paired_gz,
-        EXTRACT_SINGLETONS.out.R2_paired_gz,
-        EXTRACT_SINGLETONS.out.single_gz,
-        INFILE_HANDLING.out.base
+        EXTRACT_SINGLETONS.out.gzip_reads
     )
 
     // Collect version info
@@ -212,10 +200,7 @@ workflow {
 
     // PROCESS: Run kraken2 on paired reads
     KRAKEN_TWO (
-        EXTRACT_SINGLETONS.out.R1_paired_gz,
-        EXTRACT_SINGLETONS.out.R2_paired_gz,
-        EXTRACT_SINGLETONS.out.single_gz,
-        INFILE_HANDLING.out.base
+        EXTRACT_SINGLETONS.out.gzip_reads
     )
 
     // Collect version info
@@ -223,11 +208,7 @@ workflow {
 
     // PROCESS: Run SPAdes to assemble contigs
     SPADES (
-        EXTRACT_SINGLETONS.out.R1_paired_gz,
-        EXTRACT_SINGLETONS.out.R2_paired_gz,
-        EXTRACT_SINGLETONS.out.single_gz,
-        INFILE_HANDLING.out.base,
-        INFILE_HANDLING.out.size
+        EXTRACT_SINGLETONS.out.gzip_reads
     )
 
     // Collect version info
@@ -235,9 +216,7 @@ workflow {
 
     // PROCESS: Filter contigs based on length, coverage, GC skew, and compositional complexity
     FILTER_CONTIGS (
-        SPADES.out.contigs,
-        EXTRACT_SINGLETONS.out.R1_paired_gz,
-        INFILE_HANDLING.out.base
+        EXTRACT_SINGLETONS.out.gzip_reads.join(SPADES.out.contigs)
     )
 
     // Collect version info
@@ -245,12 +224,7 @@ workflow {
 
     // PROCESS: Use BWA/Samtools/Pilon to correct contigs with PE reads
     CLEAN_READS (
-        FILTER_CONTIGS.out.uncorrected_contigs,
-        EXTRACT_SINGLETONS.out.R1_paired_gz,
-        EXTRACT_SINGLETONS.out.R2_paired_gz,
-        EXTRACT_SINGLETONS.out.single_gz,
-        INFILE_HANDLING.out.base,
-        INFILE_HANDLING.out.size
+        EXTRACT_SINGLETONS.out.gzip_reads.join(FILTER_CONTIGS.out.uncorrected_contigs)
     )
 
     // Collect version info
@@ -258,13 +232,11 @@ workflow {
 
     // PROCESS: Run Bedtools to calculate coverage
     CLEANED_COVERAGE (
-        CLEAN_READS.out.single_bam,
-        CLEAN_READS.out.paired_bam,
-        INFILE_HANDLING.out.base
+        CLEAN_READS.out.bam
     )
 
     // Collect all Summary Stats and concatenate into one file
-    alnstats_summary_ch = alnstats_summary_ch.mix(CLEANED_COVERAGE.out.summary_stats)
+    alnstats_summary_ch = alnstats_summary_ch.mix(CLEANED_COVERAGE.out.summary_alnstats)
     alnstats_summary_ch.collectFile(name: 'Summary.Illumina.CleanedReads-AlnStats.tab', storeDir: "${params.outpath}/qa")
 
     // Collect version info
@@ -272,8 +244,7 @@ workflow {
 
     // PROCESS: Run MLST to find MLST for each assembly
     MLST (
-        CLEAN_READS.out.base_fna,
-        INFILE_HANDLING.out.base
+        CLEAN_READS.out.bam.join(CLEAN_READS.out.base_fna)
     )
 
     // Collect all MLST Summaries and concatenate into one file
@@ -285,9 +256,7 @@ workflow {
 
     // PROCESS: Run Prokka to annotate reads
     ANNOTATE (
-        CLEAN_READS.out.base_fna,
-        INFILE_HANDLING.out.base,
-        INFILE_HANDLING.out.size
+        CLEAN_READS.out.bam.join(CLEAN_READS.out.base_fna)
     )
 
     // Collect version info
@@ -295,8 +264,7 @@ workflow {
 
     // PROCESS: Extract records from annotation file
     EXTRACT_RECORDS (
-        ANNOTATE.out.annotation,
-        INFILE_HANDLING.out.base
+        ANNOTATE.out.annotation.join(CLEAN_READS.out.base_fna)
     )
 
     // Collect version info
@@ -304,10 +272,7 @@ workflow {
 
     // PROCESS: Run Barrnap to predict ribosomal RNA genes
     BARRNAP (
-        EXTRACT_RECORDS.out.extracted_rna,
-        CLEAN_READS.out.base_fna,
-        ANNOTATE.out.annotation,
-        INFILE_HANDLING.out.base
+        ANNOTATE.out.annotation.join(CLEAN_READS.out.base_fna).join(EXTRACT_RECORDS.out.extracted_rna)
     )
 
     // Collect version info
@@ -315,9 +280,7 @@ workflow {
 
     // PROCESS: Run Blast on predicted ribosomal RNA genes
     BLAST (
-        BARRNAP.out.extracted_base,
-        CLEAN_READS.out.base_fna,
-        INFILE_HANDLING.out.base
+        BARRNAP.out.extracted_base.join(CLEAN_READS.out.base_fna)
     )
 
     // Collect version info
@@ -325,9 +288,7 @@ workflow {
 
     // PROCESS: Filter Blast output for best score
     FILTER_BLAST (
-        BLAST.out.blast_tsv,
-        CLEAN_READS.out.base_fna,
-        INFILE_HANDLING.out.base
+        BLAST.out.blast_tsv.join(CLEAN_READS.out.base_fna)
     )
 
     // Collect all BLAST Summaries and concatenate into one file
@@ -339,11 +300,7 @@ workflow {
 
     // PROCESS: Run QUAST for quality assessment 
     QA (
-        CLEAN_READS.out.base_fna,
-        EXTRACT_SINGLETONS.out.R1_paired_gz,
-        EXTRACT_SINGLETONS.out.R2_paired_gz,
-        EXTRACT_SINGLETONS.out.single_gz,
-        INFILE_HANDLING.out.base
+        EXTRACT_SINGLETONS.out.gzip_reads.join(CLEAN_READS.out.base_fna)
     )
 
     // Collect all Assembly Summaries and concatenate into one file
@@ -359,10 +316,7 @@ workflow {
 
     // PROCESS: Calculate genome coverage
     GENOME_COVERAGE (
-        CLEANED_COVERAGE.out.summary_stats,
-        QA.out.summary_assemblies,
-        QA.out.summary_reads,
-        INFILE_HANDLING.out.base
+        QA.out.qa_summaries.join(CLEANED_COVERAGE.out.summary_alnstats)
     )
 
     // Collect all Genome Coverage Summaries and concatenate into one file
