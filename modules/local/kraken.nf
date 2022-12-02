@@ -15,6 +15,7 @@ process KRAKEN_ONE {
 
     input:
         tuple val(base), val(size), path(R1_paired_gz), path(R2_paired_gz), path(single_gz)
+        path kraken1_db
 
     output:
         path "${base}.taxonomy1-reads.tab"
@@ -28,12 +29,14 @@ process KRAKEN_ONE {
         source bash_functions.sh
         source summarize_kraken.sh
 
-        if [ !{params.kraken1_db} == null ]; then
-            database=/kraken-database/minikraken_20171013_4GB
+        if [[ -d "!{kraken1_db}" ]]; then
+            database="!{kraken1_db}"
+            msg "INFO: Using user specified Kraken 1 database: !{params.kraken1_db}"
         else
-            database=!{params.kraken1_db}
+            database="/kraken-database/minikraken_20171013_4GB"
+            msg "INFO: Using pre-loaded MiniKraken database for Kraken 1"
         fi
-        msg "KRAKEN 1 DATABASE = ${database}"
+
         # Investigate taxonomic identity of cleaned reads
         if [ ! -s !{base}.taxonomy1-reads.tab ]; then
             msg "INFO: Running Kraken1 with !{task.cpus} threads"
@@ -73,6 +76,7 @@ process KRAKEN_TWO {
 
     input:
         tuple val(base), val(size), path(R1_paired_gz), path(R2_paired_gz), path(single_gz)
+        path kraken2_db
 
     output:
         path "${base}.taxonomy2-reads.tab"
@@ -86,12 +90,14 @@ process KRAKEN_TWO {
         source bash_functions.sh
         source summarize_kraken.sh
 
-        if [ !{params.kraken2_db} == null ]; then
-            database=/kraken2-db
+        if [[ -d "!{kraken2_db}" ]]; then
+            database="!{kraken2_db}"
+            msg "INFO: Using user specified Kraken 2 database: !{params.kraken2_db}"
         else
-            database=!{params.kraken2_db}
+            database="/kraken2-db"
+            msg "INFO: Using pre-loaded MiniKraken2 database for Kraken 2"
         fi
-        msg "KRAKEN 2 DATABASE = ${database}"
+
         if [ ! -s !{base}.taxonomy2-reads.tab ]; then
             msg "INFO: Running Kraken2 with !{task.cpus} threads"
             kraken2 --db "${database}" --threads !{task.cpus} --gzip-compressed --output /dev/null \

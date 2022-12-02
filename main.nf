@@ -62,6 +62,7 @@ if (params.version){
 ========================================================================================
 */
 
+// Validate inpath parameter
 if (!params.inpath) {
     System.err.println "ERROR: parameter inpath must be specified"
     exit 1
@@ -72,6 +73,7 @@ if (!inpathFileObj.exists()){
     exit 1
 }
 
+// Validate outpath parameter
 File outpathFileObj = new File(params.outpath)
 if (outpathFileObj.exists()){
     // Per the config file, outpath stores log & trace files so it is created before this point
@@ -86,12 +88,18 @@ if (outpathFileObj.exists()){
     outpathFileObj.mkdirs()
 }
 
+// Set logpath parameter
 File logpathFileObj = new File(params.logpath)
 if (logpathFileObj.exists()){
     System.out.println "WARNING: $params.logpath already exists. Log files will be overwritten."
 } else {
     logpathFileObj.mkdirs()
 }
+
+// Set database params to null; will be overwritten if user specifies
+params.kraken1_db = "Pre-loaded MiniKraken1"
+params.kraken2_db = "Pre-loaded MiniKraken2"
+params.blast_db = "Pre-loaded 16S rRNA"
 
 // Print parameters used
 log.info """
@@ -102,6 +110,9 @@ log.info """
     outpath:            ${params.outpath}
     logpath:            ${params.logpath}
     workDir:            ${workflow.workDir}
+    kraken1_db          ${params.kraken1_db}
+    kraken2_db          ${params.kraken2_db}
+    blast_db            ${params.blast_db}
     =====================================
     """
     .stripIndent()
@@ -146,10 +157,17 @@ include { GENOME_COVERAGE } from "./modules/local/genome_coverage.nf"
 
 workflow {
 
-    // SETUP: Define input, output, and dependency channels
+    // SETUP: Define input, output
     // Double asterisk looks in specified directory and recursively all subdirectories
     input_ch = Channel.fromFilePairs(params.inpath+'/**R{1,2}*.fastq.gz', checkIfExists: true)
     output_ch = Channel.fromPath(params.outpath)
+    
+    // SETUP: Define optional database inputs
+    kraken1_db_ch = file(params.kraken1_db)
+    kraken2_db_ch = file(params.kraken2_db)
+    blast_db_ch = file(params.blast_db)
+
+    // SETUP: Define empty channels to concatenate certain outputs
     ch_versions = Channel.empty()
     alnstats_summary_ch = Channel.empty()
     blast_summary_ch = Channel.empty()
@@ -193,7 +211,8 @@ workflow {
 
     // PROCESS: Run kraken1 on paired reads
     KRAKEN_ONE (
-        EXTRACT_SINGLETONS.out.gzip_reads
+        EXTRACT_SINGLETONS.out.gzip_reads,
+        kraken1_db_ch
     )
 
     // Collect version info
@@ -201,7 +220,8 @@ workflow {
 
     // PROCESS: Run kraken2 on paired reads
     KRAKEN_TWO (
-        EXTRACT_SINGLETONS.out.gzip_reads
+        EXTRACT_SINGLETONS.out.gzip_reads,
+        kraken2_db_ch
     )
 
     // Collect version info
@@ -281,7 +301,8 @@ workflow {
 
     // PROCESS: Run Blast on predicted ribosomal RNA genes
     BLAST (
-        BARRNAP.out.extracted_base.join(CLEAN_READS.out.base_fna)
+        BARRNAP.out.extracted_base.join(CLEAN_READS.out.base_fna),
+        blast_db_ch
     )
 
     // Collect version info

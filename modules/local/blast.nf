@@ -11,6 +11,7 @@ process BLAST {
 
     input:
         tuple val(base), val(size), path(extracted_base), path(base_fna)
+        path blast_db
 
     output:
         tuple val(base), val(size), path("${base}.blast.tsv"), emit: blast_tsv
@@ -23,20 +24,23 @@ process BLAST {
         source bash_functions.sh
 
         # Classify each 16S sequence record
-        if [ !{params.blast_db} == null ]; then
-            mkdir db
-            cd db
-            wget https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz -O db.tar.gz
-            tar -xvf db.tar.gz
-            rm db.tar.gz
-            cd ..
-            database=db
-            export BLASTDB=${database}
+        if [[ -d "!{blast_db}" ]]; then
+            database="!{blast_db}"
+            msg "INFO: Using user specified BLAST database: !{params.blast_db}"
         else
-            database=!{params.blast_db}
-            export BLASTDB=${database}
+            mkdir db && \
+            cd db && \
+            wget https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz -O db.tar.gz && \
+            tar -xvf db.tar.gz && \
+            rm db.tar.gz && \
+            cd ..
+            database="db"
+            msg "INFO: Using pre-loaded 16S rRNA database for BLAST"
         fi
-        msg "BLAST DB = ${database}"
+
+        # Set BLAST database as an environmental variable
+        export BLASTDB=${database}
+
         msg "INFO: Running blastn with !{task.cpus} threads"
 
         blastn -word_size 10 -task blastn -db 16S_ribosomal_RNA \
