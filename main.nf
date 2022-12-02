@@ -96,10 +96,11 @@ if (logpathFileObj.exists()){
     logpathFileObj.mkdirs()
 }
 
-// Set database params to null; will be overwritten if user specifies
+// Set optional params; will be overwritten if user specifies
 params.kraken1_db = "Pre-loaded MiniKraken1"
 params.kraken2_db = "Pre-loaded MiniKraken2"
 params.blast_db = "Pre-loaded 16S rRNA"
+params.size = "null"
 
 // Print parameters used
 log.info """

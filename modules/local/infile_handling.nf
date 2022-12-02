@@ -18,7 +18,7 @@ process INFILE_HANDLING {
         path "versions.yml", emit: versions
         
     shell:
-        if (params.size) {
+        if (params.size != "null") {
             size=params.size
         }
         else {
