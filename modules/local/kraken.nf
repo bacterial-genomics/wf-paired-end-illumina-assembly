@@ -33,7 +33,7 @@ process KRAKEN_ONE {
         else
             database=!{params.kraken1_db}
         fi
-        echo "KRAKEN 1 DATABASE = ${database}"
+        msg "KRAKEN 1 DATABASE = ${database}"
         # Investigate taxonomic identity of cleaned reads
         if [ ! -s !{base}.taxonomy1-reads.tab ]; then
             msg "INFO: Running Kraken1 with !{task.cpus} threads"
@@ -91,7 +91,7 @@ process KRAKEN_TWO {
         else
             database=!{params.kraken2_db}
         fi
-        echo "KRAKEN 2 DATABASE = ${database}"
+        msg "KRAKEN 2 DATABASE = ${database}"
         if [ ! -s !{base}.taxonomy2-reads.tab ]; then
             msg "INFO: Running Kraken2 with !{task.cpus} threads"
             kraken2 --db "${database}" --threads !{task.cpus} --gzip-compressed --output /dev/null \

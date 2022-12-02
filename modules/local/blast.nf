@@ -36,7 +36,7 @@ process BLAST {
             database=!{params.blast_db}
             export BLASTDB=${database}
         fi
-        echo "BLAST DB = ${database}"
+        msg "BLAST DB = ${database}"
         msg "INFO: Running blastn with !{task.cpus} threads"
 
         blastn -word_size 10 -task blastn -db 16S_ribosomal_RNA \
