@@ -16,7 +16,7 @@ process BARRNAP {
         tuple val(base), val(size), path(annotation), path(base_fna), path(extracted_rna)
 
     output:
-        tuple val(base), val(size), path("16s.${base}.fa"), emit: extracted_base
+        tuple val(base), val(size), path("16S.${base}.fa"), emit: extracted_base
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions
@@ -46,9 +46,9 @@ process BARRNAP {
         awk -v awk_var="!{base}" '/^>/{print ">" awk_var "_" ++i; next} {print}' \
         16S.!{base}.fa > !{base}.fa-renamed
         rm -f 16S.!{base}.fa
-        mv -f !{base}.fa-renamed 16s.!{base}.fa
+        mv -f !{base}.fa-renamed 16S.!{base}.fa
 
-        verify_file_minimum_size "16s.!{base}.fa" '16S extracted and renamed FastA file' '500c'
+        verify_file_minimum_size "16S.!{base}.fa" '16S extracted and renamed FastA file' '500c'
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml
