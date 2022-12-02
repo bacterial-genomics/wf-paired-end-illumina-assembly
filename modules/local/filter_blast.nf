@@ -2,7 +2,7 @@ process FILTER_BLAST {
 
     publishDir "${params.outpath}/ssu",
         mode: "${params.publish_dir_mode}",
-        pattern: "*.tsv*"
+        pattern: "*.tsv.gz"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
@@ -18,7 +18,7 @@ process FILTER_BLAST {
     output:
         path "${base}.Summary.16S.tab", emit: blast_summary
         path "${base}.blast.tsv.gz"
-        path "${base}.16S-top-species.tsv"
+        path "${base}.16S-top-species.tsv", emit: ssu_species
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

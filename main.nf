@@ -153,6 +153,7 @@ workflow {
     ch_versions = Channel.empty()
     alnstats_summary_ch = Channel.empty()
     blast_summary_ch = Channel.empty()
+    ssu_species_ch = Channel.empty()
     genome_cov_summary_ch = Channel.empty()
     mlst_summary_ch = Channel.empty()
     assembly_summary_ch = Channel.empty()
@@ -294,6 +295,10 @@ workflow {
     // Collect all BLAST Summaries and concatenate into one file
     blast_summary_ch = blast_summary_ch.mix(FILTER_BLAST.out.blast_summary)
     blast_summary_ch.collectFile(name: 'Summary.16S.tab', storeDir: "${params.outpath}/qa")
+
+    // Collect all BLAST Top Species Summaries and concatenate into one file
+    ssu_species_ch = ssu_species_ch.mix(FILTER_BLAST.out.ssu_species)
+    ssu_species_ch.collectFile(name: '16S-top-species.tsv', storeDir: "${params.outpath}/ssu")
 
     // Collect version info
     ch_versions = ch_versions.mix(FILTER_BLAST.out.versions)
