@@ -9,6 +9,9 @@ nextflow \
   ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
   --outpath ${OUT} \
   --inpath ${IN} \
+  --kraken1_db /scicomp/reference/kraken/OLD/1.0.0/kraken_db \
+  --kraken2_db /scicomp/reference/kraken/OLD/2.0.0 \
+  --blast_db /scicomp/reference/ncbi-blast/blast/db \
   -w /scicomp/scratch/${USER}/work \
   -N ${USER}@cdc.gov
 
