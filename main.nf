@@ -321,7 +321,7 @@ workflow {
 
     // PROCESS: Calculate genome coverage
     GENOME_COVERAGE (
-        QA.out.qa_summaries.join(CLEANED_COVERAGE.out.summary_alnstats)
+        QA.out.qa_summaries.join(CLEANED_COVERAGE.out.summary_stats)
     )
 
     // Collect all Genome Coverage Summaries and concatenate into one file
