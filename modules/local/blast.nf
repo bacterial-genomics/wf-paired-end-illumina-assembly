@@ -7,7 +7,7 @@ process BLAST {
 
     tag { "${base}" }
 
-    container "snads/ncbi-blast-plus@sha256:9200ea627a96b6640e6fdd1b128c08d44b92b34e51e586d5bbf817cfaf540d10"
+    container "gregorysprenger/ncbi-blast-plus@sha256:2d3e226d2eb31e3e0d5a80d7325b3a2ffd873ad1f2bd81215fd0b43727019279"
 
     input:
         tuple val(base), val(size), path(extracted_base), path(base_fna)
@@ -28,13 +28,7 @@ process BLAST {
             database="!{blast_db}"
             msg "INFO: Using user specified BLAST database: !{params.blast_db}"
         else
-            mkdir db && \
-            cd db && \
-            wget https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz -O db.tar.gz && \
-            tar -xvf db.tar.gz && \
-            rm db.tar.gz && \
-            cd ..
-            database="db"
+            database="/db"
             msg "INFO: Using pre-loaded 16S rRNA database for BLAST"
         fi
 
