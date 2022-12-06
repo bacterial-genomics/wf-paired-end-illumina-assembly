@@ -45,8 +45,7 @@ process ANNOTATE {
             fi
         done
 
-        minimum_size=$(( !{size}/600 ))
-        verify_file_minimum_size "!{base}.gbk" 'annotated assembly' ${minimum_size}c
+        verify_file_minimum_size "!{base}.gbk" 'annotated assembly' "!{size}" '0.11'
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml

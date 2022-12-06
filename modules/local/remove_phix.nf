@@ -31,7 +31,7 @@ process REMOVE_PHIX {
         # Get PhiX, check if it exists, and verify file size
         PHIX="${DIR}/PhiX_NC_001422.1.fasta"
         check_if_file_exists_allow_seconds ${PHIX} '60'
-        verify_file_minimum_size ${PHIX} 'PhiX genome' '5k'
+        verify_file_minimum_size ${PHIX} 'PhiX genome' '5k' '100'
 
         # Remove PhiX
         msg "INFO: Running bbduk with !{task.cpus} threads"
@@ -41,9 +41,8 @@ process REMOVE_PHIX {
         out=!{base}_noPhiX-R1.fsq out2=!{base}_noPhiX-R2.fsq\
         qin=auto qout=33 overwrite=t
 
-        minimum_size=$(( !{size}/120 ))
-        for suff in R1.fsq R2.fsq ; do
-            verify_file_minimum_size "!{base}_noPhiX-${suff}" 'PhiX cleaned read' ${minimum_size}c
+        for suff in R1.fsq R2.fsq; do
+            verify_file_minimum_size "!{base}_noPhiX-${suff}" 'PhiX cleaned read' "!{size}" '0.8'
         done
 
         TOT_READS=$(grep '^Input: ' .command.err \

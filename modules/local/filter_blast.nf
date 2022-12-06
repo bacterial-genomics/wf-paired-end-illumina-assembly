@@ -34,7 +34,7 @@ process FILTER_BLAST {
         python ${filter_blast} -i "!{blast_tsv}" \
         -o "!{base}.blast.tab"
 
-        verify_file_minimum_size "!{base}.blast.tab" 'filtered 16S blastn nr file' '10c'
+        verify_file_minimum_size "!{base}.blast.tab" 'filtered 16S blastn nr file' '10c' '100'
 
         awk -F $'\t' 'BEGIN{OFS=FS}; {print $1, $3 "% identity", $13 "% alignment", $14}' "!{base}.blast.tab" \
         > "!{base}.16S-top-species.tsv"

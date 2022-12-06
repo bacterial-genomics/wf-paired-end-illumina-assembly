@@ -43,7 +43,7 @@ process BLAST {
         -out "!{base}.blast.tsv" \
         -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovhsp ssciname"
 
-        verify_file_minimum_size "!{base}.blast.tsv" '16S blastn nr output file' '10c'
+        verify_file_minimum_size "!{base}.blast.tsv" '16S blastn nr output file' '10c' '100'
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml

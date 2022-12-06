@@ -46,9 +46,8 @@ process EXTRACT_SINGLETONS {
             msg "INFO: Running flash with !{task.cpus} threads"
             flash -m ${OVERLAP_LEN} -M ${READ_LEN} -o flash -t !{task.cpus} !{R1_paired} !{R2_paired}
 
-            minimum_size=$(( !{size}/150 ))
-            for suff in flash.notCombined_1.fastq flash.notCombined_2.fastq ; do
-                verify_file_minimum_size "${suff}" 'cleaned non-overlapping read' ${minimum_size}c
+            for suff in flash.notCombined_1.fastq flash.notCombined_2.fastq; do
+                verify_file_minimum_size "${suff}" 'cleaned non-overlapping read' "!{size}" '0.65'
             done
 
             rm !{R1_paired} !{R2_paired}

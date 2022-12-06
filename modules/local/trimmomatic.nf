@@ -31,7 +31,7 @@ process TRIMMOMATIC {
         # Get Adapters, check if it exists, and verify file size
         ADAPTERS="${DIR}/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas"
         check_if_file_exists_allow_seconds ${ADAPTERS} '60'
-        verify_file_minimum_size ${ADAPTERS} 'adapters' '10k'
+        verify_file_minimum_size ${ADAPTERS} 'adapters' '10k' '100'
 
         # Adapter clip and quality trim
         msg "INFO: Running trimmomatic with !{task.cpus} threads"
@@ -71,9 +71,8 @@ process TRIMMOMATIC {
 
         rm -f !{base}_R1.unpaired.fq !{base}_R2.unpaired.fq
 
-        minimum_size=$(( !{size}/120 ))
-        for suff in R1.paired.fq R2.paired.fq ; do
-            verify_file_minimum_size "!{base}_${suff}" 'cleaned read' ${minimum_size}c
+        for suff in R1.paired.fq R2.paired.fq; do
+            verify_file_minimum_size "!{base}_${suff}" 'cleaned read' "!{size}" '0.8'
         done
 
         # Get process version

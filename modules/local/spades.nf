@@ -52,8 +52,7 @@ process SPADES {
             failed=$(( ${failed}+1 ))
         done
 
-        minimum_size=$(( !{size}/1000 ))
-        verify_file_minimum_size "!{base}_tmp/contigs.fasta" 'SPAdes output assembly' ${minimum_size}c
+        verify_file_minimum_size "!{base}_tmp/contigs.fasta" 'SPAdes output assembly' "!{size}" '0.1'
         if grep -E -q 'N{60}' "!{base}_tmp/contigs.fasta"; then
             # avoid this again: https://github.com/ablab/spades/issues/273
             msg "ERROR: contigs.fasta contains 60+ Ns" >&2

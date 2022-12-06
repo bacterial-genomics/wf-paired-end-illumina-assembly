@@ -33,14 +33,22 @@ verify_file_minimum_size()
 {
   # $1=filename
   # $2=file description
-  # $3=size in Bytes (requires c, k, M, or G prefix)
+  # $3=size in Bytes
+  # $4=percent of original file needed
+  if [ "${4}" -eq "100" ]; then
+    minimum_size=${3}
+    output="less than ${3}"
+  else
+    minimum_size=$(awk -v size=${3} -v perc=${4} 'BEGIN {printf "%.0fc", size*(perc/100)}')
+    output="less than ${4}% of input file size ${3} and min size is ${minimum_size}"
+  fi
+
   if [ -f  "${1}" ]; then
     if [ -s  "${1}" ]; then
-      if [[ $(find -L "${1}" -type f -size +"${3}") ]]; then
+      if [[ $(find -L "${1}" -type f -size +"${minimum_size}") ]]; then
         return 0
       else
-        size=$(echo ${3} | sed 's/c//g')
-        msg "ERROR: ${2} file ${1} present but too small (less than ${size} bytes)" >&2
+        msg "ERROR: ${2} file ${1} present but too small (${output})" >&2
         false
       fi
     else

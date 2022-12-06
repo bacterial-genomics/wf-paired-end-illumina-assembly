@@ -31,7 +31,7 @@ process INFILE_HANDLING {
         msg "INFO: R2 = !{input[1]}"
 
         for fastq in !{input}; do
-            verify_file_minimum_size ${fastq} 'fastq' '10M'
+            verify_file_minimum_size "${fastq}" 'fastq' '10M' '100'
         done
 
         # Get process version
