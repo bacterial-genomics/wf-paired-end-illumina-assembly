@@ -111,9 +111,9 @@ log.info """
     outpath:            ${params.outpath}
     logpath:            ${params.logpath}
     workDir:            ${workflow.workDir}
-    kraken1_db          ${params.kraken1_db}
-    kraken2_db          ${params.kraken2_db}
-    blast_db            ${params.blast_db}
+    kraken1_db:         ${params.kraken1_db}
+    kraken2_db:         ${params.kraken2_db}
+    blast_db:           ${params.blast_db}
     =====================================
     """
     .stripIndent()

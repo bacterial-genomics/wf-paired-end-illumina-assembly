@@ -40,7 +40,7 @@ verify_file_minimum_size()
     output="less than ${3}"
   else
     minimum_size=$(awk -v size=${3} -v perc=${4} 'BEGIN {printf "%.0fc", size*(perc/100)}')
-    output="less than ${4}% of input file size ${3} and min size is ${minimum_size}"
+    output="less than ${4}% of input file size"
   fi
 
   if [ -f  "${1}" ]; then
