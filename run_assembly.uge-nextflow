@@ -54,7 +54,7 @@ mkdir -p /scicomp/scratch/$USER/singularity.cache && export NXF_SINGULARITY_CACH
 source ${HOME}/.bashrc
 
 # Check to see if FastQ files are present in IN
-if [[ $(find ${IN} -name "*fastq.gz" | wc -l) -ge 2 ]]; then
+if [[ $(find ${IN} -name "*fastq.gz" -o -name "*fq.gz" | wc -l) -ge 2 ]]; then
   # Arrays for submissions
   submitted=()
   not_submitted=()
