@@ -53,8 +53,11 @@ mkdir -p /scicomp/scratch/$USER/singularity.cache && export NXF_SINGULARITY_CACH
 # Get LAB_HOME or custom tmp/cache variables from .bashrc
 source ${HOME}/.bashrc
 
+# Add found files to an array
+found_files=( $(find ${IN} -name "*fastq.gz" -o -name "*fq.gz") )
+
 # Check to see if FastQ files are present in IN
-if [[ $(find ${IN} -name "*fastq.gz" -o -name "*fq.gz" | wc -l) -ge 2 ]]; then
+if [[ ${#found_files[@]} -ge 2 ]]; then
   # Arrays for submissions
   submitted=()
   not_submitted=()
@@ -64,7 +67,7 @@ if [[ $(find ${IN} -name "*fastq.gz" -o -name "*fq.gz" | wc -l) -ge 2 ]]; then
   declare -A counter
 
   # Loop over find command for fastq.gz files
-  while IFS='' read -r line;
+  for line in "${found_files[@]}";
   do
     base=$(basename ${line} | sed -r 's/(_R).*$//') # Cut filename at 'R' or else x_ and x1_ will show submitted
     clean_base=$(echo $base | sed 's/[-._]*$//') # Remove trailing separators to display later
@@ -75,7 +78,7 @@ if [[ $(find ${IN} -name "*fastq.gz" -o -name "*fq.gz" | wc -l) -ge 2 ]]; then
     else
       not_submitted+=(${clean_base})
     fi
-  done < <(find ${IN} -name "*fastq.gz")
+  done
 
 # Give error message if FastQ files are not found
 else
