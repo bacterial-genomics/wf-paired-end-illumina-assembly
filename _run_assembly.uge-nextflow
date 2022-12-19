@@ -25,7 +25,13 @@ do
     sample_name=$(grep "nf-" ${line}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
     process=$(grep "nf-" ${line}/.command.run | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
     error=$(tail -n 1 ${line}/.command.err | sed -e 's/\[[^][]*\]//g')
-    echo -e "${sample_name}\t${process}\t${error}\t${line}" >> ${OUT}/log/errors.tsv
+
+    # If process for sample retried and succeeded, ignore
+    if [ $(ls ${OUT}/log/process_logs/${sample_name}.${process}* | wc -l) -ge 1 ]; then
+      continue
+    else
+      echo -e "${sample_name}\t${process}\t${error}\t${line}" >> ${OUT}/log/errors.tsv
+    fi
 done < <(nextflow log ${run_name} -filter 'status == "FAILED"')
 
 # If errors.tsv found, add column headers
