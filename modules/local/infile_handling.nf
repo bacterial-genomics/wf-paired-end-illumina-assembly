@@ -3,27 +3,31 @@ process INFILE_HANDLING {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${basename}.${task.process}${filename}" }
+        saveAs: { filename -> "${base}.${task.process}${filename}" }
 
     container "ubuntu:focal"
-    tag { "${basename}" }
+    tag { "${base}" }
 
     input:
         tuple val(basename), path(input)
 
     output:
-        tuple val(basename), val(size), path(input), emit: input
+        tuple val(base), val(size), path(input), emit: input
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions
         
     shell:
+        // Get filesize from input file or size set by params.size
         if (params.size != "null") {
             size=params.size
         }
         else {
             size=input[0].size();
         }
+
+        // Split basename on first underscore if applicable
+        base=basename.split('_')[0];
         '''
         source bash_functions.sh
         
