@@ -160,7 +160,7 @@ workflow {
 
     // SETUP: Define input, output
     // Double asterisk looks in specified directory and recursively all subdirectories
-    input_ch = Channel.fromFilePairs(params.inpath+'/**R{1,2}*.{fastq,fq}.gz', checkIfExists: true)
+    input_ch = Channel.fromFilePairs(params.inpath+'/**_R{1,2}*.{fastq,fq}.gz', checkIfExists: true)
     output_ch = Channel.fromPath(params.outpath)
     
     // SETUP: Define optional database inputs
