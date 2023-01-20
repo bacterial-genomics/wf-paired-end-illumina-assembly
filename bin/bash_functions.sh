@@ -35,7 +35,7 @@ verify_file_minimum_size()
   # $2=file description
   # $3=size in Bytes
   # $4=percent of original file needed
-  if [ "${4}" -eq "100" ]; then
+  if [[ "${4}" == 100 ]]; then
     minimum_size=${3}
     output="less than ${3}"
   else
