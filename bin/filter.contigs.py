@@ -58,7 +58,7 @@ def parseArgs():
 		'Q75, max)')
 	opt.add_argument('--quiet-stats', default=False, action='store_true',
 		help='skip final reporting of input, discard, and output tallies '
-		'(records count, sequence lengths)')
+		'(contigs count, sequence lengths)')
 	opt.add_argument('--silent', default=False, action='store_true',
 		help='no screen output')
 	return parser.parse_args()
@@ -229,7 +229,7 @@ def calc_normalized_median_cov(records, assembly_fmt, cov_regex,
 		d = {'abs': 'in', 'rel': 'ex'}
 		Q25, _ = calc_median(srt_covs[:median_idxs[0]])
 		Q75, _ = calc_median(srt_covs[median_idxs[-1] + 1:])
-		sys.stderr.write('\nINFO: coverage quartiles of filtered records\n'
+		sys.stderr.write('\nINFO: coverage quartiles of filtered contigs\n'
 			'    ({}cluding cov filt)\n'
 			'    25th={:.2f}\n'
 			'    50th={:.2f}\n'
@@ -336,7 +336,7 @@ def main():
 
 	# Calculate statistics for read depth of contig coverage
 	if len(records) == 0:
-		sys.stderr.write('\n\nERROR: no records passed filters\n'
+		sys.stderr.write('\n\nERROR: no contigs passed filters\n'
 			'To diagnose, check which filter(s) responsible for this in '
 			'the stderr info. Coverage is most suspect, especially if input '
 			'has relative depths such as Unicycler, which can be quickly '
@@ -352,7 +352,7 @@ def main():
 		min_val, max_val = min(unfilt_coverages), max(unfilt_coverages)
 		avg_cov = sum(unfilt_coverages) / float(len(unfilt_coverages))
 		d = {'abs': 'in', 'rel': 'ex'}
-		sys.stderr.write('\nINFO: coverage of filtered records\n'
+		sys.stderr.write('\nINFO: coverage of filtered contigs\n'
 		'    ({}cluding cov filt)\n'
 		'    minimum={:.2f}\n'
 		'    average={:.2f}\n'
@@ -379,15 +379,15 @@ def main():
 
 	# Optionally report tallies
 	if not quiet_stats:
-		sys.stderr.write('INFO: {} records input\n'.format(
+		sys.stderr.write('INFO: {} contigs input\n'.format(
 			len(cnts_input_reclengths)))
 		sys.stderr.write('INFO: {} bp input\n'.format(
 			sum(cnts_input_reclengths)))
-		sys.stderr.write('INFO: {} records discarded\n'.format(
+		sys.stderr.write('INFO: {} contigs discarded\n'.format(
 			len(discarded)))
 		sys.stderr.write('INFO: {} bp discarded\n'.format(
 			sum(n for _, n in discarded)))
-		sys.stderr.write('INFO: {} records output\n'.format(
+		sys.stderr.write('INFO: {} contigs output\n'.format(
 			len(records)))
 		sys.stderr.write('INFO: {} bp output\n\n'.format(
 			sum(n for _, n in records)))
