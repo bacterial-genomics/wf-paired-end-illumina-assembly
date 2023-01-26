@@ -4,7 +4,6 @@
 # This script is to run the wf-paired-end-illumina-assembly workflow on the UGE cluster
 
 # Define script usage
-
 usage() {
   echo "
 Usage: ${0##*/} InputDirectory [OutputDirectory] [-h|--help]
@@ -30,27 +29,6 @@ Optional:
   "
 }
 
-# Check requirements
-[[ $1 == "--help" || $1 == "-h" ]] && { usage; exit 0; }
-if [[ $# -lt 1  || $# -gt 2 ]]; then
-  echo "ERROR: improper number ("$#") of arguments provided" >&2
-  usage
-  exit 1
-fi
-
-# I/O handling
-IN=$(readlink -f "$1")
-if [[ -z "$2" ]]; then
-  OUT="${PWD}"
-else
-  OUT=$(readlink -f "$2")
-fi
-
-# Color output for success, warnings, and errors to catch user's attention
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-RESET='\033[0m'
-
 # Check if user has access to scratch area for Singularity files
 check_if_user_has_access() {
   DESTINATION=${1} # full path to check
@@ -69,59 +47,6 @@ check_if_user_has_access() {
     exit 1
   fi
 }
-
-# Check if needed Singularity variables are set. If not, try to add them
-if [ -z "${SINGULARITY_BASE}" ]; then
-  echo -e "SINGULARITY_BASE missing from bash shell configuration."
-  check_if_user_has_access "/scicomp/scratch/$USER" "SINGULARITY_BASE" false
-elif [ -z "${SINGULARITY_TMPDIR}" ]; then
-  echo -e "SINGULARITY_TMPDIR missing from bash shell configuration."
-  check_if_user_has_access "$SINGULARITY_BASE/singularity.tmp" "SINGULARITY_TMPDIR" true
-elif [ -z "${SINGULARITY_CACHEDIR}" ]; then
-  echo -e "SINGULARITY_CACHEDIR missing from bash shell configuration."
-  check_if_user_has_access "$SINGULARITY_BASE/singularity.cache" "SINGULARITY_CACHEDIR" true
-fi
-
-# Set up tmp and cache directories for Singularity
-mkdir -p ${HOME}/tmp && export TMPDIR=${HOME}/tmp
-mkdir -pv $SINGULARITY_TMPDIR $SINGULARITY_CACHEDIR || true
-
-# Get LAB_HOME or custom tmp/cache variables from .bashrc
-source ${HOME}/.bashrc
-
-# Check if input/output is a windows path and replace
-if [[ ${IN} == *":\\"* ]]; then
-  echo "Please replace ${IN%:}:\ with a linux-based path."
-  echo "Exiting..."
-  exit 1
-elif [[ ${OUT} == *":\\"* ]]; then
-  echo "Please replace ${OUT%:}:\ with a linux-based path."
-  echo "Exiting..."
-  exit 1
-fi
-
-# if path starts with z:/, split by each '/' and search for that word appended to /scicomp/groups
-# Cut z:, then grab all folders and see if appending the above works, if not, grab folders with those and test until it is true
-
-# Check if input/output has a .gov path
-if [[ ${IN} == *".gov"* ]]; then
-  echo "Converting path to a linux-based path.."
-  IN=$(echo ${IN} | sed 's/.*gov/\/scicomp/')
-elif [[ ${OUT} == *".gov"* ]]; then
-  echo "Converting path to a linux-based path.."
-  OUT=$(echo ${OUT} | sed 's/.*gov/\/scicomp/')
-fi
-
-# Check if wrong slashes are being used and replace
-if [[ ${IN} == *"\\"* ]]; then
-  IN=$(echo ${IN} | sed 's/\\/\//g')
-  echo "${RED}Please avoid using Windows-based paths."
-  echo "Input is now set to: ${IN} ${RESET}"
-elif [[ ${OUT} == *"\\"* ]]; then
-  OUT=$(echo ${OUT} | sed 's/\\/\//g')
-  echo "${RED}Please avoid using Windows-based paths."
-  echo "Input is now set to: ${OUT} ${RESET}"
-fi
 
 # Check if there is a possibility data will be overwritten in INPUT
 check_if_previous_nextflow_run() {
@@ -178,6 +103,80 @@ check_if_previous_nextflow_run() {
     fi
   fi
 }
+
+# Check requirements
+[[ $1 == "--help" || $1 == "-h" ]] && { usage; exit 0; }
+if [[ $# -lt 1  || $# -gt 2 ]]; then
+  echo "ERROR: improper number ("$#") of arguments provided" >&2
+  usage
+  exit 1
+fi
+
+# I/O handling
+IN=$(readlink -f "$1")
+if [[ -z "$2" ]]; then
+  OUT="${PWD}"
+else
+  OUT=$(readlink -f "$2")
+fi
+
+# Color output for success, warnings, and errors to catch user's attention
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+RESET='\033[0m'
+
+# Check if needed Singularity variables are set. If not, try to add them
+if [ -z "${SINGULARITY_BASE}" ]; then
+  echo -e "SINGULARITY_BASE missing from bash shell configuration."
+  check_if_user_has_access "/scicomp/scratch/$USER" "SINGULARITY_BASE" false
+elif [ -z "${SINGULARITY_TMPDIR}" ]; then
+  echo -e "SINGULARITY_TMPDIR missing from bash shell configuration."
+  check_if_user_has_access "$SINGULARITY_BASE/singularity.tmp" "SINGULARITY_TMPDIR" true
+elif [ -z "${SINGULARITY_CACHEDIR}" ]; then
+  echo -e "SINGULARITY_CACHEDIR missing from bash shell configuration."
+  check_if_user_has_access "$SINGULARITY_BASE/singularity.cache" "SINGULARITY_CACHEDIR" true
+fi
+
+# Set up tmp and cache directories for Singularity
+mkdir -p ${HOME}/tmp && export TMPDIR=${HOME}/tmp
+mkdir -pv $SINGULARITY_TMPDIR $SINGULARITY_CACHEDIR || true
+
+# Get LAB_HOME or custom tmp/cache variables from .bashrc
+source ${HOME}/.bashrc
+
+# Check if input/output is a windows path and replace
+if [[ ${IN} == *":\\"* ]]; then
+  echo "Please replace ${IN%:}:\ with a linux-based path."
+  echo "Exiting..."
+  exit 1
+elif [[ ${OUT} == *":\\"* ]]; then
+  echo "Please replace ${OUT%:}:\ with a linux-based path."
+  echo "Exiting..."
+  exit 1
+fi
+
+# if path starts with z:/, split by each '/' and search for that word appended to /scicomp/groups
+# Cut z:, then grab all folders and see if appending the above works, if not, grab folders with those and test until it is true
+
+# Check if input/output has a .gov path
+if [[ ${IN} == *".gov"* ]]; then
+  echo "Converting path to a linux-based path.."
+  IN=$(echo ${IN} | sed 's/.*gov/\/scicomp/')
+elif [[ ${OUT} == *".gov"* ]]; then
+  echo "Converting path to a linux-based path.."
+  OUT=$(echo ${OUT} | sed 's/.*gov/\/scicomp/')
+fi
+
+# Check if wrong slashes are being used and replace
+if [[ ${IN} == *"\\"* ]]; then
+  IN=$(echo ${IN} | sed 's/\\/\//g')
+  echo "${RED}Please avoid using Windows-based paths."
+  echo "Input is now set to: ${IN} ${RESET}"
+elif [[ ${OUT} == *"\\"* ]]; then
+  OUT=$(echo ${OUT} | sed 's/\\/\//g')
+  echo "${RED}Please avoid using Windows-based paths."
+  echo "Input is now set to: ${OUT} ${RESET}"
+fi
 
 # Check nextflow log dir for trace*.txt file --> means nextflow has been ran before
 if [ -d "${OUT}/log" ]; then
