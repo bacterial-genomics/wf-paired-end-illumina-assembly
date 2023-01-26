@@ -46,12 +46,146 @@ else
   OUT=$(readlink -f "$2")
 fi
 
+# Color output for success, warnings, and errors to catch user's attention
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+RESET='\033[0m'
+
+# Check if user has access to scratch area for Singularity files
+check_if_user_has_access() {
+  DESTINATION=${1} # full path to check
+  VAR_NAME=${2} # variable name that is used (ex. SINGULARITY_BASE)
+  EXPORT=false # if true, add export to variable
+  if [ -r "${DESTINATION}" ]; then
+    echo -e "Adding ${VAR_NAME} to user's bash configuration file..\n"
+    if [ "${EXPORT}" = true ]; then
+      echo -e "export ${VAR_NAME}=${DESTINATION}" >> ${HOME}/.bashrc
+    else
+      echo -e "${VAR_NAME}=${DESTINATION}" >> ${HOME}/.bashrc
+    fi
+  else
+    echo -e "${RED}User does not have access to ${DESTINATION} for ${VAR_NAME}."
+    echo -e "Workflow cannot continue. Exiting..${RESET}\n"
+    exit 1
+  fi
+}
+
+# Check if needed Singularity variables are set. If not, try to add them
+if [ -z "${SINGULARITY_BASE}" ]; then
+  echo -e "SINGULARITY_BASE missing from bash shell configuration."
+  check_if_user_has_access "/scicomp/scratch/$USER" "SINGULARITY_BASE" false
+elif [ -z "${SINGULARITY_TMPDIR}" ]; then
+  echo -e "SINGULARITY_TMPDIR missing from bash shell configuration."
+  check_if_user_has_access "$SINGULARITY_BASE/singularity.tmp" "SINGULARITY_TMPDIR" true
+elif [ -z "${SINGULARITY_CACHEDIR}" ]; then
+  echo -e "SINGULARITY_CACHEDIR missing from bash shell configuration."
+  check_if_user_has_access "$SINGULARITY_BASE/singularity.cache" "SINGULARITY_CACHEDIR" true
+fi
+
 # Set up tmp and cache directories for Singularity
 mkdir -p ${HOME}/tmp && export TMPDIR=${HOME}/tmp
-mkdir -p /scicomp/scratch/$USER/singularity.cache && export NXF_SINGULARITY_CACHEDIR=/scicomp/scratch/${USER}/singularity.cache
+mkdir -pv $SINGULARITY_TMPDIR $SINGULARITY_CACHEDIR || true
 
 # Get LAB_HOME or custom tmp/cache variables from .bashrc
 source ${HOME}/.bashrc
+
+# Check if input/output is a windows path and replace
+if [[ ${IN} == *":\\"* ]]; then
+  echo "Please replace ${IN%:}:\ with a linux-based path."
+  echo "Exiting..."
+  exit 1
+elif [[ ${OUT} == *":\\"* ]]; then
+  echo "Please replace ${OUT%:}:\ with a linux-based path."
+  echo "Exiting..."
+  exit 1
+fi
+
+# if path starts with z:/, split by each '/' and search for that word appended to /scicomp/groups
+# Cut z:, then grab all folders and see if appending the above works, if not, grab folders with those and test until it is true
+
+# Check if input/output has a .gov path
+if [[ ${IN} == *".gov"* ]]; then
+  echo "Converting path to a linux-based path.."
+  IN=$(echo ${IN} | sed 's/.*gov/\/scicomp/')
+elif [[ ${OUT} == *".gov"* ]]; then
+  echo "Converting path to a linux-based path.."
+  OUT=$(echo ${OUT} | sed 's/.*gov/\/scicomp/')
+fi
+
+# Check if wrong slashes are being used and replace
+if [[ ${IN} == *"\\"* ]]; then
+  IN=$(echo ${IN} | sed 's/\\/\//g')
+  echo "${RED}Please avoid using Windows-based paths."
+  echo "Input is now set to: ${IN} ${RESET}"
+elif [[ ${OUT} == *"\\"* ]]; then
+  OUT=$(echo ${OUT} | sed 's/\\/\//g')
+  echo "${RED}Please avoid using Windows-based paths."
+  echo "Input is now set to: ${OUT} ${RESET}"
+fi
+
+# Check if there is a possibility data will be overwritten in INPUT
+check_if_previous_nextflow_run() {
+  # Parameters:
+  # $1 = file path
+  # $2 = file to search for
+
+  # Color output
+  GREEN='\033[0;32m'
+  YELLOW='\033[0;33m'
+  RED='\033[0;31m'
+  RESET='\033[0m'
+
+  if [ -f $(find ${1} -name ${2} | grep -q '.') ]; then
+    echo -e "\n${YELLOW}Previous Nextflow run found.${RESET}"
+    read -p "It is possible that data will be overwritten. Do you want to continue? (enter YES or NO): " ANSWER
+
+    # Continue submission if user wants to possibly overwrite data
+    if [[ "${ANSWER}" = "Y" || "${ANSWER}" = "YES" || "${ANSWER}" = "y" || "${ANSWER}" = "yes" ]]; then
+      echo -e "${GREEN}Data in ${1} will be overwritten. Continuing to submit samples..\n${RESET}"
+
+    # If user doesn't want to continue, see if they want to provide a different output path
+    elif [[ "${ANSWER}" = "N" || "${ANSWER}" = "NO" || "${ANSWER}" = "n" || "${ANSWER}" = "no" ]]; then
+      read -p "Would you like to use a DIFFERENT OUTPUT path? (enter YES or NO): " PROCEED
+      if [[ "${PROCEED}" = "Y" || "${PROCEED}" = "YES" || "${PROCEED}" = "y" || "${PROCEED}" = "yes" ]]; then
+        read -p "Enter NEW OUTPUT path: " NEW_OUTPUT
+        OUT=${NEW_OUTPUT}
+
+        # Check new output. If trace*.txt is found, exit and ask for resubmission
+        if [ -d "${OUT}/log" ] && [ -f $(find ${OUT}/log -name ${2} | grep -q '.') ]; then
+          echo -e "${RED}Previous Nextflow run found."
+          echo -e "Multiple attempts have been made for an empty output directory. Please locate and use an empty directory."
+          echo -e "Submission is being cancelled..${RESET}"
+          exit 1
+        fi
+        
+      # If user doesn't want to provide a new path, exit
+      elif [[ "${ANSWER}" = "N" || "${ANSWER}" = "NO" || "${ANSWER}" = "n" || "${ANSWER}" = "no" ]]; then
+        echo -e "${RED}Submission is being cancelled..${RESET}"
+        exit 1
+      
+      # Exit in case user inputs anything besides Yes, yes, Y, y, NO, no, N, n
+      else
+        echo -e "${RED}Invalid input. Valid inputs are: 'YES, yes, Y, y, NO, no, N, n.'."
+        echo -e "Submission is being cancelled..${RESET}"
+        exit 1
+      fi
+
+    # Exit in case user inputs anything besides Yes, yes, Y, y, NO, no, N, n
+    else
+      echo -e "${RED}Invalid input. Valid inputs are: YES, yes, Y, y, NO, no, N, n'."
+      echo -e "Submission is being cancelled..${RESET}"
+      exit 1
+    fi
+  fi
+}
+
+# Check nextflow log dir for trace*.txt file --> means nextflow has been ran before
+if [ -d "${OUT}/log" ]; then
+  check_if_previous_nextflow_run "${OUT}/log" "trace*.txt"
+# Else, check for trim_reads dir and *phix.tsv file --> means legacy bash script has been ran before
+elif [ -d "${OUT}/trim_reads" ]; then
+  check_if_previous_nextflow_run "${OUT}/trim_reads" "*phix.tsv"
+fi
 
 # Add found files to an array
 found_files=( $(find ${IN} -name "*fastq.gz" -o -name "*fq.gz") )
@@ -86,16 +220,31 @@ else
   exit 1
 fi
 
-# Color output
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-RESET='\033[0m'
+# Prompt user if >10 samples
+if [[ ${#submitted[@]} -ge 10 ]]; then
+  echo -e "${RED}WARNING:${RESET} ${#submitted[@]} samples have been identified. Identified samples:\n${RESET}"
+  echo -e "${submitted[@]}\n"
+  
+  # Ask if user wants to submit all the samples
+  read -p "Do you want to continue submitting ${#submitted[@]} samples? (enter YES or NO): " ANSWER
+  if [[ "${ANSWER}" = "Y" || "${ANSWER}" = "YES" || "${ANWER}" = "y" || "${ANSWER}" = "yes" ]]; then
+    echo -e "Continuing to submit ${#submitted[@]} samples..\n"
+  elif [[ "${ANSWER}" = "N" || "${ANSWER}" = "NO" || "${ANWER}" = "n" || "${ANSWER}" = "no" ]]; then
+    echo -e "Submission is being cancelled.."
+    exit 1
+  else
+    # Error catching
+    echo -e "Invalid input. Valid inputs are: 'YES, yes, Y, y, NO, no, N, n."
+    echo -e "Submission is being cancelled.."
+    exit 1
+  fi
+fi
 
 # If FastQ files are able to be submitted, submit and display basenames
 if [[ ${#submitted[@]} -ge 1 ]]; then
   # Submit Nextflow pipeline to HPC
   qsub \
-    -v NXF_SINGULARITY_CACHEDIR=${NXF_SINGULARITY_CACHEDIR} \
+    -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
     -v TMPDIR=${TMPDIR} \
     -v OUT=${OUT} \
     -v IN=${IN} \
