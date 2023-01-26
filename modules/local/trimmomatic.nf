@@ -77,7 +77,7 @@ process TRIMMOMATIC {
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml
-        "!{task.process}":
+        "!{task.process} (!{base})":
             trimmomatic: $(trimmomatic -version)
         END_VERSIONS
         '''

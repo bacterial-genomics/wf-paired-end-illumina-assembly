@@ -47,7 +47,7 @@ process BLAST {
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml
-        "!{task.process}":
+        "!{task.process} (!{base})":
             blast: $(blastn -version | head -n 1 | awk '{print $2}')
         END_VERSIONS
         '''

@@ -88,7 +88,7 @@ process EXTRACT_SINGLETONS {
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml
-        "!{task.process}":
+        "!{task.process} (!{base})":
             flash: $(flash --version | head -n 1 | awk 'NF>1{print $NF}')
         END_VERSIONS
         '''

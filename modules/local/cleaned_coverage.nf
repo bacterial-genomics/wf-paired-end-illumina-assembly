@@ -41,7 +41,7 @@ process CLEANED_COVERAGE {
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml
-        "!{task.process}":
+        "!{task.process} (!{base})":
             bedtools: $(bedtools --version | awk 'NF>1{print $NF}')
         END_VERSIONS
         '''

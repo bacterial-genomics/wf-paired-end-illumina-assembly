@@ -40,7 +40,7 @@ process INFILE_HANDLING {
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml
-        "!{task.process}":
+        "!{task.process}(!{basename})":
             ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
         END_VERSIONS
         '''

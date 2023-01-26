@@ -70,7 +70,7 @@ process REMOVE_PHIX {
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml
-        "!{task.process}":
+        "!{task.process} (!{base})":
             bbduk: $(bbduk.sh --version 2>&1 | head -n 2 | tail -1 | awk 'NF>1{print $NF}')
         END_VERSIONS
         '''

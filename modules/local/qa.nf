@@ -60,7 +60,7 @@ process QA {
         done
 
         # Get process version
-        echo -e "\"!{task.process}\":" > versions.yml
+        echo -e '"!{task.process} (!{base})":' > versions.yml
         echo -e "    quast: $(quast.py --version | awk 'NF>1{print $NF}')" >> versions.yml
         '''
 }

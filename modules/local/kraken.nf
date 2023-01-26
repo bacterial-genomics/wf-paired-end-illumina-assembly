@@ -54,7 +54,7 @@ process KRAKEN_ONE {
         fi
 
         # Get process version
-        echo -e "\"!{task.process}\":" > versions.yml
+        echo -e '"!{task.process} (!{base})":' > versions.yml
         echo -e "    kraken: $(kraken --version | head -n 1 | awk 'NF>1{print $NF}')" >> versions.yml
         '''
 }
@@ -114,7 +114,7 @@ process KRAKEN_TWO {
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml
-        "!{task.process}":
+        "!{task.process} (!{base})":
             kraken2: $(kraken2 --version | head -n 1 | awk 'NF>1{print $NF}')
         END_VERSIONS
         '''

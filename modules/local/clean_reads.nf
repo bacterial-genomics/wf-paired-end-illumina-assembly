@@ -90,7 +90,7 @@ process CLEAN_READS {
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml
-        "!{task.process}":
+        "!{task.process} (!{base})":
             bwa: $(bwa 2>&1 | head -n 3 | tail -1 | awk 'NF>1{print $NF}')
             samtools: $(samtools --version | head -n 1 | awk 'NF>1{print $NF}')
             pilon: $(pilon --version | cut -d ' ' -f 3)

@@ -52,7 +52,7 @@ process GENOME_COVERAGE {
         done < <(grep -v 'Total length' !{summary_assemblies})
 
         cat <<-END_VERSIONS > versions.yml
-        "!{task.process}":
+        "!{task.process} (!{base})":
             ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
         END_VERSIONS
         '''
