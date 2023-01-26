@@ -54,12 +54,6 @@ check_if_previous_nextflow_run() {
   # $1 = file path
   # $2 = file to search for
 
-  # Color output
-  GREEN='\033[0;32m'
-  YELLOW='\033[0;33m'
-  RED='\033[0;31m'
-  RESET='\033[0m'
-
   if [ -f $(find ${1} -name ${2} | grep -q '.') ]; then
     echo -e "\n${YELLOW}Previous Nextflow run found.${RESET}"
     read -p "It is possible that data will be overwritten. Do you want to continue? (enter YES or NO): " ANSWER
@@ -200,8 +194,7 @@ if [[ ${#found_files[@]} -ge 2 ]]; then
   declare -A counter
 
   # Loop over find command for fastq.gz files
-  for line in "${found_files[@]}";
-  do
+  for line in "${found_files[@]}"; do
     base=$(basename ${line} | sed -r 's/(_R).*$//') # Cut filename at 'R' or else x_ and x1_ will show submitted
     clean_base=$(echo $base | sed 's/[-._]*$//') # Remove trailing separators to display later
     count=$(find ${IN} -name "${base}*" | wc -l)
