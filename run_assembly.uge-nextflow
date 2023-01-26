@@ -128,6 +128,9 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 RESET='\033[0m'
 
+# Get LAB_HOME or custom tmp/cache variables from .bashrc
+source ${HOME}/.bashrc
+
 # Check if needed Singularity variables are set. If not, try to add them
 if [ -z "${SINGULARITY_BASE}" ]; then
   echo -e "SINGULARITY_BASE missing from bash shell configuration."
@@ -143,9 +146,6 @@ fi
 # Set up tmp and cache directories for Singularity
 mkdir -p ${HOME}/tmp && export TMPDIR=${HOME}/tmp
 mkdir -pv $SINGULARITY_TMPDIR $SINGULARITY_CACHEDIR || true
-
-# Get LAB_HOME or custom tmp/cache variables from .bashrc
-source ${HOME}/.bashrc
 
 # Check if input/output is a windows path and replace
 if [[ ${IN} == *":\\"* ]]; then
