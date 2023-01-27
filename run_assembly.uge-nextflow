@@ -116,6 +116,14 @@ else
 fi
 
 # I/O handling
+if [[ $1 =~ .+[[:space:]].+ ]]; then
+  echo "ERROR: whitespace in $1 path unsupported" >&2
+  exit 1
+fi
+if [[ $2 =~ .+[[:space:]].+ ]]; then
+  echo "ERROR: whitespace in $2 path unsupported" >&2
+  exit 1
+fi
 IN=$(readlink -f "$1")
 if [[ -z "$2" ]]; then
   OUT="${PWD}"
@@ -130,6 +138,10 @@ RESET='\033[0m'
 
 # Get LAB_HOME or custom tmp/cache variables from .bashrc
 source ${HOME}/.bashrc
+if [[ -z "$LAB_HOME" ]]; then
+  echo 'ERROR: $LAB_HOME not set' >&2
+  exit 1
+fi
 
 # Check if needed Singularity variables are set. If not, try to add them
 if [ -z "${SINGULARITY_BASE}" ]; then
@@ -147,46 +159,76 @@ fi
 mkdir -p ${HOME}/tmp && export TMPDIR=${HOME}/tmp
 mkdir -pv $SINGULARITY_TMPDIR $SINGULARITY_CACHEDIR || true
 
-# Check if input/output is a windows path and replace
-if [[ ${IN} == *":\\"* ]]; then
-  echo "Please replace ${IN%:}:\ with a linux-based path."
-  echo "Exiting..."
-  exit 1
-elif [[ ${OUT} == *":\\"* ]]; then
-  echo "Please replace ${OUT%:}:\ with a linux-based path."
-  echo "Exiting..."
-  exit 1
+# If Windows-style mount point (e.g., "Z:\Streptobacillus\Raw_FQs") given as a
+#  path, check both user's home, lab home, and group as possible mount areas
+#  to determine if files exist in 1 but not the others.
+if [[ ${IN} =~ ^[A-Z]\:\\.+ ]]; then
+  path_slashes_replaced="$(echo "${IN:3}" | sed 's/\\/\//g')"
+  user_home="${HOME}"/"${path_slashes_replaced}"
+  user_group_main="/scicomp/${path_slashes_replaced}"
+  user_group_branch="/scicomp/groups/OID/NCEZID/DHCPP/BSPB/${path_slashes_replaced}"
+  lab_home="${LAB_HOME}"/"${path_slashes_replaced}"
+  paths=(
+    "${user_home}"
+    "${user_group_main}"
+    "${user_group_branch}"
+    "${lab_home}"
+    )
+  for path in "${paths[@]}"; do
+    cnt_read_files=$(find "${path}" \
+     -maxdepth 2 \
+     -type f \
+     -readable \
+     -regextype posix-extended \
+     -regex ".+\.(fq|fastq)($|\.gz$)" \
+     2> /dev/null \
+     | wc -l)
+    if [[ ${cnt_read_files} -ge 1 ]]; then
+        echo "${cnt_read_files} FastQ files found in: ${path}"
+        read -p "Use ${path} as Input Directory? (yes|no)" -n 1 -r
+        if [[ $REPLY =~ ^[yY] ]]; then
+          IN="${path}"
+        else
+          exit 0
+        fi
+        break
+    fi
+  done
 fi
 
-# if path starts with z:/, split by each '/' and search for that word appended to /scicomp/groups
-# Cut z:, then grab all folders and see if appending the above works, if not, grab folders with those and test until it is true
-
-# Check if input/output has a .gov path
-if [[ ${IN} == *".gov"* ]]; then
-  echo "Converting path to a linux-based path.."
-  IN=$(echo ${IN} | sed 's/.*gov/\/scicomp/')
-elif [[ ${OUT} == *".gov"* ]]; then
-  echo "Converting path to a linux-based path.."
-  OUT=$(echo ${OUT} | sed 's/.*gov/\/scicomp/')
+# For now, just output into shared LAB_HOME area
+if [[ ${OUT} =~ ^[A-Z]\:\\.+ ]]; then
+  echo "Windows hard mount path detected as Output Directory"
+  proposed_outpath="${LAB_HOME}"/"$(date '+%Y-%b-%d_%a_%H:%M:%S')"
+  read -p "Use ${path} as Input Directory? (yes|no)" -n 1 -r
+  if [[ $REPLY =~ ^[yY] ]]; then
+    OUT="${path}"
+  else
+    echo "Okay, bad autoselection? Re-run with a different specified path"
+    exit 0
+  fi
 fi
 
-# Check if wrong slashes are being used and replace
-if [[ ${IN} == *"\\"* ]]; then
-  IN=$(echo ${IN} | sed 's/\\/\//g')
-  echo "${RED}Please avoid using Windows-based paths."
-  echo "Input is now set to: ${IN} ${RESET}"
-elif [[ ${OUT} == *"\\"* ]]; then
-  OUT=$(echo ${OUT} | sed 's/\\/\//g')
-  echo "${RED}Please avoid using Windows-based paths."
-  echo "Input is now set to: ${OUT} ${RESET}"
+# If Windows-style path from Core Facility given via email
+#  (e.g., "\\...cdc.gov\groups\OID\...BCFB\by-instrument\NovaSeq\")
+#  is given as path, form the Linux path
+if [[ ${IN} =~ ^\\\\.+\.cdc\.gov\\.+\\.+ ]]; then
+  inpath_stripped_hostname="${IN/*.cdc\.gov/\/scicomp}"
+  inpath_dewindowsed="$(echo "${inpath_stripped_hostname}" | sed 's/\\/\//g')"
+  IN="${inpath_dewindowsed}"
 fi
 
 # Check nextflow log dir for trace*.txt file --> means nextflow has been ran before
 if [ -d "${OUT}/log" ]; then
   check_if_previous_nextflow_run "${OUT}/log" "trace*.txt"
-# Else, check for trim_reads dir and *phix.tsv file --> means legacy bash script has been ran before
-elif [ -d "${OUT}/trim_reads" ]; then
-  check_if_previous_nextflow_run "${OUT}/trim_reads" "*phix.tsv"
+# Also check for unsupported behavior combining legacy bash and newer nextflow
+elif [ -d "${OUT}/.log" ] && \
+  [ -f "${OUT}/trim.asm.annot.job_ids.txt" ] && \
+  [ -f "${OUT}/trim.asm.annot.log.txt" ]; then
+  echo "Legacy bash workflow detected in ${OUT}"
+  echo "Combining data from that and this nextflow pipeline is unsupported."
+  echo "Use a different output path."
+  exit 1
 fi
 
 # Add found files to an array
@@ -221,7 +263,7 @@ else
   exit 1
 fi
 
-# Prompt user if >10 samples
+# Prompt user if >10 samples to prevent accidentally assembling too many
 if [[ ${#submitted[@]} -ge 10 ]]; then
   echo -e "${RED}WARNING:${RESET} ${#submitted[@]} samples have been identified. Identified samples:\n${RESET}"
   echo -e "${submitted[@]}\n"
@@ -231,11 +273,11 @@ if [[ ${#submitted[@]} -ge 10 ]]; then
   if [[ "${ANSWER}" = "Y" || "${ANSWER}" = "YES" || "${ANWER}" = "y" || "${ANSWER}" = "yes" ]]; then
     echo -e "Continuing to submit ${#submitted[@]} samples..\n"
   elif [[ "${ANSWER}" = "N" || "${ANSWER}" = "NO" || "${ANWER}" = "n" || "${ANSWER}" = "no" ]]; then
-    echo -e "Submission is being cancelled.."
+    echo -e "Submission cancelled"
     exit 1
   else
     # Error catching
-    echo -e "Invalid input. Valid inputs are: 'YES, yes, Y, y, NO, no, N, n."
+    echo -e "Invalid input. Valid inputs are: YES, yes, Y, y, NO, no, N, n."
     echo -e "Submission is being cancelled.."
     exit 1
   fi
@@ -272,7 +314,6 @@ fi
 # Display basename of FastQ files that weren't submitted
 if [[ ${#not_submitted[@]} -ge 1 ]]; then
   echo -e "${RED}Cannot generate assemblies for:"
-
   for elem in "${not_submitted[@]}"; do
     echo "${elem}"
   done
