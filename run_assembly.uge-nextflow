@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 #$ -cwd
 
-# This script is to run the wf-paired-end-illumina-assembly workflow on the UGE cluster
+# This wrapper script manages job submission of
+#  the wf-paired-end-illumina-assembly workflow
+#  to the UGE scheduler.
+SCRIPT_NAME="$(basename ${0#_} .uge-nextflow)"
 
 # Define script usage
 usage() {
@@ -29,76 +32,42 @@ Optional:
   "
 }
 
-# Check if user has access to scratch area for Singularity files
-check_if_user_has_access() {
-  DESTINATION=${1} # full path to check
-  VAR_NAME=${2} # variable name that is used (ex. SINGULARITY_BASE)
-  EXPORT=false # if true, add export to variable
-  if [ -r "${DESTINATION}" ]; then
-    echo -e "Adding ${VAR_NAME} to user's bash configuration file..\n"
-    if [ "${EXPORT}" = true ]; then
-      echo -e "export ${VAR_NAME}=${DESTINATION}" >> ${HOME}/.bashrc
-    else
-      echo -e "${VAR_NAME}=${DESTINATION}" >> ${HOME}/.bashrc
-    fi
+# Allow user to re-specify the output path
+prompt_new_outpath() {
+  read -p "Would you like to use a different output path? (yes|no)" -n 1 -r
+  if [[ $REPLY =~ ^[yY] ]]; then
+    read -p "Enter new Output path:" _new_outpath
+    OUT="$(readlink -f ${_new_outpath})"
   else
-    echo -e "${RED}User does not have access to ${DESTINATION} for ${VAR_NAME}."
-    echo -e "Workflow cannot continue. Exiting..${RESET}\n"
-    exit 1
+    echo -e "You can re-run this workflow with a new output path."
+    echo -e "${RED}Submission was cancelled.${RESET}"
+    exit 0
   fi
 }
 
-# Check if there is a possibility data will be overwritten in INPUT
-check_if_previous_nextflow_run() {
+# Check if there is a possibility data will be overwritten
+prompt_if_previous_nextflow_run() {
   # Parameters:
-  # $1 = file path
-  # $2 = file to search for
-
-  if [ -f $(find ${1} -name ${2} | grep -q '.') ]; then
-    echo -e "\n${YELLOW}Previous Nextflow run found.${RESET}"
-    read -p "It is possible that data will be overwritten. Do you want to continue? (enter YES or NO): " ANSWER
-
-    # Continue submission if user wants to possibly overwrite data
-    if [[ "${ANSWER}" = "Y" || "${ANSWER}" = "YES" || "${ANSWER}" = "y" || "${ANSWER}" = "yes" ]]; then
-      echo -e "${GREEN}Data in ${1} will be overwritten. Continuing to submit samples..\n${RESET}"
-
-    # If user doesn't want to continue, see if they want to provide a different output path
-    elif [[ "${ANSWER}" = "N" || "${ANSWER}" = "NO" || "${ANSWER}" = "n" || "${ANSWER}" = "no" ]]; then
-      read -p "Would you like to use a DIFFERENT OUTPUT path? (enter YES or NO): " PROCEED
-      if [[ "${PROCEED}" = "Y" || "${PROCEED}" = "YES" || "${PROCEED}" = "y" || "${PROCEED}" = "yes" ]]; then
-        read -p "Enter NEW OUTPUT path: " NEW_OUTPUT
-        OUT=${NEW_OUTPUT}
-
-        # Check new output. If trace*.txt is found, exit and ask for resubmission
-        if [ -d "${OUT}/log" ] && [ -f $(find ${OUT}/log -name ${2} | grep -q '.') ]; then
-          echo -e "${RED}Previous Nextflow run found."
-          echo -e "Multiple attempts have been made for an empty output directory. Please locate and use an empty directory."
-          echo -e "Submission is being cancelled..${RESET}"
-          exit 1
-        fi
-        
-      # If user doesn't want to provide a new path, exit
-      elif [[ "${ANSWER}" = "N" || "${ANSWER}" = "NO" || "${ANSWER}" = "n" || "${ANSWER}" = "no" ]]; then
-        echo -e "${RED}Submission is being cancelled..${RESET}"
-        exit 1
-      
-      # Exit in case user inputs anything besides Yes, yes, Y, y, NO, no, N, n
-      else
-        echo -e "${RED}Invalid input. Valid inputs are: 'YES, yes, Y, y, NO, no, N, n.'."
-        echo -e "Submission is being cancelled..${RESET}"
-        exit 1
-      fi
-
-    # Exit in case user inputs anything besides Yes, yes, Y, y, NO, no, N, n
+  #  $1 = file path
+  #  $2 = filename (no path) to search for
+  if [ -f "$(find "${1}" -name "${2}" | grep -q '.')" ]; then
+    echo -e "\nThis workflow has been ran in output path before."
+    echo -e "Processing the same sample names will overwrite older data."
+    echo -e "If you have jobs in queue this could be confusing.\n"
+    read -p "Do you want to continue? (yes|no)" -n 1 -r
+    if [[ $REPLY =~ ^[yY] ]]; then
+      # Continue submission if user wants to possibly overwrite data
+      echo -e "${GREEN}Data in ${1} will be overwritten."
+      echo -e "Continuing to submit samples...\n${RESET}"
     else
-      echo -e "${RED}Invalid input. Valid inputs are: YES, yes, Y, y, NO, no, N, n'."
-      echo -e "Submission is being cancelled..${RESET}"
-      exit 1
+      # If user doesn't want to continue, ask for a different output path
+      prompt_new_outpath
+      prompt_if_previous_nextflow_run "${OUT}" "nextflow_log.${SCRIPT_NAME}.txt"
     fi
   fi
 }
 
-# Check requirements
+# Check argument requirements
 [[ $1 == "--help" || $1 == "-h" ]] && { usage; exit 0; }
 if [[ $# -lt 1  || $# -gt 2 ]]; then
   echo "ERROR: improper number ("$#") of arguments provided" >&2
@@ -136,28 +105,45 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 RESET='\033[0m'
 
-# Get LAB_HOME or custom tmp/cache variables from .bashrc
+# Get LAB_HOME or custom tmp/cache variables from user's ~/.bashrc,
+#  while still enabling fancy people to override these from their
+#  current working environment too.
 source ${HOME}/.bashrc
 if [[ -z "$LAB_HOME" ]]; then
   echo 'ERROR: $LAB_HOME not set' >&2
   exit 1
 fi
 
-# Check if needed Singularity variables are set. If not, try to add them
-if [ -z "${SINGULARITY_BASE}" ]; then
-  echo -e "SINGULARITY_BASE missing from bash shell configuration."
-  check_if_user_has_access "/scicomp/scratch/$USER" "SINGULARITY_BASE" false
-elif [ -z "${SINGULARITY_TMPDIR}" ]; then
-  echo -e "SINGULARITY_TMPDIR missing from bash shell configuration."
-  check_if_user_has_access "$SINGULARITY_BASE/singularity.tmp" "SINGULARITY_TMPDIR" true
-elif [ -z "${SINGULARITY_CACHEDIR}" ]; then
-  echo -e "SINGULARITY_CACHEDIR missing from bash shell configuration."
-  check_if_user_has_access "$SINGULARITY_BASE/singularity.cache" "SINGULARITY_CACHEDIR" true
+# Check if Singularity environment variables are set,
+#  and confirm the user has write access.
+#  We expect these 3 paths to already exist.
+if [[ -z ${SINGULARITY_BASE} ]]; then
+  echo 'ERROR: $SINGULARITY_BASE not set' >&2
+  exit 1
+else
+  if [[ ! -d ${SINGULARITY_BASE} ]] || [[ ! -w ${SINGULARITY_BASE} ]]; then
+    echo "ERROR: \$SINGULARITY_BASE $SINGULARITY_BASE not writeable for $USER" >&2
+    exit 1
+  fi
 fi
-
-# Set up tmp and cache directories for Singularity
-mkdir -p ${HOME}/tmp && export TMPDIR=${HOME}/tmp
-mkdir -pv $SINGULARITY_TMPDIR $SINGULARITY_CACHEDIR || true
+if [[ -z ${SINGULARITY_CACHEDIR} ]]; then
+  echo 'ERROR: $SINGULARITY_CACHEDIR not set' >&2
+  exit 1
+else
+  if [[ ! -d ${SINGULARITY_CACHEDIR} ]] || [[ ! -w ${SINGULARITY_CACHEDIR} ]]; then
+    echo "ERROR: \$SINGULARITY_CACHEDIR $SINGULARITY_CACHEDIR not writeable for $USER" >&2
+    exit 1
+  fi
+fi
+if [[ -z ${SINGULARITY_TMPDIR} ]]; then
+  echo 'ERROR: $SINGULARITY_TMPDIR not set' >&2
+  exit 1
+else
+  if [[ ! -d ${SINGULARITY_TMPDIR} ]] || [[ ! -w ${SINGULARITY_TMPDIR} ]]; then
+    echo "ERROR: \$SINGULARITY_TMPDIR $SINGULARITY_TMPDIR not writeable for $USER" >&2
+    exit 1
+  fi
+fi
 
 # If Windows-style mount point (e.g., "Z:\Streptobacillus\Raw_FQs") given as a
 #  path, check both user's home, lab home, and group as possible mount areas
@@ -218,11 +204,14 @@ if [[ ${IN} =~ ^\\\\.+\.cdc\.gov\\.+\\.+ ]]; then
   IN="${inpath_dewindowsed}"
 fi
 
-# Check nextflow log dir for trace*.txt file --> means nextflow has been ran before
-if [ -d "${OUT}/log" ]; then
-  check_if_previous_nextflow_run "${OUT}/log" "trace*.txt"
+# Check for specific nextflow logfile for this workflow, which
+#  means this nextflow workflow has been ran before in the specified outpath.
+if [ -d "${OUT}/log" ] && \
+  [ -f "${OUT}/nextflow_log.${SCRIPT_NAME}.txt" ]; then
+  prompt_if_previous_nextflow_run "${OUT}" "nextflow_log.${SCRIPT_NAME}.txt"
+fi
 # Also check for unsupported behavior combining legacy bash and newer nextflow
-elif [ -d "${OUT}/.log" ] && \
+if [ -d "${OUT}/.log" ] && \
   [ -f "${OUT}/trim.asm.annot.job_ids.txt" ] && \
   [ -f "${OUT}/trim.asm.annot.log.txt" ]; then
   echo "Legacy bash workflow detected in ${OUT}"
@@ -232,7 +221,7 @@ elif [ -d "${OUT}/.log" ] && \
 fi
 
 # Add found files to an array
-found_files=( $(find ${IN} -name "*fastq.gz" -o -name "*fq.gz") )
+found_files=( $(find ${IN} -name "*.fastq.gz" -o -name "*.fq.gz") )
 
 # Check to see if FastQ files are present in IN
 if [[ ${#found_files[@]} -ge 2 ]]; then
@@ -265,21 +254,16 @@ fi
 
 # Prompt user if >10 samples to prevent accidentally assembling too many
 if [[ ${#submitted[@]} -ge 10 ]]; then
-  echo -e "${RED}WARNING:${RESET} ${#submitted[@]} samples have been identified. Identified samples:\n${RESET}"
+  echo -e "${RED}WARNING:${RESET} ${#submitted[@]} samples have been identified:\n${RESET}"
   echo -e "${submitted[@]}\n"
   
-  # Ask if user wants to submit all the samples
-  read -p "Do you want to continue submitting ${#submitted[@]} samples? (enter YES or NO): " ANSWER
-  if [[ "${ANSWER}" = "Y" || "${ANSWER}" = "YES" || "${ANWER}" = "y" || "${ANSWER}" = "yes" ]]; then
-    echo -e "Continuing to submit ${#submitted[@]} samples..\n"
-  elif [[ "${ANSWER}" = "N" || "${ANSWER}" = "NO" || "${ANWER}" = "n" || "${ANSWER}" = "no" ]]; then
-    echo -e "Submission cancelled"
-    exit 1
+  # Prompt user to verify submission of large sample set
+  read -p "Do you want to continue submitting ${#submitted[@]} samples? (yes|no)" -n 1 -r
+  if [[ $REPLY =~ ^[yY] ]]; then
+    echo -e "Continuing to submit ${#submitted[@]} samples...\n"
   else
-    # Error catching
-    echo -e "Invalid input. Valid inputs are: YES, yes, Y, y, NO, no, N, n."
-    echo -e "Submission is being cancelled.."
-    exit 1
+    echo -e "Submission cancelled"
+    exit 0
   fi
 fi
 
