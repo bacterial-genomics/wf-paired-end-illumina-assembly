@@ -27,24 +27,23 @@ process BARRNAP {
 
         if [[ ! -f "!{extracted_rna}" ]] || [[ ! -s "!{extracted_rna}" ]]; then
             msg "INFO: absent 16S rRNA gene annotation in !{annotation}" >&2
-            msg 'Running barrnapp' >&2
-            barrnap !{base_fna} > !{base}.gff
+            msg 'Running barrnap' >&2
+            barrnap !{base_fna} | grep "Name=16S_rRNA;product=16S" > !{base}.gff
+            if [[ $(grep -c "Name=16S_rRNA;product=16S" "!{base}.gff") -eq 0 ]]; then
+                msg "INFO: barrnap was unable to locate a 16S rRNA gene sequence in !{base_fna}" >&2
+                exit 2
+            fi
             bedtools getfasta \
                 -fi !{base_fna} \
                 -bed !{base}.gff \
                 -fo 16S.!{base}.fa
-
-            if [[ $(grep -c '>' "!{extracted_rna}") -eq 0 ]]; then
-                msg "INFO: RNAmmer was unable to locate a 16S rRNA gene sequence in !{base_fna}" >&2
-                rm "16S.!{base}.fa"
-                exit 2
-            fi
         fi
 
         verify_file_minimum_size "16S.!{base}.fa" '16S extracted FastA file' '500c' '100'
 
-        awk -v awk_var="!{base}" '/^>/{print ">" awk_var "_" ++i; next} {print}' \
-        16S.!{base}.fa > !{base}.fa-renamed
+        awk -v awk_var="!{base}" \
+         '/^>/{print ">" awk_var "_" ++i; next} {print}' \
+         16S.!{base}.fa > !{base}.fa-renamed
         rm -f 16S.!{base}.fa
         mv -f !{base}.fa-renamed 16S.!{base}.fa
 
