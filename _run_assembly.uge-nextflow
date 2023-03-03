@@ -1,21 +1,20 @@
 #!/bin/bash -l
 
-
 SCRIPT_NAME="$(basename ${0#_} .uge-nextflow)"
 
 module load nextflow
 nextflow \
   -log ${OUT}/nextflow_log.${SCRIPT_NAME}.txt \
   run \
+  ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
   -ansi-log false \
   -profile singularity,sge \
   -resume \
-  ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
   --outpath ${OUT} \
   --inpath ${IN} \
-  --kraken1_db /scicomp/reference/kraken/OLD/1.0.0/kraken_db \
-  --kraken2_db /scicomp/reference/kraken/OLD/2.0.0 \
-  --blast_db /scicomp/reference/ncbi-blast/blast/db \
+  --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
+  --kraken2_db /scicomp/reference-pure/kraken/OLD/2.0.0 \
+  --blast_db /scicomp/reference-pure/ncbi-blast/blast/db \
   -w /scicomp/scratch/${USER}/work \
   -N ${USER}@cdc.gov
 
@@ -25,16 +24,16 @@ run_name=$(grep "Launching" ${OUT}/log/ASM_*.o* | cut -d '[' -f 2 | cut -d ']' -
 
 # Read each line from nextflow log, find info, and add to errors.tsv
 while read -r line; do
-    sample_name=$(grep "nf-" ${line}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
-    process=$(grep "nf-" ${line}/.command.run | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
-    error=$(tail -n 1 ${line}/.command.err | sed -e 's/\[[^][]*\]//g')
+  sample_name=$(grep "nf-" ${line}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
+  process=$(grep "nf-" ${line}/.command.run | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
+  error=$(tail -n 1 ${line}/.command.err | sed -e 's/\[[^][]*\]//g')
 
-    # If process for sample retried and succeeded, ignore
-    if [ $(ls ${OUT}/log/process_logs/${sample_name}.${process}* | wc -l) -ge 1 ]; then
-      continue
-    else
-      echo -e "${sample_name}\t${process}\t${error}\t${line}" >> ${OUT}/log/errors.tsv
-    fi
+  # If process for sample retried and succeeded, ignore
+  if [ $(ls ${OUT}/log/process_logs/${sample_name}.${process}* | wc -l) -ge 1 ]; then
+    continue
+  else
+    echo -e "${sample_name}\t${process}\t${error}\t${line}" >> ${OUT}/log/errors.tsv
+  fi
 done < <(nextflow log ${run_name} -filter 'status == "FAILED"')
 
 # If errors.tsv found, add column headers
