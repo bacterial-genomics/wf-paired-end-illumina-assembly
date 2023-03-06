@@ -1,7 +1,7 @@
 # Assembly Paired End Illumina Workflow
 
 
-![workflow](docs/images/simplified_workflow_v1.1.0.png)
+![workflow](images/simplified_workflow_v1.1.0.png)
 
 *A schematic of the steps in the workflow.*
 
@@ -11,44 +11,20 @@
 * [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity >=3.8.0`](https://www.sylabs.io/guides/3.0/user-guide/)
 
 
-## Install on our HPC
+## Install Worflow Locally
 ```
-git clone https://github.com/gregorysprenger/wf-paired-end-illumina-assembly.git $LAB_HOME/workflows
-```
-
-## Setup Singularity environment variables - For Aspen Cluster
-```
-# Add to $HOME/.bashrc
-SINGULARITY_BASE=/scicomp/scratch/$USER
-
-export SINGULARITY_TMPDIR=$SINGULARITY_BASE/singularity.tmp
-
-export SINGULARITY_CACHEDIR=$SINGULARITY_BASE/singularity.cache
-
-export NXF_SINGULARITY_CACHEDIR=$SINGULARITY_BASE/singularity.cache
-
-mkdir -pv $SINGULARITY_TMPDIR $SINGULARITY_CACHEDIR
+git clone https://github.com/gregorysprenger/wf-paired-end-illumina-assembly.git
 ```
 
-Reload .bashrc
-```
-source ~/.bashrc
-```
 
 # Run Workflow
 Before running workflow on new data, the workflow should be ran on the built-in test data to make sure everything is working properly. It will also download all dependencies to make subsequent runs much faster.
 
 ```
-cd $LAB_HOME/workflows/wf-paired-end-illumina-assembly
-ml nextflow
+cd wf-paired-end-illumina-assembly/
+
 nextflow run main.nf \
  -profile singularity,test
-```
-
-To minimize typing all of the parameters above, a bash script was created for UGE HPCs. It can take PE FastQ files from selected directory OR if FastQ files not found in that directory, it will look in subdirectories for FastQ files. To run:
-
-```
-run_assembly.uge-nextflow <INPUT_DIR>
 ```
 
 
@@ -59,6 +35,17 @@ nextflow run main.nf \
  -profile singularity \
  --inpath assets/test_data \
  --outpath results
+```
+
+When running locally, `--max_cpus` and `--max_memory` may need to be specified. Below, max cpus is set to 4 and max memory is set to 16 (for 16GB).
+
+```
+nextflow run main.nf \
+ -profile singularity \
+ --inpath assets/test_data \
+ --outpath results \
+ --max_cpus 4 \
+ --max_memory 16
 ```
 
 Help menu of all options:

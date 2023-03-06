@@ -10,7 +10,7 @@
 Run the built-in test set to confirm all parts are working as-expected. It will also download all dependencies to make subsequent runs much faster.
 ```
 nextflow run \
- chrisgulvik/wf-paired-end-illumina-assembly \
+ wf-paired-end-illumina-assembly \
  -r v1.1.0 \
  -profile YOURPROFILE,test
 ```
@@ -19,7 +19,7 @@ nextflow run \
 Example command on FastQs in "new-fastq-dir" data with singularity:
 ```
 nextflow run \
- chrisgulvik/wf-paired-end-illumina-assembly \
+ wf-paired-end-illumina-assembly/ \
  -r v1.1.0 \
  -profile singularity
  --inpath new-fastq-dir \
@@ -49,7 +49,7 @@ This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed c
 
 ## Usage
 ```
-nextflow run chrisgulvik/wf-paired-end-illumina-assembly -profile <docker|singularity> --inpath <input directory> --outpath <directory for results>
+nextflow run wf-paired-end-illumina-assembly -profile <docker|singularity> --inpath <input directory> --outpath <directory for results>
 ```
 
 ## Parameters
@@ -76,7 +76,7 @@ These are the most pertinent options for this workflow:
 View help menu of all workflow options:
 ```
 nextflow run \
- chrisgulvik/wf-paired-end-illumina-assembly \
+ wf-paired-end-illumina-assembly \
  -r v1.1.0 \
  --help
 ```
@@ -165,4 +165,4 @@ The complete directed acyclic graph (DAG) this workflow performs is this:
 ## Troubleshooting
 Q: It failed, how do I find out what went wrong?
 
-A: view file contents in the `<outpath>/log` dir
+A: View file contents in the `<outpath>/log` directory.
