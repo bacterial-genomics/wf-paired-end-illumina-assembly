@@ -3,95 +3,80 @@
 
 ![workflow](docs/images/simplified_workflow_v1.1.0.png)
 
-*General schematic of the steps in the workflow*
+*A schematic of the steps in the workflow.*
 
-## Quick Start: Test
 
-Run the built-in test set to confirm all parts are working as-expected. It will also download all dependencies to make subsequent runs much faster.
-```
-nextflow run \
- chrisgulvik/wf-paired-end-illumina-assembly \
- -r v1.1.0 \
- -profile YOURPROFILE,test
-```
-## Quick Start: Run
+## Requirements
+* [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=21.10.3`)
+* [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity >=3.8.0`](https://www.sylabs.io/guides/3.0/user-guide/)
 
-Example command on FastQs in "new-fastq-dir" data with singularity:
+
+## Install on our HPC
 ```
-nextflow run \
- chrisgulvik/wf-paired-end-illumina-assembly \
- -r v1.1.0 \
- -profile singularity
- --inpath new-fastq-dir \
- --outpath my-results
+git clone https://github.com/gregorysprenger/wf-paired-end-illumina-assembly.git $LAB_HOME/workflows
 ```
 
-## Contents
-- [Introduction](#Introduction)
-- [Installation](#Installation)
-- [Output File Structure](#Output-File-Structure)
-- [Parameters](#parameters)
-- [Quick Start](#Quick-Start-Test)
-- [Resource Managers](#Resource-Managers)
-- [Troubleshooting](#Troubleshooting)
-- [Usage](#usage)
-- [Workflow](#Workflow)
-
-## Introduction
-This workflow assembles bacterial isolate genomes from paired-end Illumina FastQ files. Post-assembly contig correction is performed, and a variety of quality assessment processes are recorded throughout the workflow.
-
-This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed cultures) sequenced with whole genome (WGS) or selective whole genome (SWGA) library preparation strategies. It is inappropriate for metagenomics analysis. The data files must be paired read sets (not single ended) and can come from any Illumina sequencing instrument which generates a FastQ file format (e.g., iSeq, HiSeq, MiSeq, NextSeq, NovaSeq). The read set files can be obtained from an external source, local storage device, or sequencing instrument. Other sequencing manufacturers such as Ion Torrent, PacBio, Roche 454, and Nanopore generate data files that cannot be directly used with this procedure.
-
-## Installation
-- [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation) `>=21.10.3`
-- [Docker](https://docs.docker.com/engine/installation/) or [Singularity](https://www.sylabs.io/guides/3.0/user-guide/) `>=3.8.0`
-- [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) is currently unsupported
-
-## Usage
+## Setup Singularity environment variables - For Aspen Cluster
 ```
-nextflow run chrisgulvik/wf-paired-end-illumina-assembly -profile <docker|singularity> --inpath <input directory> --outpath <directory for results>
+# Add to $HOME/.bashrc
+SINGULARITY_BASE=/scicomp/scratch/$USER
+
+export SINGULARITY_TMPDIR=$SINGULARITY_BASE/singularity.tmp
+
+export SINGULARITY_CACHEDIR=$SINGULARITY_BASE/singularity.cache
+
+export NXF_SINGULARITY_CACHEDIR=$SINGULARITY_BASE/singularity.cache
+
+mkdir -pv $SINGULARITY_TMPDIR $SINGULARITY_CACHEDIR
 ```
 
-## Parameters
-Note the "`--`" long name arguments (e.g., `--help`, `--inpath`, `--outpath`) are generally specific to this workflow's options, whereas "`-`" long name options (e.g., `-help`, `-latest`, `-profile`) are general nextflow options.
-
-These are the most pertinent options for this workflow:
+Reload .bashrc
 ```
-  --inpath             Path to input data directory containing FastQ assemblies. Recognized extensions are:  fastq.gz, fq.gz.
-
-  --outpath            The output directory where the results will be saved.
-
-  --kraken1_db         Specify path to database for Kraken1. Default database is Mini Kraken.
-
-  --kraken2_db         Specify path to database for Kraken2. Default database is Mini Kraken.
-
-  --blast_db           Specify path to 16S ribosomal database for BLAST. Default database is NCBI's 16S ribosomal database.
-
-  -profile singularity Use Singularity images to run the workflow. Will pull and convert Docker images from Dockerhub if not locally available.
-
-  -profile docker      Use Docker images to run the workflow. Will pull images from Dockerhub if not locally available.
-
+source ~/.bashrc
 ```
 
-View help menu of all workflow options:
+# Run Workflow
+Before running workflow on new data, the workflow should be ran on the built-in test data to make sure everything is working properly. It will also download all dependencies to make subsequent runs much faster.
+
 ```
-nextflow run \
- chrisgulvik/wf-paired-end-illumina-assembly \
- -r v1.1.0 \
- --help
+cd $LAB_HOME/workflows/wf-paired-end-illumina-assembly
+ml nextflow
+nextflow run main.nf \
+ -profile singularity,test
 ```
 
-## Resource Managers
-The most well-tested and supported is a Univa Grid Engine (UGE) job scheduler with Singularity for dependency handling.
+To minimize typing all of the parameters above, a bash script was created for UGE HPCs. It can take PE FastQ files from selected directory OR if FastQ files not found in that directory, it will look in subdirectories for FastQ files. To run:
 
-1. UGE/SGE 
-    - Additional tips for UGE processing are [here](docs/HPC-UGE-scheduler.md).
-1. no scheduler
-
-    - It has also been confirmed to work on desktop and laptop environments without a job scheduler using Docker with more tips [here](docs/local-device.md).
+```
+run_assembly.uge-nextflow <INPUT_DIR>
+```
 
 
-## Output File Structure
+Example data are included in assets/test_data directory.
+
+```
+nextflow run main.nf \
+ -profile singularity \
+ --inpath assets/test_data \
+ --outpath results
+```
+
+Help menu of all options:
+
+```
+nextflow run main.nf --help
+```
+
+Test data was generated by taking top 1 million lines (=250k reads) of SRA data SRR16343585. (Note: This requires SRAtoolkit)
+
+```
+fasterq-dump SRR16343585
+head -1000000 SRR16343585_1.fastq > test_R1.fastq
+head -1000000 SRR16343585_2.fastq > test_R2.fastq
+pigz test_R{1,2}.fastq
+```
+
+# Output File Structure
 | Output Directory | Filename | Explanation |
 | ---------------- | ---------------- | ---------------- |
 | **annot** | | **Annotation files** |
@@ -157,12 +142,3 @@ The most well-tested and supported is a Univa Grid Engine (UGE) job scheduler wi
 | | \<SampleName\>.SSU_Extracted_File.tsv | SSU Extracted File Check |
 | | \<SampleName\>.16S_BLASTn_Output_File.tsv | 16S BLASTn Output File Check |
 | | \<SampleName\>.Filtered_16S_BLASTn_File.tsv | Filtered 16S BLASTn File Check |
-
-## Workflow
-The complete directed acyclic graph (DAG) this workflow performs is this:
-![full-workflow](docs/images/workflow_dag_v1.1.0.png)
-
-## Troubleshooting
-Q: It failed, how do I find out what went wrong?
-
-A: view file contents in the `<outpath>/log` dir

@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 #$ -cwd
 
-# This script is to run the wf-paired-end-illumina-assembly workflow on the UGE cluster
+# This wrapper script manages job submission of
+#  the wf-paired-end-illumina-assembly workflow
+#  to the UGE scheduler.
+SCRIPT_NAME="$(basename ${0#_} .uge-nextflow)"
 
 # Define script usage
-
 usage() {
   echo "
 Usage: ${0##*/} InputDirectory [OutputDirectory] [-h|--help]
@@ -14,31 +16,96 @@ Required:
   
   Sample names are extracted from the first underscore of read files. Hyphens,
   periods, and commas are automatically discarded from the name to avoid errors.
-  WARNING: If you have HiSeq data where samples are ran on more than one lane, 
+  WARNING: If you have HiSeq data where samples are ran on more than one lane,
   be sure to concatenate them.
+
+  File searching goes 2 levels deep to find .fq and .fastq file pairs,
+  optionally gunzip compressed.
+
   Sample pairing of sister reads is done by consecutively using filenames sorted
   with \`ls\`, which flexibly allows for naming other than traditional R1 and R2.
   Verify that files properly will pair by checking the output order of \`ls\`
   within the <InputDirectory>.
+
 Optional:
   -h | --help        Show this help message and exit.
   <OutputDirectory>  Location for the output files, which
                      includes job logfiles. Output files
                      will be overwritten if already present.
-                     Default: current working directory.     
-  
+                     Default: current working directory.
   "
 }
 
-# Check requirements
+# Color output for success, warnings, and errors to catch user's attention
+GREEN_TXT='\033[0;32m'
+RED_TXT='\033[0;31m'
+YELLOW_TXT='\033[0;93m'
+RED_BG='\033[41m'
+COLOR_OFF='\033[0m'
+
+# Allow user to re-specify the output path
+prompt_new_outpath() {
+  read -p "${RED_BG}Would you like to use a different output path? (yes|no) ${COLOR_OFF}" -n 1 -r
+  if [[ $REPLY =~ ^[yY] ]]; then
+    read -p "${RED_BG}Enter new Output path: ${COLOR_OFF}" _new_outpath
+    OUT="$(readlink -f ${_new_outpath})"
+  else
+    echo -e "${RED_TXT}You can re-run this workflow with a new output path."
+    echo -e "Submission was cancelled. ${COLOR_OFF}"
+    exit 0
+  fi
+}
+
+# Check if there is a possibility data will be overwritten
+prompt_if_previous_nextflow_run() {
+  # Parameters:
+  #  $1 = file path
+  #  $2 = filename (no path) to search for
+  if [ -f "$(find "${1}" -name "${2}" | grep -q '.')" ]; then
+    echo -e "${YELLOW_TXT}\nThis workflow has been ran in output path before."
+    echo -e "Processing the same sample names will overwrite older data."
+    echo -e "If you have jobs in queue this could be confusing.\n ${COLOR_OFF}"
+    read -p "${RED_BG}Do you want to continue? (yes|no) ${COLOR_OFF}" -n 1 -r
+    if [[ $REPLY =~ ^[yY] ]]; then
+      # Continue submission if user wants to possibly overwrite data
+      echo -e "${GREEN_TXT}Data in ${1} will be overwritten."
+      echo -e "Continuing to submit samples...\n${COLOR_OFF}"
+    else
+      # If user doesn't want to continue, ask for a different output path
+      prompt_new_outpath
+      prompt_if_previous_nextflow_run "${OUT}" "nextflow_log.${SCRIPT_NAME}.txt"
+    fi
+  fi
+}
+
+# Check argument requirements
 [[ $1 == "--help" || $1 == "-h" ]] && { usage; exit 0; }
 if [[ $# -lt 1  || $# -gt 2 ]]; then
-  echo "ERROR: improper number ("$#") of arguments provided" >&2
+  echo -e "${RED_TXT}ERROR:${COLOR_OFF} improper number ("$#") of arguments provided" >&2
   usage
   exit 1
 fi
 
+# Confirm we are on a host that can submit jobs
+if [ ${HOSTNAME%%.*} == 'biolinux' ] || \
+ [ ${HOSTNAME%%.*} == 'login02' ] || \
+ [ ${HOSTNAME%%.*} == 'rosalind01' ] || \
+ [ $(echo ${HOSTNAME%%.*} | sed 's/[0-9]//g') == 'node' ]; then
+  :
+else
+  echo -e "${RED_TXT}ERROR:${COLOR_OFF} must be on aspen or biolinux" >&2
+  exit 1
+fi
+
 # I/O handling
+if [[ $1 =~ .+[[:space:]].+ ]]; then
+  echo -e "${RED_TXT}ERROR:${COLOR_OFF} whitespace in $1 path unsupported" >&2
+  exit 1
+fi
+if [[ $2 =~ .+[[:space:]].+ ]]; then
+  echo -e "${RED_TXT}ERROR:${COLOR_OFF} whitespace in $2 path unsupported" >&2
+  exit 1
+fi
 IN=$(readlink -f "$1")
 if [[ -z "$2" ]]; then
   OUT="${PWD}"
@@ -46,211 +113,181 @@ else
   OUT=$(readlink -f "$2")
 fi
 
-# Color output for success, warnings, and errors to catch user's attention
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-RESET='\033[0m'
+# Get LAB_HOME or custom tmp/cache variables from user's ~/.bashrc,
+#  while still enabling fancy people to override these from their
+#  current working environment too.
+source ${HOME}/.bashrc
+if [[ -z "${LAB_HOME}" ]]; then
+  echo -e "${RED_TXT}ERROR:${COLOR_OFF} ${LAB_HOME} not set" >&2
+  exit 1
+fi
 
-# Check if user has access to scratch area for Singularity files
-check_if_user_has_access() {
-  DESTINATION=${1} # full path to check
-  VAR_NAME=${2} # variable name that is used (ex. SINGULARITY_BASE)
-  EXPORT=false # if true, add export to variable
-  if [ -r "${DESTINATION}" ]; then
-    echo -e "Adding ${VAR_NAME} to user's bash configuration file..\n"
-    if [ "${EXPORT}" = true ]; then
-      echo -e "export ${VAR_NAME}=${DESTINATION}" >> ${HOME}/.bashrc
-    else
-      echo -e "${VAR_NAME}=${DESTINATION}" >> ${HOME}/.bashrc
-    fi
-  else
-    echo -e "${RED}User does not have access to ${DESTINATION} for ${VAR_NAME}."
-    echo -e "Workflow cannot continue. Exiting..${RESET}\n"
+# Check if Singularity environment variables are set,
+#  and confirm the user has write access.
+#  We expect these 2 paths to already exist.
+if [[ -z ${SINGULARITY_CACHEDIR} ]]; then
+  echo -e "${RED_TXT}ERROR:${COLOR_OFF} \$SINGULARITY_CACHEDIR not set" >&2
+  exit 1
+else
+  if [[ ! -d ${SINGULARITY_CACHEDIR} ]] || [[ ! -w ${SINGULARITY_CACHEDIR} ]]; then
+    echo -e "${RED_TXT}ERROR:${COLOR_OFF} \$SINGULARITY_CACHEDIR ${SINGULARITY_CACHEDIR} not writeable for ${USER}" >&2
     exit 1
   fi
-}
-
-# Check if needed Singularity variables are set. If not, try to add them
-if [ -z "${SINGULARITY_BASE}" ]; then
-  echo -e "SINGULARITY_BASE missing from bash shell configuration."
-  check_if_user_has_access "/scicomp/scratch/$USER" "SINGULARITY_BASE" false
-elif [ -z "${SINGULARITY_TMPDIR}" ]; then
-  echo -e "SINGULARITY_TMPDIR missing from bash shell configuration."
-  check_if_user_has_access "$SINGULARITY_BASE/singularity.tmp" "SINGULARITY_TMPDIR" true
-elif [ -z "${SINGULARITY_CACHEDIR}" ]; then
-  echo -e "SINGULARITY_CACHEDIR missing from bash shell configuration."
-  check_if_user_has_access "$SINGULARITY_BASE/singularity.cache" "SINGULARITY_CACHEDIR" true
 fi
-
-# Set up tmp and cache directories for Singularity
-mkdir -p ${HOME}/tmp && export TMPDIR=${HOME}/tmp
-mkdir -pv $SINGULARITY_TMPDIR $SINGULARITY_CACHEDIR || true
-
-# Get LAB_HOME or custom tmp/cache variables from .bashrc
-source ${HOME}/.bashrc
-
-# Check if input/output is a windows path and replace
-if [[ ${IN} == *":\\"* ]]; then
-  echo "Please replace ${IN%:}:\ with a linux-based path."
-  echo "Exiting..."
+if [[ -z ${SINGULARITY_TMPDIR} ]]; then
+  echo -e "${RED_TXT}ERROR:${COLOR_OFF} \$SINGULARITY_TMPDIR not set" >&2
   exit 1
-elif [[ ${OUT} == *":\\"* ]]; then
-  echo "Please replace ${OUT%:}:\ with a linux-based path."
-  echo "Exiting..."
-  exit 1
-fi
-
-# if path starts with z:/, split by each '/' and search for that word appended to /scicomp/groups
-# Cut z:, then grab all folders and see if appending the above works, if not, grab folders with those and test until it is true
-
-# Check if input/output has a .gov path
-if [[ ${IN} == *".gov"* ]]; then
-  echo "Converting path to a linux-based path.."
-  IN=$(echo ${IN} | sed 's/.*gov/\/scicomp/')
-elif [[ ${OUT} == *".gov"* ]]; then
-  echo "Converting path to a linux-based path.."
-  OUT=$(echo ${OUT} | sed 's/.*gov/\/scicomp/')
-fi
-
-# Check if wrong slashes are being used and replace
-if [[ ${IN} == *"\\"* ]]; then
-  IN=$(echo ${IN} | sed 's/\\/\//g')
-  echo "${RED}Please avoid using Windows-based paths."
-  echo "Input is now set to: ${IN} ${RESET}"
-elif [[ ${OUT} == *"\\"* ]]; then
-  OUT=$(echo ${OUT} | sed 's/\\/\//g')
-  echo "${RED}Please avoid using Windows-based paths."
-  echo "Input is now set to: ${OUT} ${RESET}"
-fi
-
-# Check if there is a possibility data will be overwritten in INPUT
-check_if_previous_nextflow_run() {
-  # Parameters:
-  # $1 = file path
-  # $2 = file to search for
-
-  # Color output
-  GREEN='\033[0;32m'
-  YELLOW='\033[0;33m'
-  RED='\033[0;31m'
-  RESET='\033[0m'
-
-  if [ -f $(find ${1} -name ${2} | grep -q '.') ]; then
-    echo -e "\n${YELLOW}Previous Nextflow run found.${RESET}"
-    read -p "It is possible that data will be overwritten. Do you want to continue? (enter YES or NO): " ANSWER
-
-    # Continue submission if user wants to possibly overwrite data
-    if [[ "${ANSWER}" = "Y" || "${ANSWER}" = "YES" || "${ANSWER}" = "y" || "${ANSWER}" = "yes" ]]; then
-      echo -e "${GREEN}Data in ${1} will be overwritten. Continuing to submit samples..\n${RESET}"
-
-    # If user doesn't want to continue, see if they want to provide a different output path
-    elif [[ "${ANSWER}" = "N" || "${ANSWER}" = "NO" || "${ANSWER}" = "n" || "${ANSWER}" = "no" ]]; then
-      read -p "Would you like to use a DIFFERENT OUTPUT path? (enter YES or NO): " PROCEED
-      if [[ "${PROCEED}" = "Y" || "${PROCEED}" = "YES" || "${PROCEED}" = "y" || "${PROCEED}" = "yes" ]]; then
-        read -p "Enter NEW OUTPUT path: " NEW_OUTPUT
-        OUT=${NEW_OUTPUT}
-
-        # Check new output. If trace*.txt is found, exit and ask for resubmission
-        if [ -d "${OUT}/log" ] && [ -f $(find ${OUT}/log -name ${2} | grep -q '.') ]; then
-          echo -e "${RED}Previous Nextflow run found."
-          echo -e "Multiple attempts have been made for an empty output directory. Please locate and use an empty directory."
-          echo -e "Submission is being cancelled..${RESET}"
-          exit 1
-        fi
-        
-      # If user doesn't want to provide a new path, exit
-      elif [[ "${ANSWER}" = "N" || "${ANSWER}" = "NO" || "${ANSWER}" = "n" || "${ANSWER}" = "no" ]]; then
-        echo -e "${RED}Submission is being cancelled..${RESET}"
-        exit 1
-      
-      # Exit in case user inputs anything besides Yes, yes, Y, y, NO, no, N, n
-      else
-        echo -e "${RED}Invalid input. Valid inputs are: 'YES, yes, Y, y, NO, no, N, n.'."
-        echo -e "Submission is being cancelled..${RESET}"
-        exit 1
-      fi
-
-    # Exit in case user inputs anything besides Yes, yes, Y, y, NO, no, N, n
-    else
-      echo -e "${RED}Invalid input. Valid inputs are: YES, yes, Y, y, NO, no, N, n'."
-      echo -e "Submission is being cancelled..${RESET}"
-      exit 1
-    fi
+else
+  if [[ ! -d ${SINGULARITY_TMPDIR} ]] || [[ ! -w ${SINGULARITY_TMPDIR} ]]; then
+    echo -e "${RED_TXT}ERROR:${COLOR_OFF} \$SINGULARITY_TMPDIR ${SINGULARITY_TMPDIR} not writeable for ${USER}" >&2
+    exit 1
   fi
-}
+fi
 
-# Check nextflow log dir for trace*.txt file --> means nextflow has been ran before
-if [ -d "${OUT}/log" ]; then
-  check_if_previous_nextflow_run "${OUT}/log" "trace*.txt"
-# Else, check for trim_reads dir and *phix.tsv file --> means legacy bash script has been ran before
-elif [ -d "${OUT}/trim_reads" ]; then
-  check_if_previous_nextflow_run "${OUT}/trim_reads" "*phix.tsv"
+# If Windows-style mount point (e.g., "Z:\Streptobacillus\Raw_FQs") given as a
+#  path, check both user's home, lab home, and group as possible mount areas
+#  to determine if files exist in 1 but not the others.
+if [[ ${IN} =~ ^[A-Z]\:\\.+ ]]; then
+  path_slashes_replaced="$(echo "${IN:3}" | sed 's/\\/\//g')"
+  user_home="${HOME}"/"${path_slashes_replaced}"
+  user_group_main="/scicomp/${path_slashes_replaced}"
+  user_group_branch="/scicomp/groups/OID/NCEZID/DHCPP/BSPB/${path_slashes_replaced}"
+  lab_home="${LAB_HOME}"/"${path_slashes_replaced}"
+  paths=(
+    "${user_home}"
+    "${user_group_main}"
+    "${user_group_branch}"
+    "${lab_home}"
+    )
+  for path in "${paths[@]}"; do
+    cnt_read_files=$(find "${path}" \
+     -maxdepth 2 \
+     -type f \
+     -readable \
+     -regextype posix-extended \
+     -regex ".+_(R)?(1|2)(.+)?\.(fq|fastq)($|\.gz$)" \
+     2> /dev/null \
+     | wc -l)
+    if [[ ${cnt_read_files} -ge 1 ]]; then
+        echo "${cnt_read_files} FastQ files found in: ${path}"
+        read -p "Use ${path} as Input Directory? (yes|no)" -n 1 -r
+        if [[ $REPLY =~ ^[yY] ]]; then
+          IN="${path}"
+        else
+          exit 0
+        fi
+        break
+    fi
+  done
+fi
+
+# For now, just output into shared LAB_HOME area
+if [[ ${OUT} =~ ^[A-Z]\:\\.+ ]]; then
+  echo "${YELLOW_TXT}Windows hard mount path detected as Output Directory ${COLOR_OFF}"
+  proposed_outpath="${LAB_HOME}"/"$(date '+%Y-%b-%d_%a_%H:%M:%S')"
+  read -p "Use ${path} as Input Directory? (yes|no)" -n 1 -r
+  if [[ $REPLY =~ ^[yY] ]]; then
+    OUT="${path}"
+  else
+    echo "${RED_TXT}Okay, bad autoselection? Re-run with a different specified path ${COLOR_OFF}"
+    exit 0
+  fi
+fi
+
+# If Windows-style path from Core Facility given via email
+#  (e.g., "\\...cdc.gov\groups\OID\...BCFB\by-instrument\NovaSeq\")
+#  is given as path, form the Linux path
+if [[ ${IN} =~ ^\\\\.+\.cdc\.gov\\.+\\.+ ]]; then
+  inpath_stripped_hostname="${IN/*.cdc\.gov/\/scicomp}"
+  inpath_dewindowsed="$(echo "${inpath_stripped_hostname}" | sed 's/\\/\//g')"
+  IN="${inpath_dewindowsed}"
+fi
+
+# Check for specific nextflow logfile for this workflow, which
+#  means this nextflow workflow has been ran before in the specified outpath.
+if [ -d "${OUT}/log" ] && \
+  [ -f "${OUT}/nextflow_log.${SCRIPT_NAME}.txt" ]; then
+  prompt_if_previous_nextflow_run "${OUT}" "nextflow_log.${SCRIPT_NAME}.txt"
+fi
+# Also check for unsupported behavior combining legacy bash and newer nextflow
+if [ -d "${OUT}/.log" ] && \
+  [ -f "${OUT}/trim.asm.annot.job_ids.txt" ] && \
+  [ -f "${OUT}/trim.asm.annot.log.txt" ]; then
+  echo -e "${RED_TXT}Legacy bash workflow detected in ${OUT}"
+  echo -e "Combining data from that and this nextflow pipeline is unsupported."
+  echo -e "Use a different output path. ${COLOR_OFF}"
+  exit 1
 fi
 
 # Add found files to an array
-found_files=( $(find ${IN} -name "*fastq.gz" -o -name "*fq.gz") )
+found_files=( $(find ${IN} \
+     -maxdepth 2 \
+     -type f \
+     -readable \
+     -regextype posix-extended \
+     -regex ".+_(R)?(1|2)(.+)?\.(fq|fastq)($|\.gz$)" | sort --dictionary-order )
+)
 
-# Check to see if FastQ files are present in IN
-if [[ ${#found_files[@]} -ge 2 ]]; then
-  # Arrays for submissions
-  submitted=()
-  not_submitted=()
-
-  # Counter to count basename - if >=1, skips following lines
-  unset counter
-  declare -A counter
-
-  # Loop over find command for fastq.gz files
-  for line in "${found_files[@]}";
-  do
-    base=$(basename ${line} | sed -r 's/(_R).*$//') # Cut filename at 'R' or else x_ and x1_ will show submitted
-    clean_base=$(echo $base | sed 's/[-._]*$//') # Remove trailing separators to display later
-    count=$(find ${IN} -name "${base}*" | wc -l)
-    (( counter[${base}]++ )) || \
-    if [[ $(( ${count}/2 )) -ge 1 ]]; then
-      submitted+=(${clean_base})
-    else
-      not_submitted+=(${clean_base})
-    fi
-  done
-
-# Give error message if FastQ files are not found
-else
-  echo -e "FastQ files are not found in ${IN}"
+# Require even input file count for paired-end analysis
+if [ ${#found_files[@]} -lt 1 ]; then
+  echo -e "${RED_TXT}ERROR:${COLOR_OFF} no read sets found" >&2
+  exit 1
+fi
+if [[ $((${#found_files[@]} % 2)) -ne 0 ]]; then
+  echo -e "${RED_TXT}ERROR:${COLOR_OFF} uneven number (${#found_files[@]}) of FastQ files" >&2
   exit 1
 fi
 
-# Prompt user if >10 samples
+# Pair up the FastQ files based on basename (prefix) to submit jobs
+submitted=()
+for (( i=0; i<${#found_files[@]}; i+=2 )); do
+  read1=${found_files[i]}
+  read2=${found_files[i+1]}
+  b1=$(basename ${read1} | cut -d _ -f 1 | sed 's/[-\.,]//g')
+  b2=$(basename ${read2} | cut -d _ -f 1 | sed 's/[-\.,]//g')
+  if [[ "${submitted[*]}" =~ " ${b1} " ]]; then
+    echo -e "${RED_TXT}ERROR:${COLOR_OFF} ${b1} sample name occurs in >1 paired set" >&2
+    exit 1
+  fi
+  if [ "${b1}" != "${b2}" ]; then
+    echo -e "${RED_TXT}ERROR:${COLOR_OFF} improperly paired ${b1} ${b2}" >&2
+    exit 1
+  fi
+  submitted+=(${b1})
+done
+
+# Prompt user if >10 samples to prevent accidentally assembling too many
 if [[ ${#submitted[@]} -ge 10 ]]; then
-  echo -e "${RED}WARNING:${RESET} ${#submitted[@]} samples have been identified. Identified samples:\n${RESET}"
+  echo -e "${YELLOW_TXT}WARNING:${COLOR_OFF} ${#submitted[@]} samples have been identified:\n"
   echo -e "${submitted[@]}\n"
   
-  # Ask if user wants to submit all the samples
-  read -p "Do you want to continue submitting ${#submitted[@]} samples? (enter YES or NO): " ANSWER
-  if [[ "${ANSWER}" = "Y" || "${ANSWER}" = "YES" || "${ANWER}" = "y" || "${ANSWER}" = "yes" ]]; then
-    echo -e "Continuing to submit ${#submitted[@]} samples..\n"
-  elif [[ "${ANSWER}" = "N" || "${ANSWER}" = "NO" || "${ANWER}" = "n" || "${ANSWER}" = "no" ]]; then
-    echo -e "Submission is being cancelled.."
-    exit 1
+  # Prompt user to verify submission of large sample set
+  read -p "${RED_BG}Do you want to continue submitting ${#submitted[@]} samples? (yes|no) ${COLOR_OFF}" -n 1 -r
+  if [[ $REPLY =~ ^[yY] ]]; then
+    echo -e "Continuing to submit ${#submitted[@]} samples...\n"
   else
-    # Error catching
-    echo -e "Invalid input. Valid inputs are: 'YES, yes, Y, y, NO, no, N, n."
-    echo -e "Submission is being cancelled.."
-    exit 1
+    echo -e "${RED_TXT}Submission cancelled ${COLOR_OFF}"
+    exit 0
   fi
 fi
 
+# Get node number - <=230 = biolinux, >=231 = rosalind
+NODE_NUM=$(echo ${HOSTNAME%%.*} | sed 's/node//1')
+
 # If FastQ files are able to be submitted, submit and display basenames
-if [[ ${#submitted[@]} -ge 1 ]]; then
-  # Submit Nextflow pipeline to HPC
+if [[ ${#submitted[@]} -ge 1 ]] && \
+  [[ ${HOSTNAME%%.*} == 'biolinux' || 'login02' ]] || \
+  [ ${NODE_NUM} -le 230 ]; then
+  # Submit Nextflow pipeline to Aspen HPC
   qsub \
+    -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
     -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    -v TMPDIR=${TMPDIR} \
+    -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
     -v OUT=${OUT} \
     -v IN=${IN} \
     -v LAB_HOME=${LAB_HOME} \
-    -o ${OUT}/log/ \
-    -e ${OUT}/log/ \
+    -o ${OUT}/log \
+    -e ${OUT}/log \
     -M ${USER}@cdc.gov \
     -m ba \
     -N ASM_${#submitted[@]} \
@@ -258,24 +295,45 @@ if [[ ${#submitted[@]} -ge 1 ]]; then
     ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
 
   # Display basename of FastQ files submitted
-  echo -e "\nInput directory: ${IN}"
-  echo -e "Output directory: ${OUT}"
-  echo -e "\n${GREEN}Generating annotated assemblies for:"
-
+  echo -e "${GREEN_TXT}\nInput directory:${COLOR_OFF} ${IN}"
+  echo -e "${GREEN_TXT}Output directory:${COLOR_OFF} ${OUT}"
+  echo -e "\n${GREEN_TXT}Generating annotated assemblies for:"
   for elem in "${submitted[@]}"; do
     echo "${elem}"
   done
-  echo -e "${RESET}"
-fi
+  echo -e "${COLOR_OFF}"
 
-# Display basename of FastQ files that weren't submitted
-if [[ ${#not_submitted[@]} -ge 1 ]]; then
-  echo -e "${RED}Cannot generate assemblies for:"
+elif [[ ${#submitted[@]} -ge 1 ]] && \
+  [ ${HOSTNAME%%.*} == 'rosalind01' ] || \
+  [ ${NODE_NUM} -ge 231 ]; then
+  # Submit Nextflow pipeline to Rosalind HPC
+  qsub \
+    -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
+    -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
+    -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
+    -v OUT=${OUT} \
+    -v IN=${IN} \
+    -v LAB_HOME=${LAB_HOME} \
+    -o ${OUT}/log \
+    -e ${OUT}/log \
+    -M ${USER}@cdc.gov \
+    -m ba \
+    -N ASM_${#submitted[@]} \
+    -q all.q \
+    -l max_runtime=72:00:00 \
+    -l h_vmem=${task.memory.toString().replaceAll(/[\sB]/,'')} \
+    ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
 
-  for elem in "${not_submitted[@]}"; do
+  # Display basename of FastQ files submitted
+  echo -e "${GREEN_TXT}\nInput directory:${COLOR_OFF} ${IN}"
+  echo -e "${GREEN_TXT}Output directory:${COLOR_OFF} ${OUT}"
+  echo -e "\n${GREEN_TXT}Generating annotated assemblies for:"
+  for elem in "${submitted[@]}"; do
     echo "${elem}"
   done
-  echo -e "${RESET}"
+  echo -e "${COLOR_OFF}"
+else
+  echo -e "${RED_TXT}Biolinux/Aspen/Rosalind HPC is not detected.\nSubmission cancelled. ${COLOR_OFF}"
 fi
 
 # Set up log directory in OUT directory
