@@ -56,7 +56,7 @@ verify_minimum_file_size()
       if [[ $(find -L "${1}" -type f -size +"${3}") ]]; then
         return 0
       else
-        msg "ERROR: ${2} file ${1} present but too small (${output})" >&2
+        msg "ERROR: ${2} file ${1} present but too small (less than ${3})" >&2
         return 1
       fi
     else
