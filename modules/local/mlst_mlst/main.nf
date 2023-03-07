@@ -7,7 +7,7 @@ process MLST_MLST {
 
     tag { "${base}" }
     
-    container "snads/mlst@sha256:27f290753760c44204d6e04b6ead7935d03b48d5f0a5ccce068def9ce33babe6"
+    container "gregorysprenger/mlst@sha256:69c8c8027474b8f361ef4a579df171702f3ed52f45e3fb388a41ccbf4542706f"
 
     input:
         tuple val(base), path(paired_bam), path(single_bam), path(base_fna)
