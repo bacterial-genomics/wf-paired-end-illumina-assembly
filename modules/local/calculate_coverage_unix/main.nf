@@ -9,7 +9,7 @@ process CALCULATE_COVERAGE_UNIX {
 
     tag { "${base}" }
 
-    container "ubuntu:focal"
+    container "ubuntu:jammy"
     
     input:
         tuple val(base), path(summary_assemblies), path(summary_reads), path(summary_stats)

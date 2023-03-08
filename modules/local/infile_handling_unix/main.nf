@@ -10,7 +10,7 @@ process INFILE_HANDLING_UNIX {
         pattern: ".command.*",
         saveAs: { filename -> "${base}.${task.process}${filename}" }
 
-    container "ubuntu:focal"
+    container "ubuntu:jammy"
     tag { "${base}" }
 
     input:
