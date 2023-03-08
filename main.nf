@@ -59,11 +59,13 @@ if (params.version){
 ========================================================================================
 */
 
-// Validate inpath parameter
+// Validate input parameters
 if (!params.inpath) {
-    System.err.println "ERROR: parameter inpath must be specified"
+    System.err.println "ERROR: inpath parameter must be specified"
     exit 1
 }
+
+// Check inpath parameter
 File inpathFileObj = new File(params.inpath)
 if (!inpathFileObj.exists()){
     System.err.println "ERROR: $params.inpath doesn't exist"
@@ -166,7 +168,7 @@ include { CALCULATE_COVERAGE_UNIX } from "./modules/local/calculate_coverage_uni
 workflow {
     // SETUP: Define input
     // Double asterisk looks in specified directory and recursively all subdirectories
-    input_ch = Channel.fromFilePairs(params.inpath+'/**_{R,""}{1,2}*{fastq,fq}{"",.gz}', maxDepth: 2, checkIfExists: true)
+    input_ch = Channel.fromFilePairs(params.inpath+'/**_{,R}{1,2}*{fastq,fq}{,.gz}', maxDepth: 2, checkIfExists: true)
     
     // SETUP: Define optional database inputs
     kraken1_db_ch = file(params.kraken1_db)
