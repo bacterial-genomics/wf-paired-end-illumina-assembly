@@ -26,7 +26,14 @@ run_name=$(grep "Launching" ${OUT}/log/ASM_*.o* | cut -d '[' -f 2 | cut -d ']' -
 while read -r line; do
   sample_name=$(grep "nf-" ${line}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
   process=$(grep "nf-" ${line}/.command.run | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
-  error=$(tail -n 1 ${line}/.command.err | sed -e 's/\[[^][]*\]//g')
+
+  if [ $process == "EXTRACT_16S_BIOPYTHON" ]; then
+    get_filename=$(tail -n 1 ${line}/.command.err | awk -F '/' '{print $NF}')
+    remove_filepath=$(tail -n 1 ${line}/.command.err | sed -e 's/[][]//g' | cut -d '/' -f 1)
+    error=$(echo -e "${remove_filepath} ${get_filename}")
+  else
+    error=$(tail -n 1 ${line}/.command.err | sed -e 's/\[[^][]*\] //g')
+  fi
 
   # If process for sample retried and succeeded, ignore
   if [ $(ls ${OUT}/log/process_logs/${sample_name}.${process}* | wc -l) -ge 1 ]; then
