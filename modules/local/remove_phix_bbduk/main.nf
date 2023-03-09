@@ -4,10 +4,10 @@ process REMOVE_PHIX_BBDUK {
 
     publishDir "${params.outpath}/trim_reads",
         mode: "${params.publish_dir_mode}",
-        pattern: "*.tsv"
+        pattern: "*.{raw,phix}.tsv"
     publishDir "${params.qc_filecheck_log_dir}",
         mode: "${params.publish_dir_mode}",
-        pattern: "*.PhiX-removed_FastQ_Files.tsv"
+        pattern: "*.{PhiX_Genome.tsv,PhiX-removed_FastQ_Files}.tsv"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
