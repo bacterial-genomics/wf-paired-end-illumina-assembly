@@ -19,10 +19,10 @@ process ANNOTATE_PROKKA {
     container "snads/prokka@sha256:ef7ee0835819dbb35cf69d1a2c41c5060691e71f9138288dd79d4922fa6d0050"
 
     input:
-        tuple val(base), path(paired_bam), path(single_bam), path(base_fna)
+        tuple val(base), path(paired_bam), path(single_bam), path(qc_assembly_filechecks), path(base_fna)
 
     output:
-        tuple val(base), path("${base}.gbk"), emit: annotation
+        tuple val(base), path("${base}.gbk"), path("*File.tsv"), emit: annotation
         path "${base}.Annotated_GenBank_File.tsv", emit: qc_filecheck
         path ".command.out"
         path ".command.err"
@@ -30,6 +30,11 @@ process ANNOTATE_PROKKA {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
         
         # Remove seperator characters from basename for future processes
@@ -63,7 +68,6 @@ process ANNOTATE_PROKKA {
         else
           echo -e "!{base}\tAnnotated GenBank File\tFAIL" \
            > !{base}.Annotated_GenBank_File.tsv
-          exit 1
         fi
 
         # Get process version

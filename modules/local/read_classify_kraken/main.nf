@@ -16,7 +16,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
     container "staphb/kraken@sha256:d372099288c3a7c0cc90ea7e516c643e7096c90a551b45d531bd26b4e7f46255"
 
     input:
-        tuple val(base), path(R1_paired_gz), path(R2_paired_gz), path(single_gz)
+        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_overlap_filecheck)
         path kraken1_db
 
     output:
@@ -28,6 +28,11 @@ process READ_CLASSIFY_KRAKEN_ONE {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
         source summarize_kraken.sh
 
@@ -42,7 +47,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
         fi
 
         # Confirm the db exists
-        for ext in idx jdb kdb; do
+        for ext in idx kdb; do
           if ! verify_minimum_file_size "${database}/database.${ext}" 'kraken database' '10c'; then
             msg "ERROR: pre-formatted kraken database (.${ext}) for read classification is missing" >&2
             exit 1
@@ -53,18 +58,18 @@ process READ_CLASSIFY_KRAKEN_ONE {
         if [ ! -s !{base}.taxonomy1-reads.tab ]; then
           msg "INFO: Running Kraken1 with !{task.cpus} threads"
           kraken \
-           --db ${database} \
-           --threads !{task.cpus} \
-           --fastq-input \
-           --gzip-compressed \
-           !{R1_paired_gz} !{R2_paired_gz} !{single_gz} \
-           > !{base}_kraken.output
+          --db ${database} \
+          --threads !{task.cpus} \
+          --fastq-input \
+          --gzip-compressed \
+          !{paired_R1_gz} !{paired_R2_gz} !{single_gz} \
+          > !{base}_kraken.output
 
           msg "INFO: Running kraken-report"
           kraken-report \
-           --db ${database} \
-           !{base}_kraken.output \
-           > kraken.tab 2>&1 | tr '^M' '\n' 1>&2
+          --db ${database} \
+          !{base}_kraken.output \
+          > kraken.tab 2>&1 | tr '^M' '\n' 1>&2
 
           msg "INFO: Summarizing Kraken1"
           summarize_kraken 'kraken.tab' > !{base}.taxonomy1-reads.tab
@@ -97,7 +102,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
     container "staphb/kraken2@sha256:5b107d0141d6042a6b0ac6a5852990dc541fbff556a85eb0c321a7771200ba56"
 
     input:
-        tuple val(base), path(R1_paired_gz), path(R2_paired_gz), path(single_gz)
+        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_overlap_filecheck)
         path kraken2_db
 
     output:
@@ -109,6 +114,11 @@ process READ_CLASSIFY_KRAKEN_TWO {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
         source summarize_kraken.sh
 
@@ -134,13 +144,13 @@ process READ_CLASSIFY_KRAKEN_TWO {
         if [ ! -s !{base}.taxonomy2-reads.tab ]; then
           msg "INFO: Running Kraken2 with !{task.cpus} threads"
           kraken2 \
-           --db "${database}" \
-           --threads !{task.cpus} \
-           --gzip-compressed \
-           --output /dev/null \
-           --use-names \
-           --report kraken2.tab \
-           !{R1_paired_gz} !{R2_paired_gz} !{single_gz}
+          --db "${database}" \
+          --threads !{task.cpus} \
+          --gzip-compressed \
+          --output /dev/null \
+          --use-names \
+          --report kraken2.tab \
+          !{paired_R1_gz} !{paired_R2_gz} !{single_gz}
 
           msg "INFO: Summarizing Kraken2"
           summarize_kraken 'kraken2.tab' > !{base}.taxonomy2-reads.tab

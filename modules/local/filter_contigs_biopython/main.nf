@@ -12,7 +12,7 @@ process FILTER_CONTIGS_BIOPYTHON {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-        tuple val(base), path(R1_paired_gz), path(R2_paired_gz), path(single_gz), path(contigs)
+        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_overlap_filecheck), path(contigs), path(qc_assembly_filecheck)
 
     output:
         tuple val(base), path("${base}.uncorrected.fna"), emit: uncorrected_contigs
@@ -41,20 +41,25 @@ process FILTER_CONTIGS_BIOPYTHON {
             filter_contigs_params += " --no-sort"
         }
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
 
         # Get filter.contigs.py and check if it exists
         filter_contigs_script="${DIR}/filter.contigs.py"
         if ! check_if_file_exists_allow_seconds ${filter_contigs_script} '60'; then
-          exit 1
+        exit 1
         fi
 
         # Remove junk contigs
         python ${filter_contigs_script} \
-         -i !{contigs} \
-         -b "!{base}" \
-         -o !{base}.uncorrected.fna \
-         !{filter_contigs_params}
+        -i !{contigs} \
+        -b "!{base}" \
+        -o !{base}.uncorrected.fna \
+        !{filter_contigs_params}
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml

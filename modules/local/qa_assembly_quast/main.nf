@@ -13,7 +13,7 @@ process QA_ASSEMBLY_QUAST {
     container "snads/quast@sha256:c8147a279feafbc88bafeeda3817ff32d43db87d31dd0978df1cd2f8022d324c"
 
     input:
-        tuple val(base), path(R1_paired_gz), path(R2_paired_gz), path(single_gz), path(base_fna)
+        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_overlap_filecheck), path(base_fna)
 
     output:
         tuple val(base), path("${base}.Summary.Assemblies.tab"), path("${base}.Summary.Illumina.CleanedReads-Bases.tab"), emit: qa_summaries
@@ -25,6 +25,11 @@ process QA_ASSEMBLY_QUAST {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
 
         # Run Quast
@@ -55,8 +60,8 @@ process QA_ASSEMBLY_QUAST {
         # Count nucleotides per read set
         echo -n '' > Summary.Illumina.CleanedReads-Bases.tab
         for (( i=0; i<3; i+=3 )); do
-          R1=$(basename "!{R1_paired_gz}" _R1.paired.fq.gz)
-          R2=$(basename "!{R2_paired_gz}" _R2.paired.fq.gz)
+          R1=$(basename "!{paired_R1_gz}" _R1.paired.fq.gz)
+          R2=$(basename "!{paired_R2_gz}" _R2.paired.fq.gz)
           single=$(basename "!{single_gz}" .single.fq.gz)
 
           # Verify each set of reads groups properly
@@ -66,7 +71,7 @@ process QA_ASSEMBLY_QUAST {
             exit 1
           fi
           echo -ne "${R1}\t" >> !{base}.Summary.Illumina.CleanedReads-Bases.tab
-          zcat "!{R1_paired_gz}" "!{R2_paired_gz}" "!{single_gz}" | \
+          zcat "!{paired_R1_gz}" "!{paired_R2_gz}" "!{single_gz}" | \
            awk 'BEGIN{SUM=0} {if(NR%4==2){SUM+=length($0)}} END{print SUM}' \
            >> !{base}.Summary.Illumina.CleanedReads-Bases.tab
         done

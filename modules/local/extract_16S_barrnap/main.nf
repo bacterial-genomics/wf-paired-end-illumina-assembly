@@ -7,7 +7,7 @@ process EXTRACT_16S_BARRNAP {
         pattern: "*.fa"
     publishDir "${params.qc_filecheck_log_dir}",
         mode: "${params.publish_dir_mode}",
-        pattern: "*.SSU_Extracted_File.tsv"
+        pattern: "*.{SSU_Extracted_File,SSU_Renamed_File}.tsv"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
@@ -18,17 +18,23 @@ process EXTRACT_16S_BARRNAP {
     container "snads/barrnap@sha256:e22cbd789c36d5626460feb6c7e5f6f7d55c8628dacae68ba0da30884195a837"
 
     input:
-        tuple val(base), path(annotation), path(base_fna), path(extracted_rna)
+        tuple val(base), path(annotation), path(qc_annotated_filecheck), path(base_fna), path(extracted_rna)
 
     output:
-        tuple val(base), path("16S.${base}.fa"), emit: extracted_base
-        path "${base}.SSU_Extracted_File.tsv", emit: qc_filecheck
+        tuple val(base), path("16S.${base}.fa"), path("*File.tsv"), emit: extracted_base
+        path "${base}.SSU_Extracted_File.tsv", emit: qc_ssu_extracted_filecheck
+        path "${base}.SSU_Renamed_File.tsv", emit: qc_ssu_renamed_filecheck
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
 
         if [[ ! -f "!{extracted_rna}" ]] || [[ ! -s "!{extracted_rna}" ]]; then
@@ -52,7 +58,6 @@ process EXTRACT_16S_BARRNAP {
           echo -e "!{base}\tSSU Extracted File\tPASS" > !{base}.SSU_Extracted_File.tsv
         else
           echo -e "!{base}\tSSU Extracted File\tFAIL" > !{base}.SSU_Extracted_File.tsv
-          exit 1
         fi
 
         awk -v awk_var="!{base}" \
@@ -66,7 +71,6 @@ process EXTRACT_16S_BARRNAP {
           echo -e "!{base}\tSSU Renamed File\tPASS" > !{base}.SSU_Renamed_File.tsv
         else
           echo -e "!{base}\tSSU Renamed File\tFAIL" > !{base}.SSU_Renamed_File.tsv
-          exit 1
         fi
 
         # Get process version

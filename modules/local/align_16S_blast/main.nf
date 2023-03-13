@@ -15,11 +15,11 @@ process ALIGN_16S_BLAST {
     container "gregorysprenger/ncbi-blast-plus@sha256:2d3e226d2eb31e3e0d5a80d7325b3a2ffd873ad1f2bd81215fd0b43727019279"
 
     input:
-        tuple val(base), path(extracted_base), path(base_fna)
+        tuple val(base), path(extracted_base), path(qc_extracted_filechecks), path(base_fna)
         path blast_db
 
     output:
-        tuple val(base), path("${base}.blast.tsv"), emit: blast_tsv
+        tuple val(base), path("${base}.blast.tsv"), path("*File.tsv"), emit: blast_tsv
         path "${base}.16S_BLASTn_Output_File.tsv", emit: qc_filecheck
         path ".command.out"
         path ".command.err"
@@ -27,6 +27,11 @@ process ALIGN_16S_BLAST {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
 
         # Classify each 16S sequence record
@@ -64,7 +69,6 @@ process ALIGN_16S_BLAST {
           echo -e "!{base}\t16S BLASTn Output File\tPASS" > !{base}.16S_BLASTn_Output_File.tsv
         else
           echo -e "!{base}\t16S BLASTn Output File\tFAIL" > !{base}.16S_BLASTn_Output_File.tsv
-          exit 1
         fi
 
         # Get process version

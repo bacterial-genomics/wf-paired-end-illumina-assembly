@@ -10,7 +10,7 @@ process MLST_MLST {
     container "gregorysprenger/mlst@sha256:69c8c8027474b8f361ef4a579df171702f3ed52f45e3fb388a41ccbf4542706f"
 
     input:
-        tuple val(base), path(paired_bam), path(single_bam), path(base_fna)
+        tuple val(base), path(paired_bam), path(single_bam), path(qc_assembly_filechecks), path(base_fna)
 
     output:
         path "${base}.Summary.MLST.tab", emit: summary_mlst
@@ -20,6 +20,11 @@ process MLST_MLST {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+        
         source bash_functions.sh
 
         # MLST for each assembly
@@ -33,9 +38,7 @@ process MLST_MLST {
         fi
 
         # Get process version
-        cat <<-END_VERSIONS > versions.yml
-       "!{task.process} (!{base})":
-            mlst: $(mlst --version | awk 'NF>1{print $NF}')
-        END_VERSIONS
+        echo -e '"!{task.process} (!{base})":' > versions.yml
+        echo -e "    mlst: $(mlst --version | awk '{print $2}')" >> versions.yml
         '''
 }

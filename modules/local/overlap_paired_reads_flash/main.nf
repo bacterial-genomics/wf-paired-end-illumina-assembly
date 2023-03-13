@@ -19,10 +19,10 @@ process OVERLAP_PAIRED_READS_FLASH {
     container "snads/flash@sha256:363b2f44d040c669191efbc3d3ba99caf5efd3fdef370af8f00f3328932143a6"
 
     input:
-        tuple val(base), path(input), path(R1_paired), path(R2_paired)
+        tuple val(base), path(input), path(qc_input_filecheck), path(paired_R1), path(paired_R2), path(qc_adapter_filechecks)
 
     output:
-        tuple val(base), path("${base}_R1.paired.fq.gz"), path("${base}_R2.paired.fq.gz"), path("${base}.single.fq.gz"), emit: gzip_reads
+        tuple val(base), path("${base}_R1.paired.fq.gz"), path("${base}_R2.paired.fq.gz"), path("${base}.single.fq.gz"), path("*Non*.tsv"), emit: gzip_reads
         path "${base}.Non-overlapping_FastQ_Files.tsv", emit: qc_filecheck
         path "${base}.overlap.tsv"
         path "${base}.clean-reads.tsv"
@@ -32,6 +32,11 @@ process OVERLAP_PAIRED_READS_FLASH {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
 
         # Determine read length based on the first 100 reads
@@ -47,29 +52,28 @@ process OVERLAP_PAIRED_READS_FLASH {
 
           msg "INFO: Running flash with !{task.cpus} threads"
           flash \
-           -m ${OVERLAP_LEN} \
-           -M ${READ_LEN} \
-           -o flash \
-           -t !{task.cpus} \
-           !{R1_paired} !{R2_paired}
+          -m ${OVERLAP_LEN} \
+          -M ${READ_LEN} \
+          -o flash \
+          -t !{task.cpus} \
+          !{paired_R1} !{paired_R2}
 
           for suff in notCombined_1.fastq notCombined_2.fastq; do
             if verify_minimum_file_size "flash.${suff}" 'Non-overlapping FastQ Files' "!{params.min_filesize_non_overlapping_fastq}"; then
               echo -e "!{base}\tNon-overlapping FastQ File (${suff})\tPASS" \
-               >> !{base}.Non-overlapping_FastQ_Files.tsv
+                >> !{base}.Non-overlapping_FastQ_Files.tsv
             else
               echo -e "!{base}\tNon-overlapping FastQ File (${suff})\tFAIL" \
-               >> !{base}.Non-overlapping_FastQ_Files.tsv
-              exit 1
+                >> !{base}.Non-overlapping_FastQ_Files.tsv
             fi
           done
 
-          rm !{R1_paired} !{R2_paired}
+          rm !{paired_R1} !{paired_R2}
           mv flash.notCombined_1.fastq !{base}_R1.paired.fq
           mv flash.notCombined_2.fastq !{base}_R2.paired.fq
 
           if [ -f flash.extendedFrags.fastq ] && \
-           [ -s flash.extendedFrags.fastq ]; then
+          [ -s flash.extendedFrags.fastq ]; then
             CNT_READS_OVERLAPPED=$(awk '{lines++} END{print lines/4}' \
             flash.extendedFrags.fastq)
 
@@ -79,7 +83,7 @@ process OVERLAP_PAIRED_READS_FLASH {
 
           msg "INFO: ${CNT_READS_OVERLAPPED:-0} pairs overlapped into singleton reads" >&2
           echo -e "!{base}\t${CNT_READS_OVERLAPPED:-0} reads Overlapped" \
-           > !{base}.overlap.tsv
+          > !{base}.overlap.tsv
         fi
 
         # Summarize final read set and compress
@@ -92,11 +96,11 @@ process OVERLAP_PAIRED_READS_FLASH {
         msg "INFO: CNT_CLEANED_SINGLETON ${CNT_CLEANED_SINGLETON}"
 
         echo -e "!{base}\t${CNT_CLEANED_PAIRS} cleaned pairs\t${CNT_CLEANED_SINGLETON} cleaned singletons" \
-         > !{base}.clean-reads.tsv
+        > !{base}.clean-reads.tsv
 
         gzip !{base}.single.fq \
-         !{base}_R1.paired.fq \
-         !{base}_R2.paired.fq
+        !{base}_R1.paired.fq \
+        !{base}_R2.paired.fq
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml

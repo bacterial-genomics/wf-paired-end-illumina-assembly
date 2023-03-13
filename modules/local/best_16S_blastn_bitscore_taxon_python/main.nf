@@ -18,7 +18,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-        tuple val(base), path(blast_tsv), path(base_fna)
+        tuple val(base), path(blast_tsv), path(qc_aligned_blast_filecheck), path(base_fna)
 
     output:
         path "${base}.Summary.16S.tab", emit: blast_summary
@@ -31,6 +31,11 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
 
         # Get filter.blast.py and check if it exists
@@ -49,19 +54,22 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
         if verify_minimum_file_size "!{base}.blast.tab" 'Filtered 16S BLASTn File' "!{params.min_filesize_filtered_blastn}"; then
           echo -e "!{base}\tFiltered 16S BLASTn File\tPASS" \
            > !{base}.Filtered_16S_BLASTn_File.tsv
+
+          # Report the top alignment match data: %nucl iden, %query cov aln, taxon
+          awk -F $'\t' 'BEGIN{OFS=FS}; {print $1, $3 "% identity", $13 "% alignment", $14}' \
+          "!{base}.blast.tab" \
+          > "!{base}.16S-top-species.tsv"
+
+          cat "!{base}.16S-top-species.tsv" >> "!{base}.Summary.16S.tab"
+          gzip -f !{blast_tsv}
+
         else
           echo -e "!{base}\tFiltered 16S BLASTn File\tFAIL" \
            > !{base}.Filtered_16S_BLASTn_File.tsv
-          exit 1
+
+          # Empty files to avoid errors
+          touch !{base}.16S-top-species.tsv !{base}.Summary.16S.tab !{blast_tsv}.gz
         fi
-
-        # Report the top alignment match data: %nucl iden, %query cov aln, taxon
-        awk -F $'\t' 'BEGIN{OFS=FS}; {print $1, $3 "% identity", $13 "% alignment", $14}' \
-         "!{base}.blast.tab" \
-         > "!{base}.16S-top-species.tsv"
-
-        cat "!{base}.16S-top-species.tsv" >> "!{base}.Summary.16S.tab"
-        gzip -f !{blast_tsv}
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml

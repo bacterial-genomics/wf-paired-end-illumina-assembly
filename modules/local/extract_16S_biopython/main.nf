@@ -12,7 +12,7 @@ process EXTRACT_16S_BIOPYTHON {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-        tuple val(base), path(annotation), path(base_fna)
+        tuple val(base), path(annotation), path(qc_annotated_filecheck), path(base_fna)
 
     output:
         tuple val(base), path("16S.${base}.fa"), emit: extracted_rna
@@ -22,6 +22,11 @@ process EXTRACT_16S_BIOPYTHON {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
 
         # Get extract.record.from.genbank.py and check if it exists

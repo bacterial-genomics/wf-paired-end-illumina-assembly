@@ -7,11 +7,11 @@ process REMOVE_PHIX_BBDUK {
         pattern: "*.{raw,phix}.tsv"
     publishDir "${params.qc_filecheck_log_dir}",
         mode: "${params.publish_dir_mode}",
-        pattern: "*.{PhiX_Genome.tsv,PhiX-removed_FastQ_Files}.tsv"
+        pattern: "*.{PhiX_Genome,PhiX-removed_FastQ_Files}.tsv"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${base}.${task.process}${filename}"}
+        saveAs: { filename -> "${base}.${task.process}${filename}" }
 
     label "process_low"
     tag { "${base}" }
@@ -19,10 +19,10 @@ process REMOVE_PHIX_BBDUK {
     container "snads/bbtools@sha256:9f2a9b08563839cec87d856f0fc7607c235f464296fd71e15906ea1d15254695"
 
     input:
-        tuple val(base), path(input)
+        tuple val(base), path(input), path(qc_input_filecheck)
 
     output:
-        tuple val(base), path("${base}_noPhiX-R1.fsq"), path("${base}_noPhiX-R2.fsq"), emit: phix_removed
+        tuple val(base), path("${base}_noPhiX-R1.fsq"), path("${base}_noPhiX-R2.fsq"), path("*.tsv"), emit: phix_removed
         path "${base}.PhiX_Genome.tsv", emit: qc_phix_genome_filecheck
         path "${base}.PhiX-removed_FastQ_Files.tsv", emit: qc_phix_removed_filecheck
         path "${base}.raw.tsv"
@@ -33,6 +33,11 @@ process REMOVE_PHIX_BBDUK {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
 
         # Get PhiX, check if it exists, and verify file size
@@ -44,33 +49,31 @@ process REMOVE_PHIX_BBDUK {
           echo -e "!{base}\tPhiX Genome\tPASS" >> !{base}.PhiX_Genome.tsv
         else
           echo -e "!{base}\tPhiX Genome\tFAIL" >> !{base}.PhiX_Genome.tsv
-          exit 1
         fi
 
         # Remove PhiX
         msg "INFO: Running bbduk with !{task.cpus} threads"
         
         bbduk.sh \
-         threads=!{task.cpus} \
-         k=31 \
-         hdist=1 \
-         ref="${PHIX}" \
-         in="!{input[0]}" \
-         in2="!{input[1]}" \
-         out=!{base}_noPhiX-R1.fsq \
-         out2=!{base}_noPhiX-R2.fsq \
-         qin=auto \
-         qout=33 \
-         overwrite=t
+        threads=!{task.cpus} \
+        k=31 \
+        hdist=1 \
+        ref="${PHIX}" \
+        in="!{input[0]}" \
+        in2="!{input[1]}" \
+        out=!{base}_noPhiX-R1.fsq \
+        out2=!{base}_noPhiX-R2.fsq \
+        qin=auto \
+        qout=33 \
+        overwrite=t
 
         for suff in R1.fsq R2.fsq; do
           if verify_minimum_file_size "!{base}_noPhiX-${suff}" 'PhiX-removed FastQ Files' "!{params.min_filesize_fastq_phix_removed}"; then
             echo -e "!{base}\tPhiX-removed FastQ ($suff) File\tPASS" \
-             >> !{base}.PhiX-removed_FastQ_Files.tsv
+              >> !{base}.PhiX-removed_FastQ_Files.tsv
           else
             echo -e "!{base}\tPhiX-removed FastQ ($suff) File\tFAIL" \
-             >> !{base}.PhiX-removed_FastQ_Files.tsv
-            exit 1
+              >> !{base}.PhiX-removed_FastQ_Files.tsv
           fi
         done
 
@@ -89,9 +92,9 @@ process REMOVE_PHIX_BBDUK {
         msg "INFO: ${PHIX_BASES:-0} bp of PhiX were detected and removed in ${PHIX_READS:-0} reads"
 
         echo -e "!{base}\t${TOT_BASES} bp Raw\t${TOT_READS} reads Raw" \
-         > !{base}.raw.tsv
+        > !{base}.raw.tsv
         echo -e "!{base}\t${PHIX_BASES:-0} bp PhiX\t${PHIX_READS:-0} reads PhiX" \
-         > !{base}.phix.tsv
+        > !{base}.phix.tsv
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml

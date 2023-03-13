@@ -10,7 +10,7 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     container "snads/bedtools@sha256:9b80fb5c5ef1b6f4a4a211d8739fa3fe107da34d1fb6609d6b70ddc7afdce12c"
 
     input:
-        tuple val(base), path(paired_bam), path(single_bam)
+        tuple val(base), path(paired_bam), path(single_bam), path(qc_assembly_filechecks)
 
     output:
         tuple val(base), path("${base}.Summary.Illumina.CleanedReads-AlnStats.tab"), emit: summary_stats
@@ -21,6 +21,11 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
 
         # Calculate and report coverage of paired-reads and singleton reads separately

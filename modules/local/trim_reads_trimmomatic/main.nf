@@ -7,7 +7,7 @@ process TRIM_READS_TRIMMOMATIC {
         pattern: "*.trimmo.tsv"
     publishDir "${params.qc_filecheck_log_dir}",
         mode: "${params.publish_dir_mode}",
-        pattern: "*.{Adapters_FastA.tsv,Adapter-removed_FastQ_Files.tsv}"
+        pattern: "*.{Adapters_FastA,Adapter-removed_FastQ_Files}.tsv"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
@@ -19,12 +19,12 @@ process TRIM_READS_TRIMMOMATIC {
     container "snads/trimmomatic@sha256:afbb19fdf540e6bd508b657e8dafffb6b411b5b0bf0e302347889220a0b571f1"
 
     input:
-        tuple val(base), path(noPhiX_R1), path(noPhiX_R2)
+        tuple val(base), path(noPhiX_R1), path(noPhiX_R2), path(phix_qc_filechecks)
 
     output:
-        tuple val(base), path("${base}_R1.paired.fq"), path("${base}_R2.paired.fq"), emit: trimmo
-        path "${base}.Adapters_FastA.tsv", emit: adapters_filecheck
-        path "${base}.Adapter-removed_FastQ_Files.tsv", emit: removed_adapters_filecheck
+        tuple val(base), path("${base}_R1.paired.fq"), path("${base}_R2.paired.fq"), path("*Adapter*.tsv"), emit: trimmo
+        path "${base}.Adapters_FastA.tsv", emit: qc_adapters_filecheck
+        path "${base}.Adapter-removed_FastQ_Files.tsv", emit: qc_removed_adapters_filecheck
         path "${base}.trimmo.tsv"
         path "${base}.single.fq"
         path ".command.out"
@@ -33,6 +33,11 @@ process TRIM_READS_TRIMMOMATIC {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
         
         # Get Adapters, check if it exists, and verify file size
@@ -44,26 +49,25 @@ process TRIM_READS_TRIMMOMATIC {
           echo -e "!{base}\tAdapters FastA File\tPASS" > !{base}.Adapters_FastA.tsv
         else
           echo -e "!{base}\tAdapters FastA File\tFAIL" > !{base}.Adapters_FastA.tsv
-          exit 1
         fi
 
         # Adapter clip and quality trim
         msg "INFO: Running trimmomatic with !{task.cpus} threads"
 
         trimmomatic PE \
-         -phred33 \
-         -threads !{task.cpus} \
-         !{noPhiX_R1} !{noPhiX_R2} \
-         !{base}_R1.paired.fq !{base}_R1.unpaired.fq \
-         !{base}_R2.paired.fq !{base}_R2.unpaired.fq \
-         ILLUMINACLIP:${ADAPTERS}:2:20:10:8:TRUE \
-         SLIDINGWINDOW:6:30 \
-         LEADING:10 \
-         TRAILING:10 \
-         MINLEN:50
+        -phred33 \
+        -threads !{task.cpus} \
+        !{noPhiX_R1} !{noPhiX_R2} \
+        !{base}_R1.paired.fq !{base}_R1.unpaired.fq \
+        !{base}_R2.paired.fq !{base}_R2.unpaired.fq \
+        ILLUMINACLIP:${ADAPTERS}:2:20:10:8:TRUE \
+        SLIDINGWINDOW:6:30 \
+        LEADING:10 \
+        TRAILING:10 \
+        MINLEN:50
 
         TRIMMO_DISCARD=$(grep '^Input Read Pairs: ' .command.err \
-         | grep ' Dropped: ' | awk '{print $20}')
+        | grep ' Dropped: ' | awk '{print $20}')
 
         msg "INFO: ${TRIMMO_DISCARD} reads are poor quality and were discarded" >&2
 
@@ -82,7 +86,7 @@ process TRIM_READS_TRIMMOMATIC {
         msg "INFO: $CNT_BROKEN total broken read pairs were saved as singletons" >&2
         
         echo -e "!{base}\t${TRIMMO_DISCARD} reads Discarded\t${CNT_BROKEN} reads Singletons" \
-         > !{base}.trimmo.tsv
+        > !{base}.trimmo.tsv
 
         cat !{base}_R1.unpaired.fq !{base}_R2.unpaired.fq > !{base}.single.fq
 
@@ -91,11 +95,10 @@ process TRIM_READS_TRIMMOMATIC {
         for suff in R1.paired.fq R2.paired.fq; do
           if verify_minimum_file_size "!{base}_${suff}" 'Adapter-removed FastQ Files' "!{params.min_filesize_fastq_adapters_removed}"; then
             echo -e "!{base}\tAdapter-removed ($suff) FastQ File\tPASS" \
-             >> !{base}.Adapter-removed_FastQ_Files.tsv
+              >> !{base}.Adapter-removed_FastQ_Files.tsv
           else
             echo -e "!{base}\tAdapter-removed ($suff) FastQ File\tFAIL" \
-             >> !{base}.Adapter-removed_FastQ_Files.tsv
-            exit 1
+              >> !{base}.Adapter-removed_FastQ_Files.tsv
           fi
         done
 

@@ -17,7 +17,7 @@ process INFILE_HANDLING_UNIX {
         tuple val(basename), path(input)
 
     output:
-        tuple val(base), path(input), emit: input
+        tuple val(base), path(input), path("*.tsv"), emit: input
         path "${base}.Raw_Initial_FastQ_Files.tsv", emit: qc_filecheck
         path ".command.out"
         path ".command.err"
@@ -37,17 +37,17 @@ process INFILE_HANDLING_UNIX {
           if verify_minimum_file_size "${fastq}" 'Raw Initial FastQ Files' "!{params.min_filesize_fastq_input}"; then
             echo -e "!{base}\tRaw Initial FastQ (R${i}) File\tPASS" \
              >> !{base}.Raw_Initial_FastQ_Files.tsv
+            touch !{base}.filecheck.txt
           else
             echo -e "!{base}\tRaw Initial FastQ (R${i}) File\tFAIL" \
              >> !{base}.Raw_Initial_FastQ_Files.tsv
-            exit 1
           fi
           ((i++))
         done
 
         # Get process version
         cat <<-END_VERSIONS > versions.yml
-        "!{task.process}(!{basename})":
+        "!{task.process} (!{base})":
             ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
         END_VERSIONS
         '''

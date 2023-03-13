@@ -19,10 +19,10 @@ process POLISH_ASSEMBLY_BWA_PILON {
     container "gregorysprenger/bwa-samtools-pilon@sha256:209ac13b381188b4a72fe746d3ff93d1765044cbf73c3957e4e2f843886ca57f"
     
     input:
-        tuple val(base), path(R1_paired_gz), path(R2_paired_gz), path(single_gz), path(uncorrected_contigs)
+        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_overlap_filecheck), path(uncorrected_contigs)
 
     output:
-        tuple val(base), path("${base}.paired.bam"), path("${base}.single.bam"), emit: bam
+        tuple val(base), path("${base}.paired.bam"), path("${base}.single.bam"), path("*File.tsv"), emit: bam
         tuple val(base), path("${base}.fna"), emit: base_fna
         path "${base}.Filtered_Assembly_File.tsv", emit: filtered_asm_filecheck
         path "${base}.Binary_PE_Alignment_Map_File.tsv", emit: pe_alignment_filecheck
@@ -37,6 +37,11 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
 
         # Correct cleaned SPAdes contigs with cleaned PE reads
@@ -56,44 +61,44 @@ process POLISH_ASSEMBLY_BWA_PILON {
           bwa index !{uncorrected_contigs}
 
           bwa mem \
-           -t !{task.cpus} \
-           -x intractg \
-           -v 2 \
-           !{uncorrected_contigs} \
-           !{R1_paired_gz} !{R2_paired_gz} \
-           | \
-           samtools sort \
-           -@ !{task.cpus} \
-           --reference !{uncorrected_contigs} \
-           -l 9 \
-           -o !{base}.paired.bam
+          -t !{task.cpus} \
+          -x intractg \
+          -v 2 \
+          !{uncorrected_contigs} \
+          !{paired_R1_gz} !{paired_R2_gz} \
+          | \
+          samtools sort \
+          -@ !{task.cpus} \
+          --reference !{uncorrected_contigs} \
+          -l 9 \
+          -o !{base}.paired.bam
 
           if verify_minimum_file_size "!{base}.paired.bam" 'Binary PE Alignment Map File' "!{params.min_filesize_binary_pe_alignment}"; then
             echo -e "!{base}\tBinary PE Alignment Map File (${i} of 3)\tPASS" \
-             >> !{base}.Binary_PE_Alignment_Map_File.tsv
+            >> !{base}.Binary_PE_Alignment_Map_File.tsv
           else
             echo -e "!{base}\tBinary PE Alignment Map File (${i} of 3)\tFAIL" \
-             >> !{base}.Binary_PE_Alignment_Map_File.tsv
+            >> !{base}.Binary_PE_Alignment_Map_File.tsv
             exit 1
           fi
 
           samtools index !{base}.paired.bam
 
           pilon \
-           --genome !{uncorrected_contigs} \
-           --frags !{base}.paired.bam \
-           --output "!{base}" \
-           --changes \
-           --fix snps,indels \
-           --mindepth 0.50 \
-           --threads !{task.cpus} >&2
+          --genome !{uncorrected_contigs} \
+          --frags !{base}.paired.bam \
+          --output "!{base}" \
+          --changes \
+          --fix snps,indels \
+          --mindepth 0.50 \
+          --threads !{task.cpus} >&2
 
           if verify_minimum_file_size "!{uncorrected_contigs}" 'Polished Assembly File' "!{params.min_filesize_polished_assembly}"; then
             echo -e "!{base}\tPolished Assembly File (${i} of 3)\tPASS" \
-             >> !{base}.Polished_Assembly_File.tsv
+            >> !{base}.Polished_Assembly_File.tsv
           else
             echo -e "!{base}\tPolished Assembly File (${i} of 3)\tFAIL" \
-             >> !{base}.Polished_Assembly_File.tsv
+            >> !{base}.Polished_Assembly_File.tsv
             exit 1
           fi
 
@@ -111,10 +116,10 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
         if verify_minimum_file_size "!{base}.fna" 'Final Corrected Assembly FastA File' "!{params.min_filesize_final_assembly}"; then
           echo -e "!{base}\tFinal Corrected Assembly FastA File\tPASS" \
-           > !{base}.Final_Corrected_Assembly_FastA_File.tsv
+          > !{base}.Final_Corrected_Assembly_FastA_File.tsv
         else
           echo -e "!{base}\tFinal Corrected Assembly FastA File\tFAIL" \
-           > !{base}.Final_Corrected_Assembly_FastA_File.tsv
+          > !{base}.Final_Corrected_Assembly_FastA_File.tsv
           exit 1
         fi
 
@@ -125,24 +130,24 @@ process POLISH_ASSEMBLY_BWA_PILON {
           bwa index !{base}.fna
 
           bwa mem \
-           -t !{task.cpus} \
-           -x intractg \
-           -v 2 \
-           !{base}.fna \
-           !{single_gz} \
-           | \
+          -t !{task.cpus} \
+          -x intractg \
+          -v 2 \
+          !{base}.fna \
+          !{single_gz} \
+          | \
           samtools sort \
-           -@ !{task.cpus} \
-           --reference !{base}.fna \
-           -l 9 \
-           -o !{base}.single.bam
+          -@ !{task.cpus} \
+          --reference !{base}.fna \
+          -l 9 \
+          -o !{base}.single.bam
 
           if verify_minimum_file_size "!{base}.single.bam" 'Binary SE Alignment Map File' '!{params.min_filesize_binary_se_alignment}'; then
             echo -e "!{base}\tBinary SE Alignment Map File\tPASS" \
-             > !{base}.Binary_SE_Alignment_Map_File.tsv
+            > !{base}.Binary_SE_Alignment_Map_File.tsv
           else
             echo -e "!{base}\tBinary SE Alignment Map File\tFAIL" \
-             > !{base}.Binary_SE_Alignment_Map_File.tsv
+            > !{base}.Binary_SE_Alignment_Map_File.tsv
             exit 1
           fi
 

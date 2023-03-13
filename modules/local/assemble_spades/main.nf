@@ -19,11 +19,11 @@ process ASSEMBLE_SPADES {
     container "staphb/spades@sha256:e9c50ffb4b6f0ce4d3c504dd0ce1cb3381ae942ff4d5bac24dc78119b3bfd0dd"
 
     input:
-        tuple val(base), path(R1_paired_gz), path(R2_paired_gz), path(single_gz)
+        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_filecheck)
 
     output:
         path "${base}/"
-        tuple val(base), path("${base}/contigs.fasta"), emit: contigs
+        tuple val(base), path("${base}/contigs.fasta"), path("*.tsv"), emit: contigs
         path "${base}.Raw_Assembly_File.tsv", emit: qc_filecheck
         path ".command.out"
         path ".command.err"
@@ -31,6 +31,11 @@ process ASSEMBLE_SPADES {
 
     shell:
         '''
+        # Exit if previous process fails qc filechecks
+        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
+          exit 1
+        fi
+
         source bash_functions.sh
 
         # Assemble with SPAdes
@@ -44,22 +49,22 @@ process ASSEMBLE_SPADES {
           if [ ${failed} -gt 0 ]; then
             msg "ERROR: assembly file not produced by SPAdes for !{base}" >&2
             mv -f !{base}_tmp/spades.log \
-             !{base}_tmp/"${failed}"of3-asm-attempt-failed.spades.log 2> /dev/null
+            !{base}_tmp/"${failed}"of3-asm-attempt-failed.spades.log 2> /dev/null
             msg "INFO: SPAdes failure ${failed}; retrying assembly for !{base}" >&2
             spades.py \
-             --restart-from last \
-             -o !{base}_tmp \
-             -t !{task.cpus} >&2
+            --restart-from last \
+            -o !{base}_tmp \
+            -t !{task.cpus} >&2
           else
             spades.py \
-             --pe1-1 !{R1_paired_gz} \
-             --pe1-2 !{R2_paired_gz} \
-             --pe1-s !{single_gz} \
-             --memory "${RAMSIZE_TOT}" \
-             -o !{base}_tmp \
-             --phred-offset 33 \
-             -t !{task.cpus} \
-             --only-assembler >&2
+            --pe1-1 !{paired_R1_gz} \
+            --pe1-2 !{paired_R2_gz} \
+            --pe1-s !{single_gz} \
+            --memory "${RAMSIZE_TOT}" \
+            -o !{base}_tmp \
+            --phred-offset 33 \
+            -t !{task.cpus} \
+            --only-assembler >&2
           fi
           failed=$(( ${failed}+1 ))
         done
@@ -68,7 +73,6 @@ process ASSEMBLE_SPADES {
           echo -e "!{base}\tRaw Assembly File\tPASS" > !{base}.Raw_Assembly_File.tsv
         else
           echo -e "!{base}\tRaw Assembly File\tFAIL" > !{base}.Raw_Assembly_File.tsv
-          exit 1
         fi
 
         if grep -E -q 'N{60}' "!{base}_tmp/contigs.fasta"; then
@@ -78,14 +82,14 @@ process ASSEMBLE_SPADES {
         fi
 
         gzip !{base}_tmp/spades.log \
-         !{base}_tmp/params.txt
+        !{base}_tmp/params.txt
 
         mkdir !{base}
         mv !{base}_tmp/spades.log.gz \
-         !{base}_tmp/params.txt.gz \
-         !{base}_tmp/contigs.fasta \
-         !{base}_tmp/assembly_graph_with_scaffolds.gfa \
-         !{base}/
+        !{base}_tmp/params.txt.gz \
+        !{base}_tmp/contigs.fasta \
+        !{base}_tmp/assembly_graph_with_scaffolds.gfa \
+        !{base}/
         
         if [ -f !{base}_tmp/warnings.log ]; then
           mv !{base}_tmp/warnings.log !{base}/
