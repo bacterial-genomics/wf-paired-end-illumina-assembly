@@ -370,8 +370,8 @@ workflow {
         INFILE_HANDLING_UNIX.out.qc_filecheck,
         REMOVE_PHIX_BBDUK.out.qc_phix_genome_filecheck,
         REMOVE_PHIX_BBDUK.out.qc_phix_removed_filecheck,
-        TRIM_READS_TRIMMOMATIC.out.adapters_filecheck,
-        TRIM_READS_TRIMMOMATIC.out.removed_adapters_filecheck,
+        TRIM_READS_TRIMMOMATIC.out.qc_adapters_filecheck,
+        TRIM_READS_TRIMMOMATIC.out.qc_removed_adapters_filecheck,
         OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,
         ASSEMBLE_SPADES.out.qc_filecheck,
         POLISH_ASSEMBLY_BWA_PILON.out.filtered_asm_filecheck,
@@ -380,7 +380,8 @@ workflow {
         POLISH_ASSEMBLY_BWA_PILON.out.corrected_asm_filecheck,
         POLISH_ASSEMBLY_BWA_PILON.out.se_alignment_filecheck,
         ANNOTATE_PROKKA.out.qc_filecheck,
-        EXTRACT_16S_BARRNAP.out.qc_filecheck,
+        EXTRACT_16S_BARRNAP.out.qc_ssu_extracted_filecheck,
+        EXTRACT_16S_BARRNAP.out.qc_ssu_renamed_filecheck,
         ALIGN_16S_BLAST.out.qc_filecheck,
         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck
     )
