@@ -45,12 +45,18 @@ COLOR_OFF='\033[0m'
 
 # Allow user to re-specify the output path
 prompt_new_outpath() {
-  read -p "${RED_BG}Would you like to use a different output path? (yes|no) ${COLOR_OFF}" -n 1 -r
+  echo -e "${RED_BG}"
+  read -p "\nWould you like to use a different output path? (yes|no) " -n 1 -r
+  echo -e "${COLOR_OFF}"
+
   if [[ $REPLY =~ ^[yY] ]]; then
-    read -p "${RED_BG}Enter new Output path: ${COLOR_OFF}" _new_outpath
+    echo -e "${RED_BG}"
+    read -p "Enter new Output path: " _new_outpath
+    echo -e "${COLOR_OFF}"
+
     OUT="$(readlink -f ${_new_outpath})"
   else
-    echo -e "${RED_TXT}You can re-run this workflow with a new output path."
+    echo -e "${RED_TXT}\nYou can re-run this workflow with a new output path."
     echo -e "Submission was cancelled. ${COLOR_OFF}"
     exit 0
   fi
@@ -65,7 +71,11 @@ prompt_if_previous_nextflow_run() {
     echo -e "${YELLOW_TXT}\nThis workflow has been ran in output path before."
     echo -e "Processing the same sample names will overwrite older data."
     echo -e "If you have jobs in queue this could be confusing.\n ${COLOR_OFF}"
-    read -p "${RED_BG}Do you want to continue? (yes|no) ${COLOR_OFF}" -n 1 -r
+
+    echo -e "${RED_BG}"
+    read -p "Do you want to continue? (yes|no) " -n 1 -r
+    echo -e "${COLOR_OFF}"
+
     if [[ $REPLY =~ ^[yY] ]]; then
       # Continue submission if user wants to possibly overwrite data
       echo -e "${GREEN_TXT}Data in ${1} will be overwritten."
@@ -147,10 +157,10 @@ fi
 # If Windows-style mount point (e.g., "Z:\Streptobacillus\Raw_FQs") given as a
 #  path, check both user's home, lab home, and group as possible mount areas
 #  to determine if files exist in 1 but not the others.
-if [[ ${IN} =~ ^[A-Z]\:\\.+ ]]; then
-  path_slashes_replaced="$(echo "${IN:3}" | sed 's/\\/\//g')"
+if [[ ${IN} =~ ^.+[A-Z]\:.+ ]]; then
+  path_slashes_replaced="$(echo "${IN}" | cut -d ':' -f 2 | sed 's/\\/\//g')"
   user_home="${HOME}"/"${path_slashes_replaced}"
-  user_group_main="/scicomp/${path_slashes_replaced}"
+  user_group_main="/scicomp${path_slashes_replaced}" # Dropped slash between scicomp and var
   user_group_branch="/scicomp/groups/OID/NCEZID/DHCPP/BSPB/${path_slashes_replaced}"
   lab_home="${LAB_HOME}"/"${path_slashes_replaced}"
   paths=(
@@ -169,8 +179,10 @@ if [[ ${IN} =~ ^[A-Z]\:\\.+ ]]; then
      2> /dev/null \
      | wc -l)
     if [[ ${cnt_read_files} -ge 1 ]]; then
-        echo "${cnt_read_files} FastQ files found in: ${path}"
-        read -p "Use ${path} as Input Directory? (yes|no)" -n 1 -r
+        echo -e "${YELLOW_TXT}\n${cnt_read_files} FastQ files found in: ${path}${COLOR_OFF}"
+        echo -e "${RED_BG}"
+        read -p "Use ${path} as Input Directory? (yes|no) " -n 1 -r
+        echo -e "${COLOR_OFF}"
         if [[ $REPLY =~ ^[yY] ]]; then
           IN="${path}"
         else
@@ -182,14 +194,18 @@ if [[ ${IN} =~ ^[A-Z]\:\\.+ ]]; then
 fi
 
 # For now, just output into shared LAB_HOME area
-if [[ ${OUT} =~ ^[A-Z]\:\\.+ ]]; then
-  echo "${YELLOW_TXT}Windows hard mount path detected as Output Directory ${COLOR_OFF}"
+if [[ ${OUT} =~ ^.+[A-Z]\:.+ ]]; then
+  echo -e "${YELLOW_TXT}\nWindows hard mount path detected as Output Directory ${COLOR_OFF}"
   proposed_outpath="${LAB_HOME}"/"$(date '+%Y-%b-%d_%a_%H:%M:%S')"
-  read -p "Use ${path} as Input Directory? (yes|no)" -n 1 -r
+
+  echo -e "${RED_BG}"
+  read -p "Use ${proposed_outpath} as Output Directory? (yes|no) " -n 1 -r
+  echo -e "${COLOR_OFF}"
+
   if [[ $REPLY =~ ^[yY] ]]; then
     OUT="${path}"
   else
-    echo "${RED_TXT}Okay, bad autoselection? Re-run with a different specified path ${COLOR_OFF}"
+    echo -e "${RED_TXT}\nOkay, bad autoselection? Re-run with a different specified path ${COLOR_OFF}\n"
     exit 0
   fi
 fi
@@ -197,8 +213,8 @@ fi
 # If Windows-style path from Core Facility given via email
 #  (e.g., "\\...cdc.gov\groups\OID\...BCFB\by-instrument\NovaSeq\")
 #  is given as path, form the Linux path
-if [[ ${IN} =~ ^\\\\.+\.cdc\.gov\\.+\\.+ ]]; then
-  inpath_stripped_hostname="${IN/*.cdc\.gov/\/scicomp}"
+if [[ ${IN} =~ ^.+\.cdc\.gov\\.+\\.+ ]]; then
+  inpath_stripped_hostname="${IN/*.cdc\.gov/\scicomp}"
   inpath_dewindowsed="$(echo "${inpath_stripped_hostname}" | sed 's/\\/\//g')"
   IN="${inpath_dewindowsed}"
 fi
@@ -262,7 +278,9 @@ if [[ ${#submitted[@]} -ge 10 ]]; then
   echo -e "${submitted[@]}\n"
   
   # Prompt user to verify submission of large sample set
-  read -p "${RED_BG}Do you want to continue submitting ${#submitted[@]} samples? (yes|no) ${COLOR_OFF}" -n 1 -r
+  echo -e "${RED_BG}"
+  read -p "Do you want to continue submitting ${#submitted[@]} samples? (yes|no) " -n 1 -r
+  echo -e "${COLOR_OFF}"
   if [[ $REPLY =~ ^[yY] ]]; then
     echo -e "Continuing to submit ${#submitted[@]} samples...\n"
   else
@@ -297,7 +315,7 @@ if [[ ${#submitted[@]} -ge 1 ]] && \
   # Display basename of FastQ files submitted
   echo -e "${GREEN_TXT}\nInput directory:${COLOR_OFF} ${IN}"
   echo -e "${GREEN_TXT}Output directory:${COLOR_OFF} ${OUT}"
-  echo -e "\n${GREEN_TXT}Generating annotated assemblies for:"
+  echo -e "${GREEN_TXT}\nGenerating annotated assemblies for:"
   for elem in "${submitted[@]}"; do
     echo "${elem}"
   done
@@ -327,7 +345,7 @@ elif [[ ${#submitted[@]} -ge 1 ]] && \
   # Display basename of FastQ files submitted
   echo -e "${GREEN_TXT}\nInput directory:${COLOR_OFF} ${IN}"
   echo -e "${GREEN_TXT}Output directory:${COLOR_OFF} ${OUT}"
-  echo -e "\n${GREEN_TXT}Generating annotated assemblies for:"
+  echo -e "${GREEN_TXT}\nGenerating annotated assemblies for:"
   for elem in "${submitted[@]}"; do
     echo "${elem}"
   done
