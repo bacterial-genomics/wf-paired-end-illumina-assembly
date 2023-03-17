@@ -26,17 +26,24 @@ run_name=$(grep "Launching" ${OUT}/log/ASM_*.o* | cut -d '[' -f 2 | cut -d ']' -
 while read -r line; do
   sample_name=$(grep "nf-" ${line}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
   process=$(grep "nf-" ${line}/.command.run | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
+  error=$(tail -n 1 ${line}/.command.err | sed -e 's/\[[^][]*\] //g')
 
-  if [ $process == "EXTRACT_16S_BIOPYTHON" ]; then
+  # Check if error is from file checks
+  if [[ ${error} =~ .+Check[[:space:]]FAILED$ ]]; then
+    get_previous_process_workdir=$(dirname $(grep "ln -s" ${line}/.command.run | grep "work" | awk 'END {print $(NF-1)}' ))
+    process=$(grep "nf-" ${get_previous_process_workdir}/.command.run | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
+    line="${get_previous_process_workdir}"
+
+  # Check if process is EXTRACT_16S_BIOPYTHON -> requires different sed commands
+  elif [[ ${process} == "EXTRACT_16S_BIOPYTHON" ]]; then
     get_filename=$(tail -n 1 ${line}/.command.err | awk -F '/' '{print $NF}')
     remove_filepath=$(tail -n 1 ${line}/.command.err | sed -e 's/[][]//g' | cut -d '/' -f 1)
     error=$(echo -e "${remove_filepath} ${get_filename}")
-  else
-    error=$(tail -n 1 ${line}/.command.err | sed -e 's/\[[^][]*\] //g')
   fi
 
   # If process for sample retried and succeeded, ignore
-  if [ $(ls ${OUT}/log/process_logs/${sample_name}.${process}* | wc -l) -ge 1 ]; then
+  if [[ -f $(ls ${OUT}/log/process_logs/${sample_name}.${process}*out) ]] \
+    && [[ $(cat $line/.exitcode) = @(143|137|104|134|139|71|255) ]]; then
     continue
   else
     echo -e "${sample_name}\t${process}\t${error}\t${line}" >> ${OUT}/log/errors.tsv
@@ -65,5 +72,11 @@ elif [[ -f "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" ]]; then
   -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
   -a "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" \
+  "${USER}@cdc.gov"
+elif [[ -f "${OUT}/log/errors.tsv" ]]; then
+  echo -e "Assembly and QA could not be completed on $(date)\n${OUT}" | mail \
+  -s "No assemblies found $(basename "${OUT}") [HPC]" \
+  -S smtp="smtpgw.cdc.gov" \
+  -a "${OUT}/log/errors.tsv" \
   "${USER}@cdc.gov"
 fi

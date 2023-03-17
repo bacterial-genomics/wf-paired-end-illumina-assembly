@@ -46,7 +46,7 @@ COLOR_OFF='\033[0m'
 # Allow user to re-specify the output path
 prompt_new_outpath() {
   echo -e "${RED_BG}"
-  read -p "\nWould you like to use a different output path? (yes|no) " -n 1 -r
+  read -p "Would you like to use a different output path? (yes|no) " -n 1 -r
   echo -e "${COLOR_OFF}"
 
   if [[ $REPLY =~ ^[yY] ]]; then
@@ -57,7 +57,7 @@ prompt_new_outpath() {
     OUT="$(readlink -f ${_new_outpath})"
   else
     echo -e "${RED_TXT}\nYou can re-run this workflow with a new output path."
-    echo -e "Submission was cancelled. ${COLOR_OFF}"
+    echo -e "Submission was cancelled.\n ${COLOR_OFF}"
     exit 0
   fi
 }
@@ -67,9 +67,9 @@ prompt_if_previous_nextflow_run() {
   # Parameters:
   #  $1 = file path
   #  $2 = filename (no path) to search for
-  if [ -f "$(find "${1}" -name "${2}" | grep -q '.')" ]; then
+  if [ -f $(find "${1}" -maxdepth 1 -name "${2}*" | grep -q '.') ]; then
     echo -e "${YELLOW_TXT}\nThis workflow has been ran in output path before."
-    echo -e "Processing the same sample names will overwrite older data."
+    echo -e "Processing samples will overwrite older data."
     echo -e "If you have jobs in queue this could be confusing.\n ${COLOR_OFF}"
 
     echo -e "${RED_BG}"
@@ -83,7 +83,7 @@ prompt_if_previous_nextflow_run() {
     else
       # If user doesn't want to continue, ask for a different output path
       prompt_new_outpath
-      prompt_if_previous_nextflow_run "${OUT}" "nextflow_log.${SCRIPT_NAME}.txt"
+      prompt_if_previous_nextflow_run "${OUT}" "nextflow_log"
     fi
   fi
 }
@@ -170,7 +170,7 @@ if [[ ${IN} =~ ^.+[A-Z]\:.+ ]]; then
     "${lab_home}"
     )
   for path in "${paths[@]}"; do
-    cnt_read_files=$(find "${path}" \
+    cnt_read_files=$(find -L "${path}" \
      -maxdepth 2 \
      -type f \
      -readable \
@@ -222,9 +222,10 @@ fi
 # Check for specific nextflow logfile for this workflow, which
 #  means this nextflow workflow has been ran before in the specified outpath.
 if [ -d "${OUT}/log" ] && \
-  [ -f "${OUT}/nextflow_log.${SCRIPT_NAME}.txt" ]; then
-  prompt_if_previous_nextflow_run "${OUT}" "nextflow_log.${SCRIPT_NAME}.txt"
+  [ -f $(find "${OUT}" -maxdepth 1 -name "nextflow_log*" | grep -q '.') ]; then
+  prompt_if_previous_nextflow_run "${OUT}" "nextflow_log"
 fi
+
 # Also check for unsupported behavior combining legacy bash and newer nextflow
 if [ -d "${OUT}/.log" ] && \
   [ -f "${OUT}/trim.asm.annot.job_ids.txt" ] && \
@@ -236,7 +237,7 @@ if [ -d "${OUT}/.log" ] && \
 fi
 
 # Add found files to an array
-found_files=( $(find ${IN} \
+found_files=( $(find -L ${IN} \
      -maxdepth 2 \
      -type f \
      -readable \
@@ -274,17 +275,19 @@ done
 
 # Prompt user if >10 samples to prevent accidentally assembling too many
 if [[ ${#submitted[@]} -ge 10 ]]; then
-  echo -e "${YELLOW_TXT}WARNING:${COLOR_OFF} ${#submitted[@]} samples have been identified:\n"
-  echo -e "${submitted[@]}\n"
+  echo -e "${YELLOW_TXT}\nWARNING: ${#submitted[@]} samples have been identified:\n${COLOR_OFF}"
+  for f in ${submitted[@]}; do
+    echo -e "${YELLOW_TXT}${f}${COLOR_OFF}"
+  done
   
   # Prompt user to verify submission of large sample set
   echo -e "${RED_BG}"
   read -p "Do you want to continue submitting ${#submitted[@]} samples? (yes|no) " -n 1 -r
   echo -e "${COLOR_OFF}"
   if [[ $REPLY =~ ^[yY] ]]; then
-    echo -e "Continuing to submit ${#submitted[@]} samples...\n"
+    echo -e "\nContinuing to submit ${#submitted[@]} samples...\n"
   else
-    echo -e "${RED_TXT}Submission cancelled ${COLOR_OFF}"
+    echo -e "${RED_TXT}\nSubmission cancelled ${COLOR_OFF}"
     exit 0
   fi
 fi
