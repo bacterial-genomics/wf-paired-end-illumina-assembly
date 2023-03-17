@@ -35,7 +35,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
         for filecheck in !{qc_nonoverlap_filecheck}; do
           if [[ $(grep "FAIL" ${filecheck}) ]]; then
             error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-            msg "FAILURE: ${error_message} Check FAILED" >&2
+            msg "${error_message} Check FAILED" >&2
             exit 1
           else
             rm ${filecheck}
@@ -127,7 +127,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
         for filecheck in !{qc_nonoverlap_filecheck}; do
           if [[ $(grep "FAIL" ${filecheck}) ]]; then
             error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-            msg "FAILURE: ${error_message} Check FAILED" >&2
+            msg "${error_message} Check FAILED" >&2
             exit 1
           else
             rm ${filecheck}

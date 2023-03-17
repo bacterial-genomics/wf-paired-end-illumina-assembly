@@ -33,7 +33,7 @@ process ALIGN_16S_BLAST {
         for filecheck in !{qc_extracted_filecheck}; do
           if [[ $(grep "FAIL" ${filecheck}) ]]; then
             error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-            msg "FAILURE: ${error_message} Check FAILED" >&2
+            msg "${error_message} Check FAILED" >&2
             exit 1
           else
             rm ${filecheck}
