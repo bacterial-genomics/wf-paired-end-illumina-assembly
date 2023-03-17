@@ -7,7 +7,7 @@ process REMOVE_PHIX_BBDUK {
         pattern: "*.{raw,phix}.tsv"
     publishDir "${params.qc_filecheck_log_dir}",
         mode: "${params.publish_dir_mode}",
-        pattern: "*.{PhiX_Genome,PhiX-removed_FastQ_Files}.tsv"
+        pattern: "*.{PhiX_Genome_File,PhiX-removed_FastQ_Files}.tsv"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
@@ -22,8 +22,8 @@ process REMOVE_PHIX_BBDUK {
         tuple val(base), path(input), path(qc_input_filecheck)
 
     output:
-        tuple val(base), path("${base}_noPhiX-R1.fsq"), path("${base}_noPhiX-R2.fsq"), path("*.tsv"), emit: phix_removed
-        path "${base}.PhiX_Genome.tsv", emit: qc_phix_genome_filecheck
+        tuple val(base), path("${base}_noPhiX-R1.fsq"), path("${base}_noPhiX-R2.fsq"), path("*File*.tsv"), emit: phix_removed
+        path "${base}.PhiX_Genome_File.tsv", emit: qc_phix_genome_filecheck
         path "${base}.PhiX-removed_FastQ_Files.tsv", emit: qc_phix_removed_filecheck
         path "${base}.raw.tsv"
         path "${base}.phix.tsv"
@@ -33,12 +33,18 @@ process REMOVE_PHIX_BBDUK {
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-
         source bash_functions.sh
+        
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_input_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
 
         # Get PhiX, check if it exists, and verify file size
         PHIX="${DIR}/PhiX_NC_001422.1.fasta"
@@ -46,9 +52,9 @@ process REMOVE_PHIX_BBDUK {
           exit 1
         fi
         if verify_minimum_file_size ${PHIX} 'PhiX Genome' "!{params.min_filesize_phix_genome}"; then
-          echo -e "!{base}\tPhiX Genome\tPASS" >> !{base}.PhiX_Genome.tsv
+          echo -e "!{base}\tPhiX Genome\tPASS" >> !{base}.PhiX_Genome_File.tsv
         else
-          echo -e "!{base}\tPhiX Genome\tFAIL" >> !{base}.PhiX_Genome.tsv
+          echo -e "!{base}\tPhiX Genome\tFAIL" >> !{base}.PhiX_Genome_File.tsv
         fi
 
         # Remove PhiX

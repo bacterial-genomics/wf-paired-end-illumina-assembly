@@ -10,7 +10,7 @@ process MLST_MLST {
     container "gregorysprenger/mlst@sha256:69c8c8027474b8f361ef4a579df171702f3ed52f45e3fb388a41ccbf4542706f"
 
     input:
-        tuple val(base), path(paired_bam), path(single_bam), path(qc_assembly_filechecks), path(base_fna)
+        tuple val(base), path(paired_bam), path(single_bam), path(qc_assembly_filecheck), path(base_fna)
 
     output:
         path "${base}.Summary.MLST.tab", emit: summary_mlst
@@ -20,12 +20,18 @@ process MLST_MLST {
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-        
         source bash_functions.sh
+
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_assembly_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
 
         # MLST for each assembly
         msg "INFO: Running MLST with !{task.cpus} threads"

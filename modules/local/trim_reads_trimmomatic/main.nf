@@ -7,7 +7,7 @@ process TRIM_READS_TRIMMOMATIC {
         pattern: "*.trimmo.tsv"
     publishDir "${params.qc_filecheck_log_dir}",
         mode: "${params.publish_dir_mode}",
-        pattern: "*.{Adapters_FastA,Adapter-removed_FastQ_Files}.tsv"
+        pattern: "*.{Adapters_FastA_File,Adapter-removed_FastQ_Files}.tsv"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
@@ -19,11 +19,11 @@ process TRIM_READS_TRIMMOMATIC {
     container "snads/trimmomatic@sha256:afbb19fdf540e6bd508b657e8dafffb6b411b5b0bf0e302347889220a0b571f1"
 
     input:
-        tuple val(base), path(noPhiX_R1), path(noPhiX_R2), path(phix_qc_filechecks)
+        tuple val(base), path(noPhiX_R1), path(noPhiX_R2), path(qc_phix_filecheck)
 
     output:
-        tuple val(base), path("${base}_R1.paired.fq"), path("${base}_R2.paired.fq"), path("*Adapter*.tsv"), emit: trimmo
-        path "${base}.Adapters_FastA.tsv", emit: qc_adapters_filecheck
+        tuple val(base), path("${base}_R1.paired.fq"), path("${base}_R2.paired.fq"), path("*File*.tsv"), emit: trimmo
+        path "${base}.Adapters_FastA_File.tsv", emit: qc_adapters_filecheck
         path "${base}.Adapter-removed_FastQ_Files.tsv", emit: qc_removed_adapters_filecheck
         path "${base}.trimmo.tsv"
         path "${base}.single.fq"
@@ -33,12 +33,18 @@ process TRIM_READS_TRIMMOMATIC {
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-
         source bash_functions.sh
+
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_phix_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
         
         # Get Adapters, check if it exists, and verify file size
         ADAPTERS="${DIR}/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas"
@@ -46,9 +52,9 @@ process TRIM_READS_TRIMMOMATIC {
           exit 1
         fi
         if verify_minimum_file_size ${ADAPTERS} 'Adapters FastA' "!{params.min_filesize_adapters}"; then
-          echo -e "!{base}\tAdapters FastA File\tPASS" > !{base}.Adapters_FastA.tsv
+          echo -e "!{base}\tAdapters FastA File\tPASS" > !{base}.Adapters_FastA_File.tsv
         else
-          echo -e "!{base}\tAdapters FastA File\tFAIL" > !{base}.Adapters_FastA.tsv
+          echo -e "!{base}\tAdapters FastA File\tFAIL" > !{base}.Adapters_FastA_File.tsv
         fi
 
         # Adapter clip and quality trim

@@ -13,7 +13,7 @@ process QA_ASSEMBLY_QUAST {
     container "snads/quast@sha256:c8147a279feafbc88bafeeda3817ff32d43db87d31dd0978df1cd2f8022d324c"
 
     input:
-        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_overlap_filecheck), path(base_fna)
+        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck), path(base_fna)
 
     output:
         tuple val(base), path("${base}.Summary.Assemblies.tab"), path("${base}.Summary.Illumina.CleanedReads-Bases.tab"), emit: qa_summaries
@@ -25,12 +25,18 @@ process QA_ASSEMBLY_QUAST {
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-
         source bash_functions.sh
+
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_nonoverlap_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
 
         # Run Quast
         msg "INFO: Running QUAST with !{task.cpus} threads"

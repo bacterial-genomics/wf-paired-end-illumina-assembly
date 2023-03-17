@@ -21,7 +21,7 @@ process EXTRACT_16S_BARRNAP {
         tuple val(base), path(annotation), path(qc_annotated_filecheck), path(base_fna), path(extracted_rna)
 
     output:
-        tuple val(base), path("16S.${base}.fa"), path("*File.tsv"), emit: extracted_base
+        tuple val(base), path("16S.${base}.fa"), path("*File*.tsv"), emit: extracted_base
         path "${base}.SSU_Extracted_File.tsv", emit: qc_ssu_extracted_filecheck
         path "${base}.SSU_Renamed_File.tsv", emit: qc_ssu_renamed_filecheck
         path ".command.out"
@@ -30,12 +30,18 @@ process EXTRACT_16S_BARRNAP {
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-
         source bash_functions.sh
+
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_annotated_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
 
         if [[ ! -f "!{extracted_rna}" ]] || [[ ! -s "!{extracted_rna}" ]]; then
           msg "INFO: absent 16S rRNA gene annotation in !{annotation}" >&2

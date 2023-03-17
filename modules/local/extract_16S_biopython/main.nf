@@ -22,12 +22,18 @@ process EXTRACT_16S_BIOPYTHON {
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-
         source bash_functions.sh
+
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_annotated_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
 
         # Get extract.record.from.genbank.py and check if it exists
         extract_record_script="${DIR}/extract.record.from.genbank.py"

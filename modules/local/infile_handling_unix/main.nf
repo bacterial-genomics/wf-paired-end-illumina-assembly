@@ -17,8 +17,8 @@ process INFILE_HANDLING_UNIX {
         tuple val(basename), path(input)
 
     output:
-        tuple val(base), path(input), path("*.tsv"), emit: input
-        path "${base}.Raw_Initial_FastQ_Files.tsv", emit: qc_filecheck
+        tuple val(base), path(input), path("*File*.tsv"), emit: input
+        path "${base}.Raw_Initial_FastQ_Files.tsv", emit: qc_input_filecheck
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions

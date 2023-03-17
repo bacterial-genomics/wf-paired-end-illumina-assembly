@@ -19,11 +19,11 @@ process OVERLAP_PAIRED_READS_FLASH {
     container "snads/flash@sha256:363b2f44d040c669191efbc3d3ba99caf5efd3fdef370af8f00f3328932143a6"
 
     input:
-        tuple val(base), path(input), path(qc_input_filecheck), path(paired_R1), path(paired_R2), path(qc_adapter_filechecks)
+        tuple val(base), path(input), path(qc_input_filecheck), path(paired_R1), path(paired_R2), path(qc_adapter_filecheck)
 
     output:
-        tuple val(base), path("${base}_R1.paired.fq.gz"), path("${base}_R2.paired.fq.gz"), path("${base}.single.fq.gz"), path("*Non*.tsv"), emit: gzip_reads
-        path "${base}.Non-overlapping_FastQ_Files.tsv", emit: qc_filecheck
+        tuple val(base), path("${base}_R1.paired.fq.gz"), path("${base}_R2.paired.fq.gz"), path("${base}.single.fq.gz"), path("*File*.tsv"), emit: gzip_reads
+        path "${base}.Non-overlapping_FastQ_Files.tsv", emit: qc_nonoverlap_filecheck
         path "${base}.overlap.tsv"
         path "${base}.clean-reads.tsv"
         path ".command.out"
@@ -32,12 +32,18 @@ process OVERLAP_PAIRED_READS_FLASH {
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-
         source bash_functions.sh
+
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_input_filecheck} !{qc_adapter_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
 
         # Determine read length based on the first 100 reads
         echo -e "$(zcat "!{input[0]}" | head -n 400 > read_R1_len.txt)"

@@ -19,24 +19,30 @@ process ASSEMBLE_SPADES {
     container "staphb/spades@sha256:e9c50ffb4b6f0ce4d3c504dd0ce1cb3381ae942ff4d5bac24dc78119b3bfd0dd"
 
     input:
-        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_filecheck)
+        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
 
     output:
         path "${base}/"
-        tuple val(base), path("${base}/contigs.fasta"), path("*.tsv"), emit: contigs
-        path "${base}.Raw_Assembly_File.tsv", emit: qc_filecheck
+        tuple val(base), path("${base}/contigs.fasta"), path("*File*.tsv"), emit: contigs
+        path "${base}.Raw_Assembly_File.tsv", emit: qc_raw_assembly_filecheck
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-
         source bash_functions.sh
+
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_nonoverlap_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
 
         # Assemble with SPAdes
         failed=0

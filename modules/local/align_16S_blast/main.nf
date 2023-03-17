@@ -15,24 +15,30 @@ process ALIGN_16S_BLAST {
     container "gregorysprenger/ncbi-blast-plus@sha256:2d3e226d2eb31e3e0d5a80d7325b3a2ffd873ad1f2bd81215fd0b43727019279"
 
     input:
-        tuple val(base), path(extracted_base), path(qc_extracted_filechecks), path(base_fna)
+        tuple val(base), path(extracted_base), path(qc_extracted_filecheck), path(base_fna)
         path blast_db
 
     output:
         tuple val(base), path("${base}.blast.tsv"), path("*File.tsv"), emit: blast_tsv
-        path "${base}.16S_BLASTn_Output_File.tsv", emit: qc_filecheck
+        path "${base}.16S_BLASTn_Output_File.tsv", emit: qc_blastn_filecheck
         path ".command.out"
         path ".command.err"
         path "versions.yml", emit: versions
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-
         source bash_functions.sh
+
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_extracted_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
 
         # Classify each 16S sequence record
         if [[ -d "!{blast_db}" ]]; then

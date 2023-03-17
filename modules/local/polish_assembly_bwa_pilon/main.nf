@@ -7,7 +7,7 @@ process POLISH_ASSEMBLY_BWA_PILON {
         pattern: "*.{txt,fna}"
     publishDir "${params.qc_filecheck_log_dir}",
         mode: "${params.publish_dir_mode}",
-        pattern: "*.tsv"
+        pattern: "*File*.tsv"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
@@ -19,16 +19,16 @@ process POLISH_ASSEMBLY_BWA_PILON {
     container "gregorysprenger/bwa-samtools-pilon@sha256:209ac13b381188b4a72fe746d3ff93d1765044cbf73c3957e4e2f843886ca57f"
     
     input:
-        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_overlap_filecheck), path(uncorrected_contigs)
+        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck), path(uncorrected_contigs)
 
     output:
-        tuple val(base), path("${base}.paired.bam"), path("${base}.single.bam"), path("*File.tsv"), emit: bam
+        tuple val(base), path("${base}.paired.bam"), path("${base}.single.bam"), path("*File*.tsv"), emit: bam
         tuple val(base), path("${base}.fna"), emit: base_fna
-        path "${base}.Filtered_Assembly_File.tsv", emit: filtered_asm_filecheck
-        path "${base}.Binary_PE_Alignment_Map_File.tsv", emit: pe_alignment_filecheck
-        path "${base}.Polished_Assembly_File.tsv", emit: polished_asm_filecheck
-        path "${base}.Final_Corrected_Assembly_FastA_File.tsv", emit: corrected_asm_filecheck
-        path "${base}.Binary_SE_Alignment_Map_File.tsv", emit: se_alignment_filecheck
+        path "${base}.Filtered_Assembly_File.tsv", emit: qc_filtered_asm_filecheck
+        path "${base}.Binary_PE_Alignment_Map_File.tsv", emit: qc_pe_alignment_filecheck
+        path "${base}.Polished_Assembly_File.tsv", emit: qc_polished_asm_filecheck
+        path "${base}.Final_Corrected_Assembly_FastA_File.tsv", emit: qc_corrected_asm_filecheck
+        path "${base}.Binary_SE_Alignment_Map_File.tsv", emit: qc_se_alignment_filecheck
         path "${base}.InDels-corrected.cnt.txt"
         path "${base}.SNPs-corrected.cnt.txt"
         path ".command.out"
@@ -37,12 +37,17 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-
         source bash_functions.sh
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_nonoverlap_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
 
         # Correct cleaned SPAdes contigs with cleaned PE reads
         if verify_minimum_file_size "!{uncorrected_contigs}" 'Filtered Assembly File' "!{params.min_filesize_non_filtered_assembly}"; then

@@ -367,23 +367,23 @@ workflow {
 
     // Collect all QC File Checks and concatenate into one file
     qc_filecheck_ch = qc_filecheck_ch.concat(
-        INFILE_HANDLING_UNIX.out.qc_filecheck,
+        INFILE_HANDLING_UNIX.out.qc_input_filecheck,
         REMOVE_PHIX_BBDUK.out.qc_phix_genome_filecheck,
         REMOVE_PHIX_BBDUK.out.qc_phix_removed_filecheck,
         TRIM_READS_TRIMMOMATIC.out.qc_adapters_filecheck,
         TRIM_READS_TRIMMOMATIC.out.qc_removed_adapters_filecheck,
-        OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,
-        ASSEMBLE_SPADES.out.qc_filecheck,
-        POLISH_ASSEMBLY_BWA_PILON.out.filtered_asm_filecheck,
-        POLISH_ASSEMBLY_BWA_PILON.out.pe_alignment_filecheck,
-        POLISH_ASSEMBLY_BWA_PILON.out.polished_asm_filecheck,
-        POLISH_ASSEMBLY_BWA_PILON.out.corrected_asm_filecheck,
-        POLISH_ASSEMBLY_BWA_PILON.out.se_alignment_filecheck,
-        ANNOTATE_PROKKA.out.qc_filecheck,
+        OVERLAP_PAIRED_READS_FLASH.out.qc_nonoverlap_filecheck,
+        ASSEMBLE_SPADES.out.qc_raw_assembly_filecheck,
+        POLISH_ASSEMBLY_BWA_PILON.out.qc_filtered_asm_filecheck,
+        POLISH_ASSEMBLY_BWA_PILON.out.qc_pe_alignment_filecheck,
+        POLISH_ASSEMBLY_BWA_PILON.out.qc_polished_asm_filecheck,
+        POLISH_ASSEMBLY_BWA_PILON.out.qc_corrected_asm_filecheck,
+        POLISH_ASSEMBLY_BWA_PILON.out.qc_se_alignment_filecheck,
+        ANNOTATE_PROKKA.out.qc_annotated_filecheck,
         EXTRACT_16S_BARRNAP.out.qc_ssu_extracted_filecheck,
         EXTRACT_16S_BARRNAP.out.qc_ssu_renamed_filecheck,
-        ALIGN_16S_BLAST.out.qc_filecheck,
-        BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck
+        ALIGN_16S_BLAST.out.qc_blastn_filecheck,
+        BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filtered_blastn_filecheck
     )
     qc_filecheck_ch.collectFile(name: 'Summary.QC_File_Checks.tab', storeDir: "${params.outpath}/qa", sort: {it.getSimpleName()})
 }

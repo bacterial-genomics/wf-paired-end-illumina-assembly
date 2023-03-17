@@ -23,7 +23,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     output:
         path "${base}.Summary.16S.tab", emit: blast_summary
         path "${base}.16S-top-species.tsv", emit: ssu_species
-        path "${base}.Filtered_16S_BLASTn_File.tsv", emit: qc_filecheck
+        path "${base}.Filtered_16S_BLASTn_File.tsv", emit: qc_filtered_blastn_filecheck
         path "${base}.blast.tsv.gz"
         path ".command.out"
         path ".command.err"
@@ -31,12 +31,18 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-
         source bash_functions.sh
+
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_aligned_blast_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
 
         # Get filter.blast.py and check if it exists
         filter_blast_script="${DIR}/filter.blast.py"

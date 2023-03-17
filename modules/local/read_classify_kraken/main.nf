@@ -16,7 +16,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
     container "staphb/kraken@sha256:d372099288c3a7c0cc90ea7e516c643e7096c90a551b45d531bd26b4e7f46255"
 
     input:
-        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_overlap_filecheck)
+        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
         path kraken1_db
 
     output:
@@ -28,13 +28,19 @@ process READ_CLASSIFY_KRAKEN_ONE {
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-
         source bash_functions.sh
         source summarize_kraken.sh
+        
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_nonoverlap_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
 
         # If user doesn't provide a non-default db path, use the path in the Docker container,
         #  which contains a smaller minikraken database
@@ -102,7 +108,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
     container "staphb/kraken2@sha256:5b107d0141d6042a6b0ac6a5852990dc541fbff556a85eb0c321a7771200ba56"
 
     input:
-        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_overlap_filecheck)
+        tuple val(base), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
         path kraken2_db
 
     output:
@@ -114,13 +120,19 @@ process READ_CLASSIFY_KRAKEN_TWO {
 
     shell:
         '''
-        # Exit if previous process fails qc filechecks
-        if [ $(grep "FAIL" !{base}*File*.tsv) ]; then
-          exit 1
-        fi
-
         source bash_functions.sh
         source summarize_kraken.sh
+
+        # Exit if previous process fails qc filecheck
+        for filecheck in !{qc_nonoverlap_filecheck}; do
+          if [[ $(grep "FAIL" ${filecheck}) ]]; then
+            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
+            msg "FAILURE: ${error_message} Check FAILED" >&2
+            exit 1
+          else
+            rm ${filecheck}
+          fi
+        done
 
         # If user doesn't provide a non-default db path, use the path in the Docker container,
         #  which contains a smaller minikraken database
