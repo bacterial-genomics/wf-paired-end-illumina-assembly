@@ -1,7 +1,7 @@
 # Assembly Paired End Illumina Workflow
 
 
-![workflow](docs/images/simplified_workflow_v1.1.0.png)
+![workflow](docs/images/simplified_workflow_v1.1.0.svg)
 
 *General schematic of the steps in the workflow*
 
