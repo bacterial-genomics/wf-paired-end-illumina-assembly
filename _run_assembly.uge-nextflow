@@ -20,7 +20,7 @@ nextflow \
 
 # Check for errors and add to errors.tsv
 # Get nextflow run name
-run_name=$(grep "Launching" ${OUT}/log/ASM_*.o* | cut -d '[' -f 2 | cut -d ']' -f 1)
+run_name=$(grep "Launching" ${OUT}/log/ASM_*.o${SCRIPT_NAME} | cut -d '[' -f 2 | cut -d ']' -f 1)
 
 # Read each line from nextflow log, find info, and add to errors.tsv
 while read -r line; do
@@ -43,7 +43,7 @@ while read -r line; do
 
   # If process for sample retried and succeeded, ignore
   if [[ -f $(ls ${OUT}/log/process_logs/${sample_name}.${process}*out) ]] \
-    && [[ $(cat $line/.exitcode) = @(143|137|104|134|139|71|255) ]]; then
+    && [[ $(cat ${line}/.exitcode) = @(143|137|104|134|139|71|255) ]]; then
     continue
   else
     echo -e "${sample_name}\t${process}\t${error}\t${line}" >> ${OUT}/log/errors.tsv

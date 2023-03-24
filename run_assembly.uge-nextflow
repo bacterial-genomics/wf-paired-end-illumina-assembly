@@ -24,7 +24,7 @@ Required:
 
   Sample pairing of sister reads is done by consecutively using filenames sorted
   with \`ls\`, which flexibly allows for naming other than traditional R1 and R2.
-  Verify that files properly will pair by checking the output order of \`ls\`
+  Verify that files will properly pair by checking the output order of \`ls\`
   within the <InputDirectory>.
 
 Optional:
@@ -78,8 +78,8 @@ prompt_if_previous_nextflow_run() {
 
     if [[ $REPLY =~ ^[yY] ]]; then
       # Continue submission if user wants to possibly overwrite data
-      echo -e "${GREEN_TXT}Data in ${1} will be overwritten."
-      echo -e "Continuing to submit samples...\n${COLOR_OFF}"
+      echo -e "${YELLOW_TXT}\nData in ${1} will be overwritten."
+      echo -e "Continuing to submit samples...${COLOR_OFF}"
     else
       # If user doesn't want to continue, ask for a different output path
       prompt_new_outpath
@@ -228,8 +228,8 @@ fi
 
 # Also check for unsupported behavior combining legacy bash and newer nextflow
 if [ -d "${OUT}/.log" ] && \
-  [ -f "${OUT}/trim.asm.annot.job_ids.txt" ] && \
-  [ -f "${OUT}/trim.asm.annot.log.txt" ]; then
+  [ -f "${OUT}/.log/trim.asm.annot.job_ids.txt" ] && \
+  [ -f "${OUT}/.log/trim.asm.annot.log.txt" ]; then
   echo -e "${RED_TXT}Legacy bash workflow detected in ${OUT}"
   echo -e "Combining data from that and this nextflow pipeline is unsupported."
   echo -e "Use a different output path. ${COLOR_OFF}"
@@ -242,8 +242,7 @@ found_files=( $(find -L ${IN} \
      -type f \
      -readable \
      -regextype posix-extended \
-     -regex ".+_(R)?(1|2)(.+)?\.(fq|fastq)($|\.gz$)" | sort --dictionary-order )
-)
+     -regex ".+_(R)?(1|2)(.+)?\.(fq|fastq)($|\.gz$)" | sort --dictionary-order ))
 
 # Require even input file count for paired-end analysis
 if [ ${#found_files[@]} -lt 1 ]; then
@@ -298,7 +297,7 @@ NODE_NUM=$(echo ${HOSTNAME%%.*} | sed 's/node//1')
 # If FastQ files are able to be submitted, submit and display basenames
 if [[ ${#submitted[@]} -ge 1 ]] && \
   [[ ${HOSTNAME%%.*} == 'biolinux' || 'login02' ]] || \
-  [ ${NODE_NUM} -le 230 ]; then
+  [[ ${NODE_NUM} -le 230 ]]; then
   # Submit Nextflow pipeline to Aspen HPC
   qsub \
     -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
@@ -325,8 +324,8 @@ if [[ ${#submitted[@]} -ge 1 ]] && \
   echo -e "${COLOR_OFF}"
 
 elif [[ ${#submitted[@]} -ge 1 ]] && \
-  [ ${HOSTNAME%%.*} == 'rosalind01' ] || \
-  [ ${NODE_NUM} -ge 231 ]; then
+  [[ ${HOSTNAME%%.*} == 'rosalind01' ]] || \
+  [[ ${NODE_NUM} -ge 231 ]]; then
   # Submit Nextflow pipeline to Rosalind HPC
   qsub \
     -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
