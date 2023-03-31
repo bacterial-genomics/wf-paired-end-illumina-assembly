@@ -147,7 +147,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
         # Confirm the db exists
         for pref in hash opts taxo; do
           if ! verify_minimum_file_size "${database}/${pref}".k2d 'kraken2 database' '10c'; then
-            msg "ERROR: pre-formatted kraken2 database (${ext}.k2d) for read classification is missing" >&2
+            msg "ERROR: pre-formatted kraken2 database (${pref}.k2d) for read classification is missing" >&2
             exit 1
           fi
         done
