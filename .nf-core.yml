@@ -1,0 +1,5 @@
+repository_type: pipeline
+
+lint:
+  files_unchanged:
+    - lib/NfcoreTemplate.groovy

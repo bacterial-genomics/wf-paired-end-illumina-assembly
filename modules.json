@@ -1,0 +1,13 @@
+{
+    "name": "wf-paired-end-illumina-assembly",
+    "homePage": "https://github.com/gregorysprenger/wf-paired-end-illumina-assembly",
+    "repos": {
+        "https://github.com/nf-core/modules.git": {
+            "modules": {
+                "nf-core": {
+                    
+                }
+            }
+        }
+    }
+}

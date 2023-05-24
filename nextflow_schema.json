@@ -1,0 +1,549 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/gregorysprenger/wf-paired-end-illumina-assembly/master/nextflow_schema.json",
+    "title": "wf-paired-end-illumina-assembly pipeline parameters",
+    "description": "Trim, assemble, and annotate paired end illumina reads.",
+    "type": "object",
+    "definitions": {
+        "input_output_options": {
+            "title": "Input/output options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define where the pipeline should find input data and save output data.",
+            "required": ["input", "outdir"],
+            "properties": {
+                "input": {
+                    "type": "string",
+                    "description": "Path to samplesheet ** OR ** directory containing FastQ read sets. Recognized extensions are .fq, .fastq with optional gzip compression.",
+                    "fa_icon": "fas fa-folder-open"
+                },
+                "outdir": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
+                    "fa_icon": "fas fa-folder-open"
+                }
+            }
+        },
+        "analysis_options": {
+            "title": "Analysis options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Parameters used to aid in the analysis of PE Illumina data.",
+            "properties": {
+                "assembler": {
+                    "type": "string",
+                    "default": "spades",
+                    "description": "Specify which assembler to execute.",
+                    "enum": ["spades", "skesa"]
+                },
+                "kraken1_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "default": "Pre-loaded MiniKraken1 database",
+                    "description": "Path containing Kraken1 database files (must contain *.kdb, *.idk).",
+                    "fa_icon": "fas fa-folder-open"
+                },
+                "kraken2_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "default": "Pre-loaded MiniKraken2 database",
+                    "description": "Path containing Kraken2 database files (must contain *.k2d).",
+                    "fa_icon": "fas fa-folder-open"
+                },
+                "blast_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "default": "Pre-loaded NCBI's 16S rRNA database",
+                    "description": "Path to 16S ribosomal database for BLAST.",
+                    "fa_icon": "fas fa-folder-open"
+                },
+                "phix_reference" : {
+                  "type": "string",
+                  "format": "file-path",
+                  "default": "../../../bin/PhiX_NC_001422.1.fasta",
+                  "hidden": true,
+                  "description": "Path to PhiX reference file."
+                },
+                "adapter_reference" : {
+                    "type": "string",
+                    "format": "file-path",
+                    "default": "../../../bin/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas",
+                    "hidden": true,
+                    "description": "Path to adapter reference file."
+                },
+                "skesa_kmer_length" : {
+                    "type": "integer",
+                    "default": 21,
+                    "hidden": true,
+                    "description": "SKESA: Kmer length for assembly."
+                },
+                "skesa_vector_percent" : {
+                    "type": "string",
+                    "default": "0.05",
+                    "hidden": true,
+                    "description": "SKESA: Percentage of reads containing 19-mer for the 19-mer to be considered a vector."
+                },
+                "skesa_steps" : {
+                    "type": "integer",
+                    "default": 11,
+                    "hidden": true,
+                    "description": "SKESA: Number of assembly iterations from minimal to maximal kmer length in reads."
+                },
+                "skesa_fraction" : {
+                    "type": "string",
+                    "default": "0.1",
+                    "hidden": true,
+                    "description": "SKESA: Maximum noise to signal ratio acceptable for extension"
+                },
+                "skesa_max_snp_length" : {
+                    "type": "integer",
+                    "default": 150,
+                    "hidden": true,
+                    "description": "SKESA: Maximal snp length."
+                },
+                "skesa_min_contig_length" : {
+                    "type": "integer",
+                    "default": 200,
+                    "hidden": true,
+                    "description": "SKESA: Minimal contig length reported in output."
+                },
+                "skesa_allow_snps" : {
+                    "type": "boolean",
+                    "default": false,
+                    "hidden": true,
+                    "description": "SKESA: Allow additional step for snp discovery."
+                },
+                "spades_polish_corrections" : {
+                    "type": "integer",
+                    "default": 3,
+                    "hidden": true,
+                    "description": "Number of rounds to correct contigs from SPAdes using cleaned paired-end reads."
+                },
+                "filter_blast_column" : {
+                    "type": "integer",
+                    "default": 1,
+                    "hidden": true,
+                    "description": "Report best BLASTn hit per query label (1st column) or target (2nd column)."
+                },
+                "filter_blast_bitscore" : {
+                    "type": "string",
+                    "default": "0.0",
+                    "hidden": true,
+                    "description": "Minimum BLASTn alignment bit score."
+                },
+                "merge_lanes": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "SAMPLESHEET ONLY: Merges multiple lane files into one."
+                },
+                "excel_sheet_name": {
+                    "type": "string",
+                    "default": "Sheet1",
+                    "hidden": true,
+                    "description": "EXCEL SAMPLESHEET ONLY: Sheet name of Excel (.XLSX, .XLS) samplesheet."
+                },
+                "genbank_query": {
+                    "type": "string",
+                    "default": "16S ribosomal RNA",
+                    "hidden": true,
+                    "description": "String to search each defline in genbank file for extraction."
+                },
+                "genbank_query_feature": {
+                    "type": "string",
+                    "default": "rRNA",
+                    "hidden": true,
+                    "description": "GenBank feature type to search in genbank file for extraction.",
+                    "enum": ["CDS", "gene", "rRNA", "source", "tRNA", "misc_feature"]
+                },
+                "genbank_query_qualifier": {
+                    "type": "string",
+                    "default": "product",
+                    "hidden": true,
+                    "description": "Qualifier term within each genbank feature to search in genbank file for extraction.",
+                    "enum": ["gene", "inference", "locus_tag", "old_locus_tag", "product", "translation"]
+                },
+                "genbank_search_type": {
+                    "type": "string",
+                    "default": "any_q_is_rec",
+                    "hidden": true,
+                    "description": "Type of query match to search in genbank file for extraction.",
+                    "enum": ["all_q_in_rec", "any_q_in_rec", "any_q_is_rec"]
+                },
+                "filter_contigs_coverage": {
+                    "type": "string",
+                    "default": "5",
+                    "hidden": true,
+                    "description": "Minimum coverage of each contig, where an integer is an absolute coverage and a float is a minimum percentage, when filtering contigs."
+                },
+                "filter_contigs_discard_file": {
+                    "type": "string",
+                    "default": "None",
+                    "hidden": true,
+                    "description": "Output FastA file of discarded sequences which includes failed filters in the deflines when filtering contigs.",
+                    "enum": ["None", "<path/to/file>"]
+                },
+                "filter_contigs_gcskew": {
+                    "type": "boolean",
+                    "default": false,
+                    "hidden": true,
+                    "description": "Keep >88 and <12% GC contigs when filtering contigs."
+                },
+                "filter_contigs_length": {
+                    "type": "integer",
+                    "default": 1000,
+                    "hidden": true,
+                    "description": "Minimum contig length (in bp) when filtering contigs."
+                },
+                "filter_contigs_keep_low_complexity": {
+                    "type": "boolean",
+                    "default": false,
+                    "hidden": true,
+                    "description": "Keep low-complexity contigs with only 1 or 2 nucleotides represented when filtering contigs."
+                },
+                "filter_contigs_deflines": {
+                    "type": "string",
+                    "default": "rename_retain",
+                    "hidden": true,
+                    "description": "Rename and/or retain deflines when filtering contigs.",
+                    "enum": ["rename", "rename_retain", "retain"]
+                },
+                "filter_contigs_no_sort": {
+                    "type": "boolean",
+                    "default": false,
+                    "hidden": true,
+                    "description": "Skip sorting contigs by descending length when filtering contigs."
+                }
+            }
+        },
+        "profile_options": {
+            "title": "Profile options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Parameters to select which profile to use.",
+            "properties": {
+                "profile singularity": {
+                    "type": "string",
+                    "description": "Use Singularity images to run the workflow. Will pull and convert Docker images from Dockerhub if not locally available."
+                },
+                "profile docker": {
+                    "type": "string",
+                    "description": "Use Docker images to run the workflow. Will pull images from Dockerhub if not locally available."
+                },
+                "profile conda": {
+                    "type": "string",
+                    "hidden": true,
+                    "description": "TODO: this is not implemented yet."
+                }
+            }
+        },
+        "minimum_file_size_options": {
+            "title": "Minimum file size options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Parameters used for workflow checks and verification tests.",
+            "properties": {
+                "min_filesize_fastq_input": {
+                    "type": "string",
+                    "default" : "10M",
+                    "hidden": true,
+                    "description": "Minimum file size of input FastQ files."
+                },
+                "min_filesize_phix_genome": {
+                    "type": "string",
+                    "default" : "5k",
+                    "hidden" : true,
+                    "description": "Minimum file size of input PhiX reference file."
+                },
+                "min_filesize_fastq_phix_removed": {
+                    "type": "string",
+                    "default": "25M",
+                    "hidden": true,
+                    "description": "Minimum file size of FastQ files after PhiX is removed."
+                },
+                "min_filesize_adapters": {
+                    "type": "string",
+                    "default": "10k",
+                    "hidden": true,
+                    "description": "Minimum file size of input adapter reference file."
+                },
+                "min_filesize_fastq_adapters_removed": {
+                    "type": "string",
+                    "default": "25M",
+                    "hidden": true,
+                    "description": "Minimum file size of FastQ files after adapters are removed."
+                },
+                "min_filesize_non_overlapping_fastq": {
+                    "type": "string",
+                    "default": "20M",
+                    "hidden": true,
+                    "description": "Minimum file size of non-overlapping FastQ files."
+                },
+                "min_filesize_raw_assembly": {
+                    "type": "string",
+                    "default": "1M",
+                    "hidden": true,
+                    "description": "Minimum file size of raw assembly file formed from the assembler software package."
+                },
+                "min_filesize_filtered_assembly": {
+                    "type": "string",
+                    "default": "1M",
+                    "hidden": true,
+                    "description": "Minimum file size of assembly file after biopython filters away contigs."
+                },
+                "min_filesize_binary_pe_alignment": {
+                    "type": "string",
+                    "default": "25M",
+                    "hidden": true,
+                    "description": "Minimum file size of binary cleaned paired-end alignment file after paired-end reads are mapped onto the filtered assembly."
+                },
+                "min_filesize_polished_assembly": {
+                    "type": "string",
+                    "default": "1M",
+                    "hidden": true,
+                    "description": "Minimum file size of assembly file after SNP and InDel corrections."
+                },
+                "min_filesize_final_assembly": {
+                    "type": "string",
+                    "default": "1M",
+                    "hidden": true,
+                    "description": "Minimum file size of the final error-corrected contigs."
+                },
+                "min_filesize_binary_se_alignment": {
+                    "type": "string",
+                    "default": "1k",
+                    "hidden": true,
+                    "description": "Minimum file size of binary singleton alignment file after singletons are mapped to final assembly file."
+                },
+                "min_filesize_annotated_genbank": {
+                    "type": "string",
+                    "default": "3M",
+                    "hidden": true,
+                    "description": "Minimum file size of annotated genbank file."
+                },
+                "min_filesize_extracted_ssu_file": {
+                    "type": "string",
+                    "default": "500c",
+                    "hidden": true,
+                    "description": "Minimum file size of the file containing extracted 16S rRNA gene sequences."
+                },
+                "min_filesize_renamed_ssu_file": {
+                    "type": "string",
+                    "default": "500c",
+                    "hidden": true,
+                    "description": "Minimum file size of SSU extracted file that gets renamed to contain sample identifiers for each sequence."
+                },
+                "min_filesize_blastn_db": {
+                    "type": "string",
+                    "default": "10c",
+                    "hidden": true,
+                    "description": "Minimum file size of 16S BLASTn database files."
+                },
+                "min_filesize_blastn_output": {
+                    "type": "string",
+                    "default": "10c",
+                    "hidden": true,
+                    "description": "Minimum file size of the output file generated by BLASTn."
+                },
+                "min_filesize_filtered_blastn": {
+                    "type": "string",
+                    "default": "10c",
+                    "hidden": true,
+                    "description": "Minimum file size of file containing the top 16S BLASTn alignments."
+                }
+            }
+        },
+        "institutional_config_options": {
+            "title": "Institutional config options",
+            "type": "object",
+            "fa_icon": "fas fa-university",
+            "description": "Parameters used to describe centralised config profiles. These should not be edited.",
+            "help_text": "The centralised nf-core configuration profiles use a handful of pipeline parameters to describe themselves. This information is then printed to the Nextflow log when you run a pipeline. You should not need to change these values when you run a pipeline.",
+            "properties": {
+                "custom_config_version": {
+                    "type": "string",
+                    "description": "Git commit id for Institutional configs.",
+                    "default": "master",
+                    "hidden": true,
+                    "fa_icon": "fas fa-users-cog"
+                },
+                "custom_config_base": {
+                    "type": "string",
+                    "description": "Base directory for Institutional configs.",
+                    "default": "https://raw.githubusercontent.com/nf-core/configs/master",
+                    "hidden": true,
+                    "help_text": "If you're running offline, Nextflow will not be able to fetch the institutional config files from the internet. If you don't need them, then this is not a problem. If you do need them, you should download the files from the repo and tell Nextflow where to find them with this parameter.",
+                    "fa_icon": "fas fa-users-cog"
+                },
+                "config_profile_name": {
+                    "type": "string",
+                    "description": "Institutional config name.",
+                    "hidden": true,
+                    "fa_icon": "fas fa-users-cog"
+                },
+                "config_profile_description": {
+                    "type": "string",
+                    "description": "Institutional config description.",
+                    "hidden": true,
+                    "fa_icon": "fas fa-users-cog"
+                },
+                "config_profile_contact": {
+                    "type": "string",
+                    "description": "Institutional config contact information.",
+                    "hidden": true,
+                    "fa_icon": "fas fa-users-cog"
+                },
+                "config_profile_url": {
+                    "type": "string",
+                    "description": "Institutional config URL link.",
+                    "hidden": true,
+                    "fa_icon": "fas fa-users-cog"
+                }
+            }
+        },
+        "max_job_request_options": {
+            "title": "Max job request options",
+            "type": "object",
+            "fa_icon": "fab fa-acquisitions-incorporated",
+            "description": "Set the top limit for requested resources for any single job.",
+            "help_text": "If you are running on a smaller system, a pipeline step requesting more resources than are available may cause the Nextflow to stop the run with an error. These options allow you to cap the maximum resources requested by any single job so that the pipeline will run on your system.\n\nNote that you can not _increase_ the resources requested by any job using these options. For that you will need your own configuration file. See [the nf-core website](https://nf-co.re/usage/configuration) for details.",
+            "properties": {
+                "max_cpus": {
+                    "type": "integer",
+                    "description": "Maximum number of CPUs that can be requested for any single job.",
+                    "default": 16,
+                    "fa_icon": "fas fa-microchip",
+                    "hidden": true,
+                    "help_text": "Use to set an upper-limit for the CPU requirement for each process. Should be an integer e.g. `--max_cpus 1`"
+                },
+                "max_memory": {
+                    "type": "string",
+                    "description": "Maximum amount of memory that can be requested for any single job.",
+                    "default": "128.GB",
+                    "fa_icon": "fas fa-memory",
+                    "pattern": "^\\d+(\\.\\d+)?\\.?\\s*(K|M|G|T)?B$",
+                    "hidden": true,
+                    "help_text": "Use to set an upper-limit for the memory requirement for each process. Should be a string in the format integer-unit e.g. `--max_memory '8.GB'`"
+                },
+                "max_time": {
+                    "type": "string",
+                    "description": "Maximum amount of time that can be requested for any single job.",
+                    "default": "240.h",
+                    "fa_icon": "far fa-clock",
+                    "pattern": "^(\\d+\\.?\\s*(s|m|h|day)\\s*)+$",
+                    "hidden": true,
+                    "help_text": "Use to set an upper-limit for the time requirement for each process. Should be a string in the format integer-unit e.g. `--max_time '2.h'`"
+                }
+            }
+        },
+        "generic_options": {
+            "title": "Generic options",
+            "type": "object",
+            "fa_icon": "fas fa-file-import",
+            "description": "Less common options for the pipeline, typically set in a config file.",
+            "help_text": "These options are common to all nf-core pipelines and allow you to customise some of the core preferences for how the pipeline runs.\n\nTypically these options would be set in a Nextflow config file loaded for all pipeline runs, such as `~/.nextflow/config`.",
+            "properties": {
+                "help": {
+                    "type": "boolean",
+                    "description": "Display help text.",
+                    "fa_icon": "fas fa-question-circle",
+                    "hidden": false
+                },
+                "version": {
+                    "type": "boolean",
+                    "description": "Display version and exit.",
+                    "fa_icon": "fas fa-question-circle",
+                    "hidden": true
+                },
+                "publish_dir_mode": {
+                    "type": "string",
+                    "default": "copy",
+                    "description": "Method used to save pipeline results to output directory.",
+                    "help_text": "The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.",
+                    "fa_icon": "fas fa-copy",
+                    "enum": ["symlink", "rellink", "link", "copy", "copyNoFollow", "move"],
+                    "hidden": true
+                },
+                "email": {
+                    "type": "string",
+                    "description": "Email address for completion summary.",
+                    "fa_icon": "fas fa-envelope",
+                    "help_text": "Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.",
+                    "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$",
+                    "hidden": false
+                },
+                "email_on_fail": {
+                    "type": "string",
+                    "description": "Email address for completion summary, only when pipeline fails.",
+                    "fa_icon": "fas fa-exclamation-triangle",
+                    "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$",
+                    "help_text": "An email address to send a summary email to when the pipeline is completed - ONLY sent if the pipeline does not exit successfully.",
+                    "hidden": true
+                },
+                "plaintext_email": {
+                    "type": "boolean",
+                    "description": "Send plain-text email instead of HTML.",
+                    "fa_icon": "fas fa-remove-format",
+                    "hidden": true
+                },
+                "monochrome_logs": {
+                    "type": "boolean",
+                    "description": "Do not use coloured log outputs.",
+                    "fa_icon": "fas fa-palette",
+                    "hidden": true
+                },
+                "hook_url": {
+                    "type": "string",
+                    "description": "Incoming hook URL for messaging service",
+                    "fa_icon": "fas fa-people-group",
+                    "help_text": "Incoming hook URL for messaging service. Currently, MS Teams and Slack are supported.",
+                    "hidden": true
+                },
+                "tracedir": {
+                    "type": "string",
+                    "description": "Directory to keep pipeline Nextflow logs and reports.",
+                    "default": "${params.outdir}/log",
+                    "fa_icon": "fas fa-cogs",
+                    "hidden": true
+                },
+                "validate_params": {
+                    "type": "boolean",
+                    "description": "Boolean whether to validate parameters against the schema at runtime",
+                    "default": true,
+                    "fa_icon": "fas fa-check-square",
+                    "hidden": true
+                },
+                "show_hidden_params": {
+                    "type": "boolean",
+                    "fa_icon": "far fa-eye-slash",
+                    "description": "Show all params when using `--help`",
+                    "hidden": true,
+                    "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters."
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/definitions/input_output_options"
+        },
+        {
+            "$ref": "#/definitions/analysis_options"
+        },
+        {
+            "$ref": "#/definitions/profile_options"
+        },
+        {
+            "$ref": "#/definitions/institutional_config_options"
+        },
+        {
+            "$ref": "#/definitions/max_job_request_options"
+        },
+        {
+            "$ref": "#/definitions/generic_options"
+        },
+        {
+            "$ref": "#/definitions/minimum_file_size_options"
+        }
+    ]
+}
