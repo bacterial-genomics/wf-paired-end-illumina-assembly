@@ -3,8 +3,10 @@
 [tool.black]
 line-length = 120
 target_version = ["py37", "py38", "py39", "py310"]
+extend-exclude = ["bin/extract.record.from.genbank.py", "bin/filter.blast.py", "bin/filter.contigs.py"]
 
 [tool.isort]
 profile = "black"
 known_first_party = ["nf_core"]
 multi_line_output = 3
+

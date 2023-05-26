@@ -8,7 +8,7 @@ trim_trailing_whitespace = true
 indent_size = 4
 indent_style = space
 
-[*.{md,yml,yaml,html,css,scss,js,cff}]
+[*.{md,yml,yaml,html,css,scss,js,cff,nf,sh,uge-nextflow}]
 indent_size = 2
 
 # These files are edited and tested upstream in nf-core/modules
@@ -20,5 +20,17 @@ trim_trailing_whitespace = unset
 indent_style = unset
 indent_size = unset
 
+# Ignore all singularity.cache
+[/assets/singularity.cache/**]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset
+
 [/assets/email*]
+indent_size = unset
+
+[LICENSE]
 indent_size = unset
