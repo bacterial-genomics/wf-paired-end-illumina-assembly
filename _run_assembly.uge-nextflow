@@ -85,7 +85,7 @@ done < <(nextflow log ${run_name} -filter 'status == "FAILED"')
 
 # If errors.tsv found, add column headers
 if [[ -f "${OUT}/log/errors.tsv" ]]; then
-  sed -i '1i Sample Name\tProcess\tError\tError Directory\tTime Stamp\Run Name' ${OUT}/log/errors.tsv
+  sed -i '1i Sample Name\tProcess\tError\tError Directory\tTimestamp\tRun Name' ${OUT}/log/errors.tsv
 fi
 
 # Count lines in Summary.Illumina.GenomeCoverage.tab
