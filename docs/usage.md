@@ -1,6 +1,6 @@
 # wf-paired-end-illumina-assembly: Usage
 
-## :warning: Please read this documentation on the pipeline's website: [https://github.com/gregorysprenger/wf-paired-end-illumina-assembly/docs/usage](https://github.com/gregorysprenger/wf-paired-end-illumina-assembly/docs/usage)
+## :warning: Please read this documentation on the pipeline's website: [https://github.com/gregorysprenger/wf-paired-end-illumina-assembly/docs/usage.md](https://github.com/gregorysprenger/wf-paired-end-illumina-assembly/docs/usage.md)
 
 > _Documentation of pipeline parameters is generated automatically from the pipeline schema and can no longer be found in markdown files._
 
