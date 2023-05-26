@@ -6,16 +6,16 @@ SCRIPT_NAME="$(basename ${0#_} .uge-nextflow)"
 # Get node number - <=230 = biolinux, >=231 = rosalind
 NODE_NUM=$(echo ${HOSTNAME%%.*} | sed 's/node//1')
 if [[ ${NODE_NUM} -ge 231 ]]; then
-  HPC='rosalind'
+  HPC='rosalind_hpc'
 else
-  HPC='aspen'
+  HPC='aspen_hpc'
 fi
 
 module load nextflow
 nextflow \
   -log ${OUT}/nextflow_log.${SCRIPT_NAME}.txt \
   run \
-  ${LAB_HOME}/.dev/wf-paired-end-illumina-assembly/main.nf \
+  ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
   -ansi-log false \
   -profile ${HPC} \
   -resume \
@@ -33,12 +33,12 @@ run_name=$(grep "Launching" ${OUT}/log/ASM_*.o${SCRIPT_NAME} | cut -d '[' -f 2 |
 
 # Read each line from nextflow log, find info, and add to errors.tsv
 while read -r line; do
+  # Get time stamp
+  time_stamp=$(date '+%Y-%b-%d %a %H:%M:%S')
+
   # If process is already running, clean up error
   if [[ "${line}" =~ ^Unable[[:space:]]to[[:space:]]acquire[[:space:]]lock.* ]]; then
     error="You are trying to resume the execution of an already running pipeline."
-    month_day=$(head -n 1 ${OUT}/nextflow_log.${SCRIPT_NAME}.txt | cut -d ' ' -f 1)
-    year=$(date | awk '{print $(NF)}')
-    time_stamp="${year}-${month_day}"
     ASM_OUT=$(realpath ${OUT}/log/ASM_*.o*)
     echo -e " \t \t${error}\t${ASM_OUT}\t${time_stamp}\t${run_name}" >> ${OUT}/log/errors.tsv
   else
@@ -46,24 +46,15 @@ while read -r line; do
     sample_name=$(grep "nf-" ${line}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
     process=$(grep "nf-" ${line}/.command.run | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
     error=$(tail -n 1 ${line}/.command.err | sed -e 's/\[[^][]*\] //g')
-    time_stamp=$( tail -n 1 ${line}/.command.err | cut -d ' ' -f 1 | sed -e 's/[[^]//')
-
-    # Pull timestamp from nextflow_log if it is missing from .command.err
-    if [[ "${time_stamp}" == "" ]]; then
-      month_day=$(grep "${process} (${sample_name}).*terminated" \
-        ${OUT}/nextflow_log.${SCRIPT_NAME}.txt | cut -d ' ' -f 1)
-      year=$(date | awk '{print $(NF)}')
-      time_stamp="${year}-${month_day}"
-    fi
 
     # Kraken 2 places "Loading database information... done." in error log
-    if [[ "${process}" == "READ_CLASSIFY_KRAKEN_TWO" ]] \
+    if [[ ${process} == .*READ_CLASSIFY_KRAKEN_TWO$ ]] \
       && [[ "${error}" =~ Loading[[:space:]]database[[:space:]]information.*$ ]]; then
       continue
     fi
 
     # BBDuk java error for wonky input FastQ files
-    if [[ "${process}" == "REMOVE_PHIX_BBDUK" ]] \
+    if [[ ${process} =~ .*REMOVE_PHIX_BBDUK$ ]] \
       && [[ "${error}" =~ .*at.* ]]; then
       error=$(grep -A1 "java.lang" ${line}/.command.err | head -n 2 | tail -n 1)
     fi
@@ -76,7 +67,7 @@ while read -r line; do
     fi
 
     # Check if process is EXTRACT_16S_BIOPYTHON -> requires different sed commands
-    if [[ ${process} == "EXTRACT_16S_BIOPYTHON" ]]; then
+    if [[ ${process} =~ .*EXTRACT_16S_BIOPYTHON$ ]]; then
       get_filename=$(tail -n 1 ${line}/.command.err | awk -F '/' '{print $NF}')
       remove_filepath=$(tail -n 1 ${line}/.command.err | sed -e 's/[][]//g' | cut -d '/' -f 1)
       error=$(echo -e "${remove_filepath} ${get_filename}")
@@ -94,7 +85,7 @@ done < <(nextflow log ${run_name} -filter 'status == "FAILED"')
 
 # If errors.tsv found, add column headers
 if [[ -f "${OUT}/log/errors.tsv" ]]; then
-  sed -i '1i Sample Name\tProcess\tError\tError Directory' ${OUT}/log/errors.tsv
+  sed -i '1i Sample Name\tProcess\tError\tError Directory\tTime Stamp\Run Name' ${OUT}/log/errors.tsv
 fi
 
 # Count lines in Summary.Illumina.GenomeCoverage.tab

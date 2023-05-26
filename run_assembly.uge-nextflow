@@ -10,10 +10,10 @@ SCRIPT_NAME="$(basename ${0#_} .uge-nextflow)"
 usage() {
   echo "
 Usage: ${0##*/} InputDirectory [OutputDirectory] [-h|--help]
-  
+
 Required:
   <InputDirectory>   Path containing PE Illumina 1.8+ files as *.fastq.gz
-  
+
   Sample names are extracted from the first underscore of read files. Hyphens,
   periods, and commas are automatically discarded from the name to avoid errors.
   WARNING: If you have HiSeq data where samples are ran on more than one lane,
@@ -28,11 +28,11 @@ Required:
   within the <InputDirectory>.
 
 Optional:
-  -h | --help        Show this help message and exit.
-  <OutputDirectory>  Location for the output files, which
-                     includes job logfiles. Output files
-                     will be overwritten if already present.
-                     Default: current working directory.
+  -h | --help         Show this help message and exit.
+  <OutputDirectory>   Location for the output files, which
+                      includes job logfiles. Output files
+                      will be overwritten if already present.
+                      Default: current working directory.
   "
 }
 
@@ -98,9 +98,9 @@ fi
 
 # Confirm we are on a host that can submit jobs
 if [ ${HOSTNAME%%.*} == 'biolinux' ] || \
- [ ${HOSTNAME%%.*} == 'login02' ] || \
- [ ${HOSTNAME%%.*} == 'rosalind01' ] || \
- [ $(echo ${HOSTNAME%%.*} | sed 's/[0-9]//g') == 'node' ]; then
+  [ ${HOSTNAME%%.*} == 'login02' ] || \
+  [ ${HOSTNAME%%.*} == 'rosalind01' ] || \
+  [ $(echo ${HOSTNAME%%.*} | sed 's/[0-9]//g') == 'node' ]; then
   :
 else
   echo -e "${RED_TXT}ERROR:${COLOR_OFF} must be on aspen or biolinux" >&2
@@ -171,13 +171,13 @@ if [[ ${IN} =~ ^.+[A-Z]\:.+ ]]; then
     )
   for path in "${paths[@]}"; do
     cnt_read_files=$(find -L "${path}" \
-     -maxdepth 2 \
-     -type f \
-     -readable \
-     -regextype posix-extended \
-     -regex ".+_(R)?(1|2)(.+)?\.(fq|fastq)($|\.gz$)" \
-     2> /dev/null \
-     | wc -l)
+      -maxdepth 2 \
+      -type f \
+      -readable \
+      -regextype posix-extended \
+      -regex ".+_(R)?(1|2)(.+)?\.(fq|fastq)($|\.gz$)" \
+      2> /dev/null \
+      | wc -l)
     if [[ ${cnt_read_files} -ge 1 ]]; then
         echo -e "${YELLOW_TXT}\n${cnt_read_files} FastQ files found in: ${path}${COLOR_OFF}"
         echo -e "${RED_BG}"
@@ -238,11 +238,11 @@ fi
 
 # Add found files to an array
 found_files=( $(find -L ${IN} \
-     -maxdepth 2 \
-     -type f \
-     -readable \
-     -regextype posix-extended \
-     -regex ".+_(R)?(1|2)(.+)?\.(fq|fastq)($|\.gz$)" | sort --dictionary-order ))
+      -maxdepth 2 \
+      -type f \
+      -readable \
+      -regextype posix-extended \
+      -regex ".+_(R)?(1|2)(.+)?\.(fq|fastq)($|\.gz$)" | sort --dictionary-order ))
 
 # Require even input file count for paired-end analysis
 if [ ${#found_files[@]} -lt 1 ]; then
@@ -278,7 +278,7 @@ if [[ ${#submitted[@]} -ge 10 ]]; then
   for f in ${submitted[@]}; do
     echo -e "${YELLOW_TXT}${f}${COLOR_OFF}"
   done | xargs -L3 | column -t
-  
+
   # Prompt user to verify submission of large sample set
   echo -e "${RED_BG}"
   read -p "Do you want to continue submitting ${#submitted[@]} samples? (yes|no) " -n 1 -r
@@ -312,7 +312,7 @@ if [[ ${#submitted[@]} -ge 1 ]] && \
     -m ba \
     -N ASM_${#submitted[@]} \
     -q all.q \
-    ${LAB_HOME}/.dev/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+    ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
 
 elif [[ ${#submitted[@]} -ge 1 ]] && \
   [[ ${HOSTNAME%%.*} == 'rosalind01' ]] || \
@@ -332,7 +332,7 @@ elif [[ ${#submitted[@]} -ge 1 ]] && \
     -N ASM_${#submitted[@]} \
     -q all.q \
     -l max_runtime=72:00:00 \
-    ${LAB_HOME}/.dev/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+    ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
 
 else
   echo -e "${RED_TXT}Biolinux/Aspen/Rosalind HPC is not detected.\nSubmission cancelled. ${COLOR_OFF}"
