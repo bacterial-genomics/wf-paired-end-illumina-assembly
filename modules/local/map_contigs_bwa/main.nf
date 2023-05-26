@@ -15,7 +15,7 @@ process MAP_CONTIGS_BWA {
     tag { "${prefix}" }
 
     container "gregorysprenger/bwa-samtools-pilon@sha256:209ac13b381188b4a72fe746d3ff93d1765044cbf73c3957e4e2f843886ca57f"
-    
+
     input:
     tuple val(prefix), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck), path(uncorrected_contigs)
 

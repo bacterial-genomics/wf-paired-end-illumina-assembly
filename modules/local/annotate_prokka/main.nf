@@ -40,7 +40,7 @@ process ANNOTATE_PROKKA {
         rm ${filecheck}
       fi
     done
-    
+
     # Remove seperator characters from basename for future processes
     short_base=$(echo !{prefix} | sed 's/[-._].*//g')
     sed -i "s/!{prefix}/${short_base}/g" !{assembly}

@@ -6,7 +6,7 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
         saveAs: { filename -> "${prefix}.${task.process}${filename}"}
 
     tag { "${prefix}" }
-    
+
     container "snads/bedtools@sha256:9b80fb5c5ef1b6f4a4a211d8739fa3fe107da34d1fb6609d6b70ddc7afdce12c"
 
     input:

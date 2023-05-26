@@ -6,7 +6,7 @@ process EXTRACT_16S_BIOPYTHON {
         saveAs: { filename -> "${prefix}.${task.process}${filename}"}
 
     tag { "${prefix}" }
-    
+
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:

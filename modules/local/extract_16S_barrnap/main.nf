@@ -12,7 +12,7 @@ process EXTRACT_16S_BARRNAP {
         saveAs: { filename -> "${prefix}.${task.process}${filename}"}
 
     tag { "${prefix}" }
-    
+
     container "snads/barrnap@sha256:e22cbd789c36d5626460feb6c7e5f6f7d55c8628dacae68ba0da30884195a837"
 
     input:
@@ -44,14 +44,14 @@ process EXTRACT_16S_BARRNAP {
     if [[ ! -f "!{extracted_rna}" ]] || [[ ! -s "!{extracted_rna}" ]]; then
       msg "INFO: absent 16S rRNA gene annotation in !{annotation}" >&2
       msg 'Running barrnap' >&2
-      
+
       barrnap !{assembly} | grep "Name=16S_rRNA;product=16S" > !{prefix}.gff
-      
+
       if [[ $(grep -c "Name=16S_rRNA;product=16S" "!{prefix}.gff") -eq 0 ]]; then
         msg "INFO: barrnap was unable to locate a 16S rRNA gene sequence in !{assembly}" >&2
         exit 2
       fi
-      
+
       bedtools getfasta \
         -fi !{assembly} \
         -bed !{prefix}.gff \

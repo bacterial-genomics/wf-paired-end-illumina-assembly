@@ -2,49 +2,48 @@
 
 ![workflow](images/workflow_v1.1.0.svg)
 
-*A schematic of the steps in the workflow.*
-
+_A schematic of the steps in the workflow._
 
 ## Requirements
-* [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=22.04.3`)
-* [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity >=3.8.0`](https://www.sylabs.io/guides/3.0/user-guide/)
 
+- [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=22.04.3`)
+- [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity >=3.8.0`](https://www.sylabs.io/guides/3.0/user-guide/)
 
 ## Install Worflow Locally
+
 ```
 git clone https://github.com/gregorysprenger/wf-paired-end-illumina-assembly.git
 ```
 
-
 # Run Workflow
+
 Before running workflow on new data, the workflow should be ran on the built-in test data to make sure everything is working properly. It will also download all dependencies to make subsequent runs much faster.
 
 ```
 cd wf-paired-end-illumina-assembly/
 
 nextflow run main.nf \
- -profile singularity,test
+  -profile singularity,test
 ```
-
 
 Example data are included in assets/test_data directory.
 
 ```
 nextflow run main.nf \
- -profile singularity \
- --input assets/test_data \
- --outdir results
+  -profile singularity \
+  --input assets/test_data \
+  --outdir results
 ```
 
 When running locally, `--max_cpus` and `--max_memory` may need to be specified. Below, max cpus is set to 4 and max memory is set to 16 (for 16GB).
 
 ```
 nextflow run main.nf \
- -profile singularity \
- --input assets/test_data \
- --outdir results \
- --max_cpus 4 \
- --max_memory 16
+  -profile singularity \
+  --input assets/test_data \
+  --outdir results \
+  --max_cpus 4 \
+  --max_memory 16
 ```
 
 Help menu of all options:

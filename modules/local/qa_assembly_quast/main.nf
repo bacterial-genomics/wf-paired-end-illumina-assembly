@@ -4,10 +4,10 @@ process QA_ASSEMBLY_QUAST {
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
         saveAs: { filename -> "${prefix}.${task.process}${filename}"}
-    
+
     label "process_low"
     tag { "${prefix}" }
-    
+
     container "snads/quast@sha256:c8147a279feafbc88bafeeda3817ff32d43db87d31dd0978df1cd2f8022d324c"
 
     input:

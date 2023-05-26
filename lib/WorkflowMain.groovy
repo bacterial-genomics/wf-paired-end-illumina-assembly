@@ -24,9 +24,9 @@ class WorkflowMain {
     public static String help(workflow, params, log) {
         def command = """
                     nextflow run ${workflow.manifest.name} \\ \n
-                      -profile <docker|singularity> \\ \n
-                      --input <input samplesheet OR directory> \\ \n
-                      --outdir <directory for results>
+                        -profile <docker|singularity> \\ \n
+                        --input <input samplesheet OR directory> \\ \n
+                        --outdir <directory for results>
                     """.stripIndent()
         def help_string = ''
         help_string += NfcoreTemplate.logo(workflow, params.monochrome_logs)

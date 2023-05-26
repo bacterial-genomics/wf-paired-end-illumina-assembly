@@ -13,7 +13,7 @@ process REMOVE_PHIX_BBDUK {
 
     label "process_low"
     tag { "${prefix}" }
-    
+
     container "snads/bbtools@sha256:9f2a9b08563839cec87d856f0fc7607c235f464296fd71e15906ea1d15254695"
 
     input:
@@ -32,7 +32,7 @@ process REMOVE_PHIX_BBDUK {
     shell:
     '''
     source bash_functions.sh
-    
+
     # Exit if previous process fails qc filecheck
     for filecheck in !{qc_input_filecheck}; do
       if [[ $(grep "FAIL" ${filecheck}) ]]; then
@@ -57,7 +57,7 @@ process REMOVE_PHIX_BBDUK {
 
     # Remove PhiX
     msg "INFO: Running bbduk with !{task.cpus} threads"
-    
+
     bbduk.sh \
       threads=!{task.cpus} \
       k=31 \

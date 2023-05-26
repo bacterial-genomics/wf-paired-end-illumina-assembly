@@ -41,7 +41,7 @@ if (assembler in ['skesa', 'spades']) {
         include { SKESA } from './workflows/skesa'
     } else {
         include { SPADES } from './workflows/spades'
-    } 
+    }
 } else {
     log.error "Using default SPAdes assembler."
     include { SPADES } from './workflows/spades'

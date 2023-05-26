@@ -58,75 +58,75 @@
                     "description": "Path to 16S ribosomal database for BLAST.",
                     "fa_icon": "fas fa-folder-open"
                 },
-                "phix_reference" : {
-                  "type": "string",
-                  "format": "file-path",
-                  "default": "../../../bin/PhiX_NC_001422.1.fasta",
-                  "hidden": true,
-                  "description": "Path to PhiX reference file."
+                "phix_reference": {
+                    "type": "string",
+                    "format": "file-path",
+                    "default": "../../../bin/PhiX_NC_001422.1.fasta",
+                    "hidden": true,
+                    "description": "Path to PhiX reference file."
                 },
-                "adapter_reference" : {
+                "adapter_reference": {
                     "type": "string",
                     "format": "file-path",
                     "default": "../../../bin/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas",
                     "hidden": true,
                     "description": "Path to adapter reference file."
                 },
-                "skesa_kmer_length" : {
+                "skesa_kmer_length": {
                     "type": "integer",
                     "default": 21,
                     "hidden": true,
                     "description": "SKESA: Kmer length for assembly."
                 },
-                "skesa_vector_percent" : {
+                "skesa_vector_percent": {
                     "type": "string",
                     "default": "0.05",
                     "hidden": true,
                     "description": "SKESA: Percentage of reads containing 19-mer for the 19-mer to be considered a vector."
                 },
-                "skesa_steps" : {
+                "skesa_steps": {
                     "type": "integer",
                     "default": 11,
                     "hidden": true,
                     "description": "SKESA: Number of assembly iterations from minimal to maximal kmer length in reads."
                 },
-                "skesa_fraction" : {
+                "skesa_fraction": {
                     "type": "string",
                     "default": "0.1",
                     "hidden": true,
                     "description": "SKESA: Maximum noise to signal ratio acceptable for extension"
                 },
-                "skesa_max_snp_length" : {
+                "skesa_max_snp_length": {
                     "type": "integer",
                     "default": 150,
                     "hidden": true,
                     "description": "SKESA: Maximal snp length."
                 },
-                "skesa_min_contig_length" : {
+                "skesa_min_contig_length": {
                     "type": "integer",
                     "default": 200,
                     "hidden": true,
                     "description": "SKESA: Minimal contig length reported in output."
                 },
-                "skesa_allow_snps" : {
+                "skesa_allow_snps": {
                     "type": "boolean",
                     "default": false,
                     "hidden": true,
                     "description": "SKESA: Allow additional step for snp discovery."
                 },
-                "spades_polish_corrections" : {
+                "spades_polish_corrections": {
                     "type": "integer",
                     "default": 3,
                     "hidden": true,
                     "description": "Number of rounds to correct contigs from SPAdes using cleaned paired-end reads."
                 },
-                "filter_blast_column" : {
+                "filter_blast_column": {
                     "type": "integer",
                     "default": 1,
                     "hidden": true,
                     "description": "Report best BLASTn hit per query label (1st column) or target (2nd column)."
                 },
-                "filter_blast_bitscore" : {
+                "filter_blast_bitscore": {
                     "type": "string",
                     "default": "0.0",
                     "hidden": true,
@@ -245,14 +245,14 @@
             "properties": {
                 "min_filesize_fastq_input": {
                     "type": "string",
-                    "default" : "10M",
+                    "default": "10M",
                     "hidden": true,
                     "description": "Minimum file size of input FastQ files."
                 },
                 "min_filesize_phix_genome": {
                     "type": "string",
-                    "default" : "5k",
-                    "hidden" : true,
+                    "default": "5k",
+                    "hidden": true,
                     "description": "Minimum file size of input PhiX reference file."
                 },
                 "min_filesize_fastq_phix_removed": {

@@ -44,7 +44,7 @@ process FILTER_CONTIGS_BIOPYTHON {
 
     # Get filter.contigs.py and check if it exists
     filter_contigs_script="${DIR}/filter.contigs.py"
-     if ! check_if_file_exists_allow_seconds ${filter_contigs_script} '60'; then
+      if ! check_if_file_exists_allow_seconds ${filter_contigs_script} '60'; then
       exit 1
     fi
 

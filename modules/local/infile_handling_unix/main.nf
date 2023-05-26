@@ -20,13 +20,13 @@ process INFILE_HANDLING_UNIX {
     path ".command.out"
     path ".command.err"
     path "versions.yml", emit: versions
-        
+
     shell:
     // Split meta.id on first underscore if applicable
     prefix="${meta.id}".split('_')[0];
     '''
     source bash_functions.sh
-    
+
     msg "INFO: R1 = !{reads[0]}"
     msg "INFO: R2 = !{reads[1]}"
 

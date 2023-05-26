@@ -8,14 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Converted workflow to nf-core style and added SKESA assembler.
 
 ### `Added`
+
 - nf-core Styling
 - SKESA
 - Allow samplesheet (XLSX, CSV, TSV) OR directory as input
 
 ### `Fixed`
+
 - Errors in run_assembly.uge-nextflow scripts
 
 ### `Updated`
+
 - Docker containers to ensure they all have built in tests
 
 ### `Deprecated`

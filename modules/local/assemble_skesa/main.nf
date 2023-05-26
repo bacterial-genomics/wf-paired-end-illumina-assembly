@@ -56,12 +56,12 @@ process ASSEMBLE_SKESA {
         --memory !{task.memory} \
         --cores !{task.cpus} \
         --kmer !{params.skesa_kmer_length} \
-         --vector_percent !{params.skesa_vector_percent} \
-         --steps !{params.skesa_steps} \
-         --fraction !{params.skesa_fraction} \
-         --max_snp_len !{params.skesa_max_snp_length} \
-         --min_contig !{params.skesa_min_contig_length} \
-         !{allow_snps}
+        --vector_percent !{params.skesa_vector_percent} \
+        --steps !{params.skesa_steps} \
+        --fraction !{params.skesa_fraction} \
+        --max_snp_len !{params.skesa_max_snp_length} \
+        --min_contig !{params.skesa_min_contig_length} \
+        !{allow_snps}
 
     fi
 

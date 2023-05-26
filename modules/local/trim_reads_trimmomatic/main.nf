@@ -13,7 +13,7 @@ process TRIM_READS_TRIMMOMATIC {
 
     label "process_high"
     tag { "${prefix}" }
-    
+
     container "snads/trimmomatic@sha256:afbb19fdf540e6bd508b657e8dafffb6b411b5b0bf0e302347889220a0b571f1"
 
     input:
@@ -43,7 +43,7 @@ process TRIM_READS_TRIMMOMATIC {
         rm ${filecheck}
       fi
     done
-    
+
     # Get Adapters, check if it exists, and verify file size
     if ! check_if_file_exists_allow_seconds !{params.adapter_reference} '60'; then
       exit 1
@@ -87,7 +87,7 @@ process TRIM_READS_TRIMMOMATIC {
     msg "INFO: $CNT_BROKEN_R1 forward reads lacked a high quality R2 sister read" >&2
     msg "INFO: $CNT_BROKEN_R2 reverse reads lacked a high quality R1 sister read" >&2
     msg "INFO: $CNT_BROKEN total broken read pairs were saved as singletons" >&2
-    
+
     echo -e "!{prefix}\t${TRIMMO_DISCARD} reads Discarded\t${CNT_BROKEN} reads Singletons" \
     > !{prefix}.trimmo.tsv
 

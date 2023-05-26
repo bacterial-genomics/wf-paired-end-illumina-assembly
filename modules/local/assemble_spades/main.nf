@@ -94,7 +94,7 @@ process ASSEMBLE_SPADES {
     !{prefix}_tmp/contigs.fasta \
     !{prefix}_tmp/assembly_graph_with_scaffolds.gfa \
     !{prefix}/
-    
+
     if [ -f !{prefix}_tmp/warnings.log ]; then
       mv !{prefix}_tmp/warnings.log !{prefix}/
     fi

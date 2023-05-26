@@ -86,7 +86,7 @@ include { CONVERT_SAMPLESHEET_PYTHON } from "../modules/local/convert_sampleshee
 */
 
 workflow SPADES {
-    
+
     // SETUP: Define empty channels to concatenate certain outputs
     ch_versions = Channel.empty()
     ch_alnstats_summary = Channel.empty()
@@ -278,7 +278,7 @@ workflow SPADES {
 
     // Collect version info
     ch_versions = ch_versions.mix(CALCULATE_COVERAGE_UNIX.out.versions)
-    
+
     // PATTERN: Collate method for version information
     ch_versions.unique().collectFile(name: 'software_versions.yml', storeDir: params.logpath)
 

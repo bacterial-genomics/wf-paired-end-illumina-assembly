@@ -6,7 +6,7 @@ process MERGE_LANE_FILES_PYTHON {
         saveAs: { filename -> "${prefix}.${task.process}${filename}"}
 
     container "gregorysprenger/pandas-excel@sha256:4fad4114df25726e24660d8550da48b926b80ce5b8a32b522b552a2d8e1df156"
-    
+
     input:
     path samplesheet
 
@@ -50,7 +50,7 @@ process MERGE_LANE_FILES_PYTHON {
     # Make sure theres at least 1 sample that is duplicated
     if len(sample_names) >= 1:
         for name in sample_names:
-             # Grab all fastq_1 and fastq_1 columns for each sample_name
+            # Grab all fastq_1 and fastq_1 columns for each sample_name
             r1 = df[df['sample']==name]['fastq_1']
             r2 = df[df['sample']==name]['fastq_2']
 
