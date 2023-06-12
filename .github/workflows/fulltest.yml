@@ -1,0 +1,18 @@
+name: Run full size test profile
+# This workflow is triggered on published releases.
+# It can be additionally triggered manually with GitHub actions workflow dispatch button.
+# It runs the -profile 'test_full' on AWS batch
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+jobs:
+  run-full-test:
+    name: Run full size test profile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: nf-core/setup-nextflow@v1
+      - run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test_full,docker --outdir results-test

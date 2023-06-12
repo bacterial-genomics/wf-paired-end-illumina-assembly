@@ -1,0 +1,15 @@
+name: Run test profile
+# This workflow can be triggered manually with the GitHub actions workflow dispatch button.
+# It runs the -profile 'test' parameter.
+
+on:
+  workflow_dispatch:
+jobs:
+  run-small-test:
+    name: Run test profile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: nf-core/setup-nextflow@v1
+      - run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker --outdir results
