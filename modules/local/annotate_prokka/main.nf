@@ -50,7 +50,7 @@ process ANNOTATE_PROKKA {
 
     prokka \
       --outdir prokka \
-      --prefix "!{prefix}"\
+      --prefix "!{prefix}" \
       --force \
       --addgenes \
       --locustag "!{prefix}" \
@@ -68,10 +68,10 @@ process ANNOTATE_PROKKA {
 
     if verify_minimum_file_size "!{prefix}.gbk" 'Annotated GenBank File' "!{params.min_filesize_annotated_genbank}"; then
       echo -e "!{prefix}\tAnnotated GenBank File\tPASS" \
-        > !{prefix}.Annotated_GenBank_File.tsv
+      > !{prefix}.Annotated_GenBank_File.tsv
     else
       echo -e "!{prefix}\tAnnotated GenBank File\tFAIL" \
-        > !{prefix}.Annotated_GenBank_File.tsv
+      > !{prefix}.Annotated_GenBank_File.tsv
     fi
 
     # Get process version
