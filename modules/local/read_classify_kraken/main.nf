@@ -103,7 +103,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
     label "process_high"
     tag { "${prefix}" }
 
-    container "gregorysprenger/kraken2@sha256:94517863a0aa1fa820275df349777859d5c194523335978ae154e8ea8190c71d"
+    container "gregorysprenger/kraken2@sha256:e4282b158c9899382a23b53b8e07a791b83d8fd89e502b640a8cd0a411f6ca72"
 
     input:
     tuple val(prefix), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
