@@ -22,7 +22,7 @@ nextflow \
   --outdir ${OUT} \
   --input ${IN} \
   --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
-  --kraken2_db /scicomp/reference-pure/kraken/OLD/2.0.0 \
+  --kraken2_db /scicomp/reference-pure/kraken-2023 \
   --blast_db /scicomp/reference-pure/ncbi-blast/blast/db \
   -w /scicomp/scratch/${USER}/work \
   -N ${USER}@cdc.gov
