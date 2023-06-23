@@ -30,7 +30,7 @@ nextflow run \
   -r v1.1.0 \
   -profile singularity
   --input new-fastq-dir \
-  --outdir my-results
+  --outdir my-results \
   --assembler spades
 ```
 
@@ -42,7 +42,7 @@ nextflow run \
   -r v1.1.0 \
   -profile singularity
   --input new-fastq-dir \
-  --outdir my-results
+  --outdir my-results \
   --assembler skesa
 ```
 
