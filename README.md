@@ -22,7 +22,7 @@ nextflow run \
 
 ## Quick Start: Run
 
-Example command on FastQs in "new-fastq-dir" data with singularity:
+Example command on FastQs in "new-fastq-dir" data using **SPAdes** with singularity:
 
 ```
 nextflow run \
@@ -31,6 +31,19 @@ nextflow run \
   -profile singularity
   --input new-fastq-dir \
   --outdir my-results
+  --assembler spades
+```
+
+Example command on FastQs in "new-fastq-dir" data using **Skesa** with singularity:
+
+```
+nextflow run \
+  wf-paired-end-illumina-assembly/ \
+  -r v1.1.0 \
+  -profile singularity
+  --input new-fastq-dir \
+  --outdir my-results
+  --assembler skesa
 ```
 
 ## Contents
@@ -72,15 +85,17 @@ Note the "`--`" long name arguments (e.g., `--help`, `--input`, `--outdir`) are 
 These are the most pertinent options for this workflow:
 
 ```
-  --input             Path to input data directory containing FastQ assemblies or samplesheet. Recognized extensions are:  fastq.gz, fq.gz.
+  --input              Path to input data directory containing FastQ assemblies or samplesheet. Recognized extensions are:  fastq.gz, fq.gz.
 
-  --outdir            The output directory where the results will be saved.
+  --outdir             The output directory where the results will be saved.
 
-  --kraken1_db         Specify path to database for Kraken1. Default database is Mini Kraken.
+  --assembler          Specify which assembler to execute (spades, skesa). [Default: spades]
 
-  --kraken2_db         Specify path to database for Kraken2. Default database is Mini Kraken.
+  --kraken1_db         Specify path to database for Kraken1. [Default: Mini Kraken]
 
-  --blast_db           Specify path to 16S ribosomal database for BLAST. Default database is NCBI's 16S ribosomal database.
+  --kraken2_db         Specify path to database for Kraken2. [Default: Mini Kraken]
+
+  --blast_db           Specify path to 16S ribosomal database for BLAST. [Default: NCBI's 16S ribosomal database]
 
   -profile singularity Use Singularity images to run the workflow. Will pull and convert Docker images from Dockerhub if not locally available.
 
