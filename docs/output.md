@@ -70,7 +70,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 | <a id="process-logs">log/process_logs</a>            |                                                        | **Process log files**                                                                  |
 |                                                      | \<SampleName\>.\<ProcessName\>.command.out             | Standard output for \<SampleName\> during process \<ProcessName\>                      |
 |                                                      | \<SampleName\>.\<ProcessName\>.command.err             | Standard error for \<SampleName\> during process \<ProcessName\>                       |
-| <a id="qc-file-checks">log/qc_file_checks</a>        |                                                        | QC file check log files                                                                |
+| <a id="qc-file-checks">log/qc_file_checks</a>        |                                                        | **QC file check log files**                                                                |
 |                                                      | \<SampleName\>.Raw_Initial_FastQ_Files.tsv             | Raw Initial FastQ File Check                                                           |
 |                                                      | \<SampleName\>.PhiX_Genome.tsv                         | PhiX Genome Check                                                                      |
 |                                                      | \<SampleName\>.PhiX-removed_FastQ_Files.tsv            | PhiX-removed FastQ File Check                                                          |
