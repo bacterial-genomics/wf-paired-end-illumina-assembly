@@ -42,7 +42,7 @@ Before running workflow on new data, the workflow should be ran on the built-in 
 
 ```
 cd $LAB_HOME/workflows/wf-paired-end-illumina-assembly
-ml nextflow
+module load nextflow
 nextflow run main.nf \
   -profile singularity,test
 ```
