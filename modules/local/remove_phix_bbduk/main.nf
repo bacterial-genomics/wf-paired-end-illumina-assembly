@@ -20,14 +20,14 @@ process REMOVE_PHIX_BBDUK {
     tuple val(prefix), path(reads), path(qc_input_filecheck)
 
     output:
-    tuple val(prefix), path("${prefix}_noPhiX-R1.fsq"), path("${prefix}_noPhiX-R2.fsq"), path("*File*.tsv"), emit: phix_removed
-    path "${prefix}.PhiX_Genome_File.tsv", emit: qc_phix_genome_filecheck
-    path "${prefix}.PhiX-removed_FastQ_Files.tsv", emit: qc_phix_removed_filecheck
-    path "${prefix}.raw.tsv"
-    path "${prefix}.phix.tsv"
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "${prefix}.raw.tsv"
+    path "${prefix}.phix.tsv"
+    path "versions.yml"                                                                                    , emit: versions
+    path "${prefix}.PhiX_Genome_File.tsv"                                                                  , emit: qc_phix_genome_filecheck
+    path "${prefix}.PhiX-removed_FastQ_Files.tsv"                                                          , emit: qc_phix_removed_filecheck
+    tuple val(prefix), path("${prefix}_noPhiX-R1.fsq"), path("${prefix}_noPhiX-R2.fsq"), path("*File*.tsv"), emit: phix_removed
 
     shell:
     '''
@@ -59,17 +59,17 @@ process REMOVE_PHIX_BBDUK {
     msg "INFO: Running bbduk with !{task.cpus} threads"
 
     bbduk.sh \
-      threads=!{task.cpus} \
       k=31 \
       hdist=1 \
-      ref="!{params.phix_reference}" \
+      qout=33 \
+      qin=auto \
+      overwrite=t \
       in="!{reads[0]}" \
       in2="!{reads[1]}" \
+      threads=!{task.cpus} \
       out=!{prefix}_noPhiX-R1.fsq \
       out2=!{prefix}_noPhiX-R2.fsq \
-      qin=auto \
-      qout=33 \
-      overwrite=t
+      ref="!{params.phix_reference}"
 
     for suff in R1.fsq R2.fsq; do
       if verify_minimum_file_size "!{prefix}_noPhiX-${suff}" 'PhiX-removed FastQ Files' "!{params.min_filesize_fastq_phix_removed}"; then

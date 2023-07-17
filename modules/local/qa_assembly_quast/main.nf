@@ -14,12 +14,12 @@ process QA_ASSEMBLY_QUAST {
       tuple val(prefix), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck), path(assembly)
 
     output:
-    tuple val(prefix), path("${prefix}.Summary.Assemblies.tab"), path("${prefix}.Summary.Illumina.CleanedReads-Bases.tab"), emit: qa_summaries
-    path "${prefix}.Summary.Assemblies.tab", emit: summary_assemblies
-    path "${prefix}.Summary.Illumina.CleanedReads-Bases.tab", emit: summary_reads
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"                                                                                                   , emit: versions
+    path "${prefix}.Summary.Assemblies.tab"                                                                               , emit: summary_assemblies
+    path "${prefix}.Summary.Illumina.CleanedReads-Bases.tab"                                                              , emit: summary_reads
+    tuple val(prefix), path("${prefix}.Summary.Assemblies.tab"), path("${prefix}.Summary.Illumina.CleanedReads-Bases.tab"), emit: qa_summaries
 
     shell:
     '''
@@ -40,16 +40,16 @@ process QA_ASSEMBLY_QUAST {
     msg "INFO: Running QUAST with !{task.cpus} threads"
 
     quast.py \
-      --output-dir quast \
-      --min-contig 100 \
-      --threads !{task.cpus} \
-      --no-html \
-      --gene-finding \
-      --gene-thresholds 300 \
-      --contig-thresholds 500,1000 \
-      --ambiguity-usage one \
-      --strict-NA \
       --silent \
+      --no-html \
+      --strict-NA \
+      --gene-finding \
+      --min-contig 100 \
+      --output-dir quast \
+      --gene-thresholds 300 \
+      --ambiguity-usage one \
+      --threads !{task.cpus} \
+      --contig-thresholds 500,1000 \
       "!{assembly}" >&2
 
     mv -f quast/transposed_report.tsv !{prefix}.Summary.Assemblies.tab

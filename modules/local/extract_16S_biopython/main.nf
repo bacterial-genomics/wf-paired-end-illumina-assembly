@@ -13,10 +13,10 @@ process EXTRACT_16S_BIOPYTHON {
     tuple val(prefix), path(annotation), path(qc_annotated_filecheck), path(assembly)
 
     output:
-    tuple val(prefix), path("16S.${prefix}.fa"), emit: extracted_rna
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"                        , emit: versions
+    tuple val(prefix), path("16S.${prefix}.fa"), emit: extracted_rna
 
     shell:
     '''
@@ -43,11 +43,11 @@ process EXTRACT_16S_BIOPYTHON {
     if [[ -s "!{annotation}" ]]; then
       python ${extract_record_script} \
         -i "!{annotation}" \
-        -u !{params.genbank_query_qualifier} \
         -o "16S.!{prefix}.fa" \
         -q "!{params.genbank_query}" \
-        --search-type !{params.genbank_search_type} \
-        -f !{params.genbank_query_feature}
+        -f !{params.genbank_query_feature} \
+        -u !{params.genbank_query_qualifier} \
+        --search-type !{params.genbank_search_type}
     fi
 
     # Get process version

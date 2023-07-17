@@ -20,15 +20,15 @@ process MAP_CONTIGS_BWA {
     tuple val(prefix), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck), path(uncorrected_contigs)
 
     output:
-    tuple val(prefix), path("${prefix}.paired.bam"), path("${prefix}.single.bam"), path("*File*.tsv"), emit: bam
-    tuple val(prefix), path("${prefix}.fna"), emit: assembly
-    path "${prefix}.Filtered_Assembly_File.tsv", emit: qc_filtered_asm_filecheck
-    path "${prefix}.Binary_PE_Alignment_Map_File.tsv", emit: qc_pe_alignment_filecheck
-    path "${prefix}.Final_Corrected_Assembly_FastA_File.tsv", emit: qc_corrected_asm_filecheck
-    path "${prefix}.Binary_SE_Alignment_Map_File.tsv", emit: qc_se_alignment_filecheck
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"                                                                              , emit: versions
+    tuple val(prefix), path("${prefix}.fna")                                                         , emit: assembly
+    path "${prefix}.Filtered_Assembly_File.tsv"                                                      , emit: qc_filtered_asm_filecheck
+    path "${prefix}.Binary_PE_Alignment_Map_File.tsv"                                                , emit: qc_pe_alignment_filecheck
+    path "${prefix}.Binary_SE_Alignment_Map_File.tsv"                                                , emit: qc_se_alignment_filecheck
+    path "${prefix}.Final_Corrected_Assembly_FastA_File.tsv"                                         , emit: qc_corrected_asm_filecheck
+    tuple val(prefix), path("${prefix}.paired.bam"), path("${prefix}.single.bam"), path("*File*.tsv"), emit: bam
 
     shell:
     '''
@@ -55,17 +55,17 @@ process MAP_CONTIGS_BWA {
     bwa index !{uncorrected_contigs}
 
     bwa mem \
-      -t !{task.cpus} \
-      -x intractg \
       -v 2 \
+      -x intractg \
+      -t !{task.cpus} \
       !{uncorrected_contigs} \
       !{paired_R1_gz} !{paired_R2_gz} \
       | \
       samtools sort \
       -@ !{task.cpus} \
-      --reference !{uncorrected_contigs} \
       -l 9 \
-      -o !{prefix}.paired.bam
+      -o !{prefix}.paired.bam \
+      --reference !{uncorrected_contigs}
 
     if verify_minimum_file_size "!{prefix}.paired.bam" 'Binary PE Alignment Map File' "!{params.min_filesize_binary_pe_alignment}"; then
       echo -e "!{prefix}\tBinary PE Alignment Map File\tPASS" \
@@ -93,17 +93,17 @@ process MAP_CONTIGS_BWA {
       bwa index !{prefix}.fna
 
       bwa mem \
-        -t !{task.cpus} \
-        -x intractg \
         -v 2 \
-        !{prefix}.fna \
+        -x intractg \
         !{single_gz} \
+        !{prefix}.fna \
+        -t !{task.cpus} \
         | \
         samtools sort \
-        -@ !{task.cpus} \
-        --reference !{prefix}.fna \
         -l 9 \
-        -o !{prefix}.single.bam
+        -@ !{task.cpus} \
+        -o !{prefix}.single.bam \
+        --reference !{prefix}.fna
 
       if verify_minimum_file_size "!{prefix}.single.bam" 'Binary SE Alignment Map File' '!{params.min_filesize_binary_se_alignment}'; then
         echo -e "!{prefix}\tBinary SE Alignment Map File\tPASS" \

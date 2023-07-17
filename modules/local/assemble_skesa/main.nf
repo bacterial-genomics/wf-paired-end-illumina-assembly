@@ -20,11 +20,11 @@ process ASSEMBLE_SKESA {
     tuple val(prefix), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck)
 
     output:
-    tuple val(prefix), path("contigs.fasta"), path("*File*.tsv"), emit: contigs
-    path "${prefix}.Raw_Assembly_File.tsv", emit: qc_raw_assembly_filecheck
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"                                         , emit: versions
+    path "${prefix}.Raw_Assembly_File.tsv"                      , emit: qc_raw_assembly_filecheck
+    tuple val(prefix), path("contigs.fasta"), path("*File*.tsv"), emit: contigs
 
     shell:
     allow_snps = params.skesa_allow_snps ? "--allow snps" : ""
@@ -51,17 +51,16 @@ process ASSEMBLE_SKESA {
       skesa \
         --reads !{R1},!{R2} \
         --reads !{single} \
-        --use_paired_ends \
-        --contigs_out contigs.fasta \
-        --memory !{task.memory} \
+        !{allow_snps} \
         --cores !{task.cpus} \
-        --kmer !{params.skesa_kmer_length} \
-        --vector_percent !{params.skesa_vector_percent} \
+        --memory !{task.memory} \
+        --contigs_out contigs.fasta \
         --steps !{params.skesa_steps} \
+        --kmer !{params.skesa_kmer_length} \
         --fraction !{params.skesa_fraction} \
         --max_snp_len !{params.skesa_max_snp_length} \
         --min_contig !{params.skesa_min_contig_length} \
-        !{allow_snps}
+        --vector_percent !{params.skesa_vector_percent}
 
     fi
 

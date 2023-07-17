@@ -20,14 +20,14 @@ process TRIM_READS_TRIMMOMATIC {
     tuple val(prefix), path(noPhiX_R1), path(noPhiX_R2), path(qc_phix_filecheck)
 
     output:
-    tuple val(prefix), path("${prefix}_R1.paired.fq"), path("${prefix}_R2.paired.fq"), path("*File*.tsv"), emit: trimmo
-    path "${prefix}.Adapters_FastA_File.tsv", emit: qc_adapters_filecheck
-    path "${prefix}.Adapter-removed_FastQ_Files.tsv", emit: qc_removed_adapters_filecheck
-    path "${prefix}.trimmo.tsv"
-    path "${prefix}.single.fq"
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "${prefix}.single.fq"
+    path "${prefix}.trimmo.tsv"
+    path "versions.yml"                                                                                  , emit: versions
+    path "${prefix}.Adapters_FastA_File.tsv"                                                             , emit: qc_adapters_filecheck
+    path "${prefix}.Adapter-removed_FastQ_Files.tsv"                                                     , emit: qc_removed_adapters_filecheck
+    tuple val(prefix), path("${prefix}_R1.paired.fq"), path("${prefix}_R2.paired.fq"), path("*File*.tsv"), emit: trimmo
 
     shell:
     '''
@@ -58,16 +58,16 @@ process TRIM_READS_TRIMMOMATIC {
     msg "INFO: Running trimmomatic with !{task.cpus} threads"
 
     trimmomatic PE \
-    -phred33 \
-    -threads !{task.cpus} \
-    !{noPhiX_R1} !{noPhiX_R2} \
-    !{prefix}_R1.paired.fq !{prefix}_R1.unpaired.fq \
-    !{prefix}_R2.paired.fq !{prefix}_R2.unpaired.fq \
-    ILLUMINACLIP:!{params.adapter_reference}:2:20:10:8:TRUE \
-    SLIDINGWINDOW:6:30 \
-    LEADING:10 \
-    TRAILING:10 \
-    MINLEN:50
+      -phred33 \
+      -threads !{task.cpus} \
+      !{noPhiX_R1} !{noPhiX_R2} \
+      !{prefix}_R1.paired.fq !{prefix}_R1.unpaired.fq \
+      !{prefix}_R2.paired.fq !{prefix}_R2.unpaired.fq \
+      MINLEN:50 \
+      LEADING:10 \
+      TRAILING:10 \
+      SLIDINGWINDOW:6:30 \
+      ILLUMINACLIP:!{params.adapter_reference}:2:20:10:8:TRUE
 
     TRIMMO_DISCARD=$(grep '^Input Read Pairs: ' .command.err \
     | grep ' Dropped: ' | awk '{print $20}')

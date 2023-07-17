@@ -11,10 +11,10 @@ process MERGE_LANE_FILES_PYTHON {
     path samplesheet
 
     output:
-    path "lanes_merged_samplesheet.*", emit: lanes_merged_samplesheet
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"              , emit: versions
+    path "lanes_merged_samplesheet.*", emit: lanes_merged_samplesheet
 
     shell:
     '''
@@ -92,8 +92,8 @@ process MERGE_LANE_FILES_PYTHON {
 
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      ubuntu: $(awk -F ' ' '{print $2, $3}' /etc/issue | tr -d '\\n')
       python: $(python3 --version 2>&1 | awk '{print $2}')
+      ubuntu: $(awk -F ' ' '{print $2, $3}' /etc/issue | tr -d '\\n')
     END_VERSIONS
     '''
 }

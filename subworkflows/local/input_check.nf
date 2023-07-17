@@ -17,7 +17,7 @@ include { CONVERT_SAMPLESHEET_PYTHON } from "../../modules/local/convert_samples
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_MERGE_LANE_FILES } from "./input_merge_lane_files"
+include { INPUT_MERGE_LANE_FILES     } from "./input_merge_lane_files"
 
 def hasExtension(it, extension) {
     it.toString().toLowerCase().endsWith(extension.toLowerCase())
@@ -140,7 +140,7 @@ workflow INPUT_CHECK {
         // Read from FilePairs if no samplesheet is given
         ch_raw_reads = Channel
             .fromFilePairs(ch_input+'/**_{,R}{1,2}*{fastq,fq}{,.gz}', maxDepth: 2, checkIfExists: true)
-            .ifEmpty { exit 1, "Cannot find any reads matching: ${input}\nNB: Path needs to be enclosed in quotes!" }
+            .ifEmpty { exit 1, "Cannot find any reads matching: ${ch_input}\nNB: Path needs to be enclosed in quotes!" }
             .map { row ->
                         def meta = [:]
                         meta.id  = row[0]
@@ -157,5 +157,5 @@ workflow INPUT_CHECK {
 
     emit:
     raw_reads = ch_raw_reads
-    versions = ch_versions
+    versions  = ch_versions
 }

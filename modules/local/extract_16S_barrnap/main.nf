@@ -19,12 +19,12 @@ process EXTRACT_16S_BARRNAP {
     tuple val(prefix), path(annotation), path(qc_annotated_filecheck), path(assembly), path(extracted_rna)
 
     output:
-    tuple val(prefix), path("16S.${prefix}.fa"), path("*File*.tsv"), emit: extracted_base
-    path "${prefix}.SSU_Extracted_File.tsv", emit: qc_ssu_extracted_filecheck
-    path "${prefix}.SSU_Renamed_File.tsv", emit: qc_ssu_renamed_filecheck
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"                                            , emit: versions
+    path "${prefix}.SSU_Renamed_File.tsv"                          , emit: qc_ssu_renamed_filecheck
+    path "${prefix}.SSU_Extracted_File.tsv"                        , emit: qc_ssu_extracted_filecheck
+    tuple val(prefix), path("16S.${prefix}.fa"), path("*File*.tsv"), emit: extracted_base
 
     shell:
     '''

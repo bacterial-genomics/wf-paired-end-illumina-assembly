@@ -21,11 +21,11 @@ process ASSEMBLE_SPADES {
 
     output:
     path "${prefix}/"
-    tuple val(prefix), path("${prefix}/contigs.fasta"), path("*File*.tsv"), emit: contigs
-    path "${prefix}.Raw_Assembly_File.tsv", emit: qc_raw_assembly_filecheck
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"                                                   , emit: versions
+    path "${prefix}.Raw_Assembly_File.tsv"                                , emit: qc_raw_assembly_filecheck
+    tuple val(prefix), path("${prefix}/contigs.fasta"), path("*File*.tsv"), emit: contigs
 
     shell:
     '''
@@ -55,20 +55,24 @@ process ASSEMBLE_SPADES {
         mv -f !{prefix}_tmp/spades.log \
         !{prefix}_tmp/"${failed}"of3-asm-attempt-failed.spades.log 2> /dev/null
         msg "INFO: SPAdes failure ${failed}; retrying assembly for !{prefix}" >&2
+
         spades.py \
         --restart-from last \
         -o !{prefix}_tmp \
         -t !{task.cpus} >&2
+
       else
+
         spades.py \
         --pe1-1 !{R1} \
         --pe1-2 !{R2} \
         --pe1-s !{single} \
-        --memory "${RAMSIZE_TOT}" \
+        -t !{task.cpus} \
         -o !{prefix}_tmp \
         --phred-offset 33 \
-        -t !{task.cpus} \
+        --memory "${RAMSIZE_TOT}" \
         --only-assembler >&2
+
       fi
       failed=$(( ${failed}+1 ))
     done
@@ -90,10 +94,10 @@ process ASSEMBLE_SPADES {
 
     mkdir !{prefix}
     mv !{prefix}_tmp/spades.log.gz \
-    !{prefix}_tmp/params.txt.gz \
-    !{prefix}_tmp/contigs.fasta \
-    !{prefix}_tmp/assembly_graph_with_scaffolds.gfa \
-    !{prefix}/
+      !{prefix}_tmp/params.txt.gz \
+      !{prefix}_tmp/contigs.fasta \
+      !{prefix}_tmp/assembly_graph_with_scaffolds.gfa \
+      !{prefix}/
 
     if [ -f !{prefix}_tmp/warnings.log ]; then
       mv !{prefix}_tmp/warnings.log !{prefix}/

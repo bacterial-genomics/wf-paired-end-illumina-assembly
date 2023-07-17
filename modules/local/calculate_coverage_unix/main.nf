@@ -13,10 +13,10 @@ process CALCULATE_COVERAGE_UNIX {
     tuple val(prefix), path(summary_assemblies), path(summary_reads), path(summary_stats)
 
     output:
-    path "${prefix}.Summary.Illumina.GenomeCoverage.tab", emit: genome_coverage
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"                                 , emit: versions
+    path "${prefix}.Summary.Illumina.GenomeCoverage.tab", emit: genome_coverage
 
     shell:
     '''

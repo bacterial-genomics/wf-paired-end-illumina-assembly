@@ -20,13 +20,13 @@ process OVERLAP_PAIRED_READS_FLASH {
     tuple val(prefix), path(reads), path(qc_input_filecheck), path(paired_R1), path(paired_R2), path(qc_adapter_filecheck)
 
     output:
-    tuple val(prefix), path("${prefix}_R1.paired.fq.gz"), path("${prefix}_R2.paired.fq.gz"), path("${prefix}.single.fq.gz"), path("*File*.tsv"), emit: gzip_reads
-    path "${prefix}.Non-overlapping_FastQ_Files.tsv", emit: qc_nonoverlap_filecheck
-    path "${prefix}.overlap.tsv"
-    path "${prefix}.clean-reads.tsv"
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "${prefix}.overlap.tsv"
+    path "${prefix}.clean-reads.tsv"
+    path "versions.yml"                                                                                                                        , emit: versions
+    path "${prefix}.Non-overlapping_FastQ_Files.tsv"                                                                                           , emit: qc_nonoverlap_filecheck
+    tuple val(prefix), path("${prefix}_R1.paired.fq.gz"), path("${prefix}_R2.paired.fq.gz"), path("${prefix}.single.fq.gz"), path("*File*.tsv"), emit: gzip_reads
 
     shell:
     '''
@@ -56,10 +56,10 @@ process OVERLAP_PAIRED_READS_FLASH {
 
       msg "INFO: Running flash with !{task.cpus} threads"
       flash \
-        -m ${OVERLAP_LEN} \
-        -M ${READ_LEN} \
         -o flash \
+        -M ${READ_LEN} \
         -t !{task.cpus} \
+        -m ${OVERLAP_LEN} \
         !{paired_R1} !{paired_R2}
 
       for suff in notCombined_1.fastq notCombined_2.fastq; do
@@ -103,8 +103,8 @@ process OVERLAP_PAIRED_READS_FLASH {
       > !{prefix}.clean-reads.tsv
 
     gzip !{prefix}.single.fq \
-    !{prefix}_R1.paired.fq \
-    !{prefix}_R2.paired.fq
+      !{prefix}_R1.paired.fq \
+      !{prefix}_R2.paired.fq
 
     # Get process version
     cat <<-END_VERSIONS > versions.yml

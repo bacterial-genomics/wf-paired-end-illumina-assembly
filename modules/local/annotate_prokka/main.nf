@@ -20,11 +20,11 @@ process ANNOTATE_PROKKA {
     tuple val(prefix), path(paired_bam), path(single_bam), path(qc_assembly_filecheck), path(assembly)
 
     output:
-    tuple val(prefix), path("${prefix}.gbk"), path("*File*.tsv"), emit: annotation
-    path "${prefix}.Annotated_GenBank_File.tsv", emit: qc_annotated_filecheck
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"                                         , emit: versions
+    path "${prefix}.Annotated_GenBank_File.tsv"                 , emit: qc_annotated_filecheck
+    tuple val(prefix), path("${prefix}.gbk"), path("*File*.tsv"), emit: annotation
 
     shell:
     '''

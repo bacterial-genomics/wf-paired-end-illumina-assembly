@@ -19,13 +19,13 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     tuple val(prefix), path(blast_tsv), path(qc_aligned_blast_filecheck), path(assembly)
 
     output:
-    path "${prefix}.Summary.16S.tab", emit: blast_summary
-    path "${prefix}.16S-top-species.tsv", emit: ssu_species
-    path "${prefix}.Filtered_16S_BLASTn_File.tsv", emit: qc_filtered_blastn_filecheck
-    path "${prefix}.blast.tsv.gz"
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "${prefix}.blast.tsv.gz"
+    path "versions.yml"                          , emit: versions
+    path "${prefix}.Summary.16S.tab"             , emit: blast_summary
+    path "${prefix}.16S-top-species.tsv"         , emit: ssu_species
+    path "${prefix}.Filtered_16S_BLASTn_File.tsv", emit: qc_filtered_blastn_filecheck
 
     shell:
     '''

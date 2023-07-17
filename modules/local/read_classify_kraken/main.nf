@@ -18,10 +18,10 @@ process READ_CLASSIFY_KRAKEN_ONE {
     tuple val(prefix), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
 
     output:
-    path "${prefix}.taxonomy1-reads.tab"
-    path "${prefix}_kraken1.tab.gz"
     path ".command.out"
     path ".command.err"
+    path "${prefix}_kraken1.tab.gz"
+    path "${prefix}.taxonomy1-reads.tab"
     path "versions.yml", emit: versions
 
     shell:
@@ -62,10 +62,10 @@ process READ_CLASSIFY_KRAKEN_ONE {
     if [ ! -s !{prefix}.taxonomy1-reads.tab ]; then
       msg "INFO: Running Kraken1 with !{task.cpus} threads"
       kraken \
-        --db ${database} \
-        --threads !{task.cpus} \
         --fastq-input \
+        --db ${database} \
         --gzip-compressed \
+        --threads !{task.cpus} \
         !{paired_R1_gz} !{paired_R2_gz} !{single_gz} \
         > !{prefix}_kraken.output
 
@@ -109,10 +109,10 @@ process READ_CLASSIFY_KRAKEN_TWO {
     tuple val(prefix), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
 
     output:
-    path "${prefix}.taxonomy2-reads.tab"
-    path "${prefix}_kraken2.tab.gz"
     path ".command.out"
     path ".command.err"
+    path "${prefix}_kraken2.tab.gz"
+    path "${prefix}.taxonomy2-reads.tab"
     path "versions.yml", emit: versions
 
     shell:
@@ -153,12 +153,12 @@ process READ_CLASSIFY_KRAKEN_TWO {
     if [ ! -s !{prefix}.taxonomy2-reads.tab ]; then
       msg "INFO: Running Kraken2 with !{task.cpus} threads"
       kraken2 \
-        --db "${database}" \
-        --threads !{task.cpus} \
-        --gzip-compressed \
-        --output /dev/null \
         --use-names \
+        --gzip-compressed \
+        --db "${database}" \
+        --output /dev/null \
         --report kraken2.tab \
+        --threads !{task.cpus} \
         !{paired_R1_gz} !{paired_R2_gz} !{single_gz}
 
       msg "INFO: Summarizing Kraken2"

@@ -13,10 +13,10 @@ process MLST_MLST {
       tuple val(prefix), path(paired_bam), path(single_bam), path(qc_assembly_filecheck), path(assembly)
 
     output:
-    path "${prefix}.Summary.MLST.tab", emit: summary_mlst
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"              , emit: versions
+    path "${prefix}.Summary.MLST.tab", emit: summary_mlst
 
     shell:
     '''
@@ -38,8 +38,8 @@ process MLST_MLST {
 
     if [[ -s !{assembly} ]]; then
       mlst \
-        --threads !{task.cpus} \
         "!{assembly}" \
+        --threads !{task.cpus} \
         >> !{prefix}.Summary.MLST.tab
     fi
 

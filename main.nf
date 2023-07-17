@@ -38,7 +38,7 @@ if (params.assembler) {
 // Import workflow based on params.assembler input
 if (assembler in ['skesa', 'spades']) {
     if (assembler == "skesa") {
-        include { SKESA } from './workflows/skesa'
+        include { SKESA  } from './workflows/skesa'
     } else {
         include { SPADES } from './workflows/spades'
     }

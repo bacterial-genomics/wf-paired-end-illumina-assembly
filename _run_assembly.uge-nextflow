@@ -16,16 +16,16 @@ nextflow \
   -log ${OUT}/nextflow_log.${SCRIPT_NAME}.txt \
   run \
   ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
-  -ansi-log false \
   -profile ${HPC} \
-  -resume \
-  --outdir ${OUT} \
   --input ${IN} \
-  --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
+  --outdir ${OUT} \
   --kraken2_db /scicomp/reference-pure/kraken-2023 \
   --blast_db /scicomp/reference-pure/ncbi-blast/blast/db \
+  --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
   -w /scicomp/scratch/${USER}/work \
-  -N ${USER}@cdc.gov
+  -ansi-log false \
+  -N ${USER}@cdc.gov \
+  -resume
 
 # Check for errors and add to errors.tsv
 # Get nextflow run name

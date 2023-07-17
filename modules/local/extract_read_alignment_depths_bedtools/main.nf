@@ -13,11 +13,11 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     tuple val(prefix), path(paired_bam), path(single_bam), path(qc_assembly_filecheck)
 
     output:
-    tuple val(prefix), path("${prefix}.Summary.Illumina.CleanedReads-AlnStats.tab"), emit: summary_stats
-    path "${prefix}.Summary.Illumina.CleanedReads-AlnStats.tab", emit: summary_alnstats
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"                                                            , emit: versions
+    path "${prefix}.Summary.Illumina.CleanedReads-AlnStats.tab"                    , emit: summary_alnstats
+    tuple val(prefix), path("${prefix}.Summary.Illumina.CleanedReads-AlnStats.tab"), emit: summary_stats
 
     shell:
     '''

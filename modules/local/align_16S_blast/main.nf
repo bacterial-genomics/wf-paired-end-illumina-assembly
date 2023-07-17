@@ -16,11 +16,11 @@ process ALIGN_16S_BLAST {
     tuple val(prefix), path(extracted_base), path(qc_extracted_filecheck), path(assembly)
 
     output:
-    tuple val(prefix), path("${prefix}.blast.tsv"), path("*File.tsv"), emit: blast_tsv
-    path "${prefix}.16S_BLASTn_Output_File.tsv", emit: qc_blastn_filecheck
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"                                              , emit: versions
+    path "${prefix}.16S_BLASTn_Output_File.tsv"                      , emit: qc_blastn_filecheck
+    tuple val(prefix), path("${prefix}.blast.tsv"), path("*File.tsv"), emit: blast_tsv
 
     shell:
     '''

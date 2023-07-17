@@ -88,14 +88,14 @@ workflow SKESA {
 
     // SETUP: Define empty channels to concatenate certain outputs
     ch_versions           = Channel.empty()
-    ch_alnstats_summary   = Channel.empty()
-    ch_blast_summary      = Channel.empty()
     ch_ssu_species        = Channel.empty()
-    ch_genome_cov_summary = Channel.empty()
     ch_mlst_summary       = Channel.empty()
-    ch_assembly_summary   = Channel.empty()
-    ch_cleaned_summary    = Channel.empty()
     ch_qc_filecheck       = Channel.empty()
+    ch_blast_summary      = Channel.empty()
+    ch_cleaned_summary    = Channel.empty()
+    ch_alnstats_summary   = Channel.empty()
+    ch_assembly_summary   = Channel.empty()
+    ch_genome_cov_summary = Channel.empty()
 
     // Check input for samplesheet or pull inputs from directory
     INPUT_CHECK (
@@ -276,7 +276,6 @@ workflow SKESA {
     // Collect all BLAST Top Species Summaries and concatenate into one file
     ch_ssu_species = ch_ssu_species
         .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.ssu_species)
-    ch_ssu_species
         .collectFile(name: '16S-top-species.tsv', storeDir: "${params.outdir}/ssu")
 
     // Collect version info
@@ -293,15 +292,11 @@ workflow SKESA {
     // Collect all Assembly Summaries and concatenate into one file
     ch_assembly_summary = ch_assembly_summary
         .mix(QA_ASSEMBLY_QUAST.out.summary_assemblies)
-
-    ch_assembly_summary
         .collectFile(name: 'Summary.Assemblies.tab', keepHeader: true, storeDir: "${params.outdir}/qa")
 
     // Collect all Cleaned Read/Base Summaries and concatenate into one file
     ch_cleaned_summary = ch_cleaned_summary
         .mix(QA_ASSEMBLY_QUAST.out.summary_reads)
-
-    ch_cleaned_summary
         .collectFile(name: 'Summary.Illumina.CleanedReads-Bases.tab', storeDir: "${params.outdir}/qa")
 
     // Collect version info
@@ -317,8 +312,6 @@ workflow SKESA {
     // Collect all Genome Coverage Summaries and concatenate into one file
     ch_genome_cov_summary = ch_genome_cov_summary
         .mix(CALCULATE_COVERAGE_UNIX.out.genome_coverage)
-
-    ch_genome_cov_summary
         .collectFile(name: 'Summary.Illumina.GenomeCoverage.tab', storeDir: "${params.outdir}/qa")
 
     // Collect version info
@@ -331,26 +324,25 @@ workflow SKESA {
         .collectFile(name: 'software_versions.yml', storeDir: params.logpath)
 
     // Collect all QC File Checks and concatenate into one file
-    ch_qc_filecheck = ch_qc_filecheck.concat(
-        INFILE_HANDLING_UNIX.out.qc_input_filecheck,
-        REMOVE_PHIX_BBDUK.out.qc_phix_genome_filecheck,
-        REMOVE_PHIX_BBDUK.out.qc_phix_removed_filecheck,
-        TRIM_READS_TRIMMOMATIC.out.qc_adapters_filecheck,
-        TRIM_READS_TRIMMOMATIC.out.qc_removed_adapters_filecheck,
-        OVERLAP_PAIRED_READS_FLASH.out.qc_nonoverlap_filecheck,
-        ASSEMBLE_SKESA.out.qc_raw_assembly_filecheck,
-        MAP_CONTIGS_BWA.out.qc_filtered_asm_filecheck,
-        MAP_CONTIGS_BWA.out.qc_pe_alignment_filecheck,
-        MAP_CONTIGS_BWA.out.qc_corrected_asm_filecheck,
-        MAP_CONTIGS_BWA.out.qc_se_alignment_filecheck,
-        ANNOTATE_PROKKA.out.qc_annotated_filecheck,
-        EXTRACT_16S_BARRNAP.out.qc_ssu_extracted_filecheck,
-        EXTRACT_16S_BARRNAP.out.qc_ssu_renamed_filecheck,
-        ALIGN_16S_BLAST.out.qc_blastn_filecheck,
-        BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filtered_blastn_filecheck
-    )
-
-    ch_qc_filecheck
+    ch_qc_filecheck = ch_qc_filecheck
+        .concat(
+            INFILE_HANDLING_UNIX.out.qc_input_filecheck,
+            REMOVE_PHIX_BBDUK.out.qc_phix_genome_filecheck,
+            REMOVE_PHIX_BBDUK.out.qc_phix_removed_filecheck,
+            TRIM_READS_TRIMMOMATIC.out.qc_adapters_filecheck,
+            TRIM_READS_TRIMMOMATIC.out.qc_removed_adapters_filecheck,
+            OVERLAP_PAIRED_READS_FLASH.out.qc_nonoverlap_filecheck,
+            ASSEMBLE_SKESA.out.qc_raw_assembly_filecheck,
+            MAP_CONTIGS_BWA.out.qc_filtered_asm_filecheck,
+            MAP_CONTIGS_BWA.out.qc_pe_alignment_filecheck,
+            MAP_CONTIGS_BWA.out.qc_corrected_asm_filecheck,
+            MAP_CONTIGS_BWA.out.qc_se_alignment_filecheck,
+            ANNOTATE_PROKKA.out.qc_annotated_filecheck,
+            EXTRACT_16S_BARRNAP.out.qc_ssu_extracted_filecheck,
+            EXTRACT_16S_BARRNAP.out.qc_ssu_renamed_filecheck,
+            ALIGN_16S_BLAST.out.qc_blastn_filecheck,
+            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filtered_blastn_filecheck
+        )
         .collectFile(name: 'Summary.QC_File_Checks.tab', storeDir: "${params.outdir}/qa", sort: {it.getSimpleName()})
 
 }

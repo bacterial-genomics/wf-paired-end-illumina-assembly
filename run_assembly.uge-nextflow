@@ -300,18 +300,18 @@ if [[ ${#submitted[@]} -ge 1 ]] && \
   [[ ${NODE_NUM} -le 230 ]]; then
   # Submit Nextflow pipeline to Aspen HPC
   qsub \
-    -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
-    -v OUT=${OUT} \
+    -m ba \
+    -q all.q \
     -v IN=${IN} \
-    -v LAB_HOME=${LAB_HOME} \
+    -v OUT=${OUT} \
     -o ${OUT}/log \
     -e ${OUT}/log \
     -M ${USER}@cdc.gov \
-    -m ba \
+    -v LAB_HOME=${LAB_HOME} \
     -N ASM_${#submitted[@]} \
-    -q all.q \
+    -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
+    -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
+    -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
     ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
 
 elif [[ ${#submitted[@]} -ge 1 ]] && \
@@ -319,19 +319,19 @@ elif [[ ${#submitted[@]} -ge 1 ]] && \
   [[ ${NODE_NUM} -ge 231 ]]; then
   # Submit Nextflow pipeline to Rosalind HPC
   qsub \
-    -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
-    -v OUT=${OUT} \
+    -m ba \
+    -q all.q \
     -v IN=${IN} \
-    -v LAB_HOME=${LAB_HOME} \
+    -v OUT=${OUT} \
     -o ${OUT}/log \
     -e ${OUT}/log \
     -M ${USER}@cdc.gov \
-    -m ba \
+    -v LAB_HOME=${LAB_HOME} \
     -N ASM_${#submitted[@]} \
-    -q all.q \
     -l max_runtime=72:00:00 \
+    -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
+    -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
+    -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
     ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
 
 else

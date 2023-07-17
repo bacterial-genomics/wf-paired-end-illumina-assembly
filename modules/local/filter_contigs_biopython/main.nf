@@ -13,10 +13,10 @@ process FILTER_CONTIGS_BIOPYTHON {
     tuple val(prefix), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck), path(contigs), path(qc_assembly_filecheck)
 
     output:
-    tuple val(prefix), path("${prefix}.uncorrected.fna"), emit: uncorrected_contigs
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"                                 , emit: versions
+    tuple val(prefix), path("${prefix}.uncorrected.fna"), emit: uncorrected_contigs
 
     shell:
     gcskew = params.filter_contigs_gcskew ? "" : "-g"
@@ -53,12 +53,12 @@ process FILTER_CONTIGS_BIOPYTHON {
       -i !{contigs} \
       -b "!{prefix}" \
       -o !{prefix}.uncorrected.fna \
-      -c !{params.filter_contigs_coverage} \
-      --deflines !{params.filter_contigs_deflines} \
-      !{discard_file} \
+      !{no_sort} \
       !{gcskew} \
+      !{discard_file} \
       !{keep_low_complexity} \
-      !{no_sort}
+      -c !{params.filter_contigs_coverage} \
+      --deflines !{params.filter_contigs_deflines}
 
     # Get process version
     cat <<-END_VERSIONS > versions.yml

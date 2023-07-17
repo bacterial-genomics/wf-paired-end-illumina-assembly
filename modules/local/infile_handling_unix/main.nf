@@ -15,11 +15,11 @@ process INFILE_HANDLING_UNIX {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(prefix), path(reads), path("*File*.tsv"), emit: input
-    path "${prefix}.Raw_Initial_FastQ_Files.tsv", emit: qc_input_filecheck
     path ".command.out"
     path ".command.err"
-    path "versions.yml", emit: versions
+    path "versions.yml"                               , emit: versions
+    tuple val(prefix), path(reads), path("*File*.tsv"), emit: input
+    path "${prefix}.Raw_Initial_FastQ_Files.tsv"      , emit: qc_input_filecheck
 
     shell:
     // Split meta.id on first underscore if applicable
