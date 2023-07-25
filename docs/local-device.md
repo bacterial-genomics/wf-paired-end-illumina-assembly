@@ -1,6 +1,6 @@
 # ![wf-paired-end-illumina-assembly](images/wf-paired-end-illumina-assembly_logo_light.png#gh-light-mode-only) ![wf-paired-end-illumina-assembly](images/wf-paired-end-illumina-assembly_logo_dark.png#gh-dark-mode-only)
 
-![workflow](images/workflow_v1.1.0.svg)
+![workflow](images/wf-paired-end-illumina-assembly_workflow.png)
 
 _A schematic of the steps in the workflow._
 
@@ -26,13 +26,13 @@ nextflow run main.nf \
   -profile singularity,test
 ```
 
-Example data are included in assets/test_data directory.
+Example analysis using Nextflow command:
 
 ```
 nextflow run main.nf \
   -profile singularity \
-  --input assets/test_data \
-  --outdir results
+  --input INPUT_DIRECTORY \
+  --outdir OUTPUT_DIRECTORY
 ```
 
 When running locally, `--max_cpus` and `--max_memory` may need to be specified. Below, max cpus is set to 4 and max memory is set to 16 (for 16GB).
@@ -40,8 +40,8 @@ When running locally, `--max_cpus` and `--max_memory` may need to be specified. 
 ```
 nextflow run main.nf \
   -profile singularity \
-  --input assets/test_data \
-  --outdir results \
+  --input INPUT_DIRECTORY \
+  --outdir OUTPUT_DIRECTORY \
   --max_cpus 4 \
   --max_memory 16
 ```

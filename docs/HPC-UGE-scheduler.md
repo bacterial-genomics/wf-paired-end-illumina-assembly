@@ -1,6 +1,6 @@
 # ![wf-paired-end-illumina-assembly](images/wf-paired-end-illumina-assembly_logo_light.png#gh-light-mode-only) ![wf-paired-end-illumina-assembly](images/wf-paired-end-illumina-assembly_logo_dark.png#gh-dark-mode-only)
 
-![workflow](images/workflow_v1.1.0.svg)
+![workflow](images/wf-paired-end-illumina-assembly_workflow.png)
 
 _A schematic of the steps in the workflow._
 
@@ -42,7 +42,9 @@ Before running workflow on new data, the workflow should be ran on the built-in 
 
 ```
 cd $LAB_HOME/workflows/wf-paired-end-illumina-assembly
+
 module load nextflow
+
 nextflow run main.nf \
   -profile singularity,test
 ```
@@ -50,16 +52,16 @@ nextflow run main.nf \
 To minimize typing all of the parameters above, a bash script was created for UGE HPCs. It can take PE FastQ files from selected directory OR if FastQ files not found in that directory, it will look in subdirectories for FastQ files. To run:
 
 ```
-run_assembly.uge-nextflow <INPUT_DIR>
+run_assembly.uge-nextflow INPUT_DIRECTORY
 ```
 
-Example data are included in assets/test_data directory.
+Example analysis using Nextflow command:
 
 ```
 nextflow run main.nf \
   -profile singularity \
-  --input assets/test_data \
-  --outdir results
+  --input INPUT_DIRECTORY \
+  --outdir OUTPUT_DIRECTORY
 ```
 
 Help menu of all options:

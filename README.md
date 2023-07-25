@@ -5,7 +5,7 @@
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 
-![workflow](docs/images/workflow_v1.1.0.png)
+![workflow](docs/images/wf-paired-end-illumina-assembly_workflow.png)
 
 _General schematic of the steps in the workflow_
 
@@ -56,7 +56,6 @@ nextflow run \
 - [Resource Managers](#Resource-Managers)
 - [Troubleshooting](#Troubleshooting)
 - [Usage](#usage)
-- [Workflow](#Workflow)
 
 ## Introduction
 
@@ -123,11 +122,6 @@ The most well-tested and supported is a Univa Grid Engine (UGE) job scheduler wi
 ## Output
 
 Please see the [output documentation](docs/output.md) for a table of all outputs created by this workflow.
-
-## Workflow
-
-The complete directed acyclic graph (DAG) this workflow performs is this:
-![full-workflow](docs/images/workflow_dag_v1.1.0.png)
 
 ## Troubleshooting
 
