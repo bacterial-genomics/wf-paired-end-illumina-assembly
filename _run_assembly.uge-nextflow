@@ -19,12 +19,12 @@ nextflow \
   -profile ${HPC} \
   --input ${IN} \
   --outdir ${OUT} \
-  --kraken2_db /scicomp/reference-pure/kraken-2023 \
-  --blast_db /scicomp/reference-pure/ncbi-blast/blast/db \
-  --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
-  -w /scicomp/scratch/${USER}/work \
   -ansi-log false \
   -N ${USER}@cdc.gov \
+  -w /scicomp/scratch/${USER}/work \
+  --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
+  --blast_db /scicomp/groups/OID/NCEZID/DHCPP/BSPB/ZSAL/.databases/ncbi \
+  --kraken2_db /scicomp/groups/OID/NCEZID/DHCPP/BSPB/ZSAL/.databases/kraken2 \
   -resume
 
 # Check for errors and add to errors.tsv
