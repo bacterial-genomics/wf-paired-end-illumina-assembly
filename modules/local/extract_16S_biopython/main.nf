@@ -3,20 +3,20 @@ process EXTRACT_16S_BIOPYTHON {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${prefix}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
 
-    tag { "${prefix}" }
+    tag { "${meta.id}" }
 
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-    tuple val(prefix), path(annotation), path(qc_annotated_filecheck), path(assembly)
+    tuple val(meta), path(annotation), path(qc_annotated_filecheck), path(assembly)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                        , emit: versions
-    tuple val(prefix), path("16S.${prefix}.fa"), emit: extracted_rna
+    path "versions.yml"                       , emit: versions
+    tuple val(meta), path("16S.${meta.id}.fa"), emit: extracted_rna
 
     shell:
     '''
@@ -43,7 +43,7 @@ process EXTRACT_16S_BIOPYTHON {
     if [[ -s "!{annotation}" ]]; then
       python ${extract_record_script} \
         -i "!{annotation}" \
-        -o "16S.!{prefix}.fa" \
+        -o "16S.!{meta.id}.fa" \
         -q "!{params.genbank_query}" \
         -f !{params.genbank_query_feature} \
         -u !{params.genbank_query_qualifier} \

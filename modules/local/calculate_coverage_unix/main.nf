@@ -3,27 +3,27 @@ process CALCULATE_COVERAGE_UNIX {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${prefix}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
 
-    tag { "${prefix}" }
+    tag { "${meta.id}" }
 
     container "ubuntu:jammy"
 
     input:
-    tuple val(prefix), path(summary_assemblies), path(summary_reads), path(summary_stats)
+    tuple val(meta), path(summary_assemblies), path(summary_reads), path(summary_stats)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                 , emit: versions
-    path "${prefix}.Summary.Illumina.GenomeCoverage.tab", emit: genome_coverage
+    path "versions.yml"                                  , emit: versions
+    path "${meta.id}.Summary.Illumina.GenomeCoverage.tab", emit: genome_coverage
 
     shell:
     '''
     source bash_functions.sh
 
     # Report coverage
-    echo -n '' > !{prefix}.Summary.Illumina.GenomeCoverage.tab
+    echo -n '' > !{meta.id}.Summary.Illumina.GenomeCoverage.tab
     i=0
     while IFS=$'\t' read -r -a ln; do
       if grep -q -e "skesa_" -e "unicyc_" -e ".uncorrected" <<< "${ln[0]}"; then
@@ -46,7 +46,7 @@ process CALCULATE_COVERAGE_UNIX {
       msg "INFO: cov = $cov"
 
       if [[ "${cov}" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
-        echo -e "${ln[0]}\t${cov}x" >> !{prefix}.Summary.Illumina.GenomeCoverage.tab
+        echo -e "${ln[0]}\t${cov}x" >> !{meta.id}.Summary.Illumina.GenomeCoverage.tab
         ((i=i+1))
       fi
     done < <(grep -v 'Total length' !{summary_assemblies})

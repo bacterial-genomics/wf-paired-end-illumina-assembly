@@ -3,20 +3,20 @@ process FILTER_CONTIGS_BIOPYTHON {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${prefix}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
 
-    tag { "${prefix}" }
+    tag { "${meta.id}" }
 
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-    tuple val(prefix), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck), path(contigs), path(qc_assembly_filecheck)
+    tuple val(meta), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck), path(contigs), path(qc_assembly_filecheck)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                 , emit: versions
-    tuple val(prefix), path("${prefix}.uncorrected.fna"), emit: uncorrected_contigs
+    path "versions.yml"                                , emit: versions
+    tuple val(meta), path("${meta.id}.uncorrected.fna"), emit: uncorrected_contigs
 
     shell:
     gcskew = params.filter_contigs_gcskew ? "" : "-g"
@@ -51,8 +51,8 @@ process FILTER_CONTIGS_BIOPYTHON {
     # Remove junk contigs
     python ${filter_contigs_script} \
       -i !{contigs} \
-      -b "!{prefix}" \
-      -o !{prefix}.uncorrected.fna \
+      -b "!{meta.id}" \
+      -o !{meta.id}.uncorrected.fna \
       !{no_sort} \
       !{gcskew} \
       !{discard_file} \

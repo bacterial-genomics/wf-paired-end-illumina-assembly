@@ -6,23 +6,23 @@ process READ_CLASSIFY_KRAKEN_ONE {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${prefix}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
 
     label "process_high"
     label "process_high_memory"
-    tag { "${prefix}" }
+    tag { "${meta.id}" }
 
     container "gregorysprenger/kraken@sha256:650ce8ce4a5e313dfafa1726168bb4f7942e543075743766afe1f21ae19abf9c"
 
     input:
-    tuple val(prefix), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
+    tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "${prefix}_kraken1.tab.gz"
-    path "${prefix}.taxonomy1-reads.tab"
-    path "versions.yml", emit: versions
+    path "${meta.id}_kraken1.tab.gz"
+    path "${meta.id}.taxonomy1-reads.tab"
+    path "versions.yml"                  , emit: versions
 
     shell:
     '''
@@ -59,7 +59,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
     done
 
     # Investigate taxonomic identity of cleaned reads
-    if [ ! -s !{prefix}.taxonomy1-reads.tab ]; then
+    if [ ! -s !{meta.id}.taxonomy1-reads.tab ]; then
       msg "INFO: Running Kraken1 with !{task.cpus} threads"
       kraken \
         --fastq-input \
@@ -67,19 +67,19 @@ process READ_CLASSIFY_KRAKEN_ONE {
         --gzip-compressed \
         --threads !{task.cpus} \
         !{paired_R1_gz} !{paired_R2_gz} !{single_gz} \
-        > !{prefix}_kraken.output
+        > !{meta.id}_kraken.output
 
       msg "INFO: Running kraken-report"
       kraken-report \
         --db ${database} \
-        !{prefix}_kraken.output \
+        !{meta.id}_kraken.output \
         > kraken.tab 2>&1 | tr '^M' '\n' 1>&2
 
       msg "INFO: Summarizing Kraken1"
-      summarize_kraken 'kraken.tab' > !{prefix}.taxonomy1-reads.tab
+      summarize_kraken 'kraken.tab' > !{meta.id}.taxonomy1-reads.tab
 
-      mv kraken.tab !{prefix}_kraken1.tab
-      gzip !{prefix}_kraken1.tab
+      mv kraken.tab !{meta.id}_kraken1.tab
+      gzip !{meta.id}_kraken1.tab
     fi
 
     # Get process version
@@ -98,22 +98,22 @@ process READ_CLASSIFY_KRAKEN_TWO {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${prefix}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
 
     label "process_high"
-    tag { "${prefix}" }
+    tag { "${meta.id}" }
 
     container "gregorysprenger/kraken2@sha256:e4282b158c9899382a23b53b8e07a791b83d8fd89e502b640a8cd0a411f6ca72"
 
     input:
-    tuple val(prefix), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
+    tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "${prefix}_kraken2.tab.gz"
-    path "${prefix}.taxonomy2-reads.tab"
-    path "versions.yml", emit: versions
+    path "${meta.id}_kraken2.tab.gz"
+    path "${meta.id}.taxonomy2-reads.tab"
+    path "versions.yml"                  , emit: versions
 
     shell:
     '''
@@ -150,7 +150,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
     done
 
     # Investigate taxonomic identity of cleaned reads
-    if [ ! -s !{prefix}.taxonomy2-reads.tab ]; then
+    if [ ! -s !{meta.id}.taxonomy2-reads.tab ]; then
       msg "INFO: Running Kraken2 with !{task.cpus} threads"
       kraken2 \
         --use-names \
@@ -162,10 +162,10 @@ process READ_CLASSIFY_KRAKEN_TWO {
         !{paired_R1_gz} !{paired_R2_gz} !{single_gz}
 
       msg "INFO: Summarizing Kraken2"
-      summarize_kraken 'kraken2.tab' > !{prefix}.taxonomy2-reads.tab
+      summarize_kraken 'kraken2.tab' > !{meta.id}.taxonomy2-reads.tab
 
-      mv kraken2.tab !{prefix}_kraken2.tab
-      gzip !{prefix}_kraken2.tab
+      mv kraken2.tab !{meta.id}_kraken2.tab
+      gzip !{meta.id}_kraken2.tab
     fi
 
     # Get process version

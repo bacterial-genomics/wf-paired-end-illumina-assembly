@@ -9,23 +9,23 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${prefix}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
 
-    tag { "${prefix}" }
+    tag { "${meta.id}" }
 
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-    tuple val(prefix), path(blast_tsv), path(qc_aligned_blast_filecheck), path(assembly)
+    tuple val(meta), path(blast_tsv), path(qc_aligned_blast_filecheck), path(assembly)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "${prefix}.blast.tsv.gz"
-    path "versions.yml"                          , emit: versions
-    path "${prefix}.Summary.16S.tab"             , emit: blast_summary
-    path "${prefix}.16S-top-species.tsv"         , emit: ssu_species
-    path "${prefix}.Filtered_16S_BLASTn_File.tsv", emit: qc_filtered_blastn_filecheck
+    path "${meta.id}.blast.tsv.gz"
+    path "versions.yml"                           , emit: versions
+    path "${meta.id}.Summary.16S.tab"             , emit: blast_summary
+    path "${meta.id}.16S-top-species.tsv"         , emit: ssu_species
+    path "${meta.id}.Filtered_16S_BLASTn_File.tsv", emit: qc_filtered_blastn_filecheck
 
     shell:
     '''
@@ -51,28 +51,28 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     # Get the top match by bitscore
     python ${filter_blast_script} \
       -i "!{blast_tsv}" \
-      -o "!{prefix}.blast.tab" \
+      -o "!{meta.id}.blast.tab" \
       -c !{params.filter_blast_column} \
       -s !{params.filter_blast_bitscore}
 
-    if verify_minimum_file_size "!{prefix}.blast.tab" 'Filtered 16S BLASTn File' "!{params.min_filesize_filtered_blastn}"; then
-      echo -e "!{prefix}\tFiltered 16S BLASTn File\tPASS" \
-        > !{prefix}.Filtered_16S_BLASTn_File.tsv
+    if verify_minimum_file_size "!{meta.id}.blast.tab" 'Filtered 16S BLASTn File' "!{params.min_filesize_filtered_blastn}"; then
+      echo -e "!{meta.id}\tFiltered 16S BLASTn File\tPASS" \
+        > !{meta.id}.Filtered_16S_BLASTn_File.tsv
 
       # Report the top alignment match data: %nucl iden, %query cov aln, taxon
       awk -F $'\t' 'BEGIN{OFS=FS}; {print $1, $3 "% identity", $13 "% alignment", $14}' \
-      "!{prefix}.blast.tab" \
-      > "!{prefix}.16S-top-species.tsv"
+      "!{meta.id}.blast.tab" \
+      > "!{meta.id}.16S-top-species.tsv"
 
-      cat "!{prefix}.16S-top-species.tsv" >> "!{prefix}.Summary.16S.tab"
+      cat "!{meta.id}.16S-top-species.tsv" >> "!{meta.id}.Summary.16S.tab"
       gzip -f !{blast_tsv}
 
     else
-      echo -e "!{prefix}\tFiltered 16S BLASTn File\tFAIL" \
-        > !{prefix}.Filtered_16S_BLASTn_File.tsv
+      echo -e "!{meta.id}\tFiltered 16S BLASTn File\tFAIL" \
+        > !{meta.id}.Filtered_16S_BLASTn_File.tsv
 
       # Empty files to avoid errors
-      touch !{prefix}.16S-top-species.tsv !{prefix}.Summary.16S.tab !{blast_tsv}.gz
+      touch !{meta.id}.16S-top-species.tsv !{meta.id}.Summary.16S.tab !{blast_tsv}.gz
     fi
 
     # Get process version

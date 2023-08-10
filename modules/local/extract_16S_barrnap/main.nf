@@ -9,22 +9,22 @@ process EXTRACT_16S_BARRNAP {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${prefix}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
 
-    tag { "${prefix}" }
+    tag { "${meta.id}" }
 
     container "snads/barrnap@sha256:e22cbd789c36d5626460feb6c7e5f6f7d55c8628dacae68ba0da30884195a837"
 
     input:
-    tuple val(prefix), path(annotation), path(qc_annotated_filecheck), path(assembly), path(extracted_rna)
+    tuple val(meta), path(annotation), path(qc_annotated_filecheck), path(assembly), path(extracted_rna)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                            , emit: versions
-    path "${prefix}.SSU_Renamed_File.tsv"                          , emit: qc_ssu_renamed_filecheck
-    path "${prefix}.SSU_Extracted_File.tsv"                        , emit: qc_ssu_extracted_filecheck
-    tuple val(prefix), path("16S.${prefix}.fa"), path("*File*.tsv"), emit: extracted_base
+    path "versions.yml"                                           , emit: versions
+    path "${meta.id}.SSU_Renamed_File.tsv"                        , emit: qc_ssu_renamed_filecheck
+    path "${meta.id}.SSU_Extracted_File.tsv"                      , emit: qc_ssu_extracted_filecheck
+    tuple val(meta), path("16S.${meta.id}.fa"), path("*File*.tsv"), emit: extracted_base
 
     shell:
     '''
@@ -45,36 +45,36 @@ process EXTRACT_16S_BARRNAP {
       msg "INFO: absent 16S rRNA gene annotation in !{annotation}" >&2
       msg 'Running barrnap' >&2
 
-      barrnap !{assembly} | grep "Name=16S_rRNA;product=16S" > !{prefix}.gff
+      barrnap !{assembly} | grep "Name=16S_rRNA;product=16S" > !{meta.id}.gff
 
-      if [[ $(grep -c "Name=16S_rRNA;product=16S" "!{prefix}.gff") -eq 0 ]]; then
+      if [[ $(grep -c "Name=16S_rRNA;product=16S" "!{meta.id}.gff") -eq 0 ]]; then
         msg "INFO: barrnap was unable to locate a 16S rRNA gene sequence in !{assembly}" >&2
         exit 2
       fi
 
       bedtools getfasta \
         -fi !{assembly} \
-        -bed !{prefix}.gff \
-        -fo 16S.!{prefix}.fa
+        -bed !{meta.id}.gff \
+        -fo 16S.!{meta.id}.fa
     fi
 
-    if verify_minimum_file_size "16S.!{prefix}.fa" 'SSU Extracted File' "!{params.min_filesize_extracted_ssu_file}"; then
-      echo -e "!{prefix}\tSSU Extracted File\tPASS" > !{prefix}.SSU_Extracted_File.tsv
+    if verify_minimum_file_size "16S.!{meta.id}.fa" 'SSU Extracted File' "!{params.min_filesize_extracted_ssu_file}"; then
+      echo -e "!{meta.id}\tSSU Extracted File\tPASS" > !{meta.id}.SSU_Extracted_File.tsv
     else
-      echo -e "!{prefix}\tSSU Extracted File\tFAIL" > !{prefix}.SSU_Extracted_File.tsv
+      echo -e "!{meta.id}\tSSU Extracted File\tFAIL" > !{meta.id}.SSU_Extracted_File.tsv
     fi
 
-    awk -v awk_var="!{prefix}" \
+    awk -v awk_var="!{meta.id}" \
       '/^>/{print ">" awk_var "_" ++i; next} {print}' \
-      16S.!{prefix}.fa \
-      > !{prefix}.fa-renamed
-    rm -f 16S.!{prefix}.fa
-    mv -f !{prefix}.fa-renamed 16S.!{prefix}.fa
+      16S.!{meta.id}.fa \
+      > !{meta.id}.fa-renamed
+    rm -f 16S.!{meta.id}.fa
+    mv -f !{meta.id}.fa-renamed 16S.!{meta.id}.fa
 
-    if verify_minimum_file_size "16S.!{prefix}.fa" 'SSU Renamed File' "!{params.min_filesize_renamed_ssu_file}"; then
-      echo -e "!{prefix}\tSSU Renamed File\tPASS" > !{prefix}.SSU_Renamed_File.tsv
+    if verify_minimum_file_size "16S.!{meta.id}.fa" 'SSU Renamed File' "!{params.min_filesize_renamed_ssu_file}"; then
+      echo -e "!{meta.id}\tSSU Renamed File\tPASS" > !{meta.id}.SSU_Renamed_File.tsv
     else
-      echo -e "!{prefix}\tSSU Renamed File\tFAIL" > !{prefix}.SSU_Renamed_File.tsv
+      echo -e "!{meta.id}\tSSU Renamed File\tFAIL" > !{meta.id}.SSU_Renamed_File.tsv
     fi
 
     # Get process version

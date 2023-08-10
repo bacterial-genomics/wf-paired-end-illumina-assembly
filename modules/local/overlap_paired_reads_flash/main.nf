@@ -9,24 +9,24 @@ process OVERLAP_PAIRED_READS_FLASH {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${prefix}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
 
     label "process_low"
-    tag { "${prefix}" }
+    tag { "${meta.id}" }
 
     container "snads/flash@sha256:363b2f44d040c669191efbc3d3ba99caf5efd3fdef370af8f00f3328932143a6"
 
     input:
-    tuple val(prefix), path(reads), path(qc_input_filecheck), path(paired_R1), path(paired_R2), path(qc_adapter_filecheck)
+    tuple val(meta), path(reads), path(qc_input_filecheck), path(paired_R1), path(paired_R2), path(qc_adapter_filecheck)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "${prefix}.overlap.tsv"
-    path "${prefix}.clean-reads.tsv"
-    path "versions.yml"                                                                                                                        , emit: versions
-    path "${prefix}.Non-overlapping_FastQ_Files.tsv"                                                                                           , emit: qc_nonoverlap_filecheck
-    tuple val(prefix), path("${prefix}_R1.paired.fq.gz"), path("${prefix}_R2.paired.fq.gz"), path("${prefix}.single.fq.gz"), path("*File*.tsv"), emit: gzip_reads
+    path "${meta.id}.overlap.tsv"
+    path "${meta.id}.clean-reads.tsv"
+    path "versions.yml"                                                                                                                         , emit: versions
+    path "${meta.id}.Non-overlapping_FastQ_Files.tsv"                                                                                           , emit: qc_nonoverlap_filecheck
+    tuple val(meta), path("${meta.id}_R1.paired.fq.gz"), path("${meta.id}_R2.paired.fq.gz"), path("${meta.id}.single.fq.gz"), path("*File*.tsv"), emit: gzip_reads
 
     shell:
     '''
@@ -64,47 +64,47 @@ process OVERLAP_PAIRED_READS_FLASH {
 
       for suff in notCombined_1.fastq notCombined_2.fastq; do
         if verify_minimum_file_size "flash.${suff}" 'Non-overlapping FastQ Files' "!{params.min_filesize_non_overlapping_fastq}"; then
-          echo -e "!{prefix}\tNon-overlapping FastQ File (${suff})\tPASS" \
-            >> !{prefix}.Non-overlapping_FastQ_Files.tsv
+          echo -e "!{meta.id}\tNon-overlapping FastQ File (${suff})\tPASS" \
+            >> !{meta.id}.Non-overlapping_FastQ_Files.tsv
         else
-          echo -e "!{prefix}\tNon-overlapping FastQ File (${suff})\tFAIL" \
-            >> !{prefix}.Non-overlapping_FastQ_Files.tsv
+          echo -e "!{meta.id}\tNon-overlapping FastQ File (${suff})\tFAIL" \
+            >> !{meta.id}.Non-overlapping_FastQ_Files.tsv
         fi
       done
 
       rm !{paired_R1} !{paired_R2}
-      mv flash.notCombined_1.fastq !{prefix}_R1.paired.fq
-      mv flash.notCombined_2.fastq !{prefix}_R2.paired.fq
+      mv flash.notCombined_1.fastq !{meta.id}_R1.paired.fq
+      mv flash.notCombined_2.fastq !{meta.id}_R2.paired.fq
 
       if [ -f flash.extendedFrags.fastq ] && \
       [ -s flash.extendedFrags.fastq ]; then
         CNT_READS_OVERLAPPED=$(awk '{lines++} END{print lines/4}' \
         flash.extendedFrags.fastq)
 
-        cat flash.extendedFrags.fastq >> !{prefix}.single.fq
+        cat flash.extendedFrags.fastq >> !{meta.id}.single.fq
         rm flash.extendedFrags.fastq
       fi
 
       msg "INFO: ${CNT_READS_OVERLAPPED:-0} pairs overlapped into singleton reads" >&2
-      echo -e "!{prefix}\t${CNT_READS_OVERLAPPED:-0} reads Overlapped" \
-        > !{prefix}.overlap.tsv
+      echo -e "!{meta.id}\t${CNT_READS_OVERLAPPED:-0} reads Overlapped" \
+        > !{meta.id}.overlap.tsv
     fi
 
     # Summarize final read set and compress
-    count_R1=$(echo $(cat !{prefix}_R1.paired.fq | wc -l))
+    count_R1=$(echo $(cat !{meta.id}_R1.paired.fq | wc -l))
     CNT_CLEANED_PAIRS=$(echo $((${count_R1}/4)))
     msg "INFO: CNT_CLEANED_PAIRS ${CNT_CLEANED_PAIRS}"
 
-    count_single=$(echo $(cat !{prefix}.single.fq | wc -l))
+    count_single=$(echo $(cat !{meta.id}.single.fq | wc -l))
     CNT_CLEANED_SINGLETON=$(echo $((${count_single}/4)))
     msg "INFO: CNT_CLEANED_SINGLETON ${CNT_CLEANED_SINGLETON}"
 
-    echo -e "!{prefix}\t${CNT_CLEANED_PAIRS} cleaned pairs\t${CNT_CLEANED_SINGLETON} cleaned singletons" \
-      > !{prefix}.clean-reads.tsv
+    echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS} cleaned pairs\t${CNT_CLEANED_SINGLETON} cleaned singletons" \
+      > !{meta.id}.clean-reads.tsv
 
-    gzip !{prefix}.single.fq \
-      !{prefix}_R1.paired.fq \
-      !{prefix}_R2.paired.fq
+    gzip !{meta.id}.single.fq \
+      !{meta.id}_R1.paired.fq \
+      !{meta.id}_R2.paired.fq
 
     # Get process version
     cat <<-END_VERSIONS > versions.yml

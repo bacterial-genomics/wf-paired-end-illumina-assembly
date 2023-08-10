@@ -3,23 +3,23 @@ process QA_ASSEMBLY_QUAST {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${prefix}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
 
     label "process_low"
-    tag { "${prefix}" }
+    tag { "${meta.id}" }
 
     container "snads/quast@sha256:c8147a279feafbc88bafeeda3817ff32d43db87d31dd0978df1cd2f8022d324c"
 
     input:
-      tuple val(prefix), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck), path(assembly)
+      tuple val(meta), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck), path(assembly)
 
     output:
     path ".command.out"
     path ".command.err"
     path "versions.yml"                                                                                                   , emit: versions
-    path "${prefix}.Summary.Assemblies.tab"                                                                               , emit: summary_assemblies
-    path "${prefix}.Summary.Illumina.CleanedReads-Bases.tab"                                                              , emit: summary_reads
-    tuple val(prefix), path("${prefix}.Summary.Assemblies.tab"), path("${prefix}.Summary.Illumina.CleanedReads-Bases.tab"), emit: qa_summaries
+    path "${meta.id}.Summary.Assemblies.tab"                                                                              , emit: summary_assemblies
+    path "${meta.id}.Summary.Illumina.CleanedReads-Bases.tab"                                                             , emit: summary_reads
+    tuple val(meta), path("${meta.id}.Summary.Assemblies.tab"), path("${meta.id}.Summary.Illumina.CleanedReads-Bases.tab"), emit: qa_summaries
 
     shell:
     '''
@@ -52,12 +52,12 @@ process QA_ASSEMBLY_QUAST {
       --contig-thresholds 500,1000 \
       "!{assembly}" >&2
 
-    mv -f quast/transposed_report.tsv !{prefix}.Summary.Assemblies.tab
+    mv -f quast/transposed_report.tsv !{meta.id}.Summary.Assemblies.tab
 
     # Quast modifies basename. Need to check and modify if needed.
-    assemblies_name=$(awk '{print $1}' !{prefix}.Summary.Assemblies.tab | awk 'NR!=1 {print}')
-    if [ ${assemblies_name} != !{prefix} ]; then
-      sed -i "s|${assemblies_name}|!{prefix}|g" !{prefix}.Summary.Assemblies.tab
+    assemblies_name=$(awk '{print $1}' !{meta.id}.Summary.Assemblies.tab | awk 'NR!=1 {print}')
+    if [ ${assemblies_name} != !{meta.id} ]; then
+      sed -i "s|${assemblies_name}|!{meta.id}|g" !{meta.id}.Summary.Assemblies.tab
     fi
 
     # TO-DO: move this unix-only component to separate QA_READS_BASEPAIR_COUNT_UNIX
@@ -74,10 +74,10 @@ process QA_ASSEMBLY_QUAST {
         msg "ERROR: improperly grouped ${R1} ${R2} ${single}" >&2
         exit 1
       fi
-      echo -ne "${R1}\t" >> !{prefix}.Summary.Illumina.CleanedReads-Bases.tab
+      echo -ne "${R1}\t" >> !{meta.id}.Summary.Illumina.CleanedReads-Bases.tab
       zcat "!{R1}" "!{R2}" "!{single}" | \
         awk 'BEGIN{SUM=0} {if(NR%4==2){SUM+=length($0)}} END{print SUM}' \
-          >> !{prefix}.Summary.Illumina.CleanedReads-Bases.tab
+          >> !{meta.id}.Summary.Illumina.CleanedReads-Bases.tab
     done
 
     # Get process version

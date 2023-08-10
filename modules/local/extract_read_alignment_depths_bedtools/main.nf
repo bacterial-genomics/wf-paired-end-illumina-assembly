@@ -3,21 +3,21 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${prefix}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
 
-    tag { "${prefix}" }
+    tag { "${meta.id}" }
 
     container "snads/bedtools@sha256:9b80fb5c5ef1b6f4a4a211d8739fa3fe107da34d1fb6609d6b70ddc7afdce12c"
 
     input:
-    tuple val(prefix), path(paired_bam), path(single_bam), path(qc_assembly_filecheck)
+    tuple val(meta), path(paired_bam), path(single_bam), path(qc_assembly_filecheck)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                                            , emit: versions
-    path "${prefix}.Summary.Illumina.CleanedReads-AlnStats.tab"                    , emit: summary_alnstats
-    tuple val(prefix), path("${prefix}.Summary.Illumina.CleanedReads-AlnStats.tab"), emit: summary_stats
+    path "versions.yml"                                                           , emit: versions
+    path "${meta.id}.Summary.Illumina.CleanedReads-AlnStats.tab"                  , emit: summary_alnstats
+    tuple val(meta), path("${meta.id}.Summary.Illumina.CleanedReads-AlnStats.tab"), emit: summary_stats
 
     shell:
     '''
@@ -43,12 +43,12 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
         awk '{sum+=$3} END{print sum " bp Singleton Reads Mapped (" sum/NR "x)\t"}')
     fi
 
-    cov_nfo=$(bedtools genomecov -d -split -ibam !{prefix}.paired.bam |\
+    cov_nfo=$(bedtools genomecov -d -split -ibam !{meta.id}.paired.bam |\
       awk -v SEcov="${single_cov}" 'BEGIN{sum=0} {sum+=$3} END{
       print sum " bp Paired Reads Mapped (" sum/NR "x)\t" SEcov NR " bp Genome"}')
 
-    echo -e "!{prefix}\t${cov_nfo}" \
-      >> !{prefix}.Summary.Illumina.CleanedReads-AlnStats.tab
+    echo -e "!{meta.id}\t${cov_nfo}" \
+      >> !{meta.id}.Summary.Illumina.CleanedReads-AlnStats.tab
 
     # Get process version
     cat <<-END_VERSIONS > versions.yml

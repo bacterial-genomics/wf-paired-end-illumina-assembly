@@ -9,25 +9,25 @@ process REMOVE_PHIX_BBDUK {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${prefix}.${task.process}${filename}" }
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     label "process_low"
-    tag { "${prefix}" }
+    tag { "${meta.id}" }
 
     container "snads/bbtools@sha256:9f2a9b08563839cec87d856f0fc7607c235f464296fd71e15906ea1d15254695"
 
     input:
-    tuple val(prefix), path(reads), path(qc_input_filecheck)
+    tuple val(meta), path(reads), path(qc_input_filecheck)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "${prefix}.raw.tsv"
-    path "${prefix}.phix.tsv"
+    path "${meta.id}.raw.tsv"
+    path "${meta.id}.phix.tsv"
     path "versions.yml"                                                                                    , emit: versions
-    path "${prefix}.PhiX_Genome_File.tsv"                                                                  , emit: qc_phix_genome_filecheck
-    path "${prefix}.PhiX-removed_FastQ_Files.tsv"                                                          , emit: qc_phix_removed_filecheck
-    tuple val(prefix), path("${prefix}_noPhiX-R1.fsq"), path("${prefix}_noPhiX-R2.fsq"), path("*File*.tsv"), emit: phix_removed
+    path "${meta.id}.PhiX_Genome_File.tsv"                                                                 , emit: qc_phix_genome_filecheck
+    path "${meta.id}.PhiX-removed_FastQ_Files.tsv"                                                         , emit: qc_phix_removed_filecheck
+    tuple val(meta), path("${meta.id}_noPhiX-R1.fsq"), path("${meta.id}_noPhiX-R2.fsq"), path("*File*.tsv"), emit: phix_removed
 
     shell:
     '''
@@ -50,9 +50,9 @@ process REMOVE_PHIX_BBDUK {
     fi
 
     if verify_minimum_file_size !{params.phix_reference} 'PhiX Genome' "!{params.min_filesize_phix_genome}"; then
-      echo -e "!{prefix}\tPhiX Genome\tPASS" >> !{prefix}.PhiX_Genome_File.tsv
+      echo -e "!{meta.id}\tPhiX Genome\tPASS" >> !{meta.id}.PhiX_Genome_File.tsv
     else
-      echo -e "!{prefix}\tPhiX Genome\tFAIL" >> !{prefix}.PhiX_Genome_File.tsv
+      echo -e "!{meta.id}\tPhiX Genome\tFAIL" >> !{meta.id}.PhiX_Genome_File.tsv
     fi
 
     # Remove PhiX
@@ -67,17 +67,17 @@ process REMOVE_PHIX_BBDUK {
       in="!{reads[0]}" \
       in2="!{reads[1]}" \
       threads=!{task.cpus} \
-      out=!{prefix}_noPhiX-R1.fsq \
-      out2=!{prefix}_noPhiX-R2.fsq \
+      out=!{meta.id}_noPhiX-R1.fsq \
+      out2=!{meta.id}_noPhiX-R2.fsq \
       ref="!{params.phix_reference}"
 
     for suff in R1.fsq R2.fsq; do
-      if verify_minimum_file_size "!{prefix}_noPhiX-${suff}" 'PhiX-removed FastQ Files' "!{params.min_filesize_fastq_phix_removed}"; then
-        echo -e "!{prefix}\tPhiX-removed FastQ ($suff) File\tPASS" \
-          >> !{prefix}.PhiX-removed_FastQ_Files.tsv
+      if verify_minimum_file_size "!{meta.id}_noPhiX-${suff}" 'PhiX-removed FastQ Files' "!{params.min_filesize_fastq_phix_removed}"; then
+        echo -e "!{meta.id}\tPhiX-removed FastQ ($suff) File\tPASS" \
+          >> !{meta.id}.PhiX-removed_FastQ_Files.tsv
       else
-        echo -e "!{prefix}\tPhiX-removed FastQ ($suff) File\tFAIL" \
-          >> !{prefix}.PhiX-removed_FastQ_Files.tsv
+        echo -e "!{meta.id}\tPhiX-removed FastQ ($suff) File\tFAIL" \
+          >> !{meta.id}.PhiX-removed_FastQ_Files.tsv
       fi
     done
 
@@ -95,10 +95,10 @@ process REMOVE_PHIX_BBDUK {
     msg "INFO: ${TOT_BASES} bp and $TOT_READS reads provided as raw input"
     msg "INFO: ${PHIX_BASES:-0} bp of PhiX were detected and removed in ${PHIX_READS:-0} reads"
 
-    echo -e "!{prefix}\t${TOT_BASES} bp Raw\t${TOT_READS} reads Raw" \
-      > !{prefix}.raw.tsv
-    echo -e "!{prefix}\t${PHIX_BASES:-0} bp PhiX\t${PHIX_READS:-0} reads PhiX" \
-      > !{prefix}.phix.tsv
+    echo -e "!{meta.id}\t${TOT_BASES} bp Raw\t${TOT_READS} reads Raw" \
+      > !{meta.id}.raw.tsv
+    echo -e "!{meta.id}\t${PHIX_BASES:-0} bp PhiX\t${PHIX_READS:-0} reads PhiX" \
+      > !{meta.id}.phix.tsv
 
     # Get process version
     cat <<-END_VERSIONS > versions.yml

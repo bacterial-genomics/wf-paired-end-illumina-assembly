@@ -2,29 +2,29 @@ process ASSEMBLE_SKESA {
 
     publishDir "${params.outdir}/asm",
         mode: "${params.publish_dir_mode}",
-        pattern: "${prefix}"
+        pattern: "${meta.id}"
     publishDir "${params.qc_filecheck_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: "*.Raw_Assembly_File.tsv"
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${prefix}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
 
     label "process_high"
-    tag { "${prefix}" }
+    tag { "${meta.id}" }
 
     container "gregorysprenger/skesa@sha256:4455882b5d0fd968630325428729395422be7340301c31d15874a295904b7f26"
 
     input:
-    tuple val(prefix), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck)
+    tuple val(meta), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                         , emit: versions
-    path "${prefix}.Raw_Assembly_File.tsv"                      , emit: qc_raw_assembly_filecheck
-    tuple val(prefix), path("contigs.fasta"), path("*File*.tsv"), emit: contigs
+    path "versions.yml"                                       , emit: versions
+    path "${meta.id}.Raw_Assembly_File.tsv"                   , emit: qc_raw_assembly_filecheck
+    tuple val(meta), path("contigs.fasta"), path("*File*.tsv"), emit: contigs
 
     shell:
     allow_snps = params.skesa_allow_snps ? "--allow snps" : ""
@@ -65,9 +65,9 @@ process ASSEMBLE_SKESA {
     fi
 
     if verify_minimum_file_size "contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then
-      echo -e "!{prefix}\tRaw Assembly File\tPASS" > !{prefix}.Raw_Assembly_File.tsv
+      echo -e "!{meta.id}\tRaw Assembly File\tPASS" > !{meta.id}.Raw_Assembly_File.tsv
     else
-      echo -e "!{prefix}\tRaw Assembly File\tFAIL" > !{prefix}.Raw_Assembly_File.tsv
+      echo -e "!{meta.id}\tRaw Assembly File\tFAIL" > !{meta.id}.Raw_Assembly_File.tsv
     fi
 
     # Get process version
