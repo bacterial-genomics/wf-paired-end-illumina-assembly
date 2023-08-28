@@ -6,7 +6,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     label "process_high"
     label "process_high_memory"
@@ -82,7 +82,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
       gzip !{meta.id}_kraken1.tab
     fi
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS | sed -r 's/^ {4}//' | sed "s/\bEND_VERSIONS\b//" > versions.yml
     "!{task.process}":
         kraken: $(kraken --version | head -n 1 | awk 'NF>1{print $NF}')
@@ -98,7 +98,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     label "process_high"
     tag { "${meta.id}" }
@@ -168,7 +168,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
       gzip !{meta.id}_kraken2.tab
     fi
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         kraken2: $(kraken2 --version | head -n 1 | awk 'NF>1{print $NF}')

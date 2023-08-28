@@ -9,7 +9,7 @@ process ASSEMBLE_SKESA {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     label "process_high"
     tag { "${meta.id}" }
@@ -66,7 +66,7 @@ process ASSEMBLE_SKESA {
       echo -e "!{meta.id}\tRaw Assembly File\tFAIL" > !{meta.id}.Raw_Assembly_File.tsv
     fi
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
       skesa: $(skesa --version 2>&1 | grep 'SKESA' | cut -d ' ' -f 2)

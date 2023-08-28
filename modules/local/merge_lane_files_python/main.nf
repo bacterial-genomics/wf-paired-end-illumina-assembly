@@ -3,7 +3,7 @@ process MERGE_LANE_FILES_PYTHON {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     container "gregorysprenger/pandas-excel@sha256:4fad4114df25726e24660d8550da48b926b80ce5b8a32b522b552a2d8e1df156"
 
@@ -90,6 +90,7 @@ process MERGE_LANE_FILES_PYTHON {
 
     END_PYTHON
 
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         python: $(python3 --version 2>&1 | awk '{print $2}')

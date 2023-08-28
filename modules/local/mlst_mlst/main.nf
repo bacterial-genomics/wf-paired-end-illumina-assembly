@@ -3,7 +3,7 @@ process MLST_MLST {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     tag { "${meta.id}" }
 
@@ -43,7 +43,7 @@ process MLST_MLST {
         >> !{meta.id}.Summary.MLST.tab
     fi
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         mlst: $(mlst --version | awk '{print $2}')

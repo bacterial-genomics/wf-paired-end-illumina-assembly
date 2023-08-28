@@ -6,7 +6,7 @@ process ALIGN_16S_BLAST {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     tag { "${meta.id}" }
 
@@ -74,7 +74,7 @@ process ALIGN_16S_BLAST {
       echo -e "!{meta.id}\t16S BLASTn Output File\tFAIL" > !{meta.id}.16S_BLASTn_Output_File.tsv
     fi
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         blast: $(blastn -version | head -n 1 | awk '{print $2}')

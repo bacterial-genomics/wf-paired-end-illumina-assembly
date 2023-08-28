@@ -9,7 +9,7 @@ process ASSEMBLE_SPADES {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     label "process_high"
     tag { "${meta.id}" }
@@ -103,7 +103,7 @@ process ASSEMBLE_SPADES {
       mv !{meta.id}_tmp/warnings.log !{meta.id}/
     fi
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         spades: $(spades.py --version 2>&1 | awk 'NF>1{print $NF}')

@@ -9,7 +9,7 @@ process MAP_CONTIGS_BWA {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     label "process_high"
     tag { "${meta.id}" }
@@ -116,7 +116,7 @@ process MAP_CONTIGS_BWA {
       samtools index !{meta.id}.single.bam
     fi
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         bwa: $(bwa 2>&1 | head -n 3 | tail -1 | awk 'NF>1{print $NF}')

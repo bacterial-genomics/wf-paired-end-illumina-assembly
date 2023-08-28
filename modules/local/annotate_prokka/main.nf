@@ -9,7 +9,7 @@ process ANNOTATE_PROKKA {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     label "process_high"
     tag { "${meta.id}" }
@@ -74,7 +74,7 @@ process ANNOTATE_PROKKA {
       > !{meta.id}.Annotated_GenBank_File.tsv
     fi
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         prokka: $(prokka --version 2>&1 | awk 'NF>1{print $NF}')

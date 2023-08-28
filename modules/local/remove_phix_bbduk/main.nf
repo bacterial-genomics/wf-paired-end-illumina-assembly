@@ -100,7 +100,7 @@ process REMOVE_PHIX_BBDUK {
     echo -e "!{meta.id}\t${PHIX_BASES:-0} bp PhiX\t${PHIX_READS:-0} reads PhiX" \
       > !{meta.id}.phix.tsv
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         bbduk: $(bbduk.sh --version 2>&1 | head -n 2 | tail -1 | awk 'NF>1{print $NF}')

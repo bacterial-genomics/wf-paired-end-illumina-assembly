@@ -3,7 +3,7 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     tag { "${meta.id}" }
 
@@ -50,7 +50,7 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     echo -e "!{meta.id}\t${cov_nfo}" \
       >> !{meta.id}.Summary.Illumina.CleanedReads-AlnStats.tab
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
       bedtools: $(bedtools --version | awk 'NF>1{print $NF}')

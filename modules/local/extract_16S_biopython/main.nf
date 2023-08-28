@@ -3,7 +3,7 @@ process EXTRACT_16S_BIOPYTHON {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     tag { "${meta.id}" }
 
@@ -50,7 +50,7 @@ process EXTRACT_16S_BIOPYTHON {
         --search-type !{params.genbank_search_type}
     fi
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         python: $(python --version 2>&1 | awk '{print $2}')

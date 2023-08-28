@@ -9,7 +9,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     label "process_low"
     tag { "${meta.id}" }
@@ -106,7 +106,7 @@ process OVERLAP_PAIRED_READS_FLASH {
       !{meta.id}_R1.paired.fq \
       !{meta.id}_R2.paired.fq
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         flash: $(flash --version | head -n 1 | awk 'NF>1{print $NF}')

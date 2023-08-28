@@ -9,7 +9,7 @@ process POLISH_ASSEMBLY_BWA_PILON {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     label "process_high"
     tag { "${meta.id}" }
@@ -161,7 +161,7 @@ process POLISH_ASSEMBLY_BWA_PILON {
       samtools index !{meta.id}.single.bam
     fi
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         pilon: $(pilon --version | cut -d ' ' -f 3)

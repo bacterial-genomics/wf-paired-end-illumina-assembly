@@ -9,7 +9,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     tag { "${meta.id}" }
 
@@ -75,7 +75,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
       touch !{meta.id}.16S-top-species.tsv !{meta.id}.Summary.16S.tab !{blast_tsv}.gz
     fi
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         python: $(python --version 2>&1 | awk '{print $2}')

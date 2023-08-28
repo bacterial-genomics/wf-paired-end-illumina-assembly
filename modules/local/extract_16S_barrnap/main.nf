@@ -9,7 +9,7 @@ process EXTRACT_16S_BARRNAP {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     tag { "${meta.id}" }
 
@@ -77,7 +77,7 @@ process EXTRACT_16S_BARRNAP {
       echo -e "!{meta.id}\tSSU Renamed File\tFAIL" > !{meta.id}.SSU_Renamed_File.tsv
     fi
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         barrnap: $(barrnap --version 2>&1 | awk 'NF>1{print $NF}')

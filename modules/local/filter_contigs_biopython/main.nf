@@ -3,7 +3,7 @@ process FILTER_CONTIGS_BIOPYTHON {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     tag { "${meta.id}" }
 
@@ -60,7 +60,7 @@ process FILTER_CONTIGS_BIOPYTHON {
       -c !{params.filter_contigs_coverage} \
       --deflines !{params.filter_contigs_deflines}
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         python: $(python --version 2>&1 | awk '{print $2}')

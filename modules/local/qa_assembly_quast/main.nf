@@ -3,7 +3,7 @@ process QA_ASSEMBLY_QUAST {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     label "process_low"
     tag { "${meta.id}" }
@@ -80,7 +80,7 @@ process QA_ASSEMBLY_QUAST {
           >> !{meta.id}.Summary.Illumina.CleanedReads-Bases.tab
     done
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS | sed -r 's/^ {4}//' | sed "s/\bEND_VERSIONS\b//" > versions.yml
     "!{task.process}":
         quast: $(quast.py --version | awk 'NF>1{print $NF}')

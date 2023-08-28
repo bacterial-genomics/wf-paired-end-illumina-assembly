@@ -9,7 +9,7 @@ process TRIM_READS_TRIMMOMATIC {
     publishDir "${params.process_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}"}
+        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
 
     label "process_high"
     tag { "${meta.id}" }
@@ -105,7 +105,7 @@ process TRIM_READS_TRIMMOMATIC {
       fi
     done
 
-    # Get process version
+    # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         trimmomatic: $(trimmomatic -version)
