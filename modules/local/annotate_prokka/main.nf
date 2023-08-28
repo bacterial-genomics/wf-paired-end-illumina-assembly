@@ -46,7 +46,7 @@ process ANNOTATE_PROKKA {
     sed -i "s/!{meta.id}/${short_base}/g" !{assembly}
 
     # Annotate cleaned and corrected assembly
-    msg "INFO: Running prokka with !{task.cpus} threads"
+    msg "INFO: Annotating assembly using Prokka"
 
     prokka \
       --outdir prokka \
@@ -77,7 +77,7 @@ process ANNOTATE_PROKKA {
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      prokka: $(prokka --version 2>&1 | awk 'NF>1{print $NF}')
+        prokka: $(prokka --version 2>&1 | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
 }

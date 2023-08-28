@@ -42,12 +42,9 @@ process ASSEMBLE_SKESA {
       fi
     done
 
-    msg "INFO: Running SKESA with !{task.cpus} threads and !{task.memory} memory"
+    msg "INFO: Assembling contigs using SKESA"
 
     if [[ ! -f contigs.fasta ]]; then
-      RAMSIZE_TOT=$(echo !{task.memory} | cut -d ' ' -f 1)
-      msg "INFO: RAMSIZE = ${RAMSIZE_TOT}"
-
       skesa \
         --reads !{R1},!{R2} \
         --reads !{single} \
@@ -61,7 +58,6 @@ process ASSEMBLE_SKESA {
         --max_snp_len !{params.skesa_max_snp_length} \
         --min_contig !{params.skesa_min_contig_length} \
         --vector_percent !{params.skesa_vector_percent}
-
     fi
 
     if verify_minimum_file_size "contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then

@@ -64,9 +64,11 @@ process POLISH_ASSEMBLY_BWA_PILON {
       polish_corrections=1
     fi
 
-    msg "INFO: Correcting contigs with PE reads using !{task.cpus} threads"
+    msg "INFO: Polishing contigs with paired end reads.."
 
     for ((i=1;i<=polish_corrections;i++)); do
+      msg "INFO: Performing polishing step ${i} of !{params.spades_polish_corrections}"
+
       bwa index !{uncorrected_contigs}
 
       bwa mem \
@@ -132,7 +134,7 @@ process POLISH_ASSEMBLY_BWA_PILON {
     # Single read mapping if available for downstream depth of coverage
     #  calculations, not for assembly polishing.
     if [[ !{single_gz} ]]; then
-      msg "INFO: Single read mapping with !{task.cpus} threads"
+      msg "INFO: Single read mapping"
       bwa index !{meta.id}.fna
 
       bwa mem \
@@ -162,9 +164,9 @@ process POLISH_ASSEMBLY_BWA_PILON {
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      pilon: $(pilon --version | cut -d ' ' -f 3)
-      bwa: $(bwa 2>&1 | head -n 3 | tail -1 | awk 'NF>1{print $NF}')
-      samtools: $(samtools --version | head -n 1 | awk 'NF>1{print $NF}')
+        pilon: $(pilon --version | cut -d ' ' -f 3)
+        bwa: $(bwa 2>&1 | head -n 3 | tail -1 | awk 'NF>1{print $NF}')
+        samtools: $(samtools --version | head -n 1 | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
 }

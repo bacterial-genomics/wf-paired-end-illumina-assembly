@@ -77,7 +77,7 @@ process MAP_CONTIGS_BWA {
 
     samtools index !{meta.id}.paired.bam
 
-    mv -f !{meta.id}.uncorrected.fna !{meta.id}.fna
+    cp -L !{meta.id}.uncorrected.fna !{meta.id}.fna
 
     if verify_minimum_file_size "!{meta.id}.fna" 'Final Corrected Assembly FastA File' "!{params.min_filesize_final_assembly}"; then
       echo -e "!{meta.id}\tFinal Corrected Assembly FastA File\tPASS" \
@@ -89,14 +89,14 @@ process MAP_CONTIGS_BWA {
 
     # Single read mapping if available for downstream depth of coverage calculations
     if [[ !{single_gz} ]]; then
-      msg "INFO: Single read mapping with !{task.cpus} threads"
+      msg "INFO: Single read mapping"
       bwa index !{meta.id}.fna
 
       bwa mem \
         -v 2 \
         -x intractg \
-        !{single_gz} \
         !{meta.id}.fna \
+        !{single_gz} \
         -t !{task.cpus} \
         | \
         samtools sort \
@@ -119,8 +119,8 @@ process MAP_CONTIGS_BWA {
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      bwa: $(bwa 2>&1 | head -n 3 | tail -1 | awk 'NF>1{print $NF}')
-      samtools: $(samtools --version | head -n 1 | awk 'NF>1{print $NF}')
+        bwa: $(bwa 2>&1 | head -n 3 | tail -1 | awk 'NF>1{print $NF}')
+        samtools: $(samtools --version | head -n 1 | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
 }

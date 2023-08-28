@@ -37,7 +37,7 @@ process QA_ASSEMBLY_QUAST {
     done
 
     # Run Quast
-    msg "INFO: Running QUAST with !{task.cpus} threads"
+    msg "INFO: Evaluating assembly using QUAST"
 
     quast.py \
       --silent \
@@ -81,9 +81,9 @@ process QA_ASSEMBLY_QUAST {
     done
 
     # Get process version
-    cat <<-END_VERSIONS > versions.yml
+    cat <<-END_VERSIONS | sed -r 's/^ {4}//' | sed "s/\bEND_VERSIONS\b//" > versions.yml
     "!{task.process}":
-      quast: $(quast.py --version | awk 'NF>1{print $NF}')
+        quast: $(quast.py --version | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
 }

@@ -57,7 +57,7 @@ process ALIGN_16S_BLAST {
       fi
     done
 
-    msg "INFO: Running blastn with !{task.cpus} threads"
+    msg "INFO: Performing BLASTn alignments"
 
     blastn \
       -word_size 10 \
@@ -77,7 +77,7 @@ process ALIGN_16S_BLAST {
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      blast: $(blastn -version | head -n 1 | awk '{print $2}')
+        blast: $(blastn -version | head -n 1 | awk '{print $2}')
     END_VERSIONS
     '''
 }

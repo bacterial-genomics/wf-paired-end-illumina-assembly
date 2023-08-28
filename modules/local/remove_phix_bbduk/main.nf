@@ -56,7 +56,7 @@ process REMOVE_PHIX_BBDUK {
     fi
 
     # Remove PhiX
-    msg "INFO: Running bbduk with !{task.cpus} threads"
+    msg "INFO: Removing PhiX using BBDuk"
 
     bbduk.sh \
       k=31 \
@@ -103,7 +103,7 @@ process REMOVE_PHIX_BBDUK {
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      bbduk: $(bbduk.sh --version 2>&1 | head -n 2 | tail -1 | awk 'NF>1{print $NF}')
+        bbduk: $(bbduk.sh --version 2>&1 | head -n 2 | tail -1 | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
 }

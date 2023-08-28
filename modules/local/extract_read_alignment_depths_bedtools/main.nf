@@ -35,7 +35,7 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     done
 
     # Calculate and report coverage of paired-reads and singleton reads separately
-    msg "INFO: Running bedtools"
+    msg "INFO: Extracting read alignment depths using bedtools"
 
     single_cov='0 bp TooFewToMap Singleton Reads (0.0x)\t'
     if [ -s !{single_bam} ]; then

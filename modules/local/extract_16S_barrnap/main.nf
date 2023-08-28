@@ -80,7 +80,7 @@ process EXTRACT_16S_BARRNAP {
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      barrnap: $(barrnap --version 2>&1 | awk 'NF>1{print $NF}')
+        barrnap: $(barrnap --version 2>&1 | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
 }

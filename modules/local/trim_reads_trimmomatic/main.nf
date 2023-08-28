@@ -55,7 +55,7 @@ process TRIM_READS_TRIMMOMATIC {
     fi
 
     # Adapter clip and quality trim
-    msg "INFO: Running trimmomatic with !{task.cpus} threads"
+    msg "INFO: Trimming reads using Trimmomatic"
 
     trimmomatic PE \
       -phred33 \
@@ -108,7 +108,7 @@ process TRIM_READS_TRIMMOMATIC {
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      trimmomatic: $(trimmomatic -version)
+        trimmomatic: $(trimmomatic -version)
     END_VERSIONS
     '''
 }

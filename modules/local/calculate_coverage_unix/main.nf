@@ -43,7 +43,7 @@ process CALCULATE_COVERAGE_UNIX {
 
       genomelen=${ln[7]}
       cov=$(echo | awk -v x=${basepairs} -v y=${genomelen} '{printf ("%0.1f", x/y)}')
-      msg "INFO: cov = $cov"
+      msg "INFO: !{meta.id} coverage: $cov"
 
       if [[ "${cov}" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
         echo -e "${ln[0]}\t${cov}x" >> !{meta.id}.Summary.Illumina.GenomeCoverage.tab
@@ -53,7 +53,7 @@ process CALCULATE_COVERAGE_UNIX {
 
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
+        ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
     END_VERSIONS
     '''
 }

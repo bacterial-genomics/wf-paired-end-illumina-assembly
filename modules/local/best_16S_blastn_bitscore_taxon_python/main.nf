@@ -78,8 +78,8 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      python: $(python --version 2>&1 | awk '{print $2}')
-      biopython: $(python -c 'import Bio; print(Bio.__version__)' 2>&1)
+        python: $(python --version 2>&1 | awk '{print $2}')
+        biopython: $(python -c 'import Bio; print(Bio.__version__)' 2>&1)
     END_VERSIONS
     '''
 }

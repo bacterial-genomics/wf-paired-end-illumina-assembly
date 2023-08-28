@@ -34,7 +34,7 @@ process MLST_MLST {
     done
 
     # MLST for each assembly
-    msg "INFO: Running MLST with !{task.cpus} threads"
+    msg "INFO: Performing MLST"
 
     if [[ -s !{assembly} ]]; then
       mlst \
@@ -46,7 +46,7 @@ process MLST_MLST {
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      mlst: $(mlst --version | awk '{print $2}')
+        mlst: $(mlst --version | awk '{print $2}')
     END_VERSIONS
     '''
 }

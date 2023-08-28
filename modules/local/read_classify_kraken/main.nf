@@ -60,7 +60,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
 
     # Investigate taxonomic identity of cleaned reads
     if [ ! -s !{meta.id}.taxonomy1-reads.tab ]; then
-      msg "INFO: Running Kraken1 with !{task.cpus} threads"
+      msg "INFO: Performing Kraken1 classifications"
       kraken \
         --fastq-input \
         --db ${database} \
@@ -69,7 +69,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
         !{paired_R1_gz} !{paired_R2_gz} !{single_gz} \
         > !{meta.id}_kraken.output
 
-      msg "INFO: Running kraken-report"
+      msg "INFO: Creating Kraken Report"
       kraken-report \
         --db ${database} \
         !{meta.id}_kraken.output \
@@ -83,9 +83,9 @@ process READ_CLASSIFY_KRAKEN_ONE {
     fi
 
     # Get process version
-    cat <<-END_VERSIONS > versions.yml
+    cat <<-END_VERSIONS | sed -r 's/^ {4}//' | sed "s/\bEND_VERSIONS\b//" > versions.yml
     "!{task.process}":
-      kraken: $(kraken --version | head -n 1 | awk 'NF>1{print $NF}')
+        kraken: $(kraken --version | head -n 1 | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
 }
@@ -138,7 +138,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
       msg "INFO: Using user specified Kraken 2 database: !{params.kraken2_db}"
     else
       database="/kraken2-database"
-      msg "INFO: Using pre-loaded MiniKraken2 database for Kraken 2"
+      msg "INFO: Using pre-loaded MiniKraken database for Kraken 2"
     fi
 
     # Confirm the db exists
@@ -151,7 +151,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
 
     # Investigate taxonomic identity of cleaned reads
     if [ ! -s !{meta.id}.taxonomy2-reads.tab ]; then
-      msg "INFO: Running Kraken2 with !{task.cpus} threads"
+      msg "INFO: Performing Kraken2 classifications"
       kraken2 \
         --use-names \
         --gzip-compressed \
@@ -171,7 +171,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      kraken2: $(kraken2 --version | head -n 1 | awk 'NF>1{print $NF}')
+        kraken2: $(kraken2 --version | head -n 1 | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
 }

@@ -17,7 +17,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     container "snads/flash@sha256:363b2f44d040c669191efbc3d3ba99caf5efd3fdef370af8f00f3328932143a6"
 
     input:
-    tuple val(meta), path(reads), path(qc_input_filecheck), path(paired_R1), path(paired_R2), path(qc_adapter_filecheck)
+    tuple val(meta), path(paired_R1), path(paired_R2), path(qc_adapter_filecheck)
 
     output:
     path ".command.out"
@@ -33,7 +33,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     source bash_functions.sh
 
     # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_input_filecheck} !{qc_adapter_filecheck}; do
+    for filecheck in !{qc_adapter_filecheck}; do
       if [[ $(grep "FAIL" ${filecheck}) ]]; then
         error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
         msg "${error_message} Check failed" >&2
@@ -44,7 +44,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     done
 
     # Determine read length based on the first 100 reads
-    echo -e "$(zcat "!{reads[0]}" | head -n 400 > read_R1_len.txt)"
+    echo -e "$(cat "!{paired_R1}" | head -n 400 > read_R1_len.txt)"
     READ_LEN=$(awk 'NR%4==2 {if(length > x) {x=length; y=$0}} END{print length(y)}' read_R1_len.txt)
 
     OVERLAP_LEN=$(echo | awk -v n=${READ_LEN} '{print int(n*0.8)}')
@@ -54,7 +54,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     if [ ${OVERLAP_LEN} -gt 0 ]; then
       msg "INFO: ${OVERLAP_LEN} bp overlap will be required for sister reads to be merged" >&2
 
-      msg "INFO: Running flash with !{task.cpus} threads"
+      msg "INFO: Merging paired end reads using FLASH"
       flash \
         -o flash \
         -M ${READ_LEN} \
@@ -102,14 +102,14 @@ process OVERLAP_PAIRED_READS_FLASH {
     echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS} cleaned pairs\t${CNT_CLEANED_SINGLETON} cleaned singletons" \
       > !{meta.id}.clean-reads.tsv
 
-    gzip !{meta.id}.single.fq \
+    gzip -f !{meta.id}.single.fq \
       !{meta.id}_R1.paired.fq \
       !{meta.id}_R2.paired.fq
 
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      flash: $(flash --version | head -n 1 | awk 'NF>1{print $NF}')
+        flash: $(flash --version | head -n 1 | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
 }

@@ -24,9 +24,9 @@ process INFILE_HANDLING_UNIX {
     shell:
     '''
     source bash_functions.sh
-    msg "!{meta}"
-    msg "INFO: R1 = !{reads[0]}"
-    msg "INFO: R2 = !{reads[1]}"
+
+    msg "INFO: Read 1: !{reads[0]}"
+    msg "INFO: Read 2: !{reads[1]}"
 
     i=1
     for fastq in !{reads}; do
@@ -43,7 +43,7 @@ process INFILE_HANDLING_UNIX {
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
+        ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
     END_VERSIONS
     '''
 }

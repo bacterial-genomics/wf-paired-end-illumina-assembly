@@ -45,11 +45,11 @@ process ASSEMBLE_SPADES {
     # Assemble with SPAdes
     failed=0
 
-    msg "INFO: Running SPAdes with !{task.cpus} threads"
+    msg "INFO: Assembling contigs using SPAdes"
 
     while [[ ! -f !{meta.id}_tmp/contigs.fasta ]] && [ ${failed} -lt 2 ]; do
-      RAMSIZE_TOT=$(echo !{task.memory} | cut -d ' ' -f 1)
-      msg "INFO: RAMSIZE = ${RAMSIZE_TOT}"
+      RAMSIZE=$(echo !{task.memory} | cut -d ' ' -f 1)
+
       if [ ${failed} -gt 0 ]; then
         msg "ERROR: assembly file not produced by SPAdes for !{meta.id}" >&2
         mv -f !{meta.id}_tmp/spades.log \
@@ -70,7 +70,7 @@ process ASSEMBLE_SPADES {
         -t !{task.cpus} \
         -o !{meta.id}_tmp \
         --phred-offset 33 \
-        --memory "${RAMSIZE_TOT}" \
+        --memory "${RAMSIZE}" \
         --only-assembler >&2
 
       fi
@@ -106,7 +106,7 @@ process ASSEMBLE_SPADES {
     # Get process version
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      spades: $(spades.py --version 2>&1 | awk 'NF>1{print $NF}')
+        spades: $(spades.py --version 2>&1 | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
 }
