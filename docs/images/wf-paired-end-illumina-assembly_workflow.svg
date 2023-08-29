@@ -318,6 +318,16 @@
        y1="103.70081"
        x2="105"
        y2="103.70081" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient5668"
+       id="linearGradient1954"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(-0.26133059,0,0,-0.09559887,163.37929,78.779486)"
+       x1="75"
+       y1="103.70081"
+       x2="105"
+       y2="103.70081" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -327,8 +337,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.1145539"
-     inkscape:cx="487.19043"
-     inkscape:cy="329.27972"
+     inkscape:cx="446.81554"
+     inkscape:cy="251.22159"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -624,14 +634,13 @@
       </g>
     </g>
     <g
-       id="g25541-4"
-       transform="translate(17.423348,2.4453011)">
+       id="g2196">
       <rect
          inkscape:export-ydpi="289.40701"
          inkscape:export-xdpi="289.40701"
          ry="1.528429"
-         y="55.330559"
-         x="82.449448"
+         y="57.77586"
+         x="99.872795"
          height="24.531284"
          width="36.102634"
          id="rect4728-6-3-3-5-7-5-0-3-0"
@@ -639,19 +648,19 @@
       <text
          xml:space="preserve"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1;font-family:'Maven Pro';-inkscape-font-specification:'Maven Pro Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-         x="100.47578"
-         y="60.044884"
+         x="117.89912"
+         y="62.490185"
          id="text4732-0-6-5-4-3-4-3-0-1"
          inkscape:export-xdpi="289.40701"
          inkscape:export-ydpi="289.40701"><tspan
            sodipodi:role="line"
-           x="100.47578"
-           y="60.044884"
+           x="117.89912"
+           y="62.490185"
            style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:3.52778px;line-height:1;font-family:'Maven Pro';-inkscape-font-specification:'Maven Pro Bold';text-align:center;text-anchor:middle;stroke-width:0.264583"
            id="tspan24778-2-2-1">Evaluation</tspan></text>
       <g
          id="g25532-9"
-         transform="translate(8.5830688e-6,-3.7426706)">
+         transform="translate(17.423357,-1.2973695)">
         <rect
            style="fill:#24af63;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
            id="rect4770-6-1-8-6-6-3-6-9-5-1-8-5-2"
@@ -671,6 +680,29 @@
              x="94.995667"
              y="69.178535"
              style="font-size:3.175px;fill:#000000;fill-opacity:1;stroke-width:0.264583">QUAST</tspan></text>
+      </g>
+      <g
+         id="g1624"
+         transform="translate(-0.66248226,0.52916667)">
+        <rect
+           style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+           id="rect4770-6-1-8-6-6-3-6-9-5-1-8-5-2-8"
+           width="31.516283"
+           height="4.9341259"
+           x="102.82845"
+           y="70.513306"
+           ry="2.467063" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;line-height:0.25;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+           x="112.33504"
+           y="74.11673"
+           id="text4774-6-2-4-8-4-0-5-5-6-7-9-7"><tspan
+             sodipodi:role="line"
+             id="tspan4772-0-5-0-9-4-0-6-7-1-4-9-2"
+             x="112.33504"
+             y="74.11673"
+             style="font-size:3.175px;fill:#000000;fill-opacity:1;stroke-width:0.264583">GTDB-tk</tspan></text>
       </g>
     </g>
     <path
@@ -838,6 +870,53 @@
              transform="scale(1,-1)" /></flowRegion><flowPara
            id="flowPara6616"
            style="font-size:32px;line-height:1.25;stroke-width:4.20406;stroke-miterlimit:4;stroke-dasharray:none">DB</flowPara></flowRoot>
+    </g>
+    <g
+       id="g2746"
+       transform="translate(0,0.8207084)">
+      <path
+         inkscape:export-ydpi="289.40701"
+         inkscape:export-xdpi="289.40701"
+         inkscape:connector-curvature="0"
+         id="path6606-6"
+         d="m 143.80996,69.090476 -7e-5,9.59403 -0.22335,-0.63164 c -1.99441,-5.63988 -3.03675,-7.02259 -6.59382,-8.74706 l -0.91193,-0.44211 0.87092,-0.50118 c 1.63636,-0.94166 2.38328,-1.47387 3.22575,-2.29843 1.0922,-1.06899 2.02321,-2.62786 2.99469,-5.01417 0.21023,-0.5164 0.43978,-1.07719 0.51006,-1.2462 0.10991,-0.26418 0.12781,1.038 0.12775,9.28676 z"
+         style="fill:url(#linearGradient1954);fill-opacity:1;stroke:#000000;stroke-width:0.05;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
+      <g
+         id="g4239-0"
+         transform="translate(162.07545,-9.5439998)">
+        <rect
+           style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.5;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+           id="rect4680-4-0"
+           width="19.469727"
+           height="19.620728"
+           x="-18.158854"
+           y="68.95443"
+           ry="0"
+           inkscape:export-xdpi="289.40701"
+           inkscape:export-ydpi="289.40701" />
+        <path
+           id="path6610-7"
+           d="m -3.6100153,76.994168 h -0.298883 v -1.44212 c 0,-0.009 -0.0014,-0.0181 -0.0026,-0.0272 -4.71e-4,-0.0573 -0.01869,-0.11351 -0.0579,-0.15807 l -2.399852,-2.74142 c -7.37e-4,-0.001 -0.0014,-0.001 -0.0019,-0.002 -0.0143,-0.016 -0.03098,-0.0293 -0.04861,-0.0408 -0.0052,-0.004 -0.01049,-0.006 -0.01595,-0.01 -0.01527,-0.008 -0.03148,-0.0152 -0.04816,-0.0203 -0.0045,-10e-4 -0.0086,-0.003 -0.01311,-0.004 -0.01812,-0.004 -0.03695,-0.007 -0.05602,-0.007 h -5.8979567 c -0.269326,0 -0.488119,0.21904 -0.488119,0.48815 v 3.964 h -0.298853 c -0.385275,0 -0.697672,0.31226 -0.697672,0.69767 v 3.62801 c 0,0.38514 0.312397,0.6976 0.697672,0.6976 h 0.298837 v 2.48349 c 0,0.26907 0.218795,0.48814 0.48812,0.48814 h 8.0539657 c 0.269075,0 0.488119,-0.21904 0.488119,-0.48814 v -2.48349 h 0.298883 c 0.385162,0 0.697626,-0.31246 0.697626,-0.6976 v -3.62791 c -2.2e-5,-0.38539 -0.312487,-0.69766 -0.697648,-0.69766 z m -8.8409687,-3.96402 h 5.6538887 v 2.49738 c 0,0.13484 0.109398,0.24406 0.244059,0.24406 h 2.156018 v 1.22273 h -8.0539657 z m 8.0539887,11.33855 h -8.0539887 v -2.35135 h 8.0539657 v 2.35135 z"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="scsccccccccssscsssscsssscsscsccsscccccccccc"
+           style="stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none" />
+        <flowRoot
+           xml:space="preserve"
+           id="flowRoot6618-1"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:0.01%;font-family:'Maven Pro';-inkscape-font-specification:'Maven Pro Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:4.20406;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           transform="matrix(0.11893258,0,0,0.11893258,-67.916528,-142.75898)"><flowRegion
+             style="stroke-width:4.20406;stroke-miterlimit:4;stroke-dasharray:none"
+             id="flowRegion6614-1"><rect
+               id="rect6612-1"
+               width="112"
+               height="53.599998"
+               x="474.39999"
+               y="-1904.0004"
+               style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Maven Pro';-inkscape-font-specification:'Maven Pro Bold';fill:#ffffff;stroke-width:4.20406246;stroke-miterlimit:4;stroke-dasharray:none"
+               transform="scale(1,-1)" /></flowRegion><flowPara
+             id="flowPara6616-1"
+             style="font-size:32px;line-height:1.25;stroke-width:4.20406;stroke-miterlimit:4;stroke-dasharray:none">DB</flowPara></flowRoot>
+      </g>
     </g>
     <path
        inkscape:export-ydpi="289.40701"
