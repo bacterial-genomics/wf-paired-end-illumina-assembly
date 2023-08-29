@@ -25,6 +25,7 @@ nextflow \
   --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
   --blast_db /scicomp/groups/OID/NCEZID/DHCPP/BSPB/ZSAL/.databases/ncbi \
   --kraken2_db /scicomp/groups/OID/NCEZID/DHCPP/BSPB/ZSAL/.databases/kraken2 \
+  --gtdbtk_db /scicomp/groups/OID/NCEZID/DHCPP/BSPB/ZSAL/.databases/GTDB/release207_v2 \
   -resume
 
 # Check for errors and add to errors.tsv
