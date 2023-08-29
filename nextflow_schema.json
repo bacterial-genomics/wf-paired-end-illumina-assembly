@@ -58,6 +58,28 @@
                     "description": "Path to 16S ribosomal database for BLAST.",
                     "fa_icon": "fas fa-folder-open"
                 },
+                "gtdb_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Path to GTDB database.",
+                    "fa_icon": "fas fa-folder-open"
+                },
+                "skip_gtdbtk": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip GTDB-Tk classification of FastA assembly file.",
+                },
+                "busco_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Path to BUSCO lineage database.",
+                    "fa_icon": "fas fa-folder-open"
+                },
+                "skip_busco": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip BUSCO classification of each contig",
+                },
                 "phix_reference": {
                     "type": "string",
                     "format": "file-path",
@@ -213,6 +235,54 @@
                     "default": false,
                     "hidden": true,
                     "description": "Skip sorting contigs by descending length when filtering contigs."
+                },
+                "split_multifasta_remove_gaps": {
+                    "type": "boolean",
+                    "default": false,
+                    "hidden": true,
+                    "description": "Remove gaps from contigs when splitting contigs for BUSCO analysis."
+                },
+                "split_multifasta_extension": {
+                    "type": "string",
+                    "default": ".fasta",
+                    "hidden": true,
+                    "description": "File extension of contig file."
+                },
+                "gtdbtk_pplacer_scratch": {
+                    "type": "string",
+                    "default": "",
+                    "hidden": true,
+                    "description": "Reduce pplacer memory usage by writing to disk (slower)."
+                },
+                "gtdbtk_min_perc_aa": {
+                    "type": "integer",
+                    "default": 10,
+                    "hidden": true,
+                    "description": "Exclude genomes that do not have at least this percentage of AA in the MSA (inclusive bound)."
+                },
+                "gtdbtk_pplacer_cpus": {
+                    "type": "integer",
+                    "default": 1,
+                    "hidden": true,
+                    "description": "Number of CPUs to use during pplacer placement."
+                },
+                "gtdbtk_min_af": {
+                    "type": "string",
+                    "default": "0.65",
+                    "hidden": true,
+                    "description": "Minimum alignment fraction to assign genome to a species cluster."
+                },
+                "depth": {
+                    "type": "integer",
+                    "default": 100,
+                    "hidden": true,
+                    "description": "Coverage depth to subsample FastQ files to."
+                },
+                "genome_size": {
+                    "type": "string",
+                    "default": "",
+                    "hidden": true,
+                    "description": "Genome size to subsample FastQ files to."
                 }
             }
         },

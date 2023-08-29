@@ -36,32 +36,45 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 // MODULES: Local modules
 //
 include { INFILE_HANDLING_UNIX                                } from "../modules/local/infile_handling_unix/main"
+
+include { ESTIMATE_GENOME_SIZE_KMC                            } from "../modules/local/estimate_genome_size_kmc/main"
+include { COUNT_TOTAL_BP_INPUT_READS_SEQTK                    } from "../modules/local/count_total_bp_input_reads_seqtk/main"
+include { ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX                  } from "../modules/local/estimate_original_input_depth_unix/main"
+include { SUBSAMPLE_READS_TO_DEPTH_SEQTK                      } from "../modules/local/subsample_reads_to_depth_seqtk/main"
+
 include { REMOVE_PHIX_BBDUK                                   } from "../modules/local/remove_phix_bbduk/main"
 include { TRIM_READS_TRIMMOMATIC                              } from "../modules/local/trim_reads_trimmomatic/main"
 //include { TRIM_READS_FASTP                                  } from "../modules/local/trim_reads_fastp/main"
 include { OVERLAP_PAIRED_READS_FLASH                          } from "../modules/local/overlap_paired_reads_flash/main"
 //include { OVERLAP_PAIRED_READS_PEAR                         } from "../modules/local/overlap_paired_reads_pear/main"
+
 include { READ_CLASSIFY_KRAKEN_ONE; READ_CLASSIFY_KRAKEN_TWO; } from "../modules/local/read_classify_kraken/main"
 //include { READ_CLASSIFY_CENTRIFUGE                          } from "../modules/local/read_classify_centrifuge/main"
+
 include { ASSEMBLE_SKESA                                      } from "../modules/local/assemble_skesa/main"
 include { FILTER_CONTIGS_BIOPYTHON                            } from "../modules/local/filter_contigs_biopython/main"
 include { MAP_CONTIGS_BWA                                     } from "../modules/local/map_contigs_bwa/main"
 //include { POLISH_ASSEMBLY_UNICYCLER                         } from "../modules/local/polish_assembly_unicycler/main"
 include { EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS              } from "../modules/local/extract_read_alignment_depths_bedtools/main"
+include { CALCULATE_COVERAGE_UNIX                             } from "../modules/local/calculate_coverage_unix/main"
+
 include { MLST_MLST                                           } from "../modules/local/mlst_mlst/main"
 //include { MLST_SRST2                                        } from "../modules/local/mlst_srst2/main"
+
 include { ANNOTATE_PROKKA                                     } from "../modules/local/annotate_prokka/main"
 //include { ANNOTATE_BACTA                                    } from "../modules/local/annotate_bacta/main"
+
 include { EXTRACT_16S_BIOPYTHON                               } from "../modules/local/extract_16S_biopython/main"
 include { EXTRACT_16S_BARRNAP                                 } from "../modules/local/extract_16S_barrnap/main"
 //include { 16S_EXTRACT_RNAMMER                               } from "../modules/local/16S_extract_rnammer/main"
 include { ALIGN_16S_BLAST                                     } from "../modules/local/align_16S_blast/main"
 include { BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON               } from "../modules/local/best_16S_blastn_bitscore_taxon_python/main"
+
 include { QA_ASSEMBLY_QUAST                                   } from "../modules/local/qa_assembly_quast/main"
+include { GTDBTK_DB_PREPARATION_UNIX                          } from "../modules/local/gtdbtk_db_preparation_unix/main"
 //include { QA_ASSEMBLY_BUSCO                                 } from "../modules/local/qa_assembly_busco/main"
 //include { QA_ASSEMBLY_CAT                                   } from "../modules/local/qa_assembly_cat/main"
 //include { QA_ASSEMBLY_CHECKM2                               } from "../modules/local/qa_assembly_checkm2/main"
-include { CALCULATE_COVERAGE_UNIX                             } from "../modules/local/calculate_coverage_unix/main"
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -77,6 +90,29 @@ include { INPUT_CHECK                                         } from "../subwork
 //
 // MODULE: Installed directly from nf-core/modules
 //
+include { GTDBTK_CLASSIFYWF as QA_ASSEMBLY_GTDBTK             } from "../modules/nf-core/gtdbtk/classifywf/main"
+include { BUSCO as QA_ASSEMBLY_BUSCO                          } from "../modules/nf-core/busco/main"
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    CREATE CHANNELS FOR REFERENCE DATABASES
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// GTDB
+if(params.gtdb_db){
+    ch_gtdb_db_file = Channel.fromPath( "${params.gtdb_db}" )
+} else {
+    ch_gtdb_db_file = Channel.empty()
+}
+
+// BUSCO
+// if(params.busco_db){
+//     ch_busco_db_file = Channel
+//         .value(file( "${params.busco_db}" ))
+// } else {
+//     ch_busco_db_file = Channel.empty()
+// }
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,6 +123,7 @@ include { INPUT_CHECK                                         } from "../subwork
 workflow SKESA {
 
     // SETUP: Define empty channels to concatenate certain outputs
+    ch_reads              = Channel.empty()
     ch_versions           = Channel.empty()
     ch_ssu_species        = Channel.empty()
     ch_mlst_summary       = Channel.empty()
@@ -111,9 +148,67 @@ workflow SKESA {
     ch_versions = ch_versions
         .mix(INFILE_HANDLING_UNIX.out.versions)
 
+    // Handle too much raw data, subsample the input FastQ files
+    // Only calculate genome size if genome_size is unknown or a depth given to subsample
+    if (!params.genome_size && params.depth > 0) {
+        // Estimate the genome size from the input R1 FastQ file
+        ESTIMATE_GENOME_SIZE_KMC (
+            INFILE_HANDLING_UNIX.out.input
+        )
+
+        // Collect version info
+        ch_versions = ch_versions
+            .mix(ESTIMATE_GENOME_SIZE_KMC.out.versions)
+    }
+    else {
+        if (params.depth <= 0) {
+            println "Depth is set to ${params.genome_size}x. No subsampling to perform and therefore no genome size estimation required."
+        }
+        else {
+            println "Using the user-input genome size of ${params.genome_size}bp"
+        }
+        // pass the genome_size val onto the next depth channel
+        // Skip genome size estimation based on user input, but
+        //  still consider downsampling with specified genome_size input value
+    }
+
+    if (params.depth > 0) {
+        println "Estimating if the input exceeds ${params.depth}x"
+
+        // Use the genome size to figure out the expected depth
+        COUNT_TOTAL_BP_INPUT_READS_SEQTK (
+            INFILE_HANDLING_UNIX.out.input
+        )
+
+        ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX (
+            COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.total_bp
+                .join(ESTIMATE_GENOME_SIZE_KMC.out.genome_size)
+        )
+
+        // Only if specified depth is less than wanted depth, subsample infiles
+        SUBSAMPLE_READS_TO_DEPTH_SEQTK (
+            INFILE_HANDLING_UNIX.out.input
+                .join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use)
+        )
+
+        // Collect subsampled reads
+        ch_reads = SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.reads
+
+        // Collect version info
+        ch_versions = ch_versions
+            .mix(COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.versions)
+            .mix(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.versions)
+            .mix(SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.versions)
+    }
+    else {
+        // Skip subsampling and pass raw reads to PhiX removal
+        // Collect raw reads
+        ch_reads = INFILE_HANDLING_UNIX.out.input
+    }
+
     // PROCESS: Run bbduk to remove PhiX reads
     REMOVE_PHIX_BBDUK (
-        INFILE_HANDLING_UNIX.out.input
+        ch_reads
     )
 
     // Collect version info
@@ -131,8 +226,7 @@ workflow SKESA {
 
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
     OVERLAP_PAIRED_READS_FLASH (
-        INFILE_HANDLING_UNIX.out.input
-            .join(TRIM_READS_TRIMMOMATIC.out.trimmo)
+        TRIM_READS_TRIMMOMATIC.out.trimmo
     )
 
     // Collect version info
@@ -196,7 +290,10 @@ workflow SKESA {
         .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_alnstats)
 
     ch_alnstats_summary
-        .collectFile(name: 'Summary.Illumina.CleanedReads-AlnStats.tab', storeDir: "${params.outdir}/qa")
+        .collectFile(
+            name:     "Summary.Illumina.CleanedReads-AlnStats.tab",
+            storeDir: "${params.outdir}/qa"
+        )
 
     // Collect version info
     ch_versions = ch_versions
@@ -213,7 +310,10 @@ workflow SKESA {
         .mix(MLST_MLST.out.summary_mlst)
 
     ch_mlst_summary
-        .collectFile(name: 'Summary.MLST.tab', storeDir: "${params.outdir}/qa")
+        .collectFile(
+            name:     "Summary.MLST.tab",
+            storeDir: "${params.outdir}/qa"
+        )
 
     // Collect version info
     ch_versions = ch_versions
@@ -271,12 +371,18 @@ workflow SKESA {
         .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary)
 
     ch_blast_summary
-        .collectFile(name: 'Summary.16S.tab', storeDir: "${params.outdir}/qa")
+        .collectFile(
+            name:     "Summary.16S.tab",
+            storeDir: "${params.outdir}/qa"
+        )
 
     // Collect all BLAST Top Species Summaries and concatenate into one file
     ch_ssu_species = ch_ssu_species
         .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.ssu_species)
-        .collectFile(name: '16S-top-species.tsv', storeDir: "${params.outdir}/ssu")
+        .collectFile(
+            name:     "16S-top-species.tsv",
+            storeDir: "${params.outdir}/ssu"
+        )
 
     // Collect version info
     ch_versions = ch_versions
@@ -289,15 +395,47 @@ workflow SKESA {
             .join(MAP_CONTIGS_BWA.out.assembly)
     )
 
+    // PROCESS: Classify assembly FastA file using GTDB-Tk
+    if (!params.skip_gtdbtk && params.gtdb_db) {
+        ch_contig = MAP_CONTIGS_BWA.out.assembly
+            .map {
+                meta, bins ->
+                    def meta_new = meta.clone()
+                    meta_new['assembler'] = 'SPAdes'
+                    [ meta_new, bins ]
+            }
+
+        GTDBTK_DB_PREPARATION_UNIX (
+            ch_gtdb_db_file
+        )
+
+        QA_ASSEMBLY_GTDBTK (
+            ch_contig,
+            GTDBTK_DB_PREPARATION_UNIX.out.gtdb_db
+        )
+
+        // Collect version info
+        ch_versions = ch_versions
+            .mix(GTDBTK_DB_PREPARATION_UNIX.out.versions)
+            .mix(QA_ASSEMBLY_GTDBTK.out.versions)
+    }
+
     // Collect all Assembly Summaries and concatenate into one file
     ch_assembly_summary = ch_assembly_summary
         .mix(QA_ASSEMBLY_QUAST.out.summary_assemblies)
-        .collectFile(name: 'Summary.Assemblies.tab', keepHeader: true, storeDir: "${params.outdir}/qa")
+        .collectFile(
+            name:       "Summary.Assemblies.tab",
+            keepHeader: true,
+            storeDir:   "${params.outdir}/qa"
+        )
 
     // Collect all Cleaned Read/Base Summaries and concatenate into one file
     ch_cleaned_summary = ch_cleaned_summary
         .mix(QA_ASSEMBLY_QUAST.out.summary_reads)
-        .collectFile(name: 'Summary.Illumina.CleanedReads-Bases.tab', storeDir: "${params.outdir}/qa")
+        .collectFile(
+            name:     "Summary.Illumina.CleanedReads-Bases.tab",
+            storeDir: "${params.outdir}/qa"
+        )
 
     // Collect version info
     ch_versions = ch_versions
@@ -312,7 +450,10 @@ workflow SKESA {
     // Collect all Genome Coverage Summaries and concatenate into one file
     ch_genome_cov_summary = ch_genome_cov_summary
         .mix(CALCULATE_COVERAGE_UNIX.out.genome_coverage)
-        .collectFile(name: 'Summary.Illumina.GenomeCoverage.tab', storeDir: "${params.outdir}/qa")
+        .collectFile(
+            name:     "Summary.Illumina.GenomeCoverage.tab",
+            storeDir: "${params.outdir}/qa"
+        )
 
     // Collect version info
     ch_versions = ch_versions
@@ -321,7 +462,10 @@ workflow SKESA {
     // PATTERN: Collate method for version information
     ch_versions
         .unique()
-        .collectFile(name: 'software_versions.yml', storeDir: params.logpath)
+        .collectFile(
+            name:     "software_versions.yml",
+            storeDir: params.logpath
+        )
 
     // Collect all QC File Checks and concatenate into one file
     ch_qc_filecheck = ch_qc_filecheck
@@ -343,7 +487,11 @@ workflow SKESA {
             ALIGN_16S_BLAST.out.qc_blastn_filecheck,
             BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filtered_blastn_filecheck
         )
-        .collectFile(name: 'Summary.QC_File_Checks.tab', storeDir: "${params.outdir}/qa", sort: {it.getSimpleName()})
+        .collectFile(
+            name:     "Summary.QC_File_Checks.tab",
+            storeDir: "${params.outdir}/qa",
+            sort:     { it.getSimpleName() }
+        )
 
 }
 
