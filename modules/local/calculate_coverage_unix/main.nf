@@ -34,10 +34,10 @@ process CALCULATE_COVERAGE_UNIX {
         | awk 'BEGIN{FS="\t"}; {print $2}' | awk '{print $1}' | sort -u)
 
       if [[ "${basepairs}" =~ ^[0-9]+$ ]]; then
-        msg "INFO: read alignment data for ${ln[0]} used for coverage" >&2
+        msg "INFO: Read alignment data for ${ln[0]} used for coverage" >&2
       else
         basepairs=$(grep ${ln[0]} !{summary_reads} | cut -f 2)
-        msg "INFO: read alignment data absent for ${ln[0]}, so cleaned bases" >&2
+        msg "INFO: Read alignment data absent for ${ln[0]}, so cleaned bases" >&2
         msg "      given to the assembler were used to calculate coverage" >&2
       fi
 

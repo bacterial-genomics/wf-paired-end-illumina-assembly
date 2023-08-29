@@ -42,13 +42,13 @@ process EXTRACT_16S_BARRNAP {
     done
 
     if [[ ! -f "!{extracted_rna}" ]] || [[ ! -s "!{extracted_rna}" ]]; then
-      msg "INFO: absent 16S rRNA gene annotation in !{annotation}" >&2
+      msg "INFO: Absent 16S rRNA gene annotation in !{annotation}" >&2
       msg 'Running barrnap' >&2
 
       barrnap !{assembly} | grep "Name=16S_rRNA;product=16S" > !{meta.id}.gff
 
       if [[ $(grep -c "Name=16S_rRNA;product=16S" "!{meta.id}.gff") -eq 0 ]]; then
-        msg "INFO: barrnap was unable to locate a 16S rRNA gene sequence in !{assembly}" >&2
+        msg "INFO: Barrnap was unable to locate a 16S rRNA gene sequence in !{assembly}" >&2
         exit 2
       fi
 
@@ -68,6 +68,7 @@ process EXTRACT_16S_BARRNAP {
       '/^>/{print ">" awk_var "_" ++i; next} {print}' \
       16S.!{meta.id}.fa \
       > !{meta.id}.fa-renamed
+
     rm -f 16S.!{meta.id}.fa
     mv -f !{meta.id}.fa-renamed 16S.!{meta.id}.fa
 
