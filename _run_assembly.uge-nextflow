@@ -13,7 +13,7 @@ fi
 
 module load nextflow
 nextflow \
-  -log ${OUT}/nextflow_log.${SCRIPT_NAME}.txt \
+  -log ${OUT}/log/nextflow_log.${SCRIPT_NAME}.txt \
   run \
   ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
   -profile ${HPC} \

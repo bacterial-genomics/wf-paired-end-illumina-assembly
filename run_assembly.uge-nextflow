@@ -222,7 +222,7 @@ fi
 # Check for specific nextflow logfile for this workflow, which
 #  means this nextflow workflow has been ran before in the specified outdir.
 if [ -d "${OUT}/log" ] && \
-  [ -f $(find "${OUT}" -maxdepth 1 -name "nextflow_log*" | grep -q '.') ]; then
+  [ -f $(find "${OUT}" -maxdepth 2 -name "nextflow_log*" | grep -q '.') ]; then
   prompt_if_previous_nextflow_run "${OUT}" "nextflow_log"
 fi
 
