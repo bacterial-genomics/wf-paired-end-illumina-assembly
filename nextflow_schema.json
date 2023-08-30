@@ -67,7 +67,7 @@
                 "skip_gtdbtk": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Skip GTDB-Tk classification of FastA assembly file.",
+                    "description": "Skip GTDB-Tk classification of FastA assembly file."
                 },
                 "busco_db": {
                     "type": "string",
@@ -78,7 +78,7 @@
                 "skip_busco": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Skip BUSCO classification of each contig",
+                    "description": "Skip BUSCO classification of each contig"
                 },
                 "phix_reference": {
                     "type": "string",
