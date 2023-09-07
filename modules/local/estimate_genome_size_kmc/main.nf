@@ -7,7 +7,7 @@ process ESTIMATE_GENOME_SIZE_KMC {
 
     tag { "${meta.id}" }
 
-    container "nanozoo/kmc@sha256:e6375ae53d453cd9d3b3c0ce0890cf2c3fd259b8d459e4c081b2737d4b34979f"
+    container "gregorysprenger/kmc@sha256:27603041f8c8818aa71a1d0386df17eddca59dbd6441b7e84b78b8a09dc137df"
 
     input:
     tuple val(meta), path(reads), path(qc_input_filecheck)

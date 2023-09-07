@@ -7,7 +7,7 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
 
     tag { "${meta.id}" }
 
-    container "staphb/seqtk@sha256:e3105ea1c7375e6bfe0603f6e031b022068b3d4d529f295c5fa24e0a6709dd2c"
+    container "gregorysprenger/seqtk@sha256:756bff7222c384d358cb22ecbbae443e112b296503cb0e1a6baf9cf80545ae20"
 
     input:
     tuple val(meta), path(reads), path(qc_input_filecheck)
