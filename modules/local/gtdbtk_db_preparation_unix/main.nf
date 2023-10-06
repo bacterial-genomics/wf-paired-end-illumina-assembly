@@ -16,18 +16,13 @@ process GTDBTK_DB_PREPARATION_UNIX {
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                        , emit: versions
-    tuple val("${db_name}"), path("database/*"), emit: gtdb_db
+    path "versions.yml"                                         , emit: versions
+    tuple val("${database.getSimpleName()}"), path("database/*"), emit: db
 
     shell:
-    db_name = database.toString().split('\\.')[0]
     '''
-    if [ -d !{database} ]; then
-      ln -sf !{database}/ database
-    else
-      mkdir database
-      tar -xzf !{database} -C database --strip 1
-    fi
+    mkdir database
+    tar -xzf !{database} -C database --strip 1
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
