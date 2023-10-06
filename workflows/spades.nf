@@ -25,6 +25,12 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 //
 // CONFIGS: Import configs for this workflow
 //
+// BUSCO config
+if(params.busco_config){
+    ch_busco_config_file = Channel.fromPath( "${params.busco_config}" )
+} else {
+    ch_busco_config_file = Channel.empty()
+}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -71,8 +77,12 @@ include { ALIGN_16S_BLAST                                     } from "../modules
 include { BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON               } from "../modules/local/best_16S_blastn_bitscore_taxon_python/main"
 include { SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON                 } from "../modules/local/split_multifasta_assembly_biopython/main"
 
-include { QA_ASSEMBLY_QUAST                                   } from "../modules/local/qa_assembly_quast/main"
 include { GTDBTK_DB_PREPARATION_UNIX                          } from "../modules/local/gtdbtk_db_preparation_unix/main"
+include { BUSCO_DB_PREPARATION_UNIX                           } from "../modules/local/busco_db_preparation_unix/main"
+
+include { GTDBTK_CLASSIFYWF as QA_ASSEMBLY_GTDBTK             } from "../modules/nf-core/gtdbtk/classifywf/main"
+include { BUSCO as QA_ASSEMBLY_BUSCO                          } from "../modules/nf-core/busco/main"
+include { QA_ASSEMBLY_QUAST                                   } from "../modules/local/qa_assembly_quast/main"
 //include { QA_ASSEMBLY_CAT                                   } from "../modules/local/qa_assembly_cat/main"
 //include { QA_ASSEMBLY_CHECKM2                               } from "../modules/local/qa_assembly_checkm2/main"
 
@@ -83,36 +93,23 @@ include { INPUT_CHECK                                         } from "../subwork
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT NF-CORE MODULES/SUBWORKFLOWS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-//
-// MODULE: Installed directly from nf-core/modules
-//
-include { GTDBTK_CLASSIFYWF as QA_ASSEMBLY_GTDBTK             } from "../modules/nf-core/gtdbtk/classifywf/main"
-include { BUSCO as QA_ASSEMBLY_BUSCO                          } from "../modules/nf-core/busco/main"
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CREATE CHANNELS FOR REFERENCE DATABASES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 // GTDB
 if(params.gtdb_db){
-    ch_gtdb_db_file = Channel.fromPath( "${params.gtdb_db}" )
+    ch_gtdbtk_db_file = file(params.gtdb_db, checkIfExists: true)
 } else {
-    ch_gtdb_db_file = Channel.empty()
+    ch_gtdbtk_db_file = Channel.empty()
 }
 
 // BUSCO
-// if(params.busco_db){
-//     ch_busco_db_file = Channel
-//         .value(file( "${params.busco_db}" ))
-// } else {
-//     ch_busco_db_file = Channel.empty()
-// }
+if(params.busco_db){
+    ch_busco_db_file = file(params.busco_db, checkIfExists: true)
+} else {
+    ch_busco_db_file = Channel.empty()
+}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -403,19 +400,81 @@ workflow SPADES {
                     [ meta_new, bins ]
             }
 
-        GTDBTK_DB_PREPARATION_UNIX (
-            ch_gtdb_db_file
-        )
+        if ( ch_gtdbtk_db_file.extension == 'gz' || ch_gtdbtk_db_file.extension == 'tgz' ) {
+            // Expects to be .tar.gz!
+            GTDBTK_DB_PREPARATION_UNIX (
+                ch_gtdbtk_db_file
+            )
+
+            ch_db_for_gtdbtk = GTDBTK_DB_PREPARATION_UNIX.out.db
+
+            ch_versions = ch_versions
+                .mix(GTDBTK_DB_PREPARATION_UNIX.out.versions)
+
+        } else if ( ch_gtdbtk_db_file.isDirectory() ) {
+            ch_db_for_gtdbtk = Channel
+                                .fromPath(ch_gtdbtk_db_file)
+                                .map{
+                                    db ->
+                                        def meta = db.getSimpleName()
+                                        [ meta, db ]
+                                }
+        } else {
+            error("Unsupported object given to --gtdb_db, database must be supplied as either a directory or a .tar.gz file!")
+        }
 
         QA_ASSEMBLY_GTDBTK (
             ch_contig,
-            GTDBTK_DB_PREPARATION_UNIX.out.gtdb_db
+            ch_db_for_gtdbtk
         )
 
         // Collect version info
         ch_versions = ch_versions
-            .mix(GTDBTK_DB_PREPARATION_UNIX.out.versions)
             .mix(QA_ASSEMBLY_GTDBTK.out.versions)
+    }
+
+    if (!params.skip_busco && params.busco_db) {
+        if ( ch_busco_db_file.extension == 'gz' || ch_busco_db_file.extension == 'tgz' ) {
+            // Expects to be tar.gz!
+            BUSCO_DB_PREPARATION_UNIX(
+                ch_busco_db_file
+            )
+
+            ch_db_for_busco = BUSCO_DB_PREPARATION_UNIX.out.db
+
+            // Collect version info
+            ch_versions = ch_versions
+                .mix(BUSCO_DB_PREPARATION_UNIX.out.versions)
+
+        } else if ( ch_busco_db_file.isDirectory() ) {
+            ch_db_for_busco = Channel
+                                .fromPath(ch_busco_db_file)
+        } else {
+            error("Unsupported object given to --busco_db, database must be supplied as either a directory or a .tar.gz file!")
+        }
+
+        ch_lineage_for_busco_db = ch_db_for_busco
+                                    .map{
+                                        db ->
+                                            db.getSimpleName().contains('odb10') ? db : 'auto'
+                                    }
+
+        // PROCESS: Split assembly FastA file into individual contig files
+        SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON (
+            POLISH_ASSEMBLY_BWA_PILON.out.assembly
+        )
+
+        QA_ASSEMBLY_BUSCO (
+            SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.split_multifasta_assembly_dir,
+            ch_lineage_for_busco_db,
+            ch_db_for_busco,
+            ch_busco_config_file
+        )
+
+        // Collect version info
+        ch_versions = ch_versions
+            .mix(SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.versions)
+            .mix(QA_ASSEMBLY_BUSCO.out.versions)
     }
 
     // Collect all Assembly Summaries and concatenate into one file
