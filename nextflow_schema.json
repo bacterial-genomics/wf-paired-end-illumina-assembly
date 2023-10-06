@@ -78,7 +78,14 @@
                 "skip_busco": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Skip BUSCO classification of each contig"
+                    "description": "Skip BUSCO classification of each contig."
+                },
+                "busco_config": {
+                    "type": "string",
+                    "format": "file-path",
+                    "default": "../../../bin/busco_config.ini",
+                    "hidden": true,
+                    "description": "Path to configuration file for BUSCO."
                 },
                 "phix_reference": {
                     "type": "string",
