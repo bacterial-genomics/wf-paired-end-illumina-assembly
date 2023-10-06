@@ -18,19 +18,38 @@ def parseArgs():
     )
     req = parser.add_argument_group("Required")
     req.add_argument(
-        "-i", "--infile", required=True, metavar="FILE", help="input GenBank file, optionally gunzip compressed"
+        "-i",
+        "--infile",
+        required=True,
+        metavar="FILE",
+        help="input GenBank file, optionally gunzip compressed",
     )
-    req.add_argument("-q", "--query", nargs="+", metavar="STR", help="string(s) to search each defline")
+    req.add_argument(
+        "-q",
+        "--query",
+        nargs="+",
+        metavar="STR",
+        help="string(s) to search each defline",
+    )
     opt = parser.add_argument_group("Optional")
     opt.add_argument(
         "-f",
         "--query-feature",
         default="CDS",
         metavar="STR",
-        help="GenBank feature type to search in, e.g., CDS, gene, rRNA, " "source, tRNA, misc_feature [default: CDS]",
+        help="GenBank feature type to search in, e.g., CDS, gene, rRNA, "
+        "source, tRNA, misc_feature [default: CDS]",
     )
-    opt.add_argument("-h", "--help", action="help", help="show this help message and exit")
-    opt.add_argument("-o", "--outfile", default=None, metavar="FILE", help="FastA output [default: stdout]")
+    opt.add_argument(
+        "-h", "--help", action="help", help="show this help message and exit"
+    )
+    opt.add_argument(
+        "-o",
+        "--outfile",
+        default=None,
+        metavar="FILE",
+        help="FastA output [default: stdout]",
+    )
     opt.add_argument(
         "-u",
         "--query-qualifier",
@@ -74,7 +93,9 @@ def main():
                     hit = " ".join(found)
                     locus_tag = feat.qualifiers["locus_tag"][0]
                     query_match.append(
-                        ">{} {} {} {}\n{}".format(inbase, locus_tag, rec.name, hit, feat.extract(rec.seq))
+                        ">{} {} {} {}\n{}".format(
+                            inbase, locus_tag, rec.name, hit, feat.extract(rec.seq)
+                        )
                     )
 
     if len(query_match) == 0:
