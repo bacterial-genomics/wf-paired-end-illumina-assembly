@@ -58,18 +58,39 @@ process REMOVE_PHIX_BBDUK {
     # Remove PhiX
     msg "INFO: Removing PhiX using BBDuk"
 
-    bbduk.sh \
-      k=31 \
-      hdist=1 \
-      qout=33 \
-      qin=auto \
-      overwrite=t \
-      in="!{reads[0]}" \
-      in2="!{reads[1]}" \
-      threads=!{task.cpus} \
-      out=!{meta.id}_noPhiX-R1.fsq \
-      out2=!{meta.id}_noPhiX-R2.fsq \
-      ref="!{params.phix_reference}"
+    run_bbduk() {
+      read1=$1
+      read2=$2
+
+      bbduk.sh \
+        k=31 \
+        hdist=1 \
+        qout=33 \
+        qin=auto \
+        overwrite=t \
+        in="${read1}" \
+        in2="${read2}" \
+        threads=!{task.cpus} \
+        out=!{meta.id}_noPhiX-R1.fsq \
+        out2=!{meta.id}_noPhiX-R2.fsq \
+        ref="!{params.phix_reference}"
+
+        echo $?
+    }
+
+    # Try reformatting reads if bbduk was unsuccessful
+    if [ $(run_bbduk "!{reads[0]}" "!{reads[1]}") == 1 ]; then
+      for read in !{reads}; do
+        reformat.sh \
+          in="${read}" \
+          out="reformatted.${read}" \
+          tossbrokenreads=t
+      done
+
+      # Run bbduk again on reformatted reads
+      #  If this fails, input reads are corrupted
+      run_bbduk "reformatted.!{reads[0]}" "reformatted.!{reads[1]}"
+    fi
 
     for suff in R1.fsq R2.fsq; do
       if verify_minimum_file_size "!{meta.id}_noPhiX-${suff}" 'PhiX-removed FastQ Files' "!{params.min_filesize_fastq_phix_removed}"; then
