@@ -26,6 +26,13 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 // CONFIGS: Import configs for this workflow
 //
 
+// BUSCO config
+if(params.busco_config){
+    ch_busco_config_file = Channel.fromPath( "${params.busco_config}" )
+} else {
+    ch_busco_config_file = Channel.empty()
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT LOCAL MODULES/SUBWORKFLOWS
@@ -69,6 +76,7 @@ include { EXTRACT_16S_BARRNAP                                 } from "../modules
 //include { 16S_EXTRACT_RNAMMER                               } from "../modules/local/16S_extract_rnammer/main"
 include { ALIGN_16S_BLAST                                     } from "../modules/local/align_16S_blast/main"
 include { BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON               } from "../modules/local/best_16S_blastn_bitscore_taxon_python/main"
+include { SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON                 } from "../modules/local/split_multifasta_assembly_biopython/main"
 
 include { GTDBTK_DB_PREPARATION_UNIX                          } from "../modules/local/gtdbtk_db_preparation_unix/main"
 include { BUSCO_DB_PREPARATION_UNIX                           } from "../modules/local/busco_db_preparation_unix/main"
@@ -388,7 +396,7 @@ workflow SKESA {
 
     // PROCESS: Classify assembly FastA file using GTDB-Tk
     if (!params.skip_gtdbtk && params.gtdb_db) {
-        ch_contig = POLISH_ASSEMBLY_BWA_PILON.out.assembly
+        ch_contig = MAP_CONTIGS_BWA.out.assembly
             .map {
                 meta, bins ->
                     def meta_new = meta.clone()
@@ -457,7 +465,7 @@ workflow SKESA {
 
         // PROCESS: Split assembly FastA file into individual contig files
         SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON (
-            POLISH_ASSEMBLY_BWA_PILON.out.assembly
+            MAP_CONTIGS_BWA.out.assembly
         )
 
         QA_ASSEMBLY_BUSCO (
