@@ -55,7 +55,8 @@ include { TRIM_READS_TRIMMOMATIC                              } from "../modules
 include { OVERLAP_PAIRED_READS_FLASH                          } from "../modules/local/overlap_paired_reads_flash/main"
 //include { OVERLAP_PAIRED_READS_PEAR                         } from "../modules/local/overlap_paired_reads_pear/main"
 
-include { READ_CLASSIFY_KRAKEN_ONE; READ_CLASSIFY_KRAKEN_TWO; } from "../modules/local/read_classify_kraken/main"
+include { READ_CLASSIFY_KRAKEN_ONE                            } from "../modules/local/read_classify_kraken/main"
+include { READ_CLASSIFY_KRAKEN_TWO                            } from "../modules/local/read_classify_kraken2/main"
 //include { READ_CLASSIFY_CENTRIFUGE                          } from "../modules/local/read_classify_centrifuge/main"
 
 include { ASSEMBLE_SKESA                                      } from "../modules/local/assemble_skesa/main"
