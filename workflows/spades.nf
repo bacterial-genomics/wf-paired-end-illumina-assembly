@@ -25,6 +25,7 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 //
 // CONFIGS: Import configs for this workflow
 //
+
 // BUSCO config
 if(params.busco_config){
     ch_busco_config_file = Channel.fromPath( "${params.busco_config}" )
