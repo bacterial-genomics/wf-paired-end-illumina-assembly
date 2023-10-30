@@ -16,6 +16,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
 
     input:
     tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
+    path database
 
     output:
     path ".command.out"
@@ -40,30 +41,12 @@ process READ_CLASSIFY_KRAKEN_ONE {
       fi
     done
 
-    # If user doesn't provide a non-default db path, use the path in the Docker container,
-    #  which contains a smaller minikraken database
-    if [[ -d "!{params.kraken1_db}" ]]; then
-      database="!{params.kraken1_db}"
-      msg "INFO: Using user specified Kraken 1 database: !{params.kraken1_db}"
-    else
-      database="/kraken-database/"
-      msg "INFO: Using pre-loaded MiniKraken database for Kraken 1"
-    fi
-
-    # Confirm the db exists
-    for ext in idx kdb; do
-      if ! verify_minimum_file_size "${database}/database.${ext}" 'kraken database' '10c'; then
-        msg "ERROR: pre-formatted kraken database (.${ext}) for read classification is missing" >&2
-        exit 1
-      fi
-    done
-
     # Investigate taxonomic identity of cleaned reads
     if [ ! -s !{meta.id}.taxonomy1-reads.tab ]; then
       msg "INFO: Performing Kraken1 classifications"
       kraken \
         --fastq-input \
-        --db ${database} \
+        --db !{database} \
         --gzip-compressed \
         --threads !{task.cpus} \
         !{paired_R1_gz} !{paired_R2_gz} !{single_gz} \
@@ -71,7 +54,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
 
       msg "INFO: Creating Kraken Report"
       kraken-report \
-        --db ${database} \
+        --db !{database} \
         !{meta.id}_kraken.output \
         > kraken.tab 2>&1 | tr '^M' '\n' 1>&2
 

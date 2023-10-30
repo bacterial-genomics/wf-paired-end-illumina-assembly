@@ -15,6 +15,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
 
     input:
     tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
+    path database
 
     output:
     path ".command.out"
@@ -39,31 +40,13 @@ process READ_CLASSIFY_KRAKEN_TWO {
       fi
     done
 
-    # If user doesn't provide a non-default db path, use the path in the Docker container,
-    #  which contains a smaller minikraken database
-    if [[ -d "!{params.kraken2_db}" ]]; then
-      database="!{params.kraken2_db}"
-      msg "INFO: Using user specified Kraken 2 database: !{params.kraken2_db}"
-    else
-      database="/kraken2-database"
-      msg "INFO: Using pre-loaded MiniKraken database for Kraken 2"
-    fi
-
-    # Confirm the db exists
-    for pref in hash opts taxo; do
-      if ! verify_minimum_file_size "${database}/${pref}".k2d 'kraken2 database' '10c'; then
-        msg "ERROR: pre-formatted kraken2 database (${pref}.k2d) for read classification is missing" >&2
-        exit 1
-      fi
-    done
-
     # Investigate taxonomic identity of cleaned reads
     if [ ! -s !{meta.id}.taxonomy2-reads.tab ]; then
       msg "INFO: Performing Kraken2 classifications"
       kraken2 \
         --use-names \
         --gzip-compressed \
-        --db "${database}" \
+        --db !{database} \
         --output /dev/null \
         --report kraken2.tab \
         --threads !{task.cpus} \

@@ -14,6 +14,7 @@ process ALIGN_16S_BLAST {
 
     input:
     tuple val(meta), path(extracted_base), path(qc_extracted_filecheck), path(assembly)
+    val database
 
     output:
     path ".command.out"
@@ -37,32 +38,12 @@ process ALIGN_16S_BLAST {
       fi
     done
 
-    # Classify each 16S sequence record
-    if [[ -d "!{params.blast_db}" ]]; then
-      database="!{params.blast_db}"
-      msg "INFO: Using user specified BLAST database: !{params.blast_db}"
-    else
-      database="/db"
-      msg "INFO: Using pre-loaded 16S rRNA database for BLAST"
-    fi
-
-    # Set BLAST database as an environment variable
-    export BLASTDB=${database}
-
-    # Confirm the 16S db exists
-    for ext in nin nsq nhr; do
-      if ! verify_minimum_file_size "${BLASTDB}/16S_ribosomal_RNA.${ext}" '16S BLASTn database' "!{params.min_filesize_blastn_db}"; then
-        msg "ERROR: pre-formatted BLASTn database (.${ext}) for 16S rRNA genes is missing" >&2
-        exit 1
-      fi
-    done
-
     msg "INFO: Performing BLASTn alignments"
 
     blastn \
       -word_size 10 \
       -task blastn \
-      -db 16S_ribosomal_RNA \
+      -db !{database} \
       -num_threads "!{task.cpus}" \
       -query "!{extracted_base}" \
       -out "!{meta.id}.blast.tsv" \
