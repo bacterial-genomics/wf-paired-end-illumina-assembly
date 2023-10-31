@@ -43,7 +43,7 @@ process CALCULATE_COVERAGE_UNIX {
 
       genomelen=${ln[7]}
       cov=$(echo | awk -v x=${basepairs} -v y=${genomelen} '{printf ("%0.1f", x/y)}')
-      msg "INFO: !{meta.id} coverage: $cov"
+      msg "INFO: Coverage of !{meta.id}: $cov"
 
       if [[ "${cov}" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
         echo -e "${ln[0]}\t${cov}x" >> !{meta.id}.Summary.Illumina.GenomeCoverage.tab

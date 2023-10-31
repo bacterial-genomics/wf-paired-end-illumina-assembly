@@ -26,7 +26,7 @@ process ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX {
     size=$(cat !{genome_size})
 
     initial_depth=$(( ${bp} / ${size} ))
-    msg "INFO: Initial input depth of coverage estimated to be ${initial_depth}x"
+    msg "INFO: Estimated coverage depth of !{meta.id}: ${initial_depth}x"
 
     # Calculate the fraction of reads to subsample
     fraction_of_reads_to_use=$(awk \

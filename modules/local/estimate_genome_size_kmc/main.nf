@@ -23,6 +23,7 @@ process ESTIMATE_GENOME_SIZE_KMC {
     source bash_functions.sh
 
     # Calculate unique kmers in the R1 read file as a proxy for genome size
+    msg "INFO: Using kmc to estimate genome size"
     mkdir -p kmc-tmp-dir.!{meta.id}
     kmc \
       -t!{task.cpus} \
@@ -39,7 +40,7 @@ process ESTIMATE_GENOME_SIZE_KMC {
         | sed 's/[[:space:]]//g')
 
       if ! [[ ${genome_size} =~ ^[0-9]+$ ]]; then
-        msg "ERROR: genome size not estimated with kmc" >&2
+        msg "ERROR: Genome size not estimated with kmc" >&2
         exit 1
       fi
     else
@@ -50,7 +51,7 @@ process ESTIMATE_GENOME_SIZE_KMC {
     rm -rf kmc-binary-output-prefix.!{meta.id}*
 
     # Report the estimated genome size
-    msg "INFO: Genome size was estimated to be ${genome_size} bp with kmc"
+    msg "INFO: Estimated genome size of !{meta.id}: ${genome_size}"
 
     echo -n "${genome_size}" > !{meta.id}.genome_size.txt
 

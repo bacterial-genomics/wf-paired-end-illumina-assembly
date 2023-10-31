@@ -55,7 +55,7 @@ process TRIM_READS_TRIMMOMATIC {
     fi
 
     # Adapter clip and quality trim
-    msg "INFO: Trimming reads using Trimmomatic"
+    msg "INFO: Performing read trimming with Trimmomatic"
 
     trimmomatic PE \
       -phred33 \

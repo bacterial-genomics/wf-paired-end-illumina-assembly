@@ -113,8 +113,8 @@ process REMOVE_PHIX_BBDUK {
     PHIX_READS=$(grep '^Contaminants: ' .command.err | awk '{print $2}' | sed 's/,//g')
     PHIX_BASES=$(grep '^Contaminants: ' .command.err | awk '{print $5}' | sed 's/,//g')
 
-    msg "INFO: ${TOT_BASES} bp and $TOT_READS reads provided as raw input"
-    msg "INFO: ${PHIX_BASES:-0} bp of PhiX were detected and removed in ${PHIX_READS:-0} reads"
+    msg "INFO: Input contains ${TOT_BASES} bp and $TOT_READS reads"
+    msg "INFO: ${PHIX_BASES:-0} bp of PhiX were detected and ${PHIX_READS:-0} reads were removed"
 
     echo -e "!{meta.id}\t${TOT_BASES} bp Raw\t${TOT_READS} reads Raw" \
       > !{meta.id}.raw.tsv
