@@ -39,29 +39,25 @@
                 },
                 "kraken1_db": {
                     "type": "string",
-                    "format": "directory-path",
-                    "default": "Pre-loaded MiniKraken1 database",
-                    "description": "Path containing Kraken1 database files (must contain *.kdb, *.idk).",
+                    "default": "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_8GB.tgz",
+                    "description": "Path to a local directory, archive file, or a URL to compressed tar archive that contain files `database.{idx,kdb}` and `taxonomy/{names,nodes}.dmp`.",
                     "fa_icon": "fas fa-folder-open"
                 },
                 "kraken2_db": {
                     "type": "string",
-                    "format": "directory-path",
-                    "default": "Pre-loaded MiniKraken2 database",
-                    "description": "Path containing Kraken2 database files (must contain *.k2d).",
+                    "default": "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_08gb_20231009.tar.gz",
+                    "description": "Path to a local directory, archive file, or a URL to compressed tar archive that contain `{hash,opts,taxo}.k2d` files.",
                     "fa_icon": "fas fa-folder-open"
                 },
                 "blast_db": {
                     "type": "string",
-                    "format": "directory-path",
-                    "default": "Pre-loaded NCBI's 16S rRNA database",
-                    "description": "Path to 16S ribosomal database for BLAST.",
+                    "default": "https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz",
+                    "description": "Path to a local directory, archive file, or a URL to compressed tar archive that contains BLAST 16S ribosomal RNA files.",
                     "fa_icon": "fas fa-folder-open"
                 },
                 "gtdb_db": {
                     "type": "string",
-                    "format": "directory-path",
-                    "description": "Path to GTDB database.",
+                    "description": "Path to a local directory, archive file, or a URL to compressed tar archive that contains GTDBTk database.",
                     "fa_icon": "fas fa-folder-open"
                 },
                 "skip_gtdbtk": {
@@ -71,8 +67,7 @@
                 },
                 "busco_db": {
                     "type": "string",
-                    "format": "directory-path",
-                    "description": "Path to BUSCO lineage database.",
+                    "description": "Path to a local directory, archive file, or a URL to compressed tar archive that contains BUSCO lineages. Can either be a lineage dataset or entire BUSCO database.",
                     "fa_icon": "fas fa-folder-open"
                 },
                 "skip_busco": {
@@ -83,21 +78,18 @@
                 "busco_config": {
                     "type": "string",
                     "format": "file-path",
-                    "default": "../../../bin/busco_config.ini",
                     "hidden": true,
                     "description": "Path to configuration file for BUSCO."
                 },
                 "phix_reference": {
                     "type": "string",
                     "format": "file-path",
-                    "default": "../../../bin/PhiX_NC_001422.1.fasta",
                     "hidden": true,
                     "description": "Path to PhiX reference file."
                 },
                 "adapter_reference": {
                     "type": "string",
                     "format": "file-path",
-                    "default": "../../../bin/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas",
                     "hidden": true,
                     "description": "Path to adapter reference file."
                 },
@@ -257,7 +249,6 @@
                 },
                 "gtdbtk_pplacer_scratch": {
                     "type": "string",
-                    "default": "",
                     "hidden": true,
                     "description": "Reduce pplacer memory usage by writing to disk (slower)."
                 },
@@ -287,7 +278,6 @@
                 },
                 "genome_size": {
                     "type": "string",
-                    "default": "",
                     "hidden": true,
                     "description": "Genome size to subsample FastQ files to."
                 }
