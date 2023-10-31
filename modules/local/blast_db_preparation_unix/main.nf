@@ -6,12 +6,12 @@ process BLAST_DB_PREPARATION_UNIX {
         saveAs:  { filename -> "${task.process}${filename}"}
 
     label "process_medium"
-    tag { "${db_name}" }
+    tag { "${database.getSimpleName()}" }
 
     container "ubuntu:jammy"
 
     input:
-    path(database)
+    path database
 
     output:
     path ".command.out"

@@ -6,22 +6,29 @@ process BUSCO_DB_PREPARATION_UNIX {
         saveAs:  { filename -> "${task.process}${filename}"}
 
     label "process_medium"
-    tag { "${db_name}" }
+    tag { "${database.getSimpleName()}" }
 
     container "ubuntu:jammy"
 
     input:
-    path(database)
+    path database
 
     output:
     path ".command.out"
     path ".command.err"
     path "versions.yml", emit: versions
-    path "database"    , emit: db
+    path "database/"   , emit: db
 
     shell:
     '''
-    tar -xzf !{database} -C database
+    mkdir db_tmp
+    tar -xzf !{database} -C db_tmp/
+
+    # Place lineage datasets in correct format for BUSCO v5
+    mkdir -p database/lineages
+    mv \
+      `find db_tmp/ -maxdepth 2 -type d -name "*_odb10"` \
+      database/lineages
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
