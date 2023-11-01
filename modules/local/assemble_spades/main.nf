@@ -52,26 +52,28 @@ process ASSEMBLE_SPADES {
 
       if [ ${failed} -gt 0 ]; then
         msg "ERROR: assembly file not produced by SPAdes for !{meta.id}" >&2
+
         mv -f !{meta.id}_tmp/spades.log \
         !{meta.id}_tmp/"${failed}"of3-asm-attempt-failed.spades.log 2> /dev/null
+
         msg "INFO: SPAdes failure ${failed}; retrying assembly for !{meta.id}" >&2
 
         spades.py \
-        --restart-from last \
-        -o !{meta.id}_tmp \
-        -t !{task.cpus} >&2
+          --restart-from last \
+          -o !{meta.id}_tmp \
+          -t !{task.cpus} >&2
 
       else
 
         spades.py \
-        --pe1-1 !{R1} \
-        --pe1-2 !{R2} \
-        --pe1-s !{single} \
-        -t !{task.cpus} \
-        -o !{meta.id}_tmp \
-        --phred-offset 33 \
-        --memory "${RAMSIZE}" \
-        --only-assembler >&2
+          --pe1-1 !{R1} \
+          --pe1-2 !{R2} \
+          --pe1-s !{single} \
+          -t !{task.cpus} \
+          -o !{meta.id}_tmp \
+          --phred-offset 33 \
+          --memory "${RAMSIZE}" \
+          --only-assembler >&2
 
       fi
       failed=$(( ${failed}+1 ))

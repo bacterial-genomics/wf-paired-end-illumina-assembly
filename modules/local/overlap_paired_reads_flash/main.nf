@@ -93,11 +93,11 @@ process OVERLAP_PAIRED_READS_FLASH {
     # Summarize final read set and compress
     count_R1=$(echo $(cat !{meta.id}_R1.paired.fq | wc -l))
     CNT_CLEANED_PAIRS=$(echo $((${count_R1}/4)))
-    msg "INFO: Number of reads cleaned: $(printf "%'d\n" ${CNT_CLEANED_PAIRS})"
+    msg "INFO: Number of reads cleaned: ${CNT_CLEANED_PAIRS}"
 
     count_single=$(echo $(cat !{meta.id}.single.fq | wc -l))
     CNT_CLEANED_SINGLETON=$(echo $((${count_single}/4)))
-    msg "INFO: Number of singletons cleaned: $(printf "%'d\n" ${CNT_CLEANED_SINGLETON})"
+    msg "INFO: Number of singletons cleaned: ${CNT_CLEANED_SINGLETON}"
 
     echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS} cleaned pairs\t${CNT_CLEANED_SINGLETON} cleaned singletons" \
       > !{meta.id}.clean-reads.tsv
