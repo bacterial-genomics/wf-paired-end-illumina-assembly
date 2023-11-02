@@ -10,7 +10,7 @@ def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 WorkflowSpades.initialise(params, log)
 
 // Check input path parameters to see if they exist
-def checkPathParamList = [ params.input, params.kraken1_db, params.kraken2_db, params.blast_db, params.gtdb_db ]
+def checkPathParamList = [ params.input, params.kraken1_db, params.kraken2_db, params.blast_db, params.gtdb_db, params.busco_db ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters
@@ -30,7 +30,7 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 if(params.busco_config){
     ch_busco_config_file = Channel.fromPath( "${params.busco_config}" )
 } else {
-    ch_busco_config_file = Channel.empty()
+    ch_busco_config_file = []
 }
 
 /*
@@ -55,7 +55,9 @@ include { TRIM_READS_TRIMMOMATIC                              } from "../modules
 include { OVERLAP_PAIRED_READS_FLASH                          } from "../modules/local/overlap_paired_reads_flash/main"
 //include { OVERLAP_PAIRED_READS_PEAR                         } from "../modules/local/overlap_paired_reads_pear/main"
 
+include { KRAKEN1_DB_PREPARATION_UNIX                         } from "../modules/local/kraken1_db_preparation_unix/main"
 include { READ_CLASSIFY_KRAKEN_ONE                            } from "../modules/local/read_classify_kraken/main"
+include { KRAKEN2_DB_PREPARATION_UNIX                         } from "../modules/local/kraken2_db_preparation_unix/main"
 include { READ_CLASSIFY_KRAKEN_TWO                            } from "../modules/local/read_classify_kraken2/main"
 //include { READ_CLASSIFY_CENTRIFUGE                          } from "../modules/local/read_classify_centrifuge/main"
 
@@ -75,14 +77,14 @@ include { ANNOTATE_PROKKA                                     } from "../modules
 include { EXTRACT_16S_BIOPYTHON                               } from "../modules/local/extract_16S_biopython/main"
 include { EXTRACT_16S_BARRNAP                                 } from "../modules/local/extract_16S_barrnap/main"
 //include { 16S_EXTRACT_RNAMMER                               } from "../modules/local/16S_extract_rnammer/main"
+include { BLAST_DB_PREPARATION_UNIX                           } from "../modules/local/blast_db_preparation_unix/main"
 include { ALIGN_16S_BLAST                                     } from "../modules/local/align_16S_blast/main"
 include { BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON               } from "../modules/local/best_16S_blastn_bitscore_taxon_python/main"
 include { SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON                 } from "../modules/local/split_multifasta_assembly_biopython/main"
 
 include { GTDBTK_DB_PREPARATION_UNIX                          } from "../modules/local/gtdbtk_db_preparation_unix/main"
-include { BUSCO_DB_PREPARATION_UNIX                           } from "../modules/local/busco_db_preparation_unix/main"
-
 include { GTDBTK_CLASSIFYWF as QA_ASSEMBLY_GTDBTK             } from "../modules/nf-core/gtdbtk/classifywf/main"
+include { BUSCO_DB_PREPARATION_UNIX                           } from "../modules/local/busco_db_preparation_unix/main"
 include { BUSCO as QA_ASSEMBLY_BUSCO                          } from "../modules/nf-core/busco/main"
 include { QA_ASSEMBLY_QUAST                                   } from "../modules/local/qa_assembly_quast/main"
 //include { QA_ASSEMBLY_CAT                                   } from "../modules/local/qa_assembly_cat/main"
@@ -100,17 +102,38 @@ include { INPUT_CHECK                                         } from "../subwork
 */
 
 // GTDB
-if(params.gtdb_db){
+if (params.gtdb_db) {
     ch_gtdbtk_db_file = file(params.gtdb_db, checkIfExists: true)
 } else {
     ch_gtdbtk_db_file = Channel.empty()
 }
 
 // BUSCO
-if(params.busco_db){
+if (params.busco_db) {
     ch_busco_db_file = file(params.busco_db, checkIfExists: true)
 } else {
     ch_busco_db_file = Channel.empty()
+}
+
+// kraken
+if (params.kraken1_db) {
+    ch_kraken1_db_file = file(params.kraken1_db, checkIfExists: true)
+} else {
+    ch_kraken1_db_file = Channel.empty()
+}
+
+// kraken2
+if (params.kraken2_db) {
+    ch_kraken2_db_file = file(params.kraken2_db, checkIfExists: true)
+} else {
+    ch_kraken2_db_file = Channel.empty()
+}
+
+// NCBI BLAST
+if (params.blast_db) {
+    ch_blast_db_file = file(params.blast_db, checkIfExists: true)
+} else {
+    ch_blast_db_file = Channel.empty()
 }
 
 /*
@@ -236,18 +259,86 @@ workflow SPADES {
     ch_versions = ch_versions
         .mix(OVERLAP_PAIRED_READS_FLASH.out.versions)
 
+    // Prepare kraken1 database for use
+    if ( ch_kraken1_db_file ) {
+        if ( ch_kraken1_db_file.extension in ['gz', 'tgz'] ) {
+            // Expects to be .tar.gz!
+            KRAKEN1_DB_PREPARATION_UNIX (
+                ch_kraken1_db_file
+            )
+
+            ch_db_for_kraken1 = KRAKEN1_DB_PREPARATION_UNIX.out.db
+
+            ch_versions = ch_versions
+                .mix(KRAKEN1_DB_PREPARATION_UNIX.out.versions)
+
+        } else if ( ch_kraken1_db_file.isDirectory() ) {
+            ch_db_for_kraken1 = Channel
+                                    .fromPath(
+                                        "${ch_kraken1_db_file}/{database,taxonomy/nodes,taxonomy/names}.{idx,kdb,dmp}",
+                                        checkIfExists: true )
+                                    .collect()
+                                    .map{
+                                        file ->
+                                            if (file.size() >= 4) {
+                                                [ file[0].getParent() ]
+                                            } else {
+                                                error("Kraken requires 'database.{idx,kdb}' and '{names,nodes}.dmp' files!")
+                                            }
+                                        }
+        } else {
+            error("Unsupported object given to --kraken1_db, database must be supplied as either a directory or a .tar.gz file!")
+        }
+    } else {
+        ch_db_for_kraken1 = Channel.empty()
+    }
+
     // PROCESS: Run kraken1 on paired cleaned reads
     READ_CLASSIFY_KRAKEN_ONE (
-        OVERLAP_PAIRED_READS_FLASH.out.gzip_reads
+        OVERLAP_PAIRED_READS_FLASH.out.gzip_reads,
+        ch_db_for_kraken1
     )
 
     // Collect version info
     ch_versions = ch_versions
         .mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
 
+    // Prepare kraken2 database for use
+    if ( ch_kraken2_db_file ) {
+        if ( ch_kraken2_db_file.extension in ['gz', 'tgz'] ) {
+            // Expects to be .tar.gz!
+            KRAKEN2_DB_PREPARATION_UNIX (
+                ch_kraken2_db_file
+            )
+
+            ch_db_for_kraken2 = KRAKEN2_DB_PREPARATION_UNIX.out.db
+
+            ch_versions = ch_versions
+                .mix(KRAKEN2_DB_PREPARATION_UNIX.out.versions)
+
+        } else if ( ch_kraken2_db_file.isDirectory() ) {
+            ch_db_for_kraken2 = Channel
+                                    .fromPath( "${ch_kraken2_db_file}/*.k2d" )
+                                    .collect()
+                                    .map{
+                                        file ->
+                                            if (file.size() >= 3) {
+                                                [ file[0].getParent() ]
+                                            } else {
+                                                error("Kraken2 requires '{hash,opts,taxo}.k2d' files!")
+                                            }
+                                    }
+        } else {
+            error("Unsupported object given to --kraken2_db, database must be supplied as either a directory or a .tar.gz file!")
+        }
+    } else {
+        ch_db_for_kraken2 = Channel.empty()
+    }
+
     // PROCESS: Run kraken2 on paired cleaned reads
     READ_CLASSIFY_KRAKEN_TWO (
-        OVERLAP_PAIRED_READS_FLASH.out.gzip_reads
+        OVERLAP_PAIRED_READS_FLASH.out.gzip_reads,
+        ch_db_for_kraken2
     )
 
     // Collect version info
@@ -349,10 +440,49 @@ workflow SPADES {
     ch_versions = ch_versions
         .mix(EXTRACT_16S_BARRNAP.out.versions)
 
+    // Prepare BLAST database for use
+    if ( ch_blast_db_file ) {
+        if ( ch_blast_db_file.extension in ['gz', 'tgz'] ) {
+            // Expects to be .tar.gz!
+            BLAST_DB_PREPARATION_UNIX (
+                ch_blast_db_file
+            )
+
+            ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db
+                                .map{
+                                    file ->
+                                        [ file[0].toString().split(".${file[0].getExtension()}") ]
+                                }
+                                .flatten()
+
+            ch_versions = ch_versions
+                .mix(BLAST_DB_PREPARATION_UNIX.out.versions)
+
+        } else if ( ch_blast_db_file.isDirectory() ) {
+            ch_db_for_blast = Channel
+                                    .fromPath( "${ch_blast_db_file}/16S_ribosomal_RNA.n*" )
+                                    .collect()
+                                    .map{
+                                        file ->
+                                            if (file.size() >= 3) {
+                                                [ file[0].toString().split(".${file[0].getExtension()}") ]
+                                            } else {
+                                                error("16S_ribosomal_RNA BLAST database requires at least '16S_ribosomal_RNA.{nin,nsq,nhr}' files.")
+                                            }
+                                    }
+                                    .flatten()
+        } else {
+            error("Unsupported object given to --blast_db, database must be supplied as either a directory or a .tar.gz file!")
+        }
+    } else {
+        ch_db_for_blast = Channel.empty()
+    }
+
     // PROCESS: Run Blast on predicted 16S ribosomal RNA genes
     ALIGN_16S_BLAST (
         EXTRACT_16S_BARRNAP.out.extracted_base
-            .join(POLISH_ASSEMBLY_BWA_PILON.out.assembly)
+            .join(POLISH_ASSEMBLY_BWA_PILON.out.assembly),
+        ch_db_for_blast
     )
 
     // Collect version info
@@ -402,7 +532,7 @@ workflow SPADES {
                     [ meta_new, bins ]
             }
 
-        if ( ch_gtdbtk_db_file.extension == 'gz' || ch_gtdbtk_db_file.extension == 'tgz' ) {
+        if ( ch_gtdbtk_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
             GTDBTK_DB_PREPARATION_UNIX (
                 ch_gtdbtk_db_file
@@ -425,6 +555,7 @@ workflow SPADES {
             error("Unsupported object given to --gtdb_db, database must be supplied as either a directory or a .tar.gz file!")
         }
 
+        // PROCESS: Perform GTDBTk on assembly FastA file
         QA_ASSEMBLY_GTDBTK (
             ch_contig,
             ch_db_for_gtdbtk
@@ -435,8 +566,9 @@ workflow SPADES {
             .mix(QA_ASSEMBLY_GTDBTK.out.versions)
     }
 
+    // PROCESS: Classify contigs with BUSCO
     if (!params.skip_busco && params.busco_db) {
-        if ( ch_busco_db_file.extension == 'gz' || ch_busco_db_file.extension == 'tgz' ) {
+        if ( ch_busco_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be tar.gz!
             BUSCO_DB_PREPARATION_UNIX(
                 ch_busco_db_file
@@ -451,14 +583,28 @@ workflow SPADES {
         } else if ( ch_busco_db_file.isDirectory() ) {
             ch_db_for_busco = Channel
                                 .fromPath(ch_busco_db_file)
+                                .map{
+                                    db ->
+                                        if ( db.getSimpleName().contains('odb10') ) {
+                                            if ( db.getParent().getSimpleName() == "lineages" ) {
+                                                db.getParent().getParent()
+                                            } else {
+                                                error("Unsupported object given to --busco_db, database directory must be in format `<database>/lineages/<lineage>_odb10`!")
+                                            }
+                                        } else {
+                                            db
+                                        }
+                                }
         } else {
             error("Unsupported object given to --busco_db, database must be supplied as either a directory or a .tar.gz file!")
         }
 
-        ch_lineage_for_busco_db = ch_db_for_busco
+        ch_lineage_for_busco_db = Channel
+                                    .of(ch_busco_db_file)
                                     .map{
                                         db ->
-                                            db.getSimpleName().contains('odb10') ? db : 'auto'
+                                            db = db.getSimpleName()
+                                            db.contains('odb10') ? db : 'auto'
                                     }
 
         // PROCESS: Split assembly FastA file into individual contig files
@@ -466,6 +612,7 @@ workflow SPADES {
             POLISH_ASSEMBLY_BWA_PILON.out.assembly
         )
 
+        // PROCESS: Perform BUSCO analysis on contigs
         QA_ASSEMBLY_BUSCO (
             SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.split_multifasta_assembly_dir,
             ch_lineage_for_busco_db,
