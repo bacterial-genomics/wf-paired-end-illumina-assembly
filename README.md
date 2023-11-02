@@ -72,7 +72,7 @@ This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed c
 ## Usage
 
 ```
-nextflow run wf-paired-end-illumina-assembly -profile <docker|singularity> --input <input directory> --outdir <directory for results>
+nextflow run wf-paired-end-illumina-assembly -profile <docker|singularity> --input <input directory|samplesheet> --outdir <directory for results>
 ```
 
 Please see the [usage documentation](docs/usage.md) for further information on using this workflow.
@@ -84,21 +84,33 @@ Note the "`--`" long name arguments (e.g., `--help`, `--input`, `--outdir`) are 
 These are the most pertinent options for this workflow:
 
 ```
-  --input              Path to input data directory containing FastQ assemblies or samplesheet. Recognized extensions are:  fastq.gz, fq.gz.
+  ============================================
+        Required Parameters
+  ============================================
+  --input              Path to input data directory containing FastQ assemblies or samplesheet. Recognized extensions are: .fastq and .fq with optional gzip compression (.gz)
 
   --outdir             The output directory where the results will be saved.
 
+  ============================================
+        Container Platforms (choose one)
+  ============================================
+  -profile singularity Use Singularity images to run the workflow. Will pull and convert Docker images from Dockerhub if not locally available.
+
+  -profile docker      Use Docker images to run the workflow. Will pull images from Dockerhub if not locally available.
+
+  ============================================
+        Optional Assemblers
+  ============================================
   --assembler          Specify which assembler to execute (spades, skesa). [Default: spades]
 
+  ============================================
+        Optional Databases
+  ============================================
   --kraken1_db         Specify path to database for Kraken1. [Default: Mini Kraken]
 
   --kraken2_db         Specify path to database for Kraken2. [Default: Mini Kraken]
 
   --blast_db           Specify path to 16S ribosomal database for BLAST. [Default: NCBI's 16S ribosomal database]
-
-  -profile singularity Use Singularity images to run the workflow. Will pull and convert Docker images from Dockerhub if not locally available.
-
-  -profile docker      Use Docker images to run the workflow. Will pull images from Dockerhub if not locally available.
 ```
 
 View help menu of all workflow options:

@@ -18,12 +18,12 @@ Please note the following requirements:
 
 - File names must be unique
 - File names must not include spaces
-- File names must be separated by `{1,2}`, such as `R1` and `R2`
-- Valid file extenions: `.fastq.`, `.fq` with optional gzip compression
+- File names must be separated by `_{1,2}`, such as `_R1` and `_R2`
+- Valid file extenions: `.fastq.`, `.fq` with optional gzip compression (`.gz`)
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. Samplesheet can be a comma-separated (CSV), tab-separated (TSV), or Microsoft Excel file (XLSX) file with 3 columns, and a header row as shown in the examples below.
 
 ```bash
 --input '[path to samplesheet file]'
@@ -66,7 +66,11 @@ An [example samplesheet](../assets/samplesheet.csv) has been provided with the p
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run wf-paired-end-illumina-assembly --input samplesheet.csv --outdir <outdir> -profile docker
+nextflow run \
+  wf-paired-end-illumina-assembly \
+  --input samplesheet.csv \
+  --outdir <outdir> \
+  -profile docker
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
