@@ -274,18 +274,26 @@ workflow SPADES {
 
         } else if ( ch_kraken1_db_file.isDirectory() ) {
             ch_db_for_kraken1 = Channel
-                                .fromPath(
-                                    "${ch_kraken1_db_file}/database.{idx,kdb}",
-                                    checkIfExists: true )
-                                .collect()
-                                .map{
-                                    file ->
-                                        if (file.size() >= 2) {
-                                            [ file[0].getParent() ]
-                                        } else {
-                                            error("Kraken requires 'database.{idx,kdb}' and '{names,nodes}.dmp' files!")
+                                    .fromPath(
+                                        "${ch_kraken1_db_file}/{database}.{idx,kdb}",
+                                        checkIfExists: true
+                                    )
+                                    .combine(
+                                        Channel
+                                            .fromPath(
+                                                "${ch_kraken1_db_file}/taxonomy/{names,nodes}.dmp",
+                                                checkIfExists: true
+                                            )
+                                    )
+                                    .collect()
+                                    .map{
+                                        file ->
+                                            if (file.size() >= 4) {
+                                                [ file[0].getParent() ]
+                                            } else {
+                                                error("Kraken requires 'database.{idx,kdb}' and 'taxonomy/{names,nodes}.dmp' files!")
+                                            }
                                         }
-                                    }
         } else {
             error("Unsupported object given to --kraken1_db, database must be supplied as either a directory or a .tar.gz file!")
         }
