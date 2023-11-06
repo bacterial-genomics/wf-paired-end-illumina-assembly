@@ -88,7 +88,7 @@ process REMOVE_PHIX_BBDUK {
       done
 
       # Run bbduk again on reformatted reads
-      #  If this fails, input reads are corrupted
+      #  If this fails, input reads are corrupted and will automatically exit
       run_bbduk "reformatted.!{reads[0]}" "reformatted.!{reads[1]}"
     fi
 
