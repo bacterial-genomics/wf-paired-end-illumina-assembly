@@ -553,11 +553,10 @@ workflow SPADES {
 
         } else if ( ch_gtdbtk_db_file.isDirectory() ) {
             ch_db_for_gtdbtk = Channel
-                                .fromPath( "${ch_gtdbtk_db_file}/*" )
+                                .fromPath( "${ch_gtdbtk_db_file}/*", type: 'dir', maxDepth: 1 )
+                                .collect()
                                 .map{
-                                    db ->
-                                        def meta = db.getParent().getSimpleName()
-                                        [ meta, db ]
+                                    [ it[0].getSimpleName(), it ]
                                 }
         } else {
             error("Unsupported object given to --gtdb_db, database must be supplied as either a directory or a .tar.gz file!")
