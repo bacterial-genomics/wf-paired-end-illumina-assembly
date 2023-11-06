@@ -534,7 +534,7 @@ workflow SKESA {
                     [ meta_new, bins ]
             }
 
-        if ( ch_gtdbtk_db_file.extension == 'gz' || ch_gtdbtk_db_file.extension == 'tgz' ) {
+        if ( ch_gtdbtk_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
             GTDBTK_DB_PREPARATION_UNIX (
                 ch_gtdbtk_db_file
@@ -550,7 +550,7 @@ workflow SKESA {
                                 .fromPath( "${ch_gtdbtk_db_file}/*" )
                                 .map{
                                     db ->
-                                        def meta = db.getParent().getSimpleName()
+                                        def meta = db.getSimpleName()
                                         [ meta, db ]
                                 }
         } else {
