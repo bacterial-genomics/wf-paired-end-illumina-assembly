@@ -1,8 +1,5 @@
 process REMOVE_PHIX_BBDUK {
 
-    publishDir "${params.outdir}/trim_reads",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.{raw,phix}.tsv"
     publishDir "${params.qc_filecheck_log_dir}",
         mode: "${params.publish_dir_mode}",
         pattern: "*.{PhiX_Genome_File,PhiX-removed_FastQ_Files}.tsv"
@@ -22,9 +19,8 @@ process REMOVE_PHIX_BBDUK {
     output:
     path ".command.out"
     path ".command.err"
-    path "${meta.id}.raw.tsv"
-    path "${meta.id}.phix.tsv"
     path "versions.yml"                                                                                    , emit: versions
+    path "${meta.id}.Summary.PhiX.tab"                                                                     , emit: phix_summary
     path "${meta.id}.PhiX_Genome_File.tsv"                                                                 , emit: qc_phix_genome_filecheck
     path "${meta.id}.PhiX-removed_FastQ_Files.tsv"                                                         , emit: qc_phix_removed_filecheck
     tuple val(meta), path("${meta.id}_noPhiX-R1.fsq"), path("${meta.id}_noPhiX-R2.fsq"), path("*File*.tsv"), emit: phix_removed
@@ -102,6 +98,7 @@ process REMOVE_PHIX_BBDUK {
       fi
     done
 
+    # Raw input read and bp information
     TOT_READS=$(grep '^Input: ' .command.err | awk '{print $2}')
     TOT_BASES=$(grep '^Input: ' .command.err | awk '{print $4}')
 
@@ -110,16 +107,51 @@ process REMOVE_PHIX_BBDUK {
       exit 1
     fi
 
-    PHIX_READS=$(grep '^Contaminants: ' .command.err | awk '{print $2}' | sed 's/,//g')
-    PHIX_BASES=$(grep '^Contaminants: ' .command.err | awk '{print $5}' | sed 's/,//g')
+    # Number of PhiX read/bp contaminants
+    NUM_PHIX_READS=$(grep '^Contaminants: ' .command.err | awk '{print $2}' | sed 's/,//g')
+    PERCENT_PHIX_READS=$(grep '^Contaminants: ' .command.err | awk '{print $4}' | sed 's/[()]//g')
+    NUM_PHIX_BASES=$(grep '^Contaminants: ' .command.err | awk '{print $5}' | sed 's/,//g')
+    PERCENT_PHIX_BASES=$(grep '^Contaminants: ' .command.err | awk '{print $7}' | sed 's/[()]//g')
+
+    # Cleaned FastQ file information
+    NUM_CLEANED_READS=$(grep '^Result: ' .command.err | awk '{print $2}')
+    PERCENT_CLEANED_READS=$(grep '^Result: ' .command.err | awk '{print $4}' | sed 's/[()]//g')
+    NUM_CLEANED_BASES=$(grep '^Result: ' .command.err | awk '{print $4}')
+    PERCENT_CLEANED_BASES=$(grep '^Result: ' .command.err | awk '{print $7}' | sed 's/[()]//g')
 
     msg "INFO: Input contains ${TOT_BASES} bp and $TOT_READS reads"
     msg "INFO: ${PHIX_BASES:-0} bp of PhiX were detected and ${PHIX_READS:-0} reads were removed"
 
-    echo -e "!{meta.id}\t${TOT_BASES} bp Raw\t${TOT_READS} reads Raw" \
-      > !{meta.id}.raw.tsv
-    echo -e "!{meta.id}\t${PHIX_BASES:-0} bp PhiX\t${PHIX_READS:-0} reads PhiX" \
-      > !{meta.id}.phix.tsv
+    SUMMARY_HEADER="
+      Sample name\t
+      # Cleaned reads\t
+      % Cleaned reads\t
+      # Cleaned bp\t
+      % Cleaned bp\t
+      # PhiX reads\t
+      % PhiX reads\t
+      # PhiX Bp\t
+      % PhiX bp\t
+      # Raw reads\t
+      # Raw bp
+      "
+
+    SUMMARY_OUTPUT="
+      !{meta.id}\t
+      ${NUM_CLEANED_READS}\t
+      ${PERCENT_CLEANED_READS}\t
+      ${NUM_CLEANED_BASES}\t
+      ${PERCENT_CLEANED_BASES}\t
+      ${NUM_PHIX_READS}\t
+      ${PERCENT_PHIX_READS}\t
+      ${NUM_PHIX_BASES}\t
+      ${PERCENT_PHIX_BASES}\t
+      ${TOT_READS}\t
+      ${TOT_BASES}
+      "
+
+    echo -e $SUMMARY_HEADER > !{meta.id}.Summary.PhiX.tab
+    echo -e $SUMMARY_OUTPUT >> !{meta.id}.Summary.PhiX.tab
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
