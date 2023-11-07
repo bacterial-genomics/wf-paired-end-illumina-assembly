@@ -7,7 +7,7 @@
 def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 
 // Validate input parameters
-WorkflowSkesa.initialise(params, log)
+WorkflowAssembly.initialise(params, log)
 
 // Check input path parameters to see if they exist
 def checkPathParamList = [ params.input, params.kraken1_db, params.kraken2_db, params.blast_db, params.gtdb_db, params.busco_db ]
@@ -44,11 +44,6 @@ if(params.busco_config){
 //
 include { INFILE_HANDLING_UNIX                                } from "../modules/local/infile_handling_unix/main"
 
-include { ESTIMATE_GENOME_SIZE_KMC                            } from "../modules/local/estimate_genome_size_kmc/main"
-include { COUNT_TOTAL_BP_INPUT_READS_SEQTK                    } from "../modules/local/count_total_bp_input_reads_seqtk/main"
-include { ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX                  } from "../modules/local/estimate_original_input_depth_unix/main"
-include { SUBSAMPLE_READS_TO_DEPTH_SEQTK                      } from "../modules/local/subsample_reads_to_depth_seqtk/main"
-
 include { REMOVE_PHIX_BBDUK                                   } from "../modules/local/remove_phix_bbduk/main"
 include { TRIM_READS_TRIMMOMATIC                              } from "../modules/local/trim_reads_trimmomatic/main"
 //include { TRIM_READS_FASTP                                  } from "../modules/local/trim_reads_fastp/main"
@@ -61,10 +56,6 @@ include { KRAKEN2_DB_PREPARATION_UNIX                         } from "../modules
 include { READ_CLASSIFY_KRAKEN_TWO                            } from "../modules/local/read_classify_kraken2/main"
 //include { READ_CLASSIFY_CENTRIFUGE                          } from "../modules/local/read_classify_centrifuge/main"
 
-include { ASSEMBLE_SKESA                                      } from "../modules/local/assemble_skesa/main"
-include { FILTER_CONTIGS_BIOPYTHON                            } from "../modules/local/filter_contigs_biopython/main"
-include { MAP_CONTIGS_BWA                                     } from "../modules/local/map_contigs_bwa/main"
-//include { POLISH_ASSEMBLY_UNICYCLER                         } from "../modules/local/polish_assembly_unicycler/main"
 include { EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS              } from "../modules/local/extract_read_alignment_depths_bedtools/main"
 include { CALCULATE_COVERAGE_UNIX                             } from "../modules/local/calculate_coverage_unix/main"
 
@@ -94,6 +85,8 @@ include { QA_ASSEMBLY_QUAST                                   } from "../modules
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK                                         } from "../subworkflows/local/input_check"
+include { DOWNSAMPLE                                          } from "../subworkflows/local/downsampling"
+include { ASSEMBLE_CONTIGS                                    } from "../subworkflows/local/assemble_contigs"
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,10 +135,9 @@ if (params.blast_db) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-workflow SKESA {
+workflow ASSEMBLY {
 
     // SETUP: Define empty channels to concatenate certain outputs
-    ch_reads              = Channel.empty()
     ch_versions           = Channel.empty()
     ch_ssu_species        = Channel.empty()
     ch_mlst_summary       = Channel.empty()
@@ -156,104 +148,53 @@ workflow SKESA {
     ch_assembly_summary   = Channel.empty()
     ch_genome_cov_summary = Channel.empty()
 
-    // Check input for samplesheet or pull inputs from directory
+    /*
+    ================================================================================
+                            Preprocessing and Cleaning FastQ files
+    ================================================================================
+    */
+
+    // SUBWORKFLOW: Check input for samplesheet or pull inputs from directory
     INPUT_CHECK (
         ch_input
     )
+    ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
 
     // Check input files meet size criteria
     INFILE_HANDLING_UNIX (
         INPUT_CHECK.out.raw_reads
     )
+    ch_versions = ch_versions.mix(INFILE_HANDLING_UNIX.out.versions)
 
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(INFILE_HANDLING_UNIX.out.versions)
-
-    // Handle too much raw data, subsample the input FastQ files
-    // Only calculate genome size if genome_size is unknown or a depth given to subsample
-    if (!params.genome_size && params.depth > 0) {
-        // Estimate the genome size from the input R1 FastQ file
-        ESTIMATE_GENOME_SIZE_KMC (
-            INFILE_HANDLING_UNIX.out.input
-        )
-
-        // Collect version info
-        ch_versions = ch_versions
-            .mix(ESTIMATE_GENOME_SIZE_KMC.out.versions)
-    }
-    else {
-        if (params.depth <= 0) {
-            println "Depth is set to ${params.genome_size}x. No subsampling to perform and therefore no genome size estimation required."
-        }
-        else {
-            println "Using the user-input genome size of ${params.genome_size}bp"
-        }
-        // pass the genome_size val onto the next depth channel
-        // Skip genome size estimation based on user input, but
-        //  still consider downsampling with specified genome_size input value
-    }
-
-    if (params.depth > 0) {
-        println "Estimating if the input exceeds ${params.depth}x"
-
-        // Use the genome size to figure out the expected depth
-        COUNT_TOTAL_BP_INPUT_READS_SEQTK (
-            INFILE_HANDLING_UNIX.out.input
-        )
-
-        ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX (
-            COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.total_bp
-                .join(ESTIMATE_GENOME_SIZE_KMC.out.genome_size)
-        )
-
-        // Only if specified depth is less than wanted depth, subsample infiles
-        SUBSAMPLE_READS_TO_DEPTH_SEQTK (
-            INFILE_HANDLING_UNIX.out.input
-                .join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use)
-        )
-
-        // Collect subsampled reads
-        ch_reads = SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.reads
-
-        // Collect version info
-        ch_versions = ch_versions
-            .mix(COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.versions)
-            .mix(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.versions)
-            .mix(SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.versions)
-    }
-    else {
-        // Skip subsampling and pass raw reads to PhiX removal
-        // Collect raw reads
-        ch_reads = INFILE_HANDLING_UNIX.out.input
-    }
+    // SUBWORKFLOW: Downsample FastQ files
+    DOWNSAMPLE (
+        INFILE_HANDLING_UNIX.out.input
+    )
+    ch_versions = ch_versions.mix(DOWNSAMPLE.out.versions)
 
     // PROCESS: Run bbduk to remove PhiX reads
     REMOVE_PHIX_BBDUK (
-        ch_reads
+        DOWNSAMPLE.out.reads
     )
-
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(REMOVE_PHIX_BBDUK.out.versions)
+    ch_versions = ch_versions.mix(REMOVE_PHIX_BBDUK.out.versions)
 
     // PROCESS: Run trimmomatic to clip adapters and do quality trimming
     TRIM_READS_TRIMMOMATIC (
         REMOVE_PHIX_BBDUK.out.phix_removed
     )
-
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(TRIM_READS_TRIMMOMATIC.out.versions)
+    ch_versions = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
 
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
     OVERLAP_PAIRED_READS_FLASH (
         TRIM_READS_TRIMMOMATIC.out.trimmo
     )
+    ch_versions = ch_versions.mix(OVERLAP_PAIRED_READS_FLASH.out.versions)
 
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(OVERLAP_PAIRED_READS_FLASH.out.versions)
+    /*
+    ================================================================================
+                                    Taxonomic information
+    ================================================================================
+    */
 
     // Prepare kraken1 database for use
     if ( ch_kraken1_db_file ) {
@@ -262,11 +203,9 @@ workflow SKESA {
             KRAKEN1_DB_PREPARATION_UNIX (
                 ch_kraken1_db_file
             )
+            ch_versions = ch_versions.mix(KRAKEN1_DB_PREPARATION_UNIX.out.versions)
 
             ch_db_for_kraken1 = KRAKEN1_DB_PREPARATION_UNIX.out.db
-
-            ch_versions = ch_versions
-                .mix(KRAKEN1_DB_PREPARATION_UNIX.out.versions)
 
         } else if ( ch_kraken1_db_file.isDirectory() ) {
             ch_db_for_kraken1 = Channel
@@ -302,10 +241,7 @@ workflow SKESA {
         OVERLAP_PAIRED_READS_FLASH.out.gzip_reads,
         ch_db_for_kraken1
     )
-
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
+    ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
 
     // Prepare kraken2 database for use
     if ( ch_kraken2_db_file ) {
@@ -314,11 +250,9 @@ workflow SKESA {
             KRAKEN2_DB_PREPARATION_UNIX (
                 ch_kraken2_db_file
             )
+            ch_versions = ch_versions.mix(KRAKEN2_DB_PREPARATION_UNIX.out.versions)
 
             ch_db_for_kraken2 = KRAKEN2_DB_PREPARATION_UNIX.out.db
-
-            ch_versions = ch_versions
-                .mix(KRAKEN2_DB_PREPARATION_UNIX.out.versions)
 
         } else if ( ch_kraken2_db_file.isDirectory() ) {
             ch_db_for_kraken2 = Channel
@@ -344,109 +278,81 @@ workflow SKESA {
         OVERLAP_PAIRED_READS_FLASH.out.gzip_reads,
         ch_db_for_kraken2
     )
+    ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
 
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
+    /*
+    ================================================================================
+                                    Assembly
+    ================================================================================
+    */
 
-    // PROCESS: Run SKESA to assemble contigs with cleaned paired reads and cleaned singletons
-    ASSEMBLE_SKESA (
+    ASSEMBLE_CONTIGS (
         OVERLAP_PAIRED_READS_FLASH.out.gzip_reads
     )
+    ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS.out.versions)
 
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(ASSEMBLE_SKESA.out.versions)
-
-    // PROCESS: Filter contigs based on length, coverage, GC skew, and compositional complexity
-    FILTER_CONTIGS_BIOPYTHON (
-        OVERLAP_PAIRED_READS_FLASH.out.gzip_reads
-            .join(ASSEMBLE_SKESA.out.contigs)
-    )
-
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(FILTER_CONTIGS_BIOPYTHON.out.versions)
-
-    // PROCESS: Use BWA/Samtools/Pilon to correct contigs with cleaned PE reads
-    MAP_CONTIGS_BWA (
-        OVERLAP_PAIRED_READS_FLASH.out.gzip_reads
-            .join(FILTER_CONTIGS_BIOPYTHON.out.uncorrected_contigs)
-    )
-
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(MAP_CONTIGS_BWA.out.versions)
+    /*
+    ================================================================================
+                            Assembly Information
+    ================================================================================
+    */
 
     // PROCESS: Run Bedtools to extract coverage from the pre-computed BAM alignment file
     EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS (
-        MAP_CONTIGS_BWA.out.bam
+        ASSEMBLE_CONTIGS.out.bam
     )
+    ch_versions = ch_versions.mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.versions)
 
     // Collect all Summary Stats and concatenate into one file
     ch_alnstats_summary = ch_alnstats_summary
-        .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_alnstats)
-
-    ch_alnstats_summary
-        .collectFile(
-            name:     "Summary.Illumina.CleanedReads-AlnStats.tab",
-            storeDir: "${params.outdir}/qa"
-        )
-
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.versions)
+                            .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_alnstats)
+                            .collectFile(
+                                name:     "Summary.Illumina.CleanedReads-AlnStats.tab",
+                                storeDir: "${params.outdir}/qa"
+                            )
 
     // PROCESS: Run MLST to find MLST for each polished assembly
     MLST_MLST (
-        MAP_CONTIGS_BWA.out.bam
-            .join(MAP_CONTIGS_BWA.out.assembly)
+        ASSEMBLE_CONTIGS.out.bam
+            .join(ASSEMBLE_CONTIGS.out.assembly)
     )
+    ch_versions = ch_versions.mix(MLST_MLST.out.versions)
 
     // Collect all MLST Summaries and concatenate into one file
     ch_mlst_summary = ch_mlst_summary
-        .mix(MLST_MLST.out.summary_mlst)
-
-    ch_mlst_summary
-        .collectFile(
-            name:     "Summary.MLST.tab",
-            storeDir: "${params.outdir}/qa"
-        )
-
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(MLST_MLST.out.versions)
+                        .mix(MLST_MLST.out.summary_mlst)
+                        .collectFile(
+                            name:     "Summary.MLST.tab",
+                            storeDir: "${params.outdir}/qa"
+                        )
 
     // PROCESS: Annotate the polished assembly using Prokka
     ANNOTATE_PROKKA (
-        MAP_CONTIGS_BWA.out.bam
-            .join(MAP_CONTIGS_BWA.out.assembly)
+        ASSEMBLE_CONTIGS.out.bam
+            .join(ASSEMBLE_CONTIGS.out.assembly)
     )
+    ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
 
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(ANNOTATE_PROKKA.out.versions)
+    /*
+    ================================================================================
+                            Evaluate 16S
+    ================================================================================
+    */
 
     // PROCESS: Attempt to extract 16S rRNA gene records from annotation file
     EXTRACT_16S_BIOPYTHON (
         ANNOTATE_PROKKA.out.annotation
-            .join(MAP_CONTIGS_BWA.out.assembly)
+            .join(ASSEMBLE_CONTIGS.out.assembly)
     )
-
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(EXTRACT_16S_BIOPYTHON.out.versions)
+    ch_versions = ch_versions.mix(EXTRACT_16S_BIOPYTHON.out.versions)
 
     // PROCESS: Extract 16S rRNA gene sequences with Barrnap if missing from 16S_EXTRACT_BIOPYTHON
     EXTRACT_16S_BARRNAP (
         ANNOTATE_PROKKA.out.annotation
-            .join(MAP_CONTIGS_BWA.out.assembly)
+            .join(ASSEMBLE_CONTIGS.out.assembly)
             .join(EXTRACT_16S_BIOPYTHON.out.extracted_rna)
     )
-
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(EXTRACT_16S_BARRNAP.out.versions)
+    ch_versions = ch_versions.mix(EXTRACT_16S_BARRNAP.out.versions)
 
     // Prepare BLAST database for use
     if ( ch_blast_db_file ) {
@@ -455,6 +361,7 @@ workflow SKESA {
             BLAST_DB_PREPARATION_UNIX (
                 ch_blast_db_file
             )
+            ch_versions = ch_versions.mix(BLAST_DB_PREPARATION_UNIX.out.versions)
 
             ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db
                                 .map{
@@ -462,9 +369,6 @@ workflow SKESA {
                                         [ file[0].toString().split(".${file[0].getExtension()}") ]
                                 }
                                 .flatten()
-
-            ch_versions = ch_versions
-                .mix(BLAST_DB_PREPARATION_UNIX.out.versions)
 
         } else if ( ch_blast_db_file.isDirectory() ) {
             ch_db_for_blast = Channel
@@ -489,69 +393,106 @@ workflow SKESA {
     // PROCESS: Run Blast on predicted 16S ribosomal RNA genes
     ALIGN_16S_BLAST (
         EXTRACT_16S_BARRNAP.out.extracted_base
-            .join(MAP_CONTIGS_BWA.out.assembly),
+            .join(ASSEMBLE_CONTIGS.out.assembly),
         ch_db_for_blast
     )
-
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(ALIGN_16S_BLAST.out.versions)
+    ch_versions = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
         ALIGN_16S_BLAST.out.blast_tsv
-            .join(MAP_CONTIGS_BWA.out.assembly)
+            .join(ASSEMBLE_CONTIGS.out.assembly)
     )
+    ch_versions = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
 
     // Collect all BLAST Summaries and concatenate into one file
     ch_blast_summary = ch_blast_summary
-        .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary)
-
-    ch_blast_summary
-        .collectFile(
-            name:     "Summary.16S.tab",
-            storeDir: "${params.outdir}/qa"
-        )
+                        .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary)
+                        .collectFile(
+                            name:     "Summary.16S.tab",
+                            storeDir: "${params.outdir}/qa"
+                        )
 
     // Collect all BLAST Top Species Summaries and concatenate into one file
     ch_ssu_species = ch_ssu_species
-        .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.ssu_species)
-        .collectFile(
-            name:     "16S-top-species.tsv",
-            storeDir: "${params.outdir}/ssu"
-        )
+                        .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.ssu_species)
+                        .collectFile(
+                            name:     "16S-top-species.tsv",
+                            storeDir: "${params.outdir}/ssu"
+                        )
 
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
+    /*
+    ================================================================================
+                            Evaluate contigs
+    ================================================================================
+    */
+
+    /*
+     * QUAST: Genome assembly evaluation tool
+     */
 
     // PROCESS: Run QUAST on the polished assembly for quality assessment and
     //  report the number of cleaned basepairs used to form the assembly
     QA_ASSEMBLY_QUAST (
         OVERLAP_PAIRED_READS_FLASH.out.gzip_reads
-            .join(MAP_CONTIGS_BWA.out.assembly)
+            .join(ASSEMBLE_CONTIGS.out.assembly)
     )
+    ch_versions = ch_versions.mix(QA_ASSEMBLY_QUAST.out.versions)
+
+    // Collect all Assembly Summaries and concatenate into one file
+    ch_assembly_summary = ch_assembly_summary
+                            .mix(QA_ASSEMBLY_QUAST.out.summary_assemblies)
+                            .collectFile(
+                                name:       "Summary.Assemblies.tab",
+                                keepHeader: true,
+                                storeDir:   "${params.outdir}/qa"
+                            )
+
+    // Collect all Cleaned Read/Base Summaries and concatenate into one file
+    ch_cleaned_summary = ch_cleaned_summary
+                            .mix(QA_ASSEMBLY_QUAST.out.summary_reads)
+                            .collectFile(
+                                name:     "Summary.Illumina.CleanedReads-Bases.tab",
+                                storeDir: "${params.outdir}/qa"
+                            )
+
+    // PROCESS: Calculate genome assembly depth of coverage
+    CALCULATE_COVERAGE_UNIX (
+        QA_ASSEMBLY_QUAST.out.qa_summaries
+            .join(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_stats)
+    )
+    ch_versions = ch_versions.mix(CALCULATE_COVERAGE_UNIX.out.versions)
+
+    // Collect all Genome Coverage Summaries and concatenate into one file
+    ch_genome_cov_summary = ch_genome_cov_summary
+                                .mix(CALCULATE_COVERAGE_UNIX.out.genome_coverage)
+                                .collectFile(
+                                    name:     "Summary.Illumina.GenomeCoverage.tab",
+                                    storeDir: "${params.outdir}/qa"
+                                )
+
+    /*
+     * GTDB-Tk: taxonomic classification using a GTDB reference
+     */
 
     // PROCESS: Classify assembly FastA file using GTDB-Tk
     if (!params.skip_gtdbtk && params.gtdb_db) {
-        ch_contig = MAP_CONTIGS_BWA.out.assembly
-            .map {
-                meta, bins ->
-                    def meta_new = meta.clone()
-                    meta_new['assembler'] = 'skesa'
-                    [ meta_new, bins ]
-            }
+        ch_contigs = ASSEMBLE_CONTIGS.out.assembly
+                        .map {
+                            meta, bins ->
+                                def meta_new = meta.clone()
+                                meta_new['assembler'] = "${params.assembler}"
+                                [ meta_new, bins ]
+                        }
 
         if ( ch_gtdbtk_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
             GTDBTK_DB_PREPARATION_UNIX (
                 ch_gtdbtk_db_file
             )
+            ch_versions = ch_versions.mix(GTDBTK_DB_PREPARATION_UNIX.out.versions)
 
             ch_db_for_gtdbtk = GTDBTK_DB_PREPARATION_UNIX.out.db
-
-            ch_versions = ch_versions
-                .mix(GTDBTK_DB_PREPARATION_UNIX.out.versions)
 
         } else if ( ch_gtdbtk_db_file.isDirectory() ) {
             ch_db_for_gtdbtk = Channel
@@ -566,14 +507,15 @@ workflow SKESA {
 
         // PROCESS: Perform GTDBTk on assembly FastA file
         QA_ASSEMBLY_GTDBTK (
-            ch_contig,
+            ch_contigs,
             ch_db_for_gtdbtk
         )
-
-        // Collect version info
-        ch_versions = ch_versions
-            .mix(QA_ASSEMBLY_GTDBTK.out.versions)
+        ch_versions = ch_versions.mix(QA_ASSEMBLY_GTDBTK.out.versions)
     }
+
+    /*
+     * BUSCO: predict genes on contigs
+     */
 
     // PROCESS: Classify contigs with BUSCO
     if (!params.skip_busco && params.busco_db) {
@@ -582,12 +524,9 @@ workflow SKESA {
             BUSCO_DB_PREPARATION_UNIX(
                 ch_busco_db_file
             )
+            ch_versions = ch_versions.mix(BUSCO_DB_PREPARATION_UNIX.out.versions)
 
             ch_db_for_busco = BUSCO_DB_PREPARATION_UNIX.out.db
-
-            // Collect version info
-            ch_versions = ch_versions
-                .mix(BUSCO_DB_PREPARATION_UNIX.out.versions)
 
         } else if ( ch_busco_db_file.isDirectory() ) {
             // Expects directory in <database>/lineages/<lineage>_odb10 format!
@@ -619,8 +558,9 @@ workflow SKESA {
 
         // PROCESS: Split assembly FastA file into individual contig files
         SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON (
-            MAP_CONTIGS_BWA.out.assembly
+            ASSEMBLE_CONTIGS.out.assembly
         )
+        ch_versions = ch_versions.mix(SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.versions)
 
         // PROCESS: Perform BUSCO analysis on contigs
         QA_ASSEMBLY_BUSCO (
@@ -629,51 +569,14 @@ workflow SKESA {
             ch_db_for_busco,
             ch_busco_config_file
         )
-
-        // Collect version info
-        ch_versions = ch_versions
-            .mix(SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.versions)
-            .mix(QA_ASSEMBLY_BUSCO.out.versions)
+        ch_versions = ch_versions.mix(QA_ASSEMBLY_BUSCO.out.versions)
     }
 
-    // Collect all Assembly Summaries and concatenate into one file
-    ch_assembly_summary = ch_assembly_summary
-        .mix(QA_ASSEMBLY_QUAST.out.summary_assemblies)
-        .collectFile(
-            name:       "Summary.Assemblies.tab",
-            keepHeader: true,
-            storeDir:   "${params.outdir}/qa"
-        )
-
-    // Collect all Cleaned Read/Base Summaries and concatenate into one file
-    ch_cleaned_summary = ch_cleaned_summary
-        .mix(QA_ASSEMBLY_QUAST.out.summary_reads)
-        .collectFile(
-            name:     "Summary.Illumina.CleanedReads-Bases.tab",
-            storeDir: "${params.outdir}/qa"
-        )
-
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(QA_ASSEMBLY_QUAST.out.versions)
-
-    // PROCESS: Calculate genome assembly depth of coverage
-    CALCULATE_COVERAGE_UNIX (
-        QA_ASSEMBLY_QUAST.out.qa_summaries
-            .join(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_stats)
-    )
-
-    // Collect all Genome Coverage Summaries and concatenate into one file
-    ch_genome_cov_summary = ch_genome_cov_summary
-        .mix(CALCULATE_COVERAGE_UNIX.out.genome_coverage)
-        .collectFile(
-            name:     "Summary.Illumina.GenomeCoverage.tab",
-            storeDir: "${params.outdir}/qa"
-        )
-
-    // Collect version info
-    ch_versions = ch_versions
-        .mix(CALCULATE_COVERAGE_UNIX.out.versions)
+    /*
+    ================================================================================
+                        Collect version and QC information
+    ================================================================================
+    */
 
     // PATTERN: Collate method for version information
     ch_versions
@@ -692,11 +595,7 @@ workflow SKESA {
             TRIM_READS_TRIMMOMATIC.out.qc_adapters_filecheck,
             TRIM_READS_TRIMMOMATIC.out.qc_removed_adapters_filecheck,
             OVERLAP_PAIRED_READS_FLASH.out.qc_nonoverlap_filecheck,
-            ASSEMBLE_SKESA.out.qc_raw_assembly_filecheck,
-            MAP_CONTIGS_BWA.out.qc_filtered_asm_filecheck,
-            MAP_CONTIGS_BWA.out.qc_pe_alignment_filecheck,
-            MAP_CONTIGS_BWA.out.qc_corrected_asm_filecheck,
-            MAP_CONTIGS_BWA.out.qc_se_alignment_filecheck,
+            ASSEMBLE_CONTIGS.out.qc_filechecks,
             ANNOTATE_PROKKA.out.qc_annotated_filecheck,
             EXTRACT_16S_BARRNAP.out.qc_ssu_extracted_filecheck,
             EXTRACT_16S_BARRNAP.out.qc_ssu_renamed_filecheck,

@@ -1,10 +1,10 @@
 //
-// This file holds several functions specific to the workflow/spades.nf in the wf-paired-end-illumina-assembly pipeline
+// This file holds several functions specific to the workflow/assembly.nf in the wf-paired-end-illumina-assembly pipeline
 //
 
 import groovy.text.SimpleTemplateEngine
 
-class WorkflowSpades {
+class WorkflowAssembly {
 
     //
     // Check and validate parameters
