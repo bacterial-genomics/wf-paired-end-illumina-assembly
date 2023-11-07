@@ -308,6 +308,7 @@ workflow ASSEMBLY {
                             .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_alnstats)
                             .collectFile(
                                 name:     "Summary.Illumina.CleanedReads-AlnStats.tab",
+                                keepHeader: true,
                                 storeDir: "${params.outdir}/qa"
                             )
 

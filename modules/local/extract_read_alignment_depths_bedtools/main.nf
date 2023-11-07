@@ -44,11 +44,14 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     fi
 
     cov_info=$(bedtools genomecov -d -split -ibam !{meta.id}.paired.bam |\
-      awk -v SEcov="${single_cov}" 'BEGIN{sum=0} {sum+=$3} END{
+      awk -v OFS='\t' -v SEcov="${single_cov}" 'BEGIN{sum=0} {sum+=$3} END{
       print sum " bp Paired Reads Mapped (" sum/NR "x)\t" SEcov NR " bp Genome"}')
 
     echo -e "!{meta.id}\t${cov_info}" \
-      >> !{meta.id}.Summary.Illumina.CleanedReads-AlnStats.tab
+      > !{meta.id}.Summary.Illumina.CleanedReads-AlnStats.tab
+
+    sed -i 1i"Sample name\tCoverage of paired reads\tCoverage of singleton reads\tGenome size" \
+      !{meta.id}.Summary.Illumina.CleanedReads-AlnStats.tab
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
