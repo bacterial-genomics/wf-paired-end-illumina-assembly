@@ -94,6 +94,38 @@ include { ASSEMBLE_CONTIGS                                    } from "../subwork
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+// PhiX Reference
+if (params.phix_reference) {
+    ch_phix_reference = Channel
+                            .fromPath(params.phix_reference, checkIfExists: true)
+                            .map{
+                                file ->
+                                    if ( file.extension in ['fasta', 'fas', 'fa', 'fna'] ) {
+                                        [ file ]
+                                    } else {
+                                        error("PhiX reference file not in supported extension: .fasta, .fas, .fa, .fna")
+                                    }
+                            }
+} else {
+    error("Path to PhiX reference not specified. Please supply a PhiX reference file in FastA format via `--phix_reference` parameter.")
+}
+
+// Adapter Reference
+if (params.adapter_reference) {
+    ch_adapter_reference = Channel
+                            .fromPath(params.adapter_reference, checkIfExists: true)
+                            .map{
+                                file ->
+                                    if ( file.extension in ['fasta', 'fas', 'fa', 'fna'] ) {
+                                        [ file ]
+                                    } else {
+                                        error("Adapter reference file not in supported extension: .fasta, .fas, .fa, .fna")
+                                    }
+                            }
+} else {
+    error("Path to Adapter reference not specified. Please supply an adapter reference file in FastA format via `--adapter_reference` parameter.")
+}
+
 // GTDB
 if (params.gtdb_db) {
     ch_gtdbtk_db_file = file(params.gtdb_db, checkIfExists: true)
@@ -175,7 +207,8 @@ workflow ASSEMBLY {
 
     // PROCESS: Run bbduk to remove PhiX reads
     REMOVE_PHIX_BBDUK (
-        DOWNSAMPLE.out.reads
+        DOWNSAMPLE.out.reads,
+        ch_phix_reference
     )
     ch_versions = ch_versions.mix(REMOVE_PHIX_BBDUK.out.versions)
 

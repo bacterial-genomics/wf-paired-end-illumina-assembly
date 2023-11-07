@@ -18,6 +18,7 @@ process TRIM_READS_TRIMMOMATIC {
 
     input:
     tuple val(meta), path(noPhiX_R1), path(noPhiX_R2), path(qc_phix_filecheck)
+    path adapter_reference_file
 
     output:
     path ".command.out"
@@ -44,11 +45,8 @@ process TRIM_READS_TRIMMOMATIC {
       fi
     done
 
-    # Get Adapters, check if it exists, and verify file size
-    if ! check_if_file_exists_allow_seconds !{params.adapter_reference} '60'; then
-      exit 1
-    fi
-    if verify_minimum_file_size !{params.adapter_reference} 'Adapters FastA' "!{params.min_filesize_adapters}"; then
+    # Verify adapter reference file size
+    if verify_minimum_file_size !{adapter_reference_file} 'Adapters FastA' "!{params.min_filesize_adapters}"; then
       echo -e "!{meta.id}\tAdapters FastA File\tPASS" > !{meta.id}.Adapters_FastA_File.tsv
     else
       echo -e "!{meta.id}\tAdapters FastA File\tFAIL" > !{meta.id}.Adapters_FastA_File.tsv
@@ -67,7 +65,7 @@ process TRIM_READS_TRIMMOMATIC {
       LEADING:10 \
       TRAILING:10 \
       SLIDINGWINDOW:6:30 \
-      ILLUMINACLIP:!{params.adapter_reference}:2:20:10:8:TRUE
+      ILLUMINACLIP:!{adapter_reference_file}:2:20:10:8:TRUE
 
     TRIMMO_DISCARD=$(grep '^Input Read Pairs: ' .command.err \
     | grep ' Dropped: ' | awk '{print $20}')

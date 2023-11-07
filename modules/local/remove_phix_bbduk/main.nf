@@ -15,6 +15,7 @@ process REMOVE_PHIX_BBDUK {
 
     input:
     tuple val(meta), path(reads), path(qc_input_filecheck)
+    path phix_reference_file
 
     output:
     path ".command.out"
@@ -40,12 +41,8 @@ process REMOVE_PHIX_BBDUK {
       fi
     done
 
-    # Get PhiX, check if it exists, and verify file size
-    if ! check_if_file_exists_allow_seconds !{params.phix_reference} '60'; then
-      exit 1
-    fi
-
-    if verify_minimum_file_size !{params.phix_reference} 'PhiX Genome' "!{params.min_filesize_phix_genome}"; then
+    # Verify PhiX reference file size
+    if verify_minimum_file_size !{phix_reference_file} 'PhiX Genome' "!{params.min_filesize_phix_genome}"; then
       echo -e "!{meta.id}\tPhiX Genome\tPASS" >> !{meta.id}.PhiX_Genome_File.tsv
     else
       echo -e "!{meta.id}\tPhiX Genome\tFAIL" >> !{meta.id}.PhiX_Genome_File.tsv
@@ -69,7 +66,7 @@ process REMOVE_PHIX_BBDUK {
         threads=!{task.cpus} \
         out=!{meta.id}_noPhiX-R1.fsq \
         out2=!{meta.id}_noPhiX-R2.fsq \
-        ref="!{params.phix_reference}"
+        ref="!{phix_reference_file}"
 
         echo $?
     }
