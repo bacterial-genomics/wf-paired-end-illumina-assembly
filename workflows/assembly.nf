@@ -90,7 +90,7 @@ include { ASSEMBLE_CONTIGS                                    } from "../subwork
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    CREATE CHANNELS FOR REFERENCE DATABASES
+    CREATE CHANNELS FOR INPUT FILES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -138,15 +138,16 @@ if (params.blast_db) {
 workflow ASSEMBLY {
 
     // SETUP: Define empty channels to concatenate certain outputs
-    ch_versions           = Channel.empty()
-    ch_ssu_species        = Channel.empty()
-    ch_mlst_summary       = Channel.empty()
-    ch_qc_filecheck       = Channel.empty()
-    ch_blast_summary      = Channel.empty()
-    ch_cleaned_summary    = Channel.empty()
-    ch_alnstats_summary   = Channel.empty()
-    ch_assembly_summary   = Channel.empty()
-    ch_genome_cov_summary = Channel.empty()
+    ch_versions             = Channel.empty()
+    ch_ssu_species          = Channel.empty()
+    ch_mlst_summary         = Channel.empty()
+    ch_qc_filecheck         = Channel.empty()
+    ch_blast_summary        = Channel.empty()
+    ch_cleaned_summary      = Channel.empty()
+    ch_alnstats_summary     = Channel.empty()
+    ch_assembly_summary     = Channel.empty()
+    ch_genome_cov_summary   = Channel.empty()
+    ch_phix_removal_summary = Channel.empty()
 
     /*
     ================================================================================
@@ -177,6 +178,14 @@ workflow ASSEMBLY {
         DOWNSAMPLE.out.reads
     )
     ch_versions = ch_versions.mix(REMOVE_PHIX_BBDUK.out.versions)
+
+    ch_phix_removal_summary = ch_phix_removal_summary
+                                .mix(REMOVE_PHIX_BBDUK.out.phix_summary)
+                                .collectFile(
+                                    name:       "Summary.PhiX_removal.tab",
+                                    keepHeader: true,
+                                    storeDir:   "${params.outdir}/qa"
+                                )
 
     // PROCESS: Run trimmomatic to clip adapters and do quality trimming
     TRIM_READS_TRIMMOMATIC (
