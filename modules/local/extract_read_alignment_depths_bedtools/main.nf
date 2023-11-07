@@ -43,11 +43,11 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
         awk '{sum+=$3} END{print sum " bp Singleton Reads Mapped (" sum/NR "x)\t"}')
     fi
 
-    cov_nfo=$(bedtools genomecov -d -split -ibam !{meta.id}.paired.bam |\
+    cov_info=$(bedtools genomecov -d -split -ibam !{meta.id}.paired.bam |\
       awk -v SEcov="${single_cov}" 'BEGIN{sum=0} {sum+=$3} END{
       print sum " bp Paired Reads Mapped (" sum/NR "x)\t" SEcov NR " bp Genome"}')
 
-    echo -e "!{meta.id}\t${cov_nfo}" \
+    echo -e "!{meta.id}\t${cov_info}" \
       >> !{meta.id}.Summary.Illumina.CleanedReads-AlnStats.tab
 
     # Get process version information
