@@ -11,8 +11,8 @@
 //
 // MODULES: Local modules
 //
-include { ASSEMBLE_SKESA            } from "../../modules/local/assemble_skesa/main"
-include { ASSEMBLE_SPADES           } from "../../modules/local/assemble_spades/main"
+include { ASSEMBLE_CONTIGS_SKESA    } from "../../modules/local/assemble_contigs_skesa/main"
+include { ASSEMBLE_CONTIGS_SPADES   } from "../../modules/local/assemble_contigs_spades/main"
 
 include { FILTER_CONTIGS_BIOPYTHON  } from "../../modules/local/filter_contigs_biopython/main"
 
@@ -50,14 +50,14 @@ workflow ASSEMBLE_CONTIGS {
 
     if ( params.assembler == "skesa" ) {
         // PROCESS: Run SKESA to assemble contigs with cleaned paired reads and cleaned singletons
-        ASSEMBLE_SKESA (
+        ASSEMBLE_CONTIGS_SKESA (
             ch_cleaned_reads
         )
 
         // PROCESS: Filter contigs based on length, coverage, GC skew, and compositional complexity
         FILTER_CONTIGS_BIOPYTHON (
             ch_cleaned_reads
-                .join(ASSEMBLE_SKESA.out.contigs)
+                .join(ASSEMBLE_CONTIGS_SKESA.out.contigs)
         )
 
         // PROCESS: Use BWA/Samtools/Pilon to correct contigs with cleaned PE reads
@@ -72,14 +72,14 @@ workflow ASSEMBLE_CONTIGS {
 
         // Collect version info
         ch_versions = ch_versions
-                        .mix(ASSEMBLE_SKESA.out.versions)
+                        .mix(ASSEMBLE_CONTIGS_SKESA.out.versions)
                         .mix(FILTER_CONTIGS_BIOPYTHON.out.versions)
                         .mix(MAP_CONTIGS_BWA.out.versions)
 
         // Collect QC File Checks
         ch_qc_filechecks = ch_qc_filechecks
                             .concat(
-                                ASSEMBLE_SKESA.out.qc_raw_assembly_filecheck,
+                                ASSEMBLE_CONTIGS_SKESA.out.qc_raw_assembly_filecheck,
                                 MAP_CONTIGS_BWA.out.qc_filtered_asm_filecheck,
                                 MAP_CONTIGS_BWA.out.qc_pe_alignment_filecheck,
                                 MAP_CONTIGS_BWA.out.qc_corrected_asm_filecheck,
@@ -88,14 +88,14 @@ workflow ASSEMBLE_CONTIGS {
     } else {
         // Defaulting to SPAdes assembler
         // PROCESS: Run SPAdes to assemble contigs with cleaned paired reads and cleaned singletons
-        ASSEMBLE_SPADES (
+        ASSEMBLE_CONTIGS_SPADES (
             ch_cleaned_reads
         )
 
         // PROCESS: Filter contigs based on length, coverage, GC skew, and compositional complexity
         FILTER_CONTIGS_BIOPYTHON (
             ch_cleaned_reads
-                .join(ASSEMBLE_SPADES.out.contigs)
+                .join(ASSEMBLE_CONTIGS_SPADES.out.contigs)
         )
 
         // PROCESS: Use BWA/Samtools/Pilon to correct contigs with cleaned PE reads
@@ -110,14 +110,14 @@ workflow ASSEMBLE_CONTIGS {
 
         // Collect version info
         ch_versions = ch_versions
-                        .mix(ASSEMBLE_SPADES.out.versions)
+                        .mix(ASSEMBLE_CONTIGS_SPADES.out.versions)
                         .mix(FILTER_CONTIGS_BIOPYTHON.out.versions)
                         .mix(POLISH_ASSEMBLY_BWA_PILON.out.versions)
 
         // Collect QC File Checks
         ch_qc_filechecks = ch_qc_filechecks
                                 .concat(
-                                    ASSEMBLE_SPADES.out.qc_raw_assembly_filecheck,
+                                    ASSEMBLE_CONTIGS_SPADES.out.qc_raw_assembly_filecheck,
                                     POLISH_ASSEMBLY_BWA_PILON.out.qc_filtered_asm_filecheck,
                                     POLISH_ASSEMBLY_BWA_PILON.out.qc_pe_alignment_filecheck,
                                     POLISH_ASSEMBLY_BWA_PILON.out.qc_polished_asm_filecheck,

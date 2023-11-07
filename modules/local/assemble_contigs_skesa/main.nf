@@ -1,4 +1,4 @@
-process ASSEMBLE_SKESA {
+process ASSEMBLE_CONTIGS_SKESA {
 
     publishDir "${params.outdir}/asm",
         mode: "${params.publish_dir_mode}",

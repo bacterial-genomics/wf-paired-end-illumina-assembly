@@ -1,4 +1,4 @@
-process ASSEMBLE_SPADES {
+process ASSEMBLE_CONTIGS_SPADES {
 
     publishDir "${params.outdir}/asm",
         mode: "${params.publish_dir_mode}",
