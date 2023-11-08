@@ -33,15 +33,9 @@ process EXTRACT_16S_BIOPYTHON {
       fi
     done
 
-    # Get extract.record.from.genbank.py and check if it exists
-    extract_record_script="${DIR}/extract.record.from.genbank.py"
-    if ! check_if_file_exists_allow_seconds ${extract_record_script} '60'; then
-      exit 1
-    fi
-
     # 16S extraction
     if [[ -s "!{annotation}" ]]; then
-      python ${extract_record_script} \
+      extract.record.from.genbank.py \
         -i "!{annotation}" \
         -o "16S.!{meta.id}.fa" \
         -q "!{params.genbank_query}" \

@@ -42,14 +42,8 @@ process FILTER_CONTIGS_BIOPYTHON {
       fi
     done
 
-    # Get filter.contigs.py and check if it exists
-    filter_contigs_script="${DIR}/filter.contigs.py"
-      if ! check_if_file_exists_allow_seconds ${filter_contigs_script} '60'; then
-      exit 1
-    fi
-
     # Remove junk contigs
-    python ${filter_contigs_script} \
+    filter.contigs.py \
       -i !{contigs} \
       -b "!{meta.id}" \
       -o !{meta.id}.uncorrected.fna \

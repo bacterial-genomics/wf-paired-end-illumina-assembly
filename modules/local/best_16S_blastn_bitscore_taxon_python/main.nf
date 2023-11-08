@@ -42,14 +42,8 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
       fi
     done
 
-    # Get filter.blast.py and check if it exists
-    filter_blast_script="${DIR}/filter.blast.py"
-    if ! check_if_file_exists_allow_seconds ${filter_blast_script} '60'; then
-      exit 1
-    fi
-
     # Get the top match by bitscore
-    python ${filter_blast_script} \
+    filter.blast.py \
       -i "!{blast_tsv}" \
       -o "!{meta.id}.blast.tab" \
       -c !{params.filter_blast_column} \

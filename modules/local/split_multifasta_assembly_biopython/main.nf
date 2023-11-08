@@ -23,16 +23,9 @@ process SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON {
     '''
     source bash_functions.sh
 
-    # Get split.multifasta.py and check if it exists
-    split_mfasta_script="${DIR}/split.multifasta.py"
-    if ! check_if_file_exists_allow_seconds ${split_mfasta_script} '60'; then
-      msg "ERROR: ${split_mfasta_script} absent" >&2
-      exit 1
-    fi
-
     # Split assembly multi-record FastA into individual FastA files for each contig
     if [[ -s "!{assembly}" ]]; then
-      python ${split_mfasta_script} \
+      split.multifasta.py \
         --outdir "bins" \
         --infile "!{assembly}" \
         !{no_gaps} \
