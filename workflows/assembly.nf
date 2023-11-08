@@ -222,7 +222,8 @@ workflow ASSEMBLY {
 
     // PROCESS: Run trimmomatic to clip adapters and do quality trimming
     TRIM_READS_TRIMMOMATIC (
-        REMOVE_PHIX_BBDUK.out.phix_removed
+        REMOVE_PHIX_BBDUK.out.phix_removed,
+        ch_adapter_reference
     )
     ch_versions = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
 
