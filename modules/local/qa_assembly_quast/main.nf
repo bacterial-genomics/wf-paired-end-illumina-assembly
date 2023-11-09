@@ -72,6 +72,8 @@ process QA_ASSEMBLY_QUAST {
       zcat "!{R1}" "!{R2}" "!{single}" | \
         awk 'BEGIN{SUM=0} {if(NR%4==2){SUM+=length($0)}} END{print SUM}' \
           >> !{meta.id}.CleanedReads-Bases.tsv
+
+      sed -i '1i Sample name\t# cleaned bases' !{meta.id}.CleanedReads-Bases.tsv
     done
 
     # Get process version information

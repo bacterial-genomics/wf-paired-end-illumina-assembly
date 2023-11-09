@@ -12,7 +12,7 @@ process TRIM_READS_TRIMMOMATIC {
     path ".command.out"
     path ".command.err"
     path "${meta.id}.single.fq"
-    path "${meta.id}.trimmo.tsv"
+    path "${meta.id}.trimmomatic.tsv"
     path "versions.yml"                                                                                  , emit: versions
     path "${meta.id}.Adapters_FastA_File.tsv"                                                            , emit: qc_adapters_filecheck
     path "${meta.id}.Adapter-removed_FastQ_Files.tsv"                                                    , emit: qc_removed_adapters_filecheck
@@ -74,8 +74,10 @@ process TRIM_READS_TRIMMOMATIC {
     msg "INFO: $CNT_BROKEN_R2 reverse reads lacked a high quality R1 sister read" >&2
     msg "INFO: $CNT_BROKEN total broken read pairs were saved as singletons" >&2
 
-    echo -e "!{meta.id}\t${TRIMMO_DISCARD} reads Discarded\t${CNT_BROKEN} reads Singletons" \
-    > !{meta.id}.trimmo.tsv
+    echo -e "!{meta.id}\t${TRIMMO_DISCARD}\t${CNT_BROKEN}" \
+    > !{meta.id}.Trimmomatic.tsv
+
+    sed -i '1i Sample name\t# discarded reads\t# singleton reads' !{meta.id}.Trimmomatic.tsv
 
     cat !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq > !{meta.id}.single.fq
 

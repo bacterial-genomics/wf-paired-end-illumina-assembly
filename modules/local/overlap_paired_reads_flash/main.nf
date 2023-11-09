@@ -74,8 +74,10 @@ process OVERLAP_PAIRED_READS_FLASH {
       fi
 
       msg "INFO: ${CNT_READS_OVERLAPPED:-0} pairs overlapped into singleton reads" >&2
-      echo -e "!{meta.id}\t${CNT_READS_OVERLAPPED:-0} reads Overlapped" \
+      echo -e "!{meta.id}\t${CNT_READS_OVERLAPPED:-0}" \
         > !{meta.id}.overlap.tsv
+
+      sed -i '1i Sample name\t# overlapped reads' !{meta.id}.overlap.tsv
     fi
 
     # Summarize final read set and compress
@@ -87,8 +89,12 @@ process OVERLAP_PAIRED_READS_FLASH {
     CNT_CLEANED_SINGLETON=$(echo $((${count_single}/4)))
     msg "INFO: Number of singletons cleaned: ${CNT_CLEANED_SINGLETON}"
 
-    echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS} cleaned pairs\t${CNT_CLEANED_SINGLETON} cleaned singletons" \
+    echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS}\t${CNT_CLEANED_SINGLETON}" \
       > !{meta.id}.clean-reads.tsv
+
+    sed -i \
+      '1i Sample name\t# cleaned reads (paired FastQ)\t# cleaned reads (singletons)' \
+      !{meta.id}.clean-reads.tsv
 
     gzip -f !{meta.id}.single.fq \
       !{meta.id}_R1.paired.fq \
