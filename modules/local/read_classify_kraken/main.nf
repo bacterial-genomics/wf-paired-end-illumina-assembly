@@ -54,7 +54,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
 
       # Add header to kraken summary
       sed -i \
-        '1i % Reads\t# Reads\tUnclassified\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads'
+        '1i % Reads\t# Reads\tUnclassified\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads' \
         !{meta.id}.Summary.tsv
 
       mv kraken.tab !{meta.id}.kraken_output.tab
