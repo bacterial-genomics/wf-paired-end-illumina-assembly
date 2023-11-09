@@ -1,15 +1,6 @@
 process ALIGN_16S_BLAST {
 
-    publishDir "${params.qc_filecheck_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.16S_BLASTn_Output_File.tsv"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     tag { "${meta.id}" }
-
     container "gregorysprenger/ncbi-blast-plus@sha256:2d3e226d2eb31e3e0d5a80d7325b3a2ffd873ad1f2bd81215fd0b43727019279"
 
     input:

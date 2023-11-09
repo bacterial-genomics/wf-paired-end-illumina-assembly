@@ -1,12 +1,6 @@
 process SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON {
 
-    publishDir   "${params.process_log_dir}",
-        mode:    "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs:  { filename -> "${meta.id}.${task.process}${filename}" }
-
     tag { "${meta.id}" }
-
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:

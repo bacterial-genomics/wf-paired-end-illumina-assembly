@@ -1,12 +1,6 @@
 process CALCULATE_COVERAGE_UNIX {
 
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     tag { "${meta.id}" }
-
     container "ubuntu:jammy"
 
     input:

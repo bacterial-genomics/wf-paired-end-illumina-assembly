@@ -1,15 +1,7 @@
 process INFILE_HANDLING_UNIX {
 
-    publishDir "${params.qc_filecheck_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.Raw_Initial_FastQ_Files.tsv"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
-    container "ubuntu:jammy"
     tag { "${meta.id}" }
+    container "ubuntu:jammy"
 
     input:
     tuple val(meta), path(reads)

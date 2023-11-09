@@ -1,16 +1,7 @@
 process READ_CLASSIFY_KRAKEN_TWO {
 
-    publishDir "${params.outdir}/trim_reads",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.tab*"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     label "process_high"
     tag { "${meta.id}" }
-
     container "gregorysprenger/kraken2@sha256:e4282b158c9899382a23b53b8e07a791b83d8fd89e502b640a8cd0a411f6ca72"
 
     input:

@@ -1,17 +1,11 @@
 process BLAST_DB_PREPARATION_UNIX {
 
-    publishDir   "${params.process_log_dir}",
-        mode:    "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs:  { filename -> "${task.process}${filename}"}
-
     label "process_medium"
-    tag { "${database.getSimpleName()}" }
-
+    tag { "${meta.id}" }
     container "ubuntu:jammy"
 
     input:
-    path database
+    tuple val(meta), path(database)
 
     output:
     path ".command.out"

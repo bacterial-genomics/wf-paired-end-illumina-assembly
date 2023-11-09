@@ -1,19 +1,7 @@
 process ASSEMBLE_CONTIGS_SPADES {
 
-    publishDir "${params.outdir}/asm",
-        mode: "${params.publish_dir_mode}",
-        pattern: "${meta.id}"
-    publishDir "${params.qc_filecheck_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.Raw_Assembly_File.tsv"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     label "process_high"
     tag { "${meta.id}" }
-
     container "gregorysprenger/spades@sha256:3fe1ebda8f5746ca3e3ff79c74c220d2ca75e3120f20441c3e6ae88eff03b4dc"
 
     input:

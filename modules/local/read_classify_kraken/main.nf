@@ -1,17 +1,8 @@
 process READ_CLASSIFY_KRAKEN_ONE {
 
-    publishDir "${params.outdir}/trim_reads",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.tab*"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     label "process_high"
     label "process_high_memory"
     tag { "${meta.id}" }
-
     container "gregorysprenger/kraken@sha256:650ce8ce4a5e313dfafa1726168bb4f7942e543075743766afe1f21ae19abf9c"
 
     input:

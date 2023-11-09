@@ -1,19 +1,7 @@
 process ASSEMBLE_CONTIGS_SKESA {
 
-    publishDir "${params.outdir}/asm",
-        mode: "${params.publish_dir_mode}",
-        pattern: "${meta.id}"
-    publishDir "${params.qc_filecheck_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.Raw_Assembly_File.tsv"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     label "process_high"
     tag { "${meta.id}" }
-
     container "gregorysprenger/skesa@sha256:4455882b5d0fd968630325428729395422be7340301c31d15874a295904b7f26"
 
     input:

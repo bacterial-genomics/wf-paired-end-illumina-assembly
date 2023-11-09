@@ -1,18 +1,6 @@
 process EXTRACT_16S_BARRNAP {
 
-    publishDir "${params.outdir}/ssu",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.fa"
-    publishDir "${params.qc_filecheck_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.{SSU_Extracted_File,SSU_Renamed_File}.tsv"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     tag { "${meta.id}" }
-
     container "snads/barrnap@sha256:e22cbd789c36d5626460feb6c7e5f6f7d55c8628dacae68ba0da30884195a837"
 
     input:

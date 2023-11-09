@@ -1,12 +1,6 @@
 process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
 
-    publishDir   "${params.process_log_dir}",
-        mode:    "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs:  { filename -> "${meta.id}.${task.process}${filename}" }
-
     tag { "${meta.id}" }
-
     container "gregorysprenger/seqtk@sha256:756bff7222c384d358cb22ecbbae443e112b296503cb0e1a6baf9cf80545ae20"
 
     input:

@@ -1,19 +1,7 @@
 process OVERLAP_PAIRED_READS_FLASH {
 
-    publishDir "${params.outdir}/trim_reads",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.{overlap.tsv,clean-reads.tsv,gz}"
-    publishDir "${params.qc_filecheck_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.Non-overlapping_FastQ_Files.tsv"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     label "process_low"
     tag { "${meta.id}" }
-
     container "snads/flash@sha256:363b2f44d040c669191efbc3d3ba99caf5efd3fdef370af8f00f3328932143a6"
 
     input:

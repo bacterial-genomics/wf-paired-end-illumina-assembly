@@ -1,16 +1,7 @@
 process REMOVE_PHIX_BBDUK {
 
-    publishDir "${params.qc_filecheck_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.{PhiX_Genome_File,PhiX-removed_FastQ_Files}.tsv"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     label "process_low"
     tag { "${meta.id}" }
-
     container "snads/bbtools@sha256:9f2a9b08563839cec87d856f0fc7607c235f464296fd71e15906ea1d15254695"
 
     input:

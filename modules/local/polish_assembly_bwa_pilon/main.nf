@@ -1,19 +1,7 @@
 process POLISH_ASSEMBLY_BWA_PILON {
 
-    publishDir "${params.outdir}/asm",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.{txt,fna}"
-    publishDir "${params.qc_filecheck_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*File*.tsv"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     label "process_high"
     tag { "${meta.id}" }
-
     container "gregorysprenger/bwa-samtools-pilon@sha256:209ac13b381188b4a72fe746d3ff93d1765044cbf73c3957e4e2f843886ca57f"
 
     input:

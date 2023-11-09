@@ -1,19 +1,7 @@
 process ANNOTATE_PROKKA {
 
-    publishDir "${params.outdir}/annot",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.gbk"
-    publishDir "${params.qc_filecheck_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.Annotated_GenBank_File.tsv"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     label "process_high"
     tag { "${meta.id}" }
-
     container "snads/prokka@sha256:ef7ee0835819dbb35cf69d1a2c41c5060691e71f9138288dd79d4922fa6d0050"
 
     input:
