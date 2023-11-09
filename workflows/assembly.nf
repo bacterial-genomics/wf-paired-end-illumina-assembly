@@ -694,9 +694,9 @@ workflow ASSEMBLY {
         .concat(ch_qc_filecheck)
         .flatten()
         .collectFile(
-            name:      "Summary.QC_File_Checks.tab",
-            storeDir:  "${params.outdir}/Summaries",
-            sort: 'index'
+            name:     "Summary.QC_File_Checks.tab",
+            storeDir: "${params.outdir}/Summaries",
+            sort:     'index'
         )
 
 }
