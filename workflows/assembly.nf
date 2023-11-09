@@ -215,7 +215,7 @@ workflow ASSEMBLY {
     ch_phix_removal_summary = ch_phix_removal_summary
                                 .mix(REMOVE_PHIX_BBDUK.out.phix_summary)
                                 .collectFile(
-                                    name:       "Summary.PhiX_removal.tab",
+                                    name:       "Summary.PhiX.tab",
                                     keepHeader: true,
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
