@@ -75,9 +75,9 @@ process TRIM_READS_TRIMMOMATIC {
     msg "INFO: $CNT_BROKEN total broken read pairs were saved as singletons" >&2
 
     echo -e "!{meta.id}\t${TRIMMO_DISCARD}\t${CNT_BROKEN}" \
-    > !{meta.id}.Trimmomatic.tsv
+    > !{meta.id}.trimmomatic.tsv
 
-    sed -i '1i Sample name\t# discarded reads\t# singleton reads' !{meta.id}.Trimmomatic.tsv
+    sed -i '1i Sample name\t# discarded reads\t# singleton reads' !{meta.id}.trimmomatic.tsv
 
     cat !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq > !{meta.id}.single.fq
 
