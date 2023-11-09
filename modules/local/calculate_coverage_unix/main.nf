@@ -9,15 +9,15 @@ process CALCULATE_COVERAGE_UNIX {
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                  , emit: versions
-    path "${meta.id}.Summary.Illumina.GenomeCoverage.tab", emit: genome_coverage
+    path "versions.yml"                 , emit: versions
+    path "${meta.id}.GenomeCoverage.tsv", emit: genome_coverage
 
     shell:
     '''
     source bash_functions.sh
 
     # Report coverage
-    echo -n '' > !{meta.id}.Summary.Illumina.GenomeCoverage.tab
+    echo -n '' > !{meta.id}.GenomeCoverage.tsv
     i=0
     while IFS=$'\t' read -r -a ln; do
       if grep -q -e "skesa_" -e "unicyc_" -e ".uncorrected" <<< "${ln[0]}"; then
@@ -40,10 +40,12 @@ process CALCULATE_COVERAGE_UNIX {
       msg "INFO: Coverage of !{meta.id}: $cov"
 
       if [[ "${cov}" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
-        echo -e "${ln[0]}\t${cov}x" >> !{meta.id}.Summary.Illumina.GenomeCoverage.tab
+        echo -e "${ln[0]}\t${cov}x" >> !{meta.id}.GenomeCoverage.tsv
         ((i=i+1))
       fi
     done < <(grep -v 'Total length' !{summary_assemblies})
+
+    sed -i '1i Sample name\tCoverage' !{meta.id}.GenomeCoverage.tsv
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

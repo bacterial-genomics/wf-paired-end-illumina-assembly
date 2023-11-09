@@ -170,16 +170,15 @@ if (params.blast_db) {
 workflow ASSEMBLY {
 
     // SETUP: Define empty channels to concatenate certain outputs
-    ch_versions             = Channel.empty()
-    ch_ssu_species          = Channel.empty()
-    ch_mlst_summary         = Channel.empty()
-    ch_qc_filecheck         = Channel.empty()
-    ch_blast_summary        = Channel.empty()
-    ch_cleaned_summary      = Channel.empty()
-    ch_alnstats_summary     = Channel.empty()
-    ch_assembly_summary     = Channel.empty()
-    ch_genome_cov_summary   = Channel.empty()
-    ch_phix_removal_summary = Channel.empty()
+    ch_versions                    = Channel.empty()
+    ch_ssu_species                 = Channel.empty()
+    ch_mlst_summary                = Channel.empty()
+    ch_blast_summary               = Channel.empty()
+    ch_cleaned_summary             = Channel.empty()
+    ch_assembly_summary            = Channel.empty()
+    ch_genome_cov_summary          = Channel.empty()
+    ch_phix_removal_summary        = Channel.empty()
+    ch_alignment_stats_summary     = Channel.empty()
 
     /*
     ================================================================================
@@ -361,10 +360,11 @@ workflow ASSEMBLY {
     ch_versions = ch_versions.mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.versions)
 
     // Collect all Summary Stats and concatenate into one file
-    ch_alnstats_summary = ch_alnstats_summary
-                            .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_alnstats)
+    ch_alignment_stats_summary = ch_alignment_stats_summary
+                            .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_alignment_stats)
+                            .map{ meta, file -> file }
                             .collectFile(
-                                name:     "Summary.Illumina.CleanedReads-AlnStats.tab",
+                                name:     "Summary.Illumina.CleanedReads-AlignmentStats.tab",
                                 keepHeader: true,
                                 storeDir: "${params.outdir}/Summaries"
                             )
@@ -381,6 +381,7 @@ workflow ASSEMBLY {
                         .mix(MLST_MLST.out.summary_mlst)
                         .collectFile(
                             name:     "Summary.MLST.tab",
+                            keepHeader: true,
                             storeDir: "${params.outdir}/Summaries"
                         )
 
@@ -475,6 +476,7 @@ workflow ASSEMBLY {
                         .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary)
                         .collectFile(
                             name:     "Summary.16S.tab",
+                            keepHeader: true,
                             storeDir: "${params.outdir}/Summaries"
                         )
 
@@ -483,6 +485,7 @@ workflow ASSEMBLY {
                         .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.ssu_species)
                         .collectFile(
                             name:     "16S-top-species.tsv",
+                            keepHeader: true,
                             storeDir: "${params.outdir}/SSU"
                         )
 
@@ -518,13 +521,14 @@ workflow ASSEMBLY {
                             .mix(QA_ASSEMBLY_QUAST.out.summary_reads)
                             .collectFile(
                                 name:     "Summary.Illumina.CleanedReads-Bases.tab",
+                                keepHeader: true,
                                 storeDir: "${params.outdir}/Summaries"
                             )
 
     // PROCESS: Calculate genome assembly depth of coverage
     CALCULATE_COVERAGE_UNIX (
         QA_ASSEMBLY_QUAST.out.qa_summaries
-            .join(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_stats)
+            .join(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_alignment_stats)
     )
     ch_versions = ch_versions.mix(CALCULATE_COVERAGE_UNIX.out.versions)
 
@@ -533,6 +537,7 @@ workflow ASSEMBLY {
                                 .mix(CALCULATE_COVERAGE_UNIX.out.genome_coverage)
                                 .collectFile(
                                     name:     "Summary.Illumina.GenomeCoverage.tab",
+                                    keepHeader: true,
                                     storeDir: "${params.outdir}/Summaries"
                                 )
 
@@ -666,6 +671,7 @@ workflow ASSEMBLY {
         )
 
     // Collect all QC File Checks and concatenate into one file
+    ch_qc_filecheck = Channel.empty()
     ch_qc_filecheck = ch_qc_filecheck
         .concat(
             INFILE_HANDLING_UNIX.out.qc_input_filecheck,
@@ -681,10 +687,16 @@ workflow ASSEMBLY {
             ALIGN_16S_BLAST.out.qc_blastn_filecheck,
             BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filtered_blastn_filecheck
         )
+        .map{ file -> file.getText() }
+
+    ch_qc_filecheck_header = Channel
+        .of("Sample name\tQC step\tOutcome (PASS/FAIL)\n")
+        .concat(ch_qc_filecheck)
+        .flatten()
         .collectFile(
-            name:     "Summary.QC_File_Checks.tab",
-            storeDir: "${params.outdir}/Summaries",
-            sort:     { it.getSimpleName() }
+            name:      "Summary.QC_File_Checks.tab",
+            storeDir:  "${params.outdir}/Summaries",
+            sort: 'index'
         )
 
 }

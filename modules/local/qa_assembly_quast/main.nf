@@ -10,10 +10,10 @@ process QA_ASSEMBLY_QUAST {
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                                                                                   , emit: versions
-    path "${meta.id}.Summary.Assemblies.tab"                                                                              , emit: summary_assemblies
-    path "${meta.id}.Summary.Illumina.CleanedReads-Bases.tab"                                                             , emit: summary_reads
-    tuple val(meta), path("${meta.id}.Summary.Assemblies.tab"), path("${meta.id}.Summary.Illumina.CleanedReads-Bases.tab"), emit: qa_summaries
+    path "versions.yml"                                                                            , emit: versions
+    path "${meta.id}.QuastSummary.tsv"                                                             , emit: summary_assemblies
+    path "${meta.id}.CleanedReads-Bases.tsv"                                                       , emit: summary_reads
+    tuple val(meta), path("${meta.id}.QuastSummary.tsv"), path("${meta.id}.CleanedReads-Bases.tsv"), emit: qa_summaries
 
     shell:
     '''
@@ -46,17 +46,17 @@ process QA_ASSEMBLY_QUAST {
       --contig-thresholds 500,1000 \
       "!{assembly}" >&2
 
-    mv -f quast/transposed_report.tsv !{meta.id}.Summary.Assemblies.tab
+    mv -f quast/transposed_report.tsv !{meta.id}.QuastSummary.tsv
 
     # Quast modifies basename. Need to check and modify if needed.
-    assemblies_name=$(awk '{print $1}' !{meta.id}.Summary.Assemblies.tab | awk 'NR!=1 {print}')
+    assemblies_name=$(awk '{print $1}' !{meta.id}.QuastSummary.tsv | awk 'NR!=1 {print}')
     if [ ${assemblies_name} != !{meta.id} ]; then
-      sed -i "s|${assemblies_name}|!{meta.id}|g" !{meta.id}.Summary.Assemblies.tab
+      sed -i "s|${assemblies_name}|!{meta.id}|g" !{meta.id}.QuastSummary.tsv
     fi
 
     # TO-DO: move this unix-only component to separate QA_READS_BASEPAIR_COUNT_UNIX
     # Count nucleotides per read set
-    echo -n '' > Summary.Illumina.CleanedReads-Bases.tab
+    echo -n '' > !{meta.id}.CleanedReads-Bases.tsv
     for (( i=0; i<3; i+=3 )); do
       R1=$(basename "!{R1}" _R1.paired.fq.gz)
       R2=$(basename "!{R2}" _R2.paired.fq.gz)
@@ -68,10 +68,10 @@ process QA_ASSEMBLY_QUAST {
         msg "ERROR: improperly grouped ${R1} ${R2} ${single}" >&2
         exit 1
       fi
-      echo -ne "${R1}\t" >> !{meta.id}.Summary.Illumina.CleanedReads-Bases.tab
+      echo -ne "${R1}\t" >> !{meta.id}.CleanedReads-Bases.tsv
       zcat "!{R1}" "!{R2}" "!{single}" | \
         awk 'BEGIN{SUM=0} {if(NR%4==2){SUM+=length($0)}} END{print SUM}' \
-          >> !{meta.id}.Summary.Illumina.CleanedReads-Bases.tab
+          >> !{meta.id}.CleanedReads-Bases.tsv
     done
 
     # Get process version information

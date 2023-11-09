@@ -10,8 +10,7 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     path ".command.out"
     path ".command.err"
     path "versions.yml"                                                           , emit: versions
-    path "${meta.id}.Summary.Illumina.CleanedReads-AlnStats.tab"                  , emit: summary_alnstats
-    tuple val(meta), path("${meta.id}.Summary.Illumina.CleanedReads-AlnStats.tab"), emit: summary_stats
+    tuple val(meta), path("${meta.id}.CleanedReads-AlnStats.tsv"), emit: summary_alignment_stats
 
     shell:
     '''
@@ -42,10 +41,11 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
       print sum " bp Paired Reads Mapped (" sum/NR "x)\t" SEcov NR " bp Genome"}')
 
     echo -e "!{meta.id}\t${cov_info}" \
-      > !{meta.id}.Summary.Illumina.CleanedReads-AlnStats.tab
+      > !{meta.id}.CleanedReads-AlnStats.tsv
 
-    sed -i 1i"Sample name\tCoverage of paired reads\tCoverage of singleton reads\tGenome size" \
-      !{meta.id}.Summary.Illumina.CleanedReads-AlnStats.tab
+    sed -i \
+      '1i Sample name\tCoverage of paired reads\tCoverage of singleton reads\tGenome size' \
+      !{meta.id}.CleanedReads-AlnStats.tsv
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

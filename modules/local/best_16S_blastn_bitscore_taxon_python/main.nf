@@ -46,6 +46,10 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
       "!{meta.id}.blast.tab" \
       > "!{meta.id}.16S-top-species.tsv"
 
+      sed -i \
+        '1i Sample name\tPercent identity\tPercent alignment\tSpecies match' \
+        "!{meta.id}.16S-top-species.tsv"
+
       cat "!{meta.id}.16S-top-species.tsv" >> "!{meta.id}.Summary.16S.tab"
       gzip -f !{blast_tsv}
 

@@ -11,8 +11,8 @@ process READ_CLASSIFY_KRAKEN_TWO {
     output:
     path ".command.out"
     path ".command.err"
-    path "${meta.id}_kraken2.tab.gz"
-    path "${meta.id}.taxonomy2-reads.tab"
+    path "${meta.id}.kraken2_output.tab.gz"
+    path "${meta.id}.Summary.tsv"
     path "versions.yml"                  , emit: versions
 
     shell:
@@ -32,7 +32,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
     done
 
     # Investigate taxonomic identity of cleaned reads
-    if [ ! -s !{meta.id}.taxonomy2-reads.tab ]; then
+    if [ ! -s !{meta.id}.Summary.tsv ]; then
       msg "INFO: Performing Kraken2 classifications"
       kraken2 \
         --use-names \
@@ -44,10 +44,15 @@ process READ_CLASSIFY_KRAKEN_TWO {
         !{paired_R1_gz} !{paired_R2_gz} !{single_gz}
 
       msg "INFO: Summarizing Kraken2"
-      summarize_kraken 'kraken2.tab' > !{meta.id}.taxonomy2-reads.tab
+      summarize_kraken 'kraken2.tab' > !{meta.id}.Summary.tsv
 
-      mv kraken2.tab !{meta.id}_kraken2.tab
-      gzip !{meta.id}_kraken2.tab
+      # Add header to kraken summary
+      sed -i \
+        '1i % Reads\t# Reads\tUnclassified\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads'
+        !{meta.id}.Summary.tsv
+
+      mv kraken2.tab !{meta.id}.kraken2_output.tab
+      gzip !{meta.id}.kraken2_output.tab
     fi
 
     # Get process version information

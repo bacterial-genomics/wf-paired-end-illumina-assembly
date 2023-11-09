@@ -35,6 +35,10 @@ process MLST_MLST {
         "!{assembly}" \
         --threads !{task.cpus} \
         >> !{meta.id}.Summary.MLST.tab
+
+      sed -i \
+        '1i Filename\tPubMLST scheme name\tSequence type\tAllele IDs' \
+        !{meta.id}.Summary.MLST.tab
     fi
 
     # Get process version information

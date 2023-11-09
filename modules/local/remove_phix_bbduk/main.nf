@@ -12,7 +12,7 @@ process REMOVE_PHIX_BBDUK {
     path ".command.out"
     path ".command.err"
     path "versions.yml"                                                                                    , emit: versions
-    path "${meta.id}.Summary.PhiX.tab"                                                                     , emit: phix_summary
+    path "${meta.id}.Summary.PhiX.tsv"                                                                     , emit: phix_summary
     path "${meta.id}.PhiX_Genome_File.tsv"                                                                 , emit: qc_phix_genome_filecheck
     path "${meta.id}.PhiX-removed_FastQ_Files.tsv"                                                         , emit: qc_phix_removed_filecheck
     tuple val(meta), path("${meta.id}_noPhiX-R1.fsq"), path("${meta.id}_noPhiX-R2.fsq"), path("*File*.tsv"), emit: phix_removed
@@ -64,6 +64,8 @@ process REMOVE_PHIX_BBDUK {
 
     # Try reformatting reads if bbduk was unsuccessful
     if [ $(run_bbduk "!{reads[0]}" "!{reads[1]}") == 1 ]; then
+      msg "ERROR: BBDuk failed.."
+      msg "INFO: Reformatting reads to try to fix errors.."
       for read in !{reads}; do
         reformat.sh \
           in="${read}" \
@@ -73,6 +75,7 @@ process REMOVE_PHIX_BBDUK {
 
       # Run bbduk again on reformatted reads
       #  If this fails, input reads are corrupted and will automatically exit
+      msg "INFO: Trying BBDuk again.."
       run_bbduk "reformatted.!{reads[0]}" "reformatted.!{reads[1]}"
     fi
 
@@ -138,8 +141,8 @@ process REMOVE_PHIX_BBDUK {
       ${TOT_BASES}
       "
 
-    echo -e $SUMMARY_HEADER > !{meta.id}.Summary.PhiX.tab
-    echo -e $SUMMARY_OUTPUT >> !{meta.id}.Summary.PhiX.tab
+    echo -e $SUMMARY_HEADER > !{meta.id}.Summary.PhiX.tsv
+    echo -e $SUMMARY_OUTPUT >> !{meta.id}.Summary.PhiX.tsv
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
