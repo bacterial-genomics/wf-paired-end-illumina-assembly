@@ -25,7 +25,7 @@ include { SUBSAMPLE_READS_TO_DEPTH_SEQTK     } from "../../modules/local/subsamp
 workflow DOWNSAMPLE {
 
     take:
-    ch_raw_reads
+    ch_raw_reads    // channel: [ val(meta), [reads]. [qc_filechecks] ]
 
     main:
     ch_versions = Channel.empty()
@@ -37,10 +37,8 @@ workflow DOWNSAMPLE {
         ESTIMATE_GENOME_SIZE_KMC (
             ch_raw_reads
         )
+        ch_versions = ch_versions.mix(ESTIMATE_GENOME_SIZE_KMC.out.versions)
 
-        // Collect version info
-        ch_versions = ch_versions
-            .mix(ESTIMATE_GENOME_SIZE_KMC.out.versions)
     } else {
         if (params.depth <= 0) {
             println "Depth is set to ${params.genome_size}x. No subsampling to perform and therefore no genome size estimation required."
@@ -62,13 +60,12 @@ workflow DOWNSAMPLE {
 
         ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX (
             COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.total_bp
-                .join(ESTIMATE_GENOME_SIZE_KMC.out.genome_size)
+                    .join(ESTIMATE_GENOME_SIZE_KMC.out.genome_size)
         )
 
         // Only if specified depth is less than wanted depth, subsample infiles
         SUBSAMPLE_READS_TO_DEPTH_SEQTK (
-            ch_raw_reads
-                .join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use)
+            ch_raw_reads.join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use)
         )
 
         // Collect subsampled reads
@@ -86,6 +83,6 @@ workflow DOWNSAMPLE {
     }
 
     emit:
-    reads     = ch_downsampled_reads
+    reads     = ch_downsampled_reads    // channel: [ val(meta), [reads]. [qc_filechecks] ]
     versions  = ch_versions
 }

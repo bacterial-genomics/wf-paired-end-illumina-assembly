@@ -32,7 +32,7 @@ def hasExtension(it, extension) {
 workflow INPUT_CHECK {
 
     take:
-    ch_input
+    ch_input    // channel: path
 
     main:
     ch_versions = Channel.empty()
@@ -156,6 +156,6 @@ workflow INPUT_CHECK {
         .map { ids -> if( ids.size() != ids.unique().size() ) {exit 1, "ERROR: input samplesheet contains duplicated sample IDs!" } }
 
     emit:
-    raw_reads = ch_raw_reads
+    raw_reads = ch_raw_reads    // channel: [ val(meta), [reads] ]
     versions  = ch_versions
 }
