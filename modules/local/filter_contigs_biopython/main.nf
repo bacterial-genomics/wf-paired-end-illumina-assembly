@@ -41,12 +41,13 @@ process FILTER_CONTIGS_BIOPYTHON {
       -i !{contigs} \
       -b "!{meta.id}" \
       -o !{meta.id}.uncorrected.fna \
+      -l !{params.filter_contigs_length} \
+      -c !{params.filter_contigs_coverage} \
+      --deflines !{params.filter_contigs_deflines} \
       !{no_sort} \
       !{gcskew} \
       !{discard_file} \
-      !{keep_low_complexity} \
-      -c !{params.filter_contigs_coverage} \
-      --deflines !{params.filter_contigs_deflines}
+      !{keep_low_complexity}
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
