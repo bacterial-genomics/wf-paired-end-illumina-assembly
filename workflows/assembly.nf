@@ -90,7 +90,7 @@ include { ASSEMBLE_CONTIGS                                    } from "../subwork
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    CREATE CHANNELS FOR INPUT FILES
+    CREATE CHANNELS FOR INPUT PARAMETERS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
@@ -217,7 +217,7 @@ workflow ASSEMBLY {
                                 .collectFile(
                                     name:       "Summary.PhiX_removal.tab",
                                     keepHeader: true,
-                                    storeDir:   "${params.outdir}/qa"
+                                    storeDir:   "${params.outdir}/Summaries"
                                 )
 
     // PROCESS: Run trimmomatic to clip adapters and do quality trimming
@@ -244,7 +244,14 @@ workflow ASSEMBLY {
         if ( ch_kraken1_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
             KRAKEN1_DB_PREPARATION_UNIX (
-                ch_kraken1_db_file
+                Channel
+                    .of(ch_kraken1_db_file)
+                    .map{
+                        file ->
+                            def meta = [:]
+                            meta['id'] = file.getSimpleName()
+                            [ meta, file ]
+                    }
             )
             ch_versions = ch_versions.mix(KRAKEN1_DB_PREPARATION_UNIX.out.versions)
 
@@ -291,7 +298,14 @@ workflow ASSEMBLY {
         if ( ch_kraken2_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
             KRAKEN2_DB_PREPARATION_UNIX (
-                ch_kraken2_db_file
+                Channel
+                    .of(ch_kraken2_db_file)
+                    .map{
+                        file ->
+                            def meta = [:]
+                            meta['id'] = file.getSimpleName()
+                            [ meta, file ]
+                    }
             )
             ch_versions = ch_versions.mix(KRAKEN2_DB_PREPARATION_UNIX.out.versions)
 
@@ -352,7 +366,7 @@ workflow ASSEMBLY {
                             .collectFile(
                                 name:     "Summary.Illumina.CleanedReads-AlnStats.tab",
                                 keepHeader: true,
-                                storeDir: "${params.outdir}/qa"
+                                storeDir: "${params.outdir}/Summaries"
                             )
 
     // PROCESS: Run MLST to find MLST for each polished assembly
@@ -367,7 +381,7 @@ workflow ASSEMBLY {
                         .mix(MLST_MLST.out.summary_mlst)
                         .collectFile(
                             name:     "Summary.MLST.tab",
-                            storeDir: "${params.outdir}/qa"
+                            storeDir: "${params.outdir}/Summaries"
                         )
 
     // PROCESS: Annotate the polished assembly using Prokka
@@ -403,7 +417,14 @@ workflow ASSEMBLY {
         if ( ch_blast_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
             BLAST_DB_PREPARATION_UNIX (
-                ch_blast_db_file
+                Channel
+                    .of(ch_blast_db_file)
+                    .map{
+                        file ->
+                            def meta = [:]
+                            meta['id'] = file.getSimpleName()
+                            [ meta, file ]
+                    }
             )
             ch_versions = ch_versions.mix(BLAST_DB_PREPARATION_UNIX.out.versions)
 
@@ -454,7 +475,7 @@ workflow ASSEMBLY {
                         .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary)
                         .collectFile(
                             name:     "Summary.16S.tab",
-                            storeDir: "${params.outdir}/qa"
+                            storeDir: "${params.outdir}/Summaries"
                         )
 
     // Collect all BLAST Top Species Summaries and concatenate into one file
@@ -462,7 +483,7 @@ workflow ASSEMBLY {
                         .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.ssu_species)
                         .collectFile(
                             name:     "16S-top-species.tsv",
-                            storeDir: "${params.outdir}/ssu"
+                            storeDir: "${params.outdir}/SSU"
                         )
 
     /*
@@ -489,7 +510,7 @@ workflow ASSEMBLY {
                             .collectFile(
                                 name:       "Summary.Assemblies.tab",
                                 keepHeader: true,
-                                storeDir:   "${params.outdir}/qa"
+                                storeDir:   "${params.outdir}/Summaries"
                             )
 
     // Collect all Cleaned Read/Base Summaries and concatenate into one file
@@ -497,7 +518,7 @@ workflow ASSEMBLY {
                             .mix(QA_ASSEMBLY_QUAST.out.summary_reads)
                             .collectFile(
                                 name:     "Summary.Illumina.CleanedReads-Bases.tab",
-                                storeDir: "${params.outdir}/qa"
+                                storeDir: "${params.outdir}/Summaries"
                             )
 
     // PROCESS: Calculate genome assembly depth of coverage
@@ -512,7 +533,7 @@ workflow ASSEMBLY {
                                 .mix(CALCULATE_COVERAGE_UNIX.out.genome_coverage)
                                 .collectFile(
                                     name:     "Summary.Illumina.GenomeCoverage.tab",
-                                    storeDir: "${params.outdir}/qa"
+                                    storeDir: "${params.outdir}/Summaries"
                                 )
 
     /*
@@ -532,7 +553,14 @@ workflow ASSEMBLY {
         if ( ch_gtdbtk_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
             GTDBTK_DB_PREPARATION_UNIX (
-                ch_gtdbtk_db_file
+                Channel
+                    .of(ch_gtdbtk_db_file)
+                    .map{
+                        file ->
+                            def meta = [:]
+                            meta['id'] = file.getSimpleName()
+                            [ meta, file ]
+                    }
             )
             ch_versions = ch_versions.mix(GTDBTK_DB_PREPARATION_UNIX.out.versions)
 
@@ -566,7 +594,14 @@ workflow ASSEMBLY {
         if ( ch_busco_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be tar.gz!
             BUSCO_DB_PREPARATION_UNIX(
-                ch_busco_db_file
+                Channel
+                    .of(ch_busco_db_file)
+                    .map{
+                        file ->
+                            def meta = [:]
+                            meta['id'] = file.getSimpleName()
+                            [ meta, file ]
+                    }
             )
             ch_versions = ch_versions.mix(BUSCO_DB_PREPARATION_UNIX.out.versions)
 
@@ -648,7 +683,7 @@ workflow ASSEMBLY {
         )
         .collectFile(
             name:     "Summary.QC_File_Checks.tab",
-            storeDir: "${params.outdir}/qa",
+            storeDir: "${params.outdir}/Summaries",
             sort:     { it.getSimpleName() }
         )
 
