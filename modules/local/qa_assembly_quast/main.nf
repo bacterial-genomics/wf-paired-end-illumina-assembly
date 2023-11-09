@@ -5,7 +5,7 @@ process QA_ASSEMBLY_QUAST {
     container "snads/quast@sha256:c8147a279feafbc88bafeeda3817ff32d43db87d31dd0978df1cd2f8022d324c"
 
     input:
-      tuple val(meta), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck), path(assembly)
+    tuple val(meta), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck), path(assembly)
 
     output:
     path ".command.out"
