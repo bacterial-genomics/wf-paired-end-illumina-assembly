@@ -228,6 +228,7 @@ workflow ASSEMBLY {
         INPUT_CHECK.out.raw_reads
     )
     ch_versions = ch_versions.mix(INFILE_HANDLING_UNIX.out.versions)
+    checkQCFilechecks(INFILE_HANDLING_UNIX.out.qc_filecheck)
 
     // SUBWORKFLOW: Downsample FastQ files
     DOWNSAMPLE (
@@ -241,6 +242,7 @@ workflow ASSEMBLY {
         ch_phix_reference
     )
     ch_versions = ch_versions.mix(REMOVE_PHIX_BBDUK.out.versions)
+    checkQCFilechecks(REMOVE_PHIX_BBDUK.out.qc_filecheck)
 
     ch_phix_removal_summary = ch_phix_removal_summary
                                 .mix(REMOVE_PHIX_BBDUK.out.phix_summary)
@@ -255,13 +257,16 @@ workflow ASSEMBLY {
         REMOVE_PHIX_BBDUK.out.phix_removed,
         ch_adapter_reference
     )
+    TRIM_READS_TRIMMOMATIC.out.qc_filecheck.view()
     ch_versions = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
+    checkQCFilechecks(TRIM_READS_TRIMMOMATIC.out.qc_filecheck)
 
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
     OVERLAP_PAIRED_READS_FLASH (
         TRIM_READS_TRIMMOMATIC.out.trimmo
     )
     ch_versions = ch_versions.mix(OVERLAP_PAIRED_READS_FLASH.out.versions)
+    checkQCFilechecks(OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck)
 
     /*
     ================================================================================
@@ -422,6 +427,7 @@ workflow ASSEMBLY {
             .join(ASSEMBLE_CONTIGS.out.assembly)
     )
     ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
+    checkQCFilechecks(ANNOTATE_PROKKA.out.qc_filecheck)
 
     /*
     ================================================================================
@@ -443,6 +449,7 @@ workflow ASSEMBLY {
             .join(EXTRACT_16S_BIOPYTHON.out.extracted_rna)
     )
     ch_versions = ch_versions.mix(EXTRACT_16S_BARRNAP.out.versions)
+    checkQCFilechecks(EXTRACT_16S_BARRNAP.out.qc_filecheck)
 
     // Prepare BLAST database for use
     if ( ch_blast_db_file ) {
@@ -494,6 +501,7 @@ workflow ASSEMBLY {
         ch_db_for_blast
     )
     ch_versions = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
+    checkQCFilechecks(ALIGN_16S_BLAST.out.qc_filecheck)
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
@@ -501,6 +509,7 @@ workflow ASSEMBLY {
             .join(ASSEMBLE_CONTIGS.out.assembly)
     )
     ch_versions = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
+    checkQCFilechecks(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck)
 
     // Collect all BLAST Summaries and concatenate into one file
     ch_blast_summary = ch_blast_summary
@@ -705,25 +714,16 @@ workflow ASSEMBLY {
     ch_qc_filecheck = Channel.empty()
     ch_qc_filecheck = ch_qc_filecheck
         .concat(
-            INFILE_HANDLING_UNIX.out.qc_input_filecheck,
-            REMOVE_PHIX_BBDUK.out.qc_phix_genome_filecheck,
-            REMOVE_PHIX_BBDUK.out.qc_phix_removed_filecheck,
-            TRIM_READS_TRIMMOMATIC.out.qc_adapters_filecheck,
-            TRIM_READS_TRIMMOMATIC.out.qc_removed_adapters_filecheck,
-            OVERLAP_PAIRED_READS_FLASH.out.qc_nonoverlap_filecheck,
-            ASSEMBLE_CONTIGS.out.qc_filechecks,
-            ANNOTATE_PROKKA.out.qc_annotated_filecheck,
-            EXTRACT_16S_BARRNAP.out.qc_ssu_extracted_filecheck,
-            EXTRACT_16S_BARRNAP.out.qc_ssu_renamed_filecheck,
-            ALIGN_16S_BLAST.out.qc_blastn_filecheck,
-            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filtered_blastn_filecheck
+            INFILE_HANDLING_UNIX.out.qc_filecheck,
+            REMOVE_PHIX_BBDUK.out.qc_filecheck,
+            TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
+            OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,
+            ASSEMBLE_CONTIGS.out.qc_filecheck,
+            ANNOTATE_PROKKA.out.qc_filecheck,
+            EXTRACT_16S_BARRNAP.out.qc_filecheck,
+            ALIGN_16S_BLAST.out.qc_filecheck,
+            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck
         )
-        .map{ file -> file.getText() }
-
-    ch_qc_filecheck_header = Channel
-        .of("Sample name\tQC step\tOutcome (PASS/FAIL)\n")
-        .concat(ch_qc_filecheck)
-        .flatten()
         .collectFile(
             name:     "Summary.QC_File_Checks.tab",
             storeDir: "${params.outdir}/Summaries",
