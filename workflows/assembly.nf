@@ -724,6 +724,7 @@ workflow ASSEMBLY {
         )
         .collectFile(
             name:     "Summary.QC_File_Checks.tab",
+            keepHeader: true,
             storeDir: "${params.outdir}/Summaries",
             sort:     'index'
         )
