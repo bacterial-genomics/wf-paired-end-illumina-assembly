@@ -25,7 +25,7 @@ include { SUBSAMPLE_READS_TO_DEPTH_SEQTK     } from "../../modules/local/subsamp
 workflow DOWNSAMPLE {
 
     take:
-    ch_raw_reads    // channel: [ val(meta), [reads]. [qc_filechecks] ]
+    ch_raw_reads    // channel: [ val(meta), [reads] ]
 
     main:
     ch_versions = Channel.empty()
@@ -57,25 +57,23 @@ workflow DOWNSAMPLE {
         COUNT_TOTAL_BP_INPUT_READS_SEQTK (
             ch_raw_reads
         )
+        ch_versions = ch_versions.mix(COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.versions)
 
         ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX (
             COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.total_bp
                     .join(ESTIMATE_GENOME_SIZE_KMC.out.genome_size)
         )
+        ch_versions = ch_versions.mix(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.versions)
 
         // Only if specified depth is less than wanted depth, subsample infiles
         SUBSAMPLE_READS_TO_DEPTH_SEQTK (
             ch_raw_reads.join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use)
         )
+        ch_versions = ch_versions.mix(SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.versions)
 
         // Collect subsampled reads
         ch_downsampled_reads = SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.reads
 
-        // Collect version info
-        ch_versions = ch_versions
-                        .mix(COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.versions)
-                        .mix(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.versions)
-                        .mix(SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.versions)
     } else {
         // Skip subsampling and pass raw reads to PhiX removal
         // Collect raw reads
@@ -83,6 +81,6 @@ workflow DOWNSAMPLE {
     }
 
     emit:
-    reads     = ch_downsampled_reads    // channel: [ val(meta), [reads]. [qc_filechecks] ]
+    reads     = ch_downsampled_reads    // channel: [ val(meta), [reads] ]
     versions  = ch_versions
 }
