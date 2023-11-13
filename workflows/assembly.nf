@@ -165,6 +165,35 @@ if (params.blast_db) {
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    WORKFLOW FUNCTIONS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// Check QC filechecks for a failure
+def checkQCFilechecks(it) {
+    it.map{
+        file ->
+            // Obtain file contents
+            getData = file.getText()
+
+            // Add header if needed
+            if ( !getData.split('\n').first().contains('Sample name') ) {
+                file.write("Sample name\tQC step\tOutcome (Pass/Fail)\n")
+                file.append(getData)
+            }
+
+            // Move to QC log directory
+            file.copyTo(params.qc_filecheck_log_dir)
+
+            // Check file contents for failure
+            if ( getData.contains('FAIL') ) {
+                error("${file.getBaseName().split('\\.').last().replace('_', ' ')} check failed!")
+            }
+    }
+}
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
