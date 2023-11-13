@@ -11,75 +11,78 @@ process ASSEMBLE_CONTIGS_SPADES {
     path "${meta.id}/"
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                                  , emit: versions
-    path "${meta.id}.Raw_Assembly_File.tsv"                              , emit: qc_raw_assembly_filecheck
-    tuple val(meta), path("${meta.id}/contigs.fasta"), path("*File*.tsv"), emit: contigs
+    path "versions.yml"                              , emit: versions
+    path "${meta.id}.Raw_Assembly_File.tsv"          , emit: qc_filecheck
+    tuple val(meta), path("${meta.id}/contigs.fasta"), emit: contigs
 
     shell:
     '''
     source bash_functions.sh
 
-    # Assemble with SPAdes
-    failed=0
-
+    # Run SPAdes assembler; try up to 3 times
     msg "INFO: Assembling contigs using SPAdes"
-
-    while [[ ! -f !{meta.id}_tmp/contigs.fasta ]] && [ ${failed} -lt 2 ]; do
+    failed=0
+    while [[ ! -f SPAdes/contigs.fasta ]] && [ ${failed} -lt 2 ]; do
       RAMSIZE=$(echo !{task.memory} | cut -d ' ' -f 1)
 
       if [ ${failed} -gt 0 ]; then
         msg "ERROR: assembly file not produced by SPAdes for !{meta.id}" >&2
-
-        mv -f !{meta.id}_tmp/spades.log \
-        !{meta.id}_tmp/"${failed}"of3-asm-attempt-failed.spades.log 2> /dev/null
-
+        mv -f SPAdes/spades.log \
+          SPAdes/"${failed}"of3-asm-attempt-failed.spades.log 2> /dev/null
         msg "INFO: SPAdes failure ${failed}; retrying assembly for !{meta.id}" >&2
 
         spades.py \
           --restart-from last \
-          -o !{meta.id}_tmp \
+          -o SPAdes \
           -t !{task.cpus} >&2
 
       else
 
         spades.py \
-          --pe1-1 !{R1} \
-          --pe1-2 !{R2} \
-          --pe1-s !{single} \
-          -t !{task.cpus} \
-          -o !{meta.id}_tmp \
-          --phred-offset 33 \
+          -1 !{R1} \
+          -2 !{R2} \
+          -s !{single} \
+          -o SPAdes \
           --memory "${RAMSIZE}" \
-          --only-assembler >&2
+          --threads !{task.cpus}
+          # param.mode
+          # -k !{params.kmer_sizes} \
 
       fi
       failed=$(( ${failed}+1 ))
     done
 
-    if verify_minimum_file_size "!{meta.id}_tmp/contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then
+    # Verify file output
+    if verify_minimum_file_size "SPAdes/contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then
       echo -e "!{meta.id}\tRaw Assembly File\tPASS" > !{meta.id}.Raw_Assembly_File.tsv
     else
       echo -e "!{meta.id}\tRaw Assembly File\tFAIL" > !{meta.id}.Raw_Assembly_File.tsv
     fi
 
-    if grep -E -q 'N{60}' "!{meta.id}_tmp/contigs.fasta"; then
+    if grep -E -q 'N{60}' "SPAdes/contigs.fasta"; then
       # avoid this again: https://github.com/ablab/spades/issues/273
       msg "ERROR: contigs.fasta contains 60+ Ns" >&2
       exit 1
     fi
 
-    gzip !{meta.id}_tmp/spades.log \
-    !{meta.id}_tmp/params.txt
+    # Compress log and paramters files for compact storage
+    gzip -9f SPAdes/spades.log \
+      SPAdes/params.txt
 
-    mkdir !{meta.id}
-    mv !{meta.id}_tmp/spades.log.gz \
-      !{meta.id}_tmp/params.txt.gz \
-      !{meta.id}_tmp/contigs.fasta \
-      !{meta.id}_tmp/assembly_graph_with_scaffolds.gfa \
-      !{meta.id}/
+    # Most a few spades files into a new sample name dir for storage
+    mkdir -p !{meta.id}
+    mv -t !{meta.id}/ \
+      SPAdes/spades.log.gz \
+      SPAdes/params.txt.gz \
+      SPAdes/contigs.fasta \
+      SPAdes/assembly_graph_with_scaffolds.gfa
 
-    if [ -f !{meta.id}_tmp/warnings.log ]; then
-      mv !{meta.id}_tmp/warnings.log !{meta.id}/
+    # Move extra logfiles if exist
+    if [ -f SPAdes/warnings.log ]; then
+      mv SPAdes/warnings.log !{meta.id}/
+    fi
+    if [ -f SPAdes/*of3-asm-attempt-failed.spades.log ]; then
+      mv SPAdes/*of3-asm-attempt-failed.spades.log !{meta.id}/
     fi
 
     # Get process version information
