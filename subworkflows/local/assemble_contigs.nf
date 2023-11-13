@@ -133,8 +133,8 @@ workflow ASSEMBLE_CONTIGS {
     }
 
     emit:
-    bam           = bam
-    assembly      = assembly
+    bam           = bam             // channel: [ val(meta), [paired.bam], [single.bam] ]
+    assembly      = assembly        // channel: [ val(meta), [assembly.fna] ]
     versions      = ch_versions
-    qc_filecheck = ch_qc_filechecks
+    qc_filecheck  = ch_qc_filechecks
 }
