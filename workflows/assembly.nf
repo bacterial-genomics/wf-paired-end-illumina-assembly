@@ -422,8 +422,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Annotate the polished assembly using Prokka
     ANNOTATE_PROKKA (
-        ASSEMBLE_CONTIGS.out.bam
-            .join(ASSEMBLE_CONTIGS.out.assembly)
+        ASSEMBLE_CONTIGS.out.assembly
     )
     ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
     checkQCFilechecks(ANNOTATE_PROKKA.out.qc_filecheck)
