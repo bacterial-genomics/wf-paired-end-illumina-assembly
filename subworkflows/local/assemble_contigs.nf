@@ -33,6 +33,29 @@ def toLower(it) {
 
 assembler = toLower(params.assembler)
 
+// Check QC filechecks for a failure
+def checkQCFilechecks(it) {
+    it.flatten().map{
+        file ->
+            // Obtain file contents
+            getData = file.getText()
+
+            // Add header if needed
+            if ( !getData.split('\n').first().contains('Sample name') ) {
+                file.write("Sample name\tQC step\tOutcome (Pass/Fail)\n")
+                file.append(getData)
+            }
+
+            // Move to QC log directory
+            file.copyTo(params.qc_filecheck_log_dir)
+
+            // Check file contents for failure
+            if ( getData.contains('FAIL') ) {
+                error("${file.getBaseName().split('\\.').last().replace('_', ' ')} check failed!")
+            }
+    }
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN ASSEMBLE_CONTIGS WORKFLOW
@@ -42,7 +65,7 @@ assembler = toLower(params.assembler)
 workflow ASSEMBLE_CONTIGS {
 
     take:
-    ch_cleaned_reads    // channel: [ val(meta), [read1], [read2], [single], [qc_filechecks] ]
+    ch_cleaned_reads    // channel: [ val(meta), [read1], [read2], [single] ]
 
     main:
     ch_versions = Channel.empty()
@@ -54,6 +77,7 @@ workflow ASSEMBLE_CONTIGS {
             ch_cleaned_reads
         )
         ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS_SKESA.out.versions)
+        checkQCFilechecks(ASSEMBLE_CONTIGS_SKESA.out.qc_filecheck)
 
         // PROCESS: Filter contigs based on length, coverage, GC skew, and compositional complexity
         FILTER_CONTIGS_BIOPYTHON (
@@ -66,6 +90,7 @@ workflow ASSEMBLE_CONTIGS {
             ch_cleaned_reads.join(FILTER_CONTIGS_BIOPYTHON.out.uncorrected_contigs)
         )
         ch_versions = ch_versions.mix(MAP_CONTIGS_BWA.out.versions)
+        checkQCFilechecks(MAP_CONTIGS_BWA.out.qc_filecheck)
 
         // Collect output files
         bam      = MAP_CONTIGS_BWA.out.bam
@@ -73,11 +98,8 @@ workflow ASSEMBLE_CONTIGS {
 
         // Collect QC File Checks
         ch_qc_filechecks = ch_qc_filechecks
-                                .mix(ASSEMBLE_CONTIGS_SKESA.out.qc_raw_assembly_filecheck)
-                                .mix(MAP_CONTIGS_BWA.out.qc_filtered_asm_filecheck)
-                                .mix(MAP_CONTIGS_BWA.out.qc_pe_alignment_filecheck)
-                                .mix(MAP_CONTIGS_BWA.out.qc_corrected_asm_filecheck)
-                                .mix(MAP_CONTIGS_BWA.out.qc_se_alignment_filecheck)
+                                .mix(ASSEMBLE_CONTIGS_SKESA.out.qc_filecheck)
+                                .mix(MAP_CONTIGS_BWA.out.qc_filecheck)
     } else {
         // Defaulting to SPAdes assembler
         // PROCESS: Run SPAdes to assemble contigs with cleaned paired reads and cleaned singletons
@@ -85,6 +107,7 @@ workflow ASSEMBLE_CONTIGS {
             ch_cleaned_reads
         )
         ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS_SPADES.out.versions)
+        checkQCFilechecks(ASSEMBLE_CONTIGS_SPADES.out.qc_filecheck)
 
         // PROCESS: Filter contigs based on length, coverage, GC skew, and compositional complexity
         FILTER_CONTIGS_BIOPYTHON (
@@ -97,6 +120,7 @@ workflow ASSEMBLE_CONTIGS {
             ch_cleaned_reads.join(FILTER_CONTIGS_BIOPYTHON.out.uncorrected_contigs)
         )
         ch_versions = ch_versions.mix(POLISH_ASSEMBLY_BWA_PILON.out.versions)
+        checkQCFilechecks(POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck)
 
         // Collect output files
         bam      = POLISH_ASSEMBLY_BWA_PILON.out.bam
@@ -104,17 +128,13 @@ workflow ASSEMBLE_CONTIGS {
 
         // Collect QC File Checks
         ch_qc_filechecks = ch_qc_filechecks
-                                .mix(ASSEMBLE_CONTIGS_SPADES.out.qc_raw_assembly_filecheck)
-                                .mix(POLISH_ASSEMBLY_BWA_PILON.out.qc_filtered_asm_filecheck)
-                                .mix(POLISH_ASSEMBLY_BWA_PILON.out.qc_pe_alignment_filecheck)
-                                .mix(POLISH_ASSEMBLY_BWA_PILON.out.qc_polished_asm_filecheck)
-                                .mix(POLISH_ASSEMBLY_BWA_PILON.out.qc_corrected_asm_filecheck)
-                                .mix(POLISH_ASSEMBLY_BWA_PILON.out.qc_se_alignment_filecheck)
+                                .mix(ASSEMBLE_CONTIGS_SPADES.out.qc_filecheck)
+                                .mix(POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck)
     }
 
     emit:
     bam           = bam
     assembly      = assembly
     versions      = ch_versions
-    qc_filechecks = ch_qc_filechecks
+    qc_filecheck = ch_qc_filechecks
 }
