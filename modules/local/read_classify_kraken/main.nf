@@ -3,7 +3,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
     label "process_high"
     label "process_high_memory"
     tag { "${meta.id}" }
-    container "gregorysprenger/kraken@sha256:650ce8ce4a5e313dfafa1726168bb4f7942e543075743766afe1f21ae19abf9c"
+    container "gregorysprenger/kraken@sha256:b5ab4b75fb197b16e81d8cc3878e08479bc7d105ac0b2e948e6f6a9985cfc93e"
 
     input:
     tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz)

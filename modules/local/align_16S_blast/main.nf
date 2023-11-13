@@ -1,7 +1,7 @@
 process ALIGN_16S_BLAST {
 
     tag { "${meta.id}" }
-    container "gregorysprenger/ncbi-blast-plus@sha256:2d3e226d2eb31e3e0d5a80d7325b3a2ffd873ad1f2bd81215fd0b43727019279"
+    container "gregorysprenger/ncbi-blast-plus@sha256:f187706adb753c44f50e5be82d85c518e9cd0ae090bc30ce5e14bb35565a380a"
 
     input:
     tuple val(meta), path(extracted_base), path(assembly)

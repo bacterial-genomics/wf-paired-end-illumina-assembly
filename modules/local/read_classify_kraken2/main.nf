@@ -2,7 +2,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
 
     label "process_high"
     tag { "${meta.id}" }
-    container "gregorysprenger/kraken2@sha256:e4282b158c9899382a23b53b8e07a791b83d8fd89e502b640a8cd0a411f6ca72"
+    container "gregorysprenger/kraken2@sha256:213e70b0f465464b2e52f9f128dcb0cc6761705f6e99b7ce48a5a27a6851083a"
 
     input:
     tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz)
