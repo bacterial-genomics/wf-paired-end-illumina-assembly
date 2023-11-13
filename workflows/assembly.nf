@@ -42,51 +42,53 @@ if(params.busco_config){
 //
 // MODULES: Local modules
 //
-include { INFILE_HANDLING_UNIX                                } from "../modules/local/infile_handling_unix/main"
+include { INFILE_HANDLING_UNIX                    } from "../modules/local/infile_handling_unix/main"
 
-include { REMOVE_PHIX_BBDUK                                   } from "../modules/local/remove_phix_bbduk/main"
-include { TRIM_READS_TRIMMOMATIC                              } from "../modules/local/trim_reads_trimmomatic/main"
-//include { TRIM_READS_FASTP                                  } from "../modules/local/trim_reads_fastp/main"
-include { OVERLAP_PAIRED_READS_FLASH                          } from "../modules/local/overlap_paired_reads_flash/main"
-//include { OVERLAP_PAIRED_READS_PEAR                         } from "../modules/local/overlap_paired_reads_pear/main"
+include { REMOVE_PHIX_BBDUK                       } from "../modules/local/remove_phix_bbduk/main"
+include { TRIM_READS_TRIMMOMATIC                  } from "../modules/local/trim_reads_trimmomatic/main"
+//include { TRIM_READS_FASTP                      } from "../modules/local/trim_reads_fastp/main"
+include { OVERLAP_PAIRED_READS_FLASH              } from "../modules/local/overlap_paired_reads_flash/main"
+//include { OVERLAP_PAIRED_READS_PEAR             } from "../modules/local/overlap_paired_reads_pear/main"
 
-include { KRAKEN1_DB_PREPARATION_UNIX                         } from "../modules/local/kraken1_db_preparation_unix/main"
-include { READ_CLASSIFY_KRAKEN_ONE                            } from "../modules/local/read_classify_kraken/main"
-include { KRAKEN2_DB_PREPARATION_UNIX                         } from "../modules/local/kraken2_db_preparation_unix/main"
-include { READ_CLASSIFY_KRAKEN_TWO                            } from "../modules/local/read_classify_kraken2/main"
-//include { READ_CLASSIFY_CENTRIFUGE                          } from "../modules/local/read_classify_centrifuge/main"
+include { KRAKEN1_DB_PREPARATION_UNIX             } from "../modules/local/kraken1_db_preparation_unix/main"
+include { READ_CLASSIFY_KRAKEN_ONE                } from "../modules/local/read_classify_kraken/main"
+include { KRAKEN2_DB_PREPARATION_UNIX             } from "../modules/local/kraken2_db_preparation_unix/main"
+include { READ_CLASSIFY_KRAKEN_TWO                } from "../modules/local/read_classify_kraken2/main"
+// include { READ_CLASSIFY_CENTRIFUGE                } from "../modules/local/read_classify_centrifuge/main"
+// include { READ_CLASSIFY_KRAKENUNIQ                } from "../modules/local/read_classify_krakenuniq/main"
+// include { READ_CLASSIFY_METAPHLAN                 } from "../modules/local/read_classify_metaphlan/main"
 
-include { EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS              } from "../modules/local/extract_read_alignment_depths_bedtools/main"
-include { CALCULATE_COVERAGE_UNIX                             } from "../modules/local/calculate_coverage_unix/main"
+include { EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS  } from "../modules/local/extract_read_alignment_depths_bedtools/main"
+include { CALCULATE_COVERAGE_UNIX                 } from "../modules/local/calculate_coverage_unix/main"
 
-include { MLST_MLST                                           } from "../modules/local/mlst_mlst/main"
-//include { MLST_SRST2                                        } from "../modules/local/mlst_srst2/main"
+include { MLST_MLST                               } from "../modules/local/mlst_mlst/main"
+//include { MLST_SRST2                            } from "../modules/local/mlst_srst2/main"
 
-include { ANNOTATE_PROKKA                                     } from "../modules/local/annotate_prokka/main"
-//include { ANNOTATE_BACTA                                    } from "../modules/local/annotate_bacta/main"
+include { ANNOTATE_PROKKA                         } from "../modules/local/annotate_prokka/main"
+//include { ANNOTATE_BAKTA                        } from "../modules/local/annotate_bakta/main"
 
-include { EXTRACT_16S_BIOPYTHON                               } from "../modules/local/extract_16S_biopython/main"
-include { EXTRACT_16S_BARRNAP                                 } from "../modules/local/extract_16S_barrnap/main"
-//include { 16S_EXTRACT_RNAMMER                               } from "../modules/local/16S_extract_rnammer/main"
-include { BLAST_DB_PREPARATION_UNIX                           } from "../modules/local/blast_db_preparation_unix/main"
-include { ALIGN_16S_BLAST                                     } from "../modules/local/align_16S_blast/main"
-include { BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON               } from "../modules/local/best_16S_blastn_bitscore_taxon_python/main"
-include { SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON                 } from "../modules/local/split_multifasta_assembly_biopython/main"
+include { EXTRACT_16S_BIOPYTHON                   } from "../modules/local/extract_16S_biopython/main"
+include { EXTRACT_16S_BARRNAP                     } from "../modules/local/extract_16S_barrnap/main"
+//include { 16S_EXTRACT_RNAMMER                   } from "../modules/local/16S_extract_rnammer/main"
+include { BLAST_DB_PREPARATION_UNIX               } from "../modules/local/blast_db_preparation_unix/main"
+include { ALIGN_16S_BLAST                         } from "../modules/local/align_16S_blast/main"
+include { BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON   } from "../modules/local/best_16S_blastn_bitscore_taxon_python/main"
+include { SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON     } from "../modules/local/split_multifasta_assembly_biopython/main"
 
-include { GTDBTK_DB_PREPARATION_UNIX                          } from "../modules/local/gtdbtk_db_preparation_unix/main"
-include { GTDBTK_CLASSIFYWF as QA_ASSEMBLY_GTDBTK             } from "../modules/nf-core/gtdbtk/classifywf/main"
-include { BUSCO_DB_PREPARATION_UNIX                           } from "../modules/local/busco_db_preparation_unix/main"
-include { BUSCO as QA_ASSEMBLY_BUSCO                          } from "../modules/nf-core/busco/main"
-include { QA_ASSEMBLY_QUAST                                   } from "../modules/local/qa_assembly_quast/main"
-//include { QA_ASSEMBLY_CAT                                   } from "../modules/local/qa_assembly_cat/main"
-//include { QA_ASSEMBLY_CHECKM2                               } from "../modules/local/qa_assembly_checkm2/main"
+include { GTDBTK_DB_PREPARATION_UNIX              } from "../modules/local/gtdbtk_db_preparation_unix/main"
+include { GTDBTK_CLASSIFYWF as QA_ASSEMBLY_GTDBTK } from "../modules/nf-core/gtdbtk/classifywf/main"
+include { BUSCO_DB_PREPARATION_UNIX               } from "../modules/local/busco_db_preparation_unix/main"
+include { BUSCO as QA_ASSEMBLY_BUSCO              } from "../modules/nf-core/busco/main"
+include { QA_ASSEMBLY_QUAST                       } from "../modules/local/qa_assembly_quast/main"
+//include { QA_ASSEMBLY_CAT                       } from "../modules/local/qa_assembly_cat/main"
+//include { QA_ASSEMBLY_CHECKM2                   } from "../modules/local/qa_assembly_checkm2/main"
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK                                         } from "../subworkflows/local/input_check"
-include { DOWNSAMPLE                                          } from "../subworkflows/local/downsampling"
-include { ASSEMBLE_CONTIGS                                    } from "../subworkflows/local/assemble_contigs"
+include { INPUT_CHECK                             } from "../subworkflows/local/input_check"
+include { DOWNSAMPLE                              } from "../subworkflows/local/downsampling"
+include { ASSEMBLE_CONTIGS                        } from "../subworkflows/local/assemble_contigs"
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -170,15 +172,15 @@ if (params.blast_db) {
 workflow ASSEMBLY {
 
     // SETUP: Define empty channels to concatenate certain outputs
-    ch_versions                    = Channel.empty()
-    ch_ssu_species                 = Channel.empty()
-    ch_mlst_summary                = Channel.empty()
-    ch_blast_summary               = Channel.empty()
-    ch_cleaned_summary             = Channel.empty()
-    ch_assembly_summary            = Channel.empty()
-    ch_genome_cov_summary          = Channel.empty()
-    ch_phix_removal_summary        = Channel.empty()
-    ch_alignment_stats_summary     = Channel.empty()
+    ch_versions                = Channel.empty()
+    ch_ssu_species             = Channel.empty()
+    ch_mlst_summary            = Channel.empty()
+    ch_blast_summary           = Channel.empty()
+    ch_cleaned_summary         = Channel.empty()
+    ch_assembly_summary        = Channel.empty()
+    ch_genome_cov_summary      = Channel.empty()
+    ch_phix_removal_summary    = Channel.empty()
+    ch_alignment_stats_summary = Channel.empty()
 
     /*
     ================================================================================
