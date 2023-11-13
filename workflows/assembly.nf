@@ -257,7 +257,6 @@ workflow ASSEMBLY {
         REMOVE_PHIX_BBDUK.out.phix_removed,
         ch_adapter_reference
     )
-    TRIM_READS_TRIMMOMATIC.out.qc_filecheck.view()
     ch_versions = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
     checkQCFilechecks(TRIM_READS_TRIMMOMATIC.out.qc_filecheck)
 
