@@ -171,7 +171,7 @@ if (params.blast_db) {
 
 // Check QC filechecks for a failure
 def checkQCFilechecks(it) {
-    it.map{
+    it.flatten().map{
         file ->
             // Obtain file contents
             getData = file.getText()
