@@ -4,21 +4,21 @@ process EXTRACT_16S_BARRNAP {
     container "snads/barrnap@sha256:e22cbd789c36d5626460feb6c7e5f6f7d55c8628dacae68ba0da30884195a837"
 
     input:
-    tuple val(meta), path(annotation), path(assembly), path(extracted_rna)
+    tuple val(meta), path(prokka_genbank_file), path(assembly), path(biopython_extracted_rna)
 
     output:
     path ".command.out"
     path ".command.err"
     path "versions.yml"                                , emit: versions
     path("${meta.id}.SSU_{Renamed,Extracted}_File.tsv"), emit: qc_filecheck
-    tuple val(meta), path("16S.${meta.id}.fa")         , emit: extracted_base
+    tuple val(meta), path("16S.${meta.id}.fa")         , emit: barnapp_extracted_rna
 
     shell:
     '''
     source bash_functions.sh
 
-    if [[ ! -f "!{extracted_rna}" ]] || [[ ! -s "!{extracted_rna}" ]]; then
-      msg "INFO: Absent 16S rRNA gene annotation in !{annotation}" >&2
+    if [[ ! -f "!{biopython_extracted_rna}" ]] || [[ ! -s "!{biopython_extracted_rna}" ]]; then
+      msg "INFO: Absent 16S rRNA gene prokka_genbank_file in !{prokka_genbank_file}" >&2
       msg 'Running barrnap' >&2
 
       barrnap !{assembly} | grep "Name=16S_rRNA;product=16S" > !{meta.id}.gff

@@ -4,7 +4,7 @@ process ALIGN_16S_BLAST {
     container "gregorysprenger/ncbi-blast-plus@sha256:f187706adb753c44f50e5be82d85c518e9cd0ae090bc30ce5e14bb35565a380a"
 
     input:
-    tuple val(meta), path(extracted_base), path(assembly)
+    tuple val(meta), path(barnapp_extracted_rna), path(assembly)
     val database
 
     output:
@@ -12,7 +12,7 @@ process ALIGN_16S_BLAST {
     path ".command.err"
     path "versions.yml"                          , emit: versions
     path "${meta.id}.16S_BLASTn_Output_File.tsv" , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}.blast.tsv"), emit: blast_tsv
+    tuple val(meta), path("${meta.id}.blast.tsv"), emit: blast_output
 
     shell:
     '''
@@ -25,7 +25,7 @@ process ALIGN_16S_BLAST {
       -task blastn \
       -db !{database} \
       -num_threads "!{task.cpus}" \
-      -query "!{extracted_base}" \
+      -query "!{barnapp_extracted_rna}" \
       -out "!{meta.id}.blast.tsv" \
       -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovhsp ssciname"
 

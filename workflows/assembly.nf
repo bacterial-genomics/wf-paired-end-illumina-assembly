@@ -254,7 +254,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Run trimmomatic to clip adapters and do quality trimming
     TRIM_READS_TRIMMOMATIC (
-        REMOVE_PHIX_BBDUK.out.phix_removed,
+        REMOVE_PHIX_BBDUK.out.fastq_phix_removed,
         ch_adapter_reference
     )
     ch_versions = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
@@ -262,7 +262,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
     OVERLAP_PAIRED_READS_FLASH (
-        TRIM_READS_TRIMMOMATIC.out.trimmo
+        TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed
     )
     ch_versions = ch_versions.mix(OVERLAP_PAIRED_READS_FLASH.out.versions)
     checkQCFilechecks(OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck)
@@ -322,7 +322,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Run kraken1 on paired cleaned reads
     READ_CLASSIFY_KRAKEN_ONE (
-        OVERLAP_PAIRED_READS_FLASH.out.gzip_reads,
+        OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
         ch_db_for_kraken1
     )
     ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
@@ -366,7 +366,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Run kraken2 on paired cleaned reads
     READ_CLASSIFY_KRAKEN_TWO (
-        OVERLAP_PAIRED_READS_FLASH.out.gzip_reads,
+        OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
         ch_db_for_kraken2
     )
     ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
@@ -378,7 +378,7 @@ workflow ASSEMBLY {
     */
 
     ASSEMBLE_CONTIGS (
-        OVERLAP_PAIRED_READS_FLASH.out.gzip_reads
+        OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files
     )
     ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS.out.versions)
 
@@ -390,7 +390,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Run Bedtools to extract coverage from the pre-computed BAM alignment file
     EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS (
-        ASSEMBLE_CONTIGS.out.bam
+        ASSEMBLE_CONTIGS.out.bam_files
     )
     ch_versions = ch_versions.mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.versions)
 
@@ -406,8 +406,8 @@ workflow ASSEMBLY {
 
     // PROCESS: Run MLST to find MLST for each polished assembly
     MLST_MLST (
-        ASSEMBLE_CONTIGS.out.bam
-            .join(ASSEMBLE_CONTIGS.out.assembly)
+        ASSEMBLE_CONTIGS.out.bam_files
+            .join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(MLST_MLST.out.versions)
 
@@ -422,7 +422,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Annotate the polished assembly using Prokka
     ANNOTATE_PROKKA (
-        ASSEMBLE_CONTIGS.out.assembly
+        ASSEMBLE_CONTIGS.out.assembly_file
     )
     ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
     checkQCFilechecks(ANNOTATE_PROKKA.out.qc_filecheck)
@@ -433,18 +433,18 @@ workflow ASSEMBLY {
     ================================================================================
     */
 
-    // PROCESS: Attempt to extract 16S rRNA gene records from annotation file
+    // PROCESS: Attempt to extract 16S rRNA gene records from prokka_genbank_file file
     EXTRACT_16S_BIOPYTHON (
-        ANNOTATE_PROKKA.out.annotation
-            .join(ASSEMBLE_CONTIGS.out.assembly)
+        ANNOTATE_PROKKA.out.prokka_genbank_file
+            .join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(EXTRACT_16S_BIOPYTHON.out.versions)
 
     // PROCESS: Extract 16S rRNA gene sequences with Barrnap if missing from 16S_EXTRACT_BIOPYTHON
     EXTRACT_16S_BARRNAP (
-        ANNOTATE_PROKKA.out.annotation
-            .join(ASSEMBLE_CONTIGS.out.assembly)
-            .join(EXTRACT_16S_BIOPYTHON.out.extracted_rna)
+        ANNOTATE_PROKKA.out.prokka_genbank_file
+            .join(ASSEMBLE_CONTIGS.out.assembly_file)
+            .join(EXTRACT_16S_BIOPYTHON.out.biopython_extracted_rna)
     )
     ch_versions = ch_versions.mix(EXTRACT_16S_BARRNAP.out.versions)
     checkQCFilechecks(EXTRACT_16S_BARRNAP.out.qc_filecheck)
@@ -494,8 +494,8 @@ workflow ASSEMBLY {
 
     // PROCESS: Run Blast on predicted 16S ribosomal RNA genes
     ALIGN_16S_BLAST (
-        EXTRACT_16S_BARRNAP.out.extracted_base
-            .join(ASSEMBLE_CONTIGS.out.assembly),
+        EXTRACT_16S_BARRNAP.out.barnapp_extracted_rna
+            .join(ASSEMBLE_CONTIGS.out.assembly_file),
         ch_db_for_blast
     )
     ch_versions = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
@@ -503,8 +503,8 @@ workflow ASSEMBLY {
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
-        ALIGN_16S_BLAST.out.blast_tsv
-            .join(ASSEMBLE_CONTIGS.out.assembly)
+        ALIGN_16S_BLAST.out.blast_output
+            .join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
     checkQCFilechecks(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck)
@@ -520,7 +520,7 @@ workflow ASSEMBLY {
 
     // Collect all BLAST Top Species Summaries and concatenate into one file
     ch_ssu_species = ch_ssu_species
-                        .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.ssu_species)
+                        .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.top_blast_species)
                         .collectFile(
                             name:     "16S-top-species.tsv",
                             keepHeader: true,
@@ -540,8 +540,8 @@ workflow ASSEMBLY {
     // PROCESS: Run QUAST on the polished assembly for quality assessment and
     //  report the number of cleaned basepairs used to form the assembly
     QA_ASSEMBLY_QUAST (
-        OVERLAP_PAIRED_READS_FLASH.out.gzip_reads
-            .join(ASSEMBLE_CONTIGS.out.assembly)
+        OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files
+            .join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(QA_ASSEMBLY_QUAST.out.versions)
 
@@ -585,7 +585,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Classify assembly FastA file using GTDB-Tk
     if (!params.skip_gtdbtk && params.gtdb_db) {
-        ch_contigs = ASSEMBLE_CONTIGS.out.assembly
+        ch_contigs = ASSEMBLE_CONTIGS.out.assembly_file
                         .map {
                             meta, bins ->
                                 def meta_new = meta.clone()
@@ -680,7 +680,7 @@ workflow ASSEMBLY {
 
         // PROCESS: Split assembly FastA file into individual contig files
         SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON (
-            ASSEMBLE_CONTIGS.out.assembly
+            ASSEMBLE_CONTIGS.out.assembly_file
         )
         ch_versions = ch_versions.mix(SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.versions)
 

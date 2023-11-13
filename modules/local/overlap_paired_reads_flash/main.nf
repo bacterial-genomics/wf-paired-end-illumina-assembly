@@ -14,7 +14,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     path "${meta.id}.clean-reads.tsv"
     path "versions.yml"                                                                                                     , emit: versions
     path "${meta.id}.Non-overlapping_FastQ_Files.tsv"                                                                       , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}_R1.paired.fq.gz"), path("${meta.id}_R2.paired.fq.gz"), path("${meta.id}.single.fq.gz"), emit: gzip_reads
+    tuple val(meta), path("${meta.id}_R1.paired.fq.gz"), path("${meta.id}_R2.paired.fq.gz"), path("${meta.id}.single.fq.gz"), emit: cleaned_fastq_files
 
     shell:
     '''

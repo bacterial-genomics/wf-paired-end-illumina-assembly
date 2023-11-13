@@ -14,7 +14,7 @@ process REMOVE_PHIX_BBDUK {
     path "versions.yml"                                                                , emit: versions
     path "${meta.id}.Summary.PhiX.tsv"                                                 , emit: phix_summary
     path("${meta.id}.PhiX*_File.tsv")                                                  , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}_noPhiX-R1.fsq"), path("${meta.id}_noPhiX-R2.fsq"), emit: phix_removed
+    tuple val(meta), path("${meta.id}_noPhiX-R1.fsq"), path("${meta.id}_noPhiX-R2.fsq"), emit: fastq_phix_removed
 
     shell:
     '''

@@ -93,8 +93,8 @@ workflow ASSEMBLE_CONTIGS {
         checkQCFilechecks(MAP_CONTIGS_BWA.out.qc_filecheck)
 
         // Collect output files
-        bam      = MAP_CONTIGS_BWA.out.bam
-        assembly = MAP_CONTIGS_BWA.out.assembly
+        ch_bam_files      = MAP_CONTIGS_BWA.out.bam
+        ch_assembly_file  = MAP_CONTIGS_BWA.out.assembly
 
         // Collect QC File Checks
         ch_qc_filechecks = ch_qc_filechecks
@@ -123,8 +123,8 @@ workflow ASSEMBLE_CONTIGS {
         checkQCFilechecks(POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck)
 
         // Collect output files
-        bam      = POLISH_ASSEMBLY_BWA_PILON.out.bam
-        assembly = POLISH_ASSEMBLY_BWA_PILON.out.assembly
+        ch_bam_files      = POLISH_ASSEMBLY_BWA_PILON.out.bam
+        ch_assembly_file  = POLISH_ASSEMBLY_BWA_PILON.out.assembly
 
         // Collect QC File Checks
         ch_qc_filechecks = ch_qc_filechecks
@@ -133,8 +133,8 @@ workflow ASSEMBLE_CONTIGS {
     }
 
     emit:
-    bam           = bam             // channel: [ val(meta), [paired.bam], [single.bam] ]
-    assembly      = assembly        // channel: [ val(meta), [assembly.fna] ]
+    bam_files     = ch_bam_files            // channel: [ val(meta), [paired.bam], [single.bam] ]
+    assembly_file = ch_assembly_file        // channel: [ val(meta), [assembly.fna] ]
     versions      = ch_versions
     qc_filecheck  = ch_qc_filechecks
 }

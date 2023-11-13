@@ -15,7 +15,7 @@ process TRIM_READS_TRIMMOMATIC {
     path "${meta.id}.trimmomatic.tsv"
     path "versions.yml"                                                              , emit: versions
     path("${meta.id}.Adapter*_File.tsv")                                             , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}_R1.paired.fq"), path("${meta.id}_R2.paired.fq"), emit: trimmo
+    tuple val(meta), path("${meta.id}_R1.paired.fq"), path("${meta.id}_R2.paired.fq"), emit: fastq_adapters_removed
 
     shell:
     '''

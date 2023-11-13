@@ -4,7 +4,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-    tuple val(meta), path(blast_tsv), path(assembly)
+    tuple val(meta), path(blast_output), path(assembly)
 
     output:
     path ".command.out"
@@ -12,7 +12,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     path "${meta.id}.blast.tsv.gz"
     path "versions.yml"                           , emit: versions
     path "${meta.id}.Summary.16S.tab"             , emit: blast_summary
-    path "${meta.id}.16S-top-species.tsv"         , emit: ssu_species
+    path "${meta.id}.16S-top-species.tsv"         , emit: top_blast_species
     path "${meta.id}.Filtered_16S_BLASTn_File.tsv", emit: qc_filecheck
 
     shell:
@@ -21,7 +21,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
 
     # Get the top match by bitscore
     filter.blast.py \
-      -i "!{blast_tsv}" \
+      -i "!{blast_output}" \
       -o "!{meta.id}.blast.tab" \
       -c !{params.filter_blast_column} \
       -s !{params.filter_blast_bitscore}
@@ -40,14 +40,14 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
         "!{meta.id}.16S-top-species.tsv"
 
       cat "!{meta.id}.16S-top-species.tsv" >> "!{meta.id}.Summary.16S.tab"
-      gzip -f !{blast_tsv}
+      gzip -f !{blast_output}
 
     else
       echo -e "!{meta.id}\tFiltered 16S BLASTn File\tFAIL" \
         > !{meta.id}.Filtered_16S_BLASTn_File.tsv
 
       # Empty files to avoid errors
-      touch !{meta.id}.16S-top-species.tsv !{meta.id}.Summary.16S.tab !{blast_tsv}.gz
+      touch !{meta.id}.16S-top-species.tsv !{meta.id}.Summary.16S.tab !{blast_output}.gz
     fi
 
     # Get process version information

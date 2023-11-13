@@ -60,7 +60,7 @@ workflow DOWNSAMPLE {
         ch_versions = ch_versions.mix(COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.versions)
 
         ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX (
-            COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.total_bp
+            COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.input_total_bp
                     .join(ESTIMATE_GENOME_SIZE_KMC.out.genome_size)
         )
         ch_versions = ch_versions.mix(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.versions)

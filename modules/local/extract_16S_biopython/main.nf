@@ -4,22 +4,22 @@ process EXTRACT_16S_BIOPYTHON {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-    tuple val(meta), path(annotation), path(assembly)
+    tuple val(meta), path(prokka_genbank_file), path(assembly)
 
     output:
     path ".command.out"
     path ".command.err"
     path "versions.yml"                       , emit: versions
-    tuple val(meta), path("16S.${meta.id}.fa"), emit: extracted_rna
+    tuple val(meta), path("16S.${meta.id}.fa"), emit: biopython_extracted_rna
 
     shell:
     '''
     source bash_functions.sh
 
     # 16S extraction
-    if [[ -s "!{annotation}" ]]; then
+    if [[ -s "!{prokka_genbank_file}" ]]; then
       extract.record.from.genbank.py \
-        -i "!{annotation}" \
+        -i "!{prokka_genbank_file}" \
         -o "16S.!{meta.id}.fa" \
         -q "!{params.genbank_query}" \
         -f !{params.genbank_query_feature} \

@@ -4,7 +4,7 @@ process ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX {
     container "ubuntu:jammy"
 
     input:
-    tuple val(meta), val(total_bp), val(genome_size)
+    tuple val(meta), val(input_total_bp), val(genome_size)
 
     output:
     path ".command.out"
@@ -16,7 +16,7 @@ process ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX {
     '''
     source bash_functions.sh
 
-    bp=$(cat !{total_bp})
+    bp=$(cat !{input_total_bp})
     size=$(cat !{genome_size})
 
     initial_depth=$(( ${bp} / ${size} ))

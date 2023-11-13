@@ -13,7 +13,7 @@ process ANNOTATE_PROKKA {
     path "prokka/${meta.id}.log.gz"
     path "versions.yml"                         , emit: versions
     path "${meta.id}.Annotated_GenBank_File.tsv", emit: qc_filecheck
-    tuple val(meta), path("${meta.id}.gbk")     , emit: annotation
+    tuple val(meta), path("${meta.id}.gbk")     , emit: prokka_genbank_file
 
     shell:
     '''
