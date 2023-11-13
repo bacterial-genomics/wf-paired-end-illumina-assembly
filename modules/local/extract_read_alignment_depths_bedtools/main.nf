@@ -4,28 +4,17 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     container "snads/bedtools@sha256:9b80fb5c5ef1b6f4a4a211d8739fa3fe107da34d1fb6609d6b70ddc7afdce12c"
 
     input:
-    tuple val(meta), path(paired_bam), path(single_bam), path(qc_assembly_filecheck)
+    tuple val(meta), path(paired_bam), path(single_bam)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                                           , emit: versions
+    path "versions.yml"                                          , emit: versions
     tuple val(meta), path("${meta.id}.CleanedReads-AlnStats.tsv"), emit: summary_alignment_stats
 
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_assembly_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Calculate and report coverage of paired-reads and singleton reads separately
     msg "INFO: Extracting read alignment depths using bedtools"

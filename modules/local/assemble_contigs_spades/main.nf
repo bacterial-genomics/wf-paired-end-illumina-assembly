@@ -5,7 +5,7 @@ process ASSEMBLE_CONTIGS_SPADES {
     container "gregorysprenger/spades@sha256:3fe1ebda8f5746ca3e3ff79c74c220d2ca75e3120f20441c3e6ae88eff03b4dc"
 
     input:
-    tuple val(meta), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck)
+    tuple val(meta), path(R1), path(R2), path(single)
 
     output:
     path "${meta.id}/"
@@ -18,17 +18,6 @@ process ASSEMBLE_CONTIGS_SPADES {
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_nonoverlap_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Assemble with SPAdes
     failed=0

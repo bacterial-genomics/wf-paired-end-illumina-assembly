@@ -6,7 +6,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
     container "gregorysprenger/kraken@sha256:650ce8ce4a5e313dfafa1726168bb4f7942e543075743766afe1f21ae19abf9c"
 
     input:
-    tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck)
+    tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz)
     path database
 
     output:
@@ -20,17 +20,6 @@ process READ_CLASSIFY_KRAKEN_ONE {
     '''
     source bash_functions.sh
     source summarize_kraken.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_nonoverlap_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Investigate taxonomic identity of cleaned reads
     if [ ! -s !{meta.id}.Summary.tsv ]; then

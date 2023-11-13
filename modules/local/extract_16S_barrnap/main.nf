@@ -4,30 +4,18 @@ process EXTRACT_16S_BARRNAP {
     container "snads/barrnap@sha256:e22cbd789c36d5626460feb6c7e5f6f7d55c8628dacae68ba0da30884195a837"
 
     input:
-    tuple val(meta), path(annotation), path(qc_annotated_filecheck), path(assembly), path(extracted_rna)
+    tuple val(meta), path(annotation), path(assembly), path(extracted_rna)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                           , emit: versions
-    path "${meta.id}.SSU_Renamed_File.tsv"                        , emit: qc_ssu_renamed_filecheck
-    path "${meta.id}.SSU_Extracted_File.tsv"                      , emit: qc_ssu_extracted_filecheck
-    tuple val(meta), path("16S.${meta.id}.fa"), path("*File*.tsv"), emit: extracted_base
+    path "versions.yml"                                , emit: versions
+    path("${meta.id}.SSU_{Renamed,Extracted}_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("16S.${meta.id}.fa")         , emit: extracted_base
 
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_annotated_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     if [[ ! -f "!{extracted_rna}" ]] || [[ ! -s "!{extracted_rna}" ]]; then
       msg "INFO: Absent 16S rRNA gene annotation in !{annotation}" >&2

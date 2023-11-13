@@ -5,7 +5,7 @@ process QA_ASSEMBLY_QUAST {
     container "snads/quast@sha256:c8147a279feafbc88bafeeda3817ff32d43db87d31dd0978df1cd2f8022d324c"
 
     input:
-    tuple val(meta), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck), path(assembly)
+    tuple val(meta), path(R1), path(R2), path(single), path(assembly)
 
     output:
     path ".command.out"
@@ -18,17 +18,6 @@ process QA_ASSEMBLY_QUAST {
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_nonoverlap_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Run Quast
     msg "INFO: Evaluating assembly using QUAST"

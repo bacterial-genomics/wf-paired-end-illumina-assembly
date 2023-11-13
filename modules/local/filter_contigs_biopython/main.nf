@@ -4,7 +4,7 @@ process FILTER_CONTIGS_BIOPYTHON {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-    tuple val(meta), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck), path(contigs), path(qc_assembly_filecheck)
+    tuple val(meta), path(R1), path(R2), path(single), path(contigs)
 
     output:
     path ".command.out"
@@ -24,17 +24,6 @@ process FILTER_CONTIGS_BIOPYTHON {
     }
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_nonoverlap_filecheck} !{qc_assembly_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Remove junk contigs
     filter.contigs.py \

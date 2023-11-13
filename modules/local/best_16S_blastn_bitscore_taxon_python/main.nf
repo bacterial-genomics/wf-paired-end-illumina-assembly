@@ -4,7 +4,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-    tuple val(meta), path(blast_tsv), path(qc_aligned_blast_filecheck), path(assembly)
+    tuple val(meta), path(blast_tsv), path(assembly)
 
     output:
     path ".command.out"
@@ -13,22 +13,11 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     path "versions.yml"                           , emit: versions
     path "${meta.id}.Summary.16S.tab"             , emit: blast_summary
     path "${meta.id}.16S-top-species.tsv"         , emit: ssu_species
-    path "${meta.id}.Filtered_16S_BLASTn_File.tsv", emit: qc_filtered_blastn_filecheck
+    path "${meta.id}.Filtered_16S_BLASTn_File.tsv", emit: qc_filecheck
 
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_aligned_blast_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Get the top match by bitscore
     filter.blast.py \

@@ -10,8 +10,8 @@ process INFILE_HANDLING_UNIX {
     path ".command.out"
     path ".command.err"
     path "versions.yml"                             , emit: versions
-    tuple val(meta), path(reads), path("*File*.tsv"), emit: input
-    path "${meta.id}.Raw_Initial_FastQ_Files.tsv"   , emit: qc_input_filecheck
+    tuple val(meta), path(reads)                    , emit: input
+    path "${meta.id}.Raw_Initial_FastQ_File.tsv"   , emit: qc_filecheck
 
     shell:
     '''
@@ -24,10 +24,10 @@ process INFILE_HANDLING_UNIX {
     for fastq in !{reads}; do
       if verify_minimum_file_size "${fastq}" 'Raw Initial FastQ Files' "!{params.min_filesize_fastq_input}"; then
         echo -e "!{meta.id}\tRaw Initial FastQ (R${i}) File\tPASS" \
-        >> !{meta.id}.Raw_Initial_FastQ_Files.tsv
+        >> !{meta.id}.Raw_Initial_FastQ_File.tsv
       else
         echo -e "!{meta.id}\tRaw Initial FastQ (R${i}) File\tFAIL" \
-        >> !{meta.id}.Raw_Initial_FastQ_Files.tsv
+        >> !{meta.id}.Raw_Initial_FastQ_File.tsv
       fi
       ((i++))
     done

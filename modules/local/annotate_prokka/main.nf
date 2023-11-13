@@ -5,29 +5,18 @@ process ANNOTATE_PROKKA {
     container "snads/prokka@sha256:ef7ee0835819dbb35cf69d1a2c41c5060691e71f9138288dd79d4922fa6d0050"
 
     input:
-    tuple val(meta), path(paired_bam), path(single_bam), path(qc_assembly_filecheck), path(assembly)
+    tuple val(meta), path(assembly)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                        , emit: versions
-    path "${meta.id}.Annotated_GenBank_File.tsv"               , emit: qc_annotated_filecheck
-    tuple val(meta), path("${meta.id}.gbk"), path("*File*.tsv"), emit: annotation
+    path "versions.yml"                         , emit: versions
+    path "${meta.id}.Annotated_GenBank_File.tsv", emit: qc_annotated_filecheck
+    tuple val(meta), path("${meta.id}.gbk")     , emit: annotation
 
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_assembly_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Remove seperator characters from basename for future processes
     short_base=$(echo !{meta.id} | sed 's/[-._].*//g')

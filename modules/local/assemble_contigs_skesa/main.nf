@@ -5,30 +5,19 @@ process ASSEMBLE_CONTIGS_SKESA {
     container "gregorysprenger/skesa@sha256:4455882b5d0fd968630325428729395422be7340301c31d15874a295904b7f26"
 
     input:
-    tuple val(meta), path(R1), path(R2), path(single), path(qc_nonoverlap_filecheck)
+    tuple val(meta), path(R1), path(R2), path(single)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                       , emit: versions
-    path "${meta.id}.Raw_Assembly_File.tsv"                   , emit: qc_raw_assembly_filecheck
-    tuple val(meta), path("contigs.fasta"), path("*File*.tsv"), emit: contigs
+    path "versions.yml"                    , emit: versions
+    path "${meta.id}.Raw_Assembly_File.tsv", emit: qc_filecheck
+    tuple val(meta), path("contigs.fasta") , emit: contigs
 
     shell:
     allow_snps = params.skesa_allow_snps ? "--allow snps" : ""
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_nonoverlap_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     msg "INFO: Assembling contigs using SKESA"
 

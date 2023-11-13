@@ -5,7 +5,7 @@ process TRIM_READS_TRIMMOMATIC {
     container "snads/trimmomatic@sha256:afbb19fdf540e6bd508b657e8dafffb6b411b5b0bf0e302347889220a0b571f1"
 
     input:
-    tuple val(meta), path(noPhiX_R1), path(noPhiX_R2), path(qc_phix_filecheck)
+    tuple val(meta), path(noPhiX_R1), path(noPhiX_R2)
     path adapter_reference_file
 
     output:
@@ -13,25 +13,13 @@ process TRIM_READS_TRIMMOMATIC {
     path ".command.err"
     path "${meta.id}.single.fq"
     path "${meta.id}.trimmomatic.tsv"
-    path "versions.yml"                                                                                  , emit: versions
-    path "${meta.id}.Adapters_FastA_File.tsv"                                                            , emit: qc_adapters_filecheck
-    path "${meta.id}.Adapter-removed_FastQ_Files.tsv"                                                    , emit: qc_removed_adapters_filecheck
-    tuple val(meta), path("${meta.id}_R1.paired.fq"), path("${meta.id}_R2.paired.fq"), path("*File*.tsv"), emit: trimmo
+    path "versions.yml"                                                              , emit: versions
+    path("${meta.id}.Adapter*_File.tsv")                                             , emit: qc_filecheck
+    tuple val(meta), path("${meta.id}_R1.paired.fq"), path("${meta.id}_R2.paired.fq"), emit: trimmo
 
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_phix_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Verify adapter reference file size
     if verify_minimum_file_size !{adapter_reference_file} 'Adapters FastA' "!{params.min_filesize_adapters}"; then
@@ -86,10 +74,10 @@ process TRIM_READS_TRIMMOMATIC {
     for suff in R1.paired.fq R2.paired.fq; do
       if verify_minimum_file_size "!{meta.id}_${suff}" 'Adapter-removed FastQ Files' "!{params.min_filesize_fastq_adapters_removed}"; then
         echo -e "!{meta.id}\tAdapter-removed ($suff) FastQ File\tPASS" \
-          >> !{meta.id}.Adapter-removed_FastQ_Files.tsv
+          >> !{meta.id}.Adapter-removed_FastQ_File.tsv
       else
         echo -e "!{meta.id}\tAdapter-removed ($suff) FastQ File\tFAIL" \
-          >> !{meta.id}.Adapter-removed_FastQ_Files.tsv
+          >> !{meta.id}.Adapter-removed_FastQ_File.tsv
       fi
     done
 

@@ -5,32 +5,20 @@ process REMOVE_PHIX_BBDUK {
     container "snads/bbtools@sha256:9f2a9b08563839cec87d856f0fc7607c235f464296fd71e15906ea1d15254695"
 
     input:
-    tuple val(meta), path(reads), path(qc_input_filecheck)
+    tuple val(meta), path(reads)
     path phix_reference_file
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                                                                    , emit: versions
-    path "${meta.id}.Summary.PhiX.tsv"                                                                     , emit: phix_summary
-    path "${meta.id}.PhiX_Genome_File.tsv"                                                                 , emit: qc_phix_genome_filecheck
-    path "${meta.id}.PhiX-removed_FastQ_Files.tsv"                                                         , emit: qc_phix_removed_filecheck
-    tuple val(meta), path("${meta.id}_noPhiX-R1.fsq"), path("${meta.id}_noPhiX-R2.fsq"), path("*File*.tsv"), emit: phix_removed
+    path "versions.yml"                                                                , emit: versions
+    path "${meta.id}.Summary.PhiX.tsv"                                                 , emit: phix_summary
+    path("${meta.id}.PhiX*_File.tsv")                                                  , emit: qc_filecheck
+    tuple val(meta), path("${meta.id}_noPhiX-R1.fsq"), path("${meta.id}_noPhiX-R2.fsq"), emit: phix_removed
 
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_input_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Verify PhiX reference file size
     if verify_minimum_file_size !{phix_reference_file} 'PhiX Genome' "!{params.min_filesize_phix_genome}"; then
@@ -82,10 +70,10 @@ process REMOVE_PHIX_BBDUK {
     for suff in R1.fsq R2.fsq; do
       if verify_minimum_file_size "!{meta.id}_noPhiX-${suff}" 'PhiX-removed FastQ Files' "!{params.min_filesize_fastq_phix_removed}"; then
         echo -e "!{meta.id}\tPhiX-removed FastQ ($suff) File\tPASS" \
-          >> !{meta.id}.PhiX-removed_FastQ_Files.tsv
+          >> !{meta.id}.PhiX-removed_FastQ_File.tsv
       else
         echo -e "!{meta.id}\tPhiX-removed FastQ ($suff) File\tFAIL" \
-          >> !{meta.id}.PhiX-removed_FastQ_Files.tsv
+          >> !{meta.id}.PhiX-removed_FastQ_File.tsv
       fi
     done
 

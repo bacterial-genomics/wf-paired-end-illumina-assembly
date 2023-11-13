@@ -5,36 +5,20 @@ process POLISH_ASSEMBLY_BWA_PILON {
     container "gregorysprenger/bwa-samtools-pilon@sha256:209ac13b381188b4a72fe746d3ff93d1765044cbf73c3957e4e2f843886ca57f"
 
     input:
-    tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck), path(uncorrected_contigs)
+    tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(uncorrected_contigs)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                                                              , emit: versions
-    path "${meta.id}.SNPs-corrected.cnt.txt"
-    path "${meta.id}.InDels-corrected.cnt.txt"
-    tuple val(meta), path("${meta.id}.fna")                                                          , emit: assembly
-    path "${meta.id}.Filtered_Assembly_File.tsv"                                                     , emit: qc_filtered_asm_filecheck
-    path "${meta.id}.Polished_Assembly_File.tsv"                                                     , emit: qc_polished_asm_filecheck
-    path "${meta.id}.Binary_PE_Alignment_Map_File.tsv"                                               , emit: qc_pe_alignment_filecheck
-    path "${meta.id}.Binary_SE_Alignment_Map_File.tsv"                                               , emit: qc_se_alignment_filecheck
-    path "${meta.id}.Final_Corrected_Assembly_FastA_File.tsv"                                        , emit: qc_corrected_asm_filecheck
-    tuple val(meta), path("${meta.id}.paired.bam"), path("${meta.id}.single.bam"), path("*File*.tsv"), emit: bam
+    path "versions.yml"                                                          , emit: versions
+    path("${meta.id}.{SNPs,InDels}-corrected.cnt.txt")
+    tuple val(meta), path("${meta.id}.fna")                                      , emit: assembly
+    path("${meta.id}.{Filtered,Polished,Binary,Final}*_File.tsv")                , emit: qc_filecheck
+    tuple val(meta), path("${meta.id}.paired.bam"), path("${meta.id}.single.bam"), emit: bam
 
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_nonoverlap_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Correct cleaned SPAdes contigs with cleaned PE reads
     if verify_minimum_file_size "!{uncorrected_contigs}" 'Filtered Assembly File' "!{params.min_filesize_filtered_assembly}"; then

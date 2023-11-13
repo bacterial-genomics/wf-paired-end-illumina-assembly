@@ -4,30 +4,19 @@ process ALIGN_16S_BLAST {
     container "gregorysprenger/ncbi-blast-plus@sha256:2d3e226d2eb31e3e0d5a80d7325b3a2ffd873ad1f2bd81215fd0b43727019279"
 
     input:
-    tuple val(meta), path(extracted_base), path(qc_extracted_filecheck), path(assembly)
+    tuple val(meta), path(extracted_base), path(assembly)
     val database
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                             , emit: versions
-    path "${meta.id}.16S_BLASTn_Output_File.tsv"                    , emit: qc_blastn_filecheck
-    tuple val(meta), path("${meta.id}.blast.tsv"), path("*File.tsv"), emit: blast_tsv
+    path "versions.yml"                          , emit: versions
+    path "${meta.id}.16S_BLASTn_Output_File.tsv" , emit: qc_filecheck
+    tuple val(meta), path("${meta.id}.blast.tsv"), emit: blast_tsv
 
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_extracted_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     msg "INFO: Performing BLASTn alignments"
 

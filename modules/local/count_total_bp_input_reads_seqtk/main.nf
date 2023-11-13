@@ -4,7 +4,7 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
     container "gregorysprenger/seqtk@sha256:756bff7222c384d358cb22ecbbae443e112b296503cb0e1a6baf9cf80545ae20"
 
     input:
-    tuple val(meta), path(reads), path(qc_input_filecheck)
+    tuple val(meta), path(reads)
 
     output:
     path ".command.out"
