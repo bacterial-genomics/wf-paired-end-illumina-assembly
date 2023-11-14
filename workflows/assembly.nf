@@ -316,16 +316,17 @@ workflow ASSEMBLY {
         } else {
             error("Unsupported object given to --kraken1_db, database must be supplied as either a directory or a .tar.gz file!")
         }
-    } else {
-        ch_db_for_kraken1 = Channel.empty()
-    }
 
-    // PROCESS: Run kraken1 on paired cleaned reads
-    READ_CLASSIFY_KRAKEN_ONE (
-        OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
-        ch_db_for_kraken1
-    )
-    ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
+        // PROCESS: Run kraken1 on paired cleaned reads
+        READ_CLASSIFY_KRAKEN_ONE (
+            OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
+            ch_db_for_kraken1
+        )
+        ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
+
+    } else {
+        log.warn("Kraken could not be performed - missing database input!")
+    }
 
     // Prepare kraken2 database for use
     if ( ch_kraken2_db_file ) {
@@ -352,16 +353,16 @@ workflow ASSEMBLY {
         } else {
             error("Unsupported object given to --kraken2_db, database must be supplied as either a directory or a .tar.gz file!")
         }
-    } else {
-        ch_db_for_kraken2 = Channel.empty()
-    }
+        // PROCESS: Run kraken2 on paired cleaned reads
+        READ_CLASSIFY_KRAKEN_TWO (
+            OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
+            ch_db_for_kraken2
+        )
+        ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
 
-    // PROCESS: Run kraken2 on paired cleaned reads
-    READ_CLASSIFY_KRAKEN_TWO (
-        OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
-        ch_db_for_kraken2
-    )
-    ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
+    } else {
+        log.warn("Kraken2 could not be performed - missing database input!")
+    }
 
     /*
     ================================================================================
@@ -470,7 +471,7 @@ workflow ASSEMBLY {
             error("Unsupported object given to --blast_db, database must be supplied as either a directory or a .tar.gz file!")
         }
     } else {
-        ch_db_for_blast = Channel.empty()
+        error("Missing 16S ribosomal RNA database! Database must be supplied to `--blast_db` as either a directory or a .tar.gz file!")
     }
 
     // PROCESS: Run Blast on predicted 16S ribosomal RNA genes
