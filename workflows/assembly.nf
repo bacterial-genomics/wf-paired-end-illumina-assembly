@@ -202,16 +202,8 @@ def checkQCFilechecks(it) {
 
 workflow ASSEMBLY {
 
-    // SETUP: Define empty channels to concatenate certain outputs
-    ch_versions                = Channel.empty()
-    ch_ssu_species             = Channel.empty()
-    ch_mlst_summary            = Channel.empty()
-    ch_blast_summary           = Channel.empty()
-    ch_cleaned_summary         = Channel.empty()
-    ch_assembly_summary        = Channel.empty()
-    ch_genome_cov_summary      = Channel.empty()
-    ch_phix_removal_summary    = Channel.empty()
-    ch_alignment_stats_summary = Channel.empty()
+    // SETUP: Define empty version channel
+    ch_versions = Channel.empty()
 
     /*
     ================================================================================
@@ -246,6 +238,8 @@ workflow ASSEMBLY {
     ch_versions = ch_versions.mix(REMOVE_PHIX_BBDUK.out.versions)
     checkQCFilechecks(REMOVE_PHIX_BBDUK.out.qc_filecheck)
 
+    // Collect PhiX removal summaries and concatenate into one file
+    ch_phix_removal_summary = Channel.empty()
     ch_phix_removal_summary = ch_phix_removal_summary
                                 .mix(REMOVE_PHIX_BBDUK.out.phix_summary)
                                 .collectFile(
@@ -396,7 +390,8 @@ workflow ASSEMBLY {
     )
     ch_versions = ch_versions.mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.versions)
 
-    // Collect all Summary Stats and concatenate into one file
+    // Collect alignment summary stats and concatenate into one file
+    ch_alignment_stats_summary = Channel.empty()
     ch_alignment_stats_summary = ch_alignment_stats_summary
                             .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_alignment_stats)
                             .map{ meta, file -> file }
@@ -413,7 +408,8 @@ workflow ASSEMBLY {
     )
     ch_versions = ch_versions.mix(MLST_MLST.out.versions)
 
-    // Collect all MLST Summaries and concatenate into one file
+    // Collect MLST Summaries and concatenate into one file
+    ch_mlst_summary = Channel.empty()
     ch_mlst_summary = ch_mlst_summary
                         .mix(MLST_MLST.out.summary_mlst)
                         .collectFile(
@@ -511,7 +507,8 @@ workflow ASSEMBLY {
     ch_versions = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
     checkQCFilechecks(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck)
 
-    // Collect all BLAST Summaries and concatenate into one file
+    // Collect BLASTn Summaries and concatenate into one file
+    ch_blast_summary = Channel.empty()
     ch_blast_summary = ch_blast_summary
                         .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary)
                         .collectFile(
@@ -520,7 +517,8 @@ workflow ASSEMBLY {
                             storeDir: "${params.outdir}/Summaries"
                         )
 
-    // Collect all BLAST Top Species Summaries and concatenate into one file
+    // Collect top BLASTn species and concatenate into one file
+    ch_ssu_species = Channel.empty()
     ch_ssu_species = ch_ssu_species
                         .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.top_blast_species)
                         .collectFile(
@@ -547,7 +545,8 @@ workflow ASSEMBLY {
     )
     ch_versions = ch_versions.mix(QA_ASSEMBLY_QUAST.out.versions)
 
-    // Collect all Assembly Summaries and concatenate into one file
+    // Collect assembly summaries and concatenate into one file
+    ch_assembly_summary = Channel.empty()
     ch_assembly_summary = ch_assembly_summary
                             .mix(QA_ASSEMBLY_QUAST.out.summary_assemblies)
                             .collectFile(
@@ -556,7 +555,8 @@ workflow ASSEMBLY {
                                 storeDir:   "${params.outdir}/Summaries"
                             )
 
-    // Collect all Cleaned Read/Base Summaries and concatenate into one file
+    // Collect cleaned read/base summaries and concatenate into one file
+    ch_cleaned_summary = Channel.empty()
     ch_cleaned_summary = ch_cleaned_summary
                             .mix(QA_ASSEMBLY_QUAST.out.summary_reads)
                             .collectFile(
@@ -572,7 +572,8 @@ workflow ASSEMBLY {
     )
     ch_versions = ch_versions.mix(CALCULATE_COVERAGE_UNIX.out.versions)
 
-    // Collect all Genome Coverage Summaries and concatenate into one file
+    // Collect genome coverage summaries and concatenate into one file
+    ch_genome_cov_summary = Channel.empty()
     ch_genome_cov_summary = ch_genome_cov_summary
                                 .mix(CALCULATE_COVERAGE_UNIX.out.genome_coverage)
                                 .collectFile(
@@ -710,7 +711,7 @@ workflow ASSEMBLY {
             storeDir: params.logpath
         )
 
-    // Collect all QC File Checks and concatenate into one file
+    // Collect QC file checks and concatenate into one file
     ch_qc_filecheck = Channel.empty()
     ch_qc_filecheck = ch_qc_filecheck
         .concat(
