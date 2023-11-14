@@ -67,15 +67,16 @@ workflow ASSEMBLE_CONTIGS {
     ch_versions      = Channel.empty()
     ch_qc_filechecks = Channel.empty()
 
+    // Update meta to include meta.assembler
+    ch_cleaned_reads = ch_cleaned_reads
+                        .map{
+                            meta, r1, r2, single ->
+                                def meta_new = meta + [assembler: var_assembler_name]
+                                [ meta_new, [r1], [r2], [single] ]
+                        }
+
     if ( var_assembler_name == "SKESA" ) {
         // SKESA assembler
-        ch_cleaned_reads = ch_cleaned_reads
-                                .map{
-                                    meta, r1, r2, single ->
-                                        meta.id = "${meta.id}-${var_assembler_name}"
-                                        [ meta, [r1], [r2], [single] ]
-                                }
-
         // PROCESS: Run SKESA to assemble contigs with cleaned paired reads and cleaned singletons
         ASSEMBLE_CONTIGS_SKESA (
             ch_cleaned_reads
@@ -106,13 +107,6 @@ workflow ASSEMBLE_CONTIGS {
                                 .mix(MAP_CONTIGS_BWA.out.qc_filecheck)
     } else {
         // Defaulting to SPAdes assembler
-        ch_cleaned_reads = ch_cleaned_reads
-                                .map{
-                                    meta, r1, r2, single ->
-                                        meta.id = "${meta.id}-${var_assembler_name}"
-                                        [ meta, [r1], [r2], [single] ]
-                                }
-
         // PROCESS: Run SPAdes to assemble contigs with cleaned paired reads and cleaned singletons
         ASSEMBLE_CONTIGS_SPADES (
             ch_cleaned_reads
