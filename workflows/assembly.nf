@@ -169,6 +169,17 @@ if (params.blast_db) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+// Convert params.assembler to lowercase
+def toLower(it) {
+    it.toString().toLowerCase()
+}
+
+if ( toLower(params.assembler) == "skesa" ) {
+    params.assembler = "SKESA"
+} else {
+    params.assembler = "SPAdes"
+}
+
 // Check QC filechecks for a failure
 def checkQCFilechecks(it) {
     it.flatten().map{
