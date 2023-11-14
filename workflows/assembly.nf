@@ -538,6 +538,11 @@ workflow ASSEMBLY {
     //  report the number of cleaned basepairs used to form the assembly
     QA_ASSEMBLY_QUAST (
         OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files
+            .map{
+                meta, r1, r2, single ->
+                    meta['id'] = "${meta.id}-${params.assembler}"
+                    [ meta, [r1], [r2], [single] ]
+            }
             .join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(QA_ASSEMBLY_QUAST.out.versions)
