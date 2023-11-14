@@ -61,17 +61,18 @@ workflow ASSEMBLE_CONTIGS {
 
     take:
     ch_cleaned_reads    // channel: [ val(meta), [read1], [read2], [single] ]
+    ch_assembler   // channel: val(assembler_name)
 
     main:
     ch_versions      = Channel.empty()
     ch_qc_filechecks = Channel.empty()
 
-    if ( params.assembler == "SKESA" ) {
+    if ( ch_assembler == "SKESA" ) {
         // SKESA assembler
         ch_cleaned_reads = ch_cleaned_reads
                                 .map{
                                     meta, r1, r2, single ->
-                                        meta.id = "${meta.id}-${params.assembler}"
+                                        meta.id = "${meta.id}-${ch_assembler}"
                                         [ meta, [r1], [r2], [single] ]
                                 }
 
@@ -108,7 +109,7 @@ workflow ASSEMBLE_CONTIGS {
         ch_cleaned_reads = ch_cleaned_reads
                                 .map{
                                     meta, r1, r2, single ->
-                                        meta.id = "${meta.id}-${params.assembler}"
+                                        meta.id = "${meta.id}-${ch_assembler}"
                                         [ meta, [r1], [r2], [single] ]
                                 }
 

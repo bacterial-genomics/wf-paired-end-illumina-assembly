@@ -96,6 +96,13 @@ include { ASSEMBLE_CONTIGS                        } from "../subworkflows/local/
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+// Assembler input
+if ( toLower(params.assembler) == "skesa" ) {
+    ch_assembler = Channel.of("SKESA")
+} else {
+    ch_assembler = Channel.of("SPAdes")
+}
+
 // PhiX Reference
 if (params.phix_reference) {
     ch_phix_reference = Channel
@@ -169,15 +176,9 @@ if (params.blast_db) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// Convert params.assembler to lowercase
+// Convert ch_assembler to lowercase
 def toLower(it) {
     it.toString().toLowerCase()
-}
-
-if ( toLower(params.assembler) == "skesa" ) {
-    params.assembler = "SKESA"
-} else {
-    params.assembler = "SPAdes"
 }
 
 // Check QC filechecks for a failure
@@ -285,17 +286,9 @@ workflow ASSEMBLY {
         if ( ch_kraken1_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
             KRAKEN1_DB_PREPARATION_UNIX (
-                Channel
-                    .of(ch_kraken1_db_file)
-                    .map{
-                        file ->
-                            def meta = [:]
-                            meta['id'] = file.getSimpleName()
-                            [ meta, file ]
-                    }
+                ch_kraken1_db_file
             )
             ch_versions = ch_versions.mix(KRAKEN1_DB_PREPARATION_UNIX.out.versions)
-
             ch_db_for_kraken1 = KRAKEN1_DB_PREPARATION_UNIX.out.db
 
         } else if ( ch_kraken1_db_file.isDirectory() ) {
@@ -339,17 +332,9 @@ workflow ASSEMBLY {
         if ( ch_kraken2_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
             KRAKEN2_DB_PREPARATION_UNIX (
-                Channel
-                    .of(ch_kraken2_db_file)
-                    .map{
-                        file ->
-                            def meta = [:]
-                            meta['id'] = file.getSimpleName()
-                            [ meta, file ]
-                    }
+                ch_kraken2_db_file
             )
             ch_versions = ch_versions.mix(KRAKEN2_DB_PREPARATION_UNIX.out.versions)
-
             ch_db_for_kraken2 = KRAKEN2_DB_PREPARATION_UNIX.out.db
 
         } else if ( ch_kraken2_db_file.isDirectory() ) {
@@ -385,7 +370,8 @@ workflow ASSEMBLY {
     */
 
     ASSEMBLE_CONTIGS (
-        OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files
+        OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
+        ch_assembler
     )
     ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS.out.versions)
 
@@ -540,7 +526,7 @@ workflow ASSEMBLY {
         OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files
             .map{
                 meta, r1, r2, single ->
-                    meta['id'] = "${meta.id}-${params.assembler}"
+                    meta['id'] = "${meta.id}-${ch_assembler}"
                     [ meta, [r1], [r2], [single] ]
             }
             .join(ASSEMBLE_CONTIGS.out.assembly_file)
@@ -594,24 +580,16 @@ workflow ASSEMBLY {
                         .map {
                             meta, bins ->
                                 def meta_new = meta.clone()
-                                meta_new['assembler'] = "${params.assembler}"
+                                meta_new['assembler'] = "${ch_assembler}"
                                 [ meta_new, bins ]
                         }
 
         if ( ch_gtdbtk_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
             GTDBTK_DB_PREPARATION_UNIX (
-                Channel
-                    .of(ch_gtdbtk_db_file)
-                    .map{
-                        file ->
-                            def meta = [:]
-                            meta['id'] = file.getSimpleName()
-                            [ meta, file ]
-                    }
+                ch_gtdbtk_db_file
             )
             ch_versions = ch_versions.mix(GTDBTK_DB_PREPARATION_UNIX.out.versions)
-
             ch_db_for_gtdbtk = GTDBTK_DB_PREPARATION_UNIX.out.db
 
         } else if ( ch_gtdbtk_db_file.isDirectory() ) {
@@ -642,17 +620,9 @@ workflow ASSEMBLY {
         if ( ch_busco_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be tar.gz!
             BUSCO_DB_PREPARATION_UNIX(
-                Channel
-                    .of(ch_busco_db_file)
-                    .map{
-                        file ->
-                            def meta = [:]
-                            meta['id'] = file.getSimpleName()
-                            [ meta, file ]
-                    }
+                ch_busco_db_file
             )
             ch_versions = ch_versions.mix(BUSCO_DB_PREPARATION_UNIX.out.versions)
-
             ch_db_for_busco = BUSCO_DB_PREPARATION_UNIX.out.db
 
         } else if ( ch_busco_db_file.isDirectory() ) {

@@ -1,17 +1,17 @@
 process GTDBTK_DB_PREPARATION_UNIX {
 
     label "process_medium"
-    tag { "${meta.id}" }
+    tag { "${database.getSimpleName()}" }
     container "ubuntu:jammy"
 
     input:
-    tuple val(meta), path(database)
+    path(database)
 
     output:
     path ".command.out"
     path ".command.err"
     path "versions.yml"                                         , emit: versions
-    tuple val("${meta.id}"), path("database/*"), emit: db
+    tuple val("${database.getSimpleName()}"), path("database/*"), emit: db
 
     shell:
     '''
