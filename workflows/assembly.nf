@@ -98,9 +98,9 @@ include { ASSEMBLE_CONTIGS                        } from "../subworkflows/local/
 
 // Assembler input
 if ( toLower(params.assembler) == "skesa" ) {
-    ch_assembler = Channel.of("SKESA")
+    var_assembler_name = "SKESA"
 } else {
-    ch_assembler = Channel.of("SPAdes")
+    var_assembler_name = "SPAdes"
 }
 
 // PhiX Reference
@@ -176,7 +176,7 @@ if (params.blast_db) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// Convert ch_assembler to lowercase
+// Convert var_assembler_name to lowercase
 def toLower(it) {
     it.toString().toLowerCase()
 }
@@ -371,7 +371,7 @@ workflow ASSEMBLY {
 
     ASSEMBLE_CONTIGS (
         OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
-        ch_assembler
+        var_assembler_name
     )
     ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS.out.versions)
 
@@ -526,7 +526,7 @@ workflow ASSEMBLY {
         OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files
             .map{
                 meta, r1, r2, single ->
-                    meta['id'] = "${meta.id}-${ch_assembler}"
+                    meta['id'] = "${meta.id}-${var_assembler_name}"
                     [ meta, [r1], [r2], [single] ]
             }
             .join(ASSEMBLE_CONTIGS.out.assembly_file)
@@ -580,7 +580,7 @@ workflow ASSEMBLY {
                         .map {
                             meta, bins ->
                                 def meta_new = meta.clone()
-                                meta_new['assembler'] = "${ch_assembler}"
+                                meta_new['assembler'] = "${var_assembler_name}"
                                 [ meta_new, bins ]
                         }
 
