@@ -76,7 +76,11 @@ workflow ASSEMBLE_CONTIGS {
     if ( assembler == "skesa" ) {
         // PROCESS: Run SKESA to assemble contigs with cleaned paired reads and cleaned singletons
         ASSEMBLE_CONTIGS_SKESA (
-            ch_cleaned_reads
+            ch_cleaned_reads.map{
+                meta, r1, r2, single ->
+                    meta.id = "${meta.id}-SKESA"
+                    [ meta, [r1], [r2], [single] ]
+            }
         )
         ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS_SKESA.out.versions)
         checkQCFilechecks(ASSEMBLE_CONTIGS_SKESA.out.qc_filecheck)
@@ -106,7 +110,11 @@ workflow ASSEMBLE_CONTIGS {
         // Defaulting to SPAdes assembler
         // PROCESS: Run SPAdes to assemble contigs with cleaned paired reads and cleaned singletons
         ASSEMBLE_CONTIGS_SPADES (
-            ch_cleaned_reads
+            ch_cleaned_reads.map{
+                meta, r1, r2, single ->
+                    meta.id = "${meta.id}-SPAdes"
+                    [ meta, [r1], [r2], [single] ]
+            }
         )
         ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS_SPADES.out.versions)
         checkQCFilechecks(ASSEMBLE_CONTIGS_SPADES.out.qc_filecheck)
