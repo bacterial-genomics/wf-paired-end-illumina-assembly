@@ -1,6 +1,6 @@
 process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
 
-    tag { "${meta.id}" }
+    tag { "${meta.id}-${meta.assembler}" }
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
@@ -9,11 +9,11 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     output:
     path ".command.out"
     path ".command.err"
-    path "${meta.id}.blast.tsv.gz"
-    path "versions.yml"                           , emit: versions
-    path "${meta.id}.Summary.16S.tab"             , emit: blast_summary
-    path "${meta.id}.16S-top-species.tsv"         , emit: top_blast_species
-    path "${meta.id}.Filtered_16S_BLASTn_File.tsv", emit: qc_filecheck
+    path "${meta.id}-${meta.assembler}.blast.tsv.gz"
+    path "versions.yml"                                             , emit: versions
+    path "${meta.id}-${meta.assembler}.Summary.16S.tab"             , emit: blast_summary
+    path "${meta.id}-${meta.assembler}.16S-top-species.tsv"         , emit: top_blast_species
+    path "${meta.id}-${meta.assembler}.Filtered_16S_BLASTn_File.tsv", emit: qc_filecheck
 
     shell:
     '''
@@ -22,33 +22,35 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     # Get the top match by bitscore
     filter.blast.py \
       -i "!{blast_output}" \
-      -o "!{meta.id}.blast.tab" \
+      -o "!{meta.id}-!{meta.assembler}.blast.tab" \
       -c !{params.filter_blast_column} \
       -s !{params.filter_blast_bitscore}
 
-    if verify_minimum_file_size "!{meta.id}.blast.tab" 'Filtered 16S BLASTn File' "!{params.min_filesize_filtered_blastn}"; then
+    if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.blast.tab" 'Filtered 16S BLASTn File' "!{params.min_filesize_filtered_blastn}"; then
       echo -e "!{meta.id}\tFiltered 16S BLASTn File\tPASS" \
-        > !{meta.id}.Filtered_16S_BLASTn_File.tsv
+        > "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
 
       # Report the top alignment match data: %nucl iden, %query cov aln, taxon
       awk -F $'\t' 'BEGIN{OFS=FS}; {print $1, $3 "% identity", $13 "% alignment", $14}' \
-      "!{meta.id}.blast.tab" \
-      > "!{meta.id}.16S-top-species.tsv"
+      "!{meta.id}-!{meta.assembler}.blast.tab" \
+      > "!{meta.id}-!{meta.assembler}.16S-top-species.tsv"
 
       sed -i \
         '1i Sample name\tPercent identity\tPercent alignment\tSpecies match' \
-        "!{meta.id}.16S-top-species.tsv"
+        "!{meta.id}-!{meta.assembler}.16S-top-species.tsv"
 
-      cat "!{meta.id}.16S-top-species.tsv" >> "!{meta.id}.Summary.16S.tab"
-      gzip -f !{blast_output}
+      cat "!{meta.id}-!{meta.assembler}.16S-top-species.tsv" >> "!{meta.id}-!{meta.assembler}.Summary.16S.tab"
 
     else
       echo -e "!{meta.id}\tFiltered 16S BLASTn File\tFAIL" \
-        > !{meta.id}.Filtered_16S_BLASTn_File.tsv
+        > "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
 
       # Empty files to avoid errors
-      touch !{meta.id}.16S-top-species.tsv !{meta.id}.Summary.16S.tab !{blast_output}.gz
+      touch "!{meta.id}-!{meta.assembler}.16S-top-species.tsv" \
+        "!{meta.id}-!{meta.assembler}.Summary.16S.tab"
     fi
+
+    gzip -f !{blast_output}
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

@@ -1,6 +1,6 @@
 process MLST_MLST {
 
-    tag { "${meta.id}" }
+    tag { "${meta.id}-${meta.assembler}" }
     container "gregorysprenger/mlst@sha256:69c8c8027474b8f361ef4a579df171702f3ed52f45e3fb388a41ccbf4542706f"
 
     input:
@@ -9,8 +9,8 @@ process MLST_MLST {
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"               , emit: versions
-    path "${meta.id}.Summary.MLST.tab", emit: summary_mlst
+    path "versions.yml"                                 , emit: versions
+    path "${meta.id}-${meta.assembler}.Summary.MLST.tab", emit: summary_mlst
 
     shell:
     '''
@@ -23,11 +23,11 @@ process MLST_MLST {
       mlst \
         "!{assembly}" \
         --threads !{task.cpus} \
-        >> !{meta.id}.Summary.MLST.tab
+        >> "!{meta.id}-!{meta.assembler}.Summary.MLST.tab"
 
       sed -i \
         '1i Filename\tPubMLST scheme name\tSequence type\tAllele IDs' \
-        !{meta.id}.Summary.MLST.tab
+        "!{meta.id}-!{meta.assembler}.Summary.MLST.tab"
     fi
 
     # Get process version information

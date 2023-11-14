@@ -1,6 +1,6 @@
 process EXTRACT_16S_BIOPYTHON {
 
-    tag { "${meta.id}" }
+    tag { "${meta.id}-${meta.assembler}" }
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
@@ -9,8 +9,8 @@ process EXTRACT_16S_BIOPYTHON {
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                       , emit: versions
-    tuple val(meta), path("16S.${meta.id}.fa"), emit: biopython_extracted_rna
+    path "versions.yml"                                         , emit: versions
+    tuple val(meta), path("16S.${meta.id}-${meta.assembler}.fa"), emit: biopython_extracted_rna
 
     shell:
     '''
@@ -20,7 +20,7 @@ process EXTRACT_16S_BIOPYTHON {
     if [[ -s "!{prokka_genbank_file}" ]]; then
       extract.record.from.genbank.py \
         -i "!{prokka_genbank_file}" \
-        -o "16S.!{meta.id}.fa" \
+        -o "16S.!{meta.id}-!{meta.assembler}.fa" \
         -q "!{params.genbank_query}" \
         -f !{params.genbank_query_feature} \
         -u !{params.genbank_query_qualifier} \

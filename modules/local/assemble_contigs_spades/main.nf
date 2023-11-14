@@ -11,9 +11,9 @@ process ASSEMBLE_CONTIGS_SPADES {
     path "${meta.id}/"
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                              , emit: versions
-    path "${meta.id}.Raw_Assembly_File.tsv"          , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}/contigs.fasta"), emit: contigs
+    path "versions.yml"                                      , emit: versions
+    path "${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv", emit: qc_filecheck
+    tuple val(meta), path("${meta.id}/contigs.fasta")        , emit: contigs
 
     shell:
     '''
@@ -54,9 +54,9 @@ process ASSEMBLE_CONTIGS_SPADES {
 
     # Verify file output
     if verify_minimum_file_size "SPAdes/contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then
-      echo -e "!{meta.id}\tRaw Assembly File\tPASS" > !{meta.id}.Raw_Assembly_File.tsv
+      echo -e "!{meta.id}\tRaw Assembly File\tPASS" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     else
-      echo -e "!{meta.id}\tRaw Assembly File\tFAIL" > !{meta.id}.Raw_Assembly_File.tsv
+      echo -e "!{meta.id}\tRaw Assembly File\tFAIL" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     fi
 
     if grep -E -q 'N{60}' "SPAdes/contigs.fasta"; then

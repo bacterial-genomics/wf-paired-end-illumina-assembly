@@ -1,7 +1,7 @@
 process ANNOTATE_PROKKA {
 
     label "process_high"
-    tag { "${meta.id}" }
+    tag { "${meta.id}-${meta.assembler}" }
     container "snads/prokka@sha256:ef7ee0835819dbb35cf69d1a2c41c5060691e71f9138288dd79d4922fa6d0050"
 
     input:
@@ -10,10 +10,10 @@ process ANNOTATE_PROKKA {
     output:
     path ".command.out"
     path ".command.err"
-    path "prokka/${meta.id}.log.gz"
-    path "versions.yml"                         , emit: versions
-    path "${meta.id}.Annotated_GenBank_File.tsv", emit: qc_filecheck
-    tuple val(meta), path("${meta.id}.gbk")     , emit: prokka_genbank_file
+    path "prokka/${meta.id}-${meta.assembler}.log.gz"
+    path "versions.yml"                                           , emit: versions
+    path "${meta.id}-${meta.assembler}.Annotated_GenBank_File.tsv", emit: qc_filecheck
+    tuple val(meta), path("${meta.id}-${meta.assembler}.gbk")     , emit: prokka_genbank_file
 
     shell:
     '''
@@ -29,10 +29,10 @@ process ANNOTATE_PROKKA {
     # Run Prokka
     prokka \
       --outdir prokka \
-      --prefix "!{meta.id}" \
+      --prefix "!{meta.id}-!{meta.assembler}" \
       --force \
       --addgenes \
-      --locustag "!{meta.id}" \
+      --locustag "!{meta.id}-!{meta.assembler}" \
       --mincontiglen 1 \
       --evalue !{params.evalue} \
       --cpus !{task.cpus} \
@@ -41,23 +41,24 @@ process ANNOTATE_PROKKA {
 
     # Regardless of the file extension, unify to GBK extension for GenBank format
     for ext in gb gbf gbff gbk; do
-      if [ -s "prokka/!{meta.id}.${ext}" ]; then
-        mv -f prokka/!{meta.id}.${ext} !{meta.id}.gbk
+      if [ -s "prokka/!{meta.id}-!{meta.assembler}.${ext}" ]; then
+        mv -f "prokka/!{meta.id}-!{meta.assembler}.${ext}" \
+          "!{meta.id}-!{meta.assembler}.gbk"
         break
       fi
     done
 
     # Verify output file
-    if verify_minimum_file_size "!{meta.id}.gbk" 'Annotated GenBank File' "!{params.min_filesize_annotated_genbank}"; then
+    if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.gbk" 'Annotated GenBank File' "!{params.min_filesize_annotated_genbank}"; then
       echo -e "!{meta.id}\tAnnotated GenBank File\tPASS" \
-      > !{meta.id}.Annotated_GenBank_File.tsv
+      > "!{meta.id}-!{meta.assembler}.Annotated_GenBank_File.tsv"
     else
       echo -e "!{meta.id}\tAnnotated GenBank File\tFAIL" \
-      > !{meta.id}.Annotated_GenBank_File.tsv
+      > "!{meta.id}-!{meta.assembler}.Annotated_GenBank_File.tsv"
     fi
 
     # Compress the bulky verbose logfile for compact storage
-    gzip -9f prokka/!{meta.id}.log
+    gzip -9f "prokka/!{meta.id}-!{meta.assembler}.log"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

@@ -527,8 +527,8 @@ workflow ASSEMBLY {
         OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files
             .map{
                 meta, r1, r2, single ->
-                    meta['id'] = "${meta.id}-${var_assembler_name}"
-                    [ meta, [r1], [r2], [single] ]
+                    def meta_new = meta + [assembler: var_assembler_name]
+                    [ meta_new, [r1], [r2], [single] ]
             }
             .join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
@@ -577,14 +577,6 @@ workflow ASSEMBLY {
 
     // PROCESS: Classify assembly FastA file using GTDB-Tk
     if (!params.skip_gtdbtk && params.gtdb_db) {
-        ch_contigs = ASSEMBLE_CONTIGS.out.assembly_file
-                        .map {
-                            meta, bins ->
-                                def meta_new = meta.clone()
-                                meta_new['assembler'] = "${var_assembler_name}"
-                                [ meta_new, bins ]
-                        }
-
         if ( ch_gtdbtk_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
             GTDBTK_DB_PREPARATION_UNIX (
@@ -606,7 +598,7 @@ workflow ASSEMBLY {
 
         // PROCESS: Perform GTDBTk on assembly FastA file
         QA_ASSEMBLY_GTDBTK (
-            ch_contigs,
+            ASSEMBLE_CONTIGS.out.assembly_file,
             ch_db_for_gtdbtk
         )
         ch_versions = ch_versions.mix(QA_ASSEMBLY_GTDBTK.out.versions)

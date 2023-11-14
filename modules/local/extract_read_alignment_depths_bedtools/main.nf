@@ -1,6 +1,6 @@
 process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
 
-    tag { "${meta.id}" }
+    tag { "${meta.id}-${meta.assembler}" }
     container "snads/bedtools@sha256:9b80fb5c5ef1b6f4a4a211d8739fa3fe107da34d1fb6609d6b70ddc7afdce12c"
 
     input:
@@ -9,8 +9,8 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                                          , emit: versions
-    tuple val(meta), path("${meta.id}.CleanedReads-AlnStats.tsv"), emit: summary_alignment_stats
+    path "versions.yml"                                                            , emit: versions
+    tuple val(meta), path("${meta.id}-${meta.assembler}.CleanedReads-AlnStats.tsv"), emit: summary_alignment_stats
 
     shell:
     '''
@@ -25,16 +25,16 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
         awk '{sum+=$3} END{print sum " bp Singleton Reads Mapped (" sum/NR "x)\t"}')
     fi
 
-    cov_info=$(bedtools genomecov -d -split -ibam !{meta.id}.paired.bam |\
+    cov_info=$(bedtools genomecov -d -split -ibam "!{meta.id}-!{meta.assembler}.paired.bam" |\
       awk -v OFS='\t' -v SEcov="${single_cov}" 'BEGIN{sum=0} {sum+=$3} END{
       print sum " bp Paired Reads Mapped (" sum/NR "x)\t" SEcov NR " bp Genome"}')
 
     echo -e "!{meta.id}\t${cov_info}" \
-      > !{meta.id}.CleanedReads-AlnStats.tsv
+      > "!{meta.id}-!{meta.assembler}.CleanedReads-AlnStats.tsv"
 
     sed -i \
       '1i Sample name\tCoverage of paired reads\tCoverage of singleton reads\tGenome size' \
-      !{meta.id}.CleanedReads-AlnStats.tsv
+      "!{meta.id}-!{meta.assembler}.CleanedReads-AlnStats.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

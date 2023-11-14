@@ -1,6 +1,6 @@
 process FILTER_CONTIGS_BIOPYTHON {
 
-    tag { "${meta.id}" }
+    tag { "${meta.id}-${meta.assembler}" }
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
@@ -10,7 +10,7 @@ process FILTER_CONTIGS_BIOPYTHON {
     path ".command.out"
     path ".command.err"
     path "versions.yml"                                , emit: versions
-    tuple val(meta), path("${meta.id}.uncorrected.fna"), emit: uncorrected_contigs
+    tuple val(meta), path("${meta.id}-${meta.assembler}.uncorrected.fna"), emit: uncorrected_contigs
 
     shell:
     gcskew = params.filter_contigs_gcskew ? "" : "-g"
@@ -28,8 +28,8 @@ process FILTER_CONTIGS_BIOPYTHON {
     # Remove junk contigs
     filter.contigs.py \
       -i !{contigs} \
-      -b "!{meta.id}" \
-      -o !{meta.id}.uncorrected.fna \
+      -b "!{meta.id}-!{meta.assembler}" \
+      -o "!{meta.id}-!{meta.assembler}.uncorrected.fna" \
       -l !{params.filter_contigs_length} \
       -c !{params.filter_contigs_coverage} \
       --deflines !{params.filter_contigs_deflines} \

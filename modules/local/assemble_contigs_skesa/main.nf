@@ -10,9 +10,9 @@ process ASSEMBLE_CONTIGS_SKESA {
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                    , emit: versions
-    path "${meta.id}.Raw_Assembly_File.tsv", emit: qc_filecheck
-    tuple val(meta), path("contigs.fasta") , emit: contigs
+    path "versions.yml"                                      , emit: versions
+    path "${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv", emit: qc_filecheck
+    tuple val(meta), path("contigs.fasta")                   , emit: contigs
 
     shell:
     allow_snps = params.skesa_allow_snps ? "--allow snps" : ""
@@ -38,9 +38,9 @@ process ASSEMBLE_CONTIGS_SKESA {
     fi
 
     if verify_minimum_file_size "contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then
-      echo -e "!{meta.id}\tRaw Assembly File\tPASS" > !{meta.id}.Raw_Assembly_File.tsv
+      echo -e "!{meta.id}\tRaw Assembly File\tPASS" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     else
-      echo -e "!{meta.id}\tRaw Assembly File\tFAIL" > !{meta.id}.Raw_Assembly_File.tsv
+      echo -e "!{meta.id}\tRaw Assembly File\tFAIL" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     fi
 
     # Get process version information

@@ -1,6 +1,6 @@
 process ALIGN_16S_BLAST {
 
-    tag { "${meta.id}" }
+    tag { "${meta.id}-${meta.assembler}" }
     container "gregorysprenger/ncbi-blast-plus@sha256:f187706adb753c44f50e5be82d85c518e9cd0ae090bc30ce5e14bb35565a380a"
 
     input:
@@ -10,9 +10,9 @@ process ALIGN_16S_BLAST {
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                          , emit: versions
-    path "${meta.id}.16S_BLASTn_Output_File.tsv" , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}.blast.tsv"), emit: blast_output
+    path "versions.yml"                                            , emit: versions
+    path "${meta.id}-${meta.assembler}.16S_BLASTn_Output_File.tsv" , emit: qc_filecheck
+    tuple val(meta), path("${meta.id}-${meta.assembler}.blast.tsv"), emit: blast_output
 
     shell:
     '''
@@ -26,13 +26,13 @@ process ALIGN_16S_BLAST {
       -db "database/!{db_name}" \
       -num_threads "!{task.cpus}" \
       -query "!{barnapp_extracted_rna}" \
-      -out "!{meta.id}.blast.tsv" \
+      -out "!{meta.id}-!{meta.assembler}.blast.tsv" \
       -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovhsp ssciname"
 
-    if verify_minimum_file_size "!{meta.id}.blast.tsv" '16S BLASTn Output File' "!{params.min_filesize_blastn_output}"; then
-      echo -e "!{meta.id}\t16S BLASTn Output File\tPASS" > !{meta.id}.16S_BLASTn_Output_File.tsv
+    if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.blast.tsv" '16S BLASTn Output File' "!{params.min_filesize_blastn_output}"; then
+      echo -e "!{meta.id}\t16S BLASTn Output File\tPASS" > "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     else
-      echo -e "!{meta.id}\t16S BLASTn Output File\tFAIL" > !{meta.id}.16S_BLASTn_Output_File.tsv
+      echo -e "!{meta.id}\t16S BLASTn Output File\tFAIL" > "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     fi
 
     # Get process version information
