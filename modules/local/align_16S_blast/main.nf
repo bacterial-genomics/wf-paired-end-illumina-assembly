@@ -5,7 +5,7 @@ process ALIGN_16S_BLAST {
 
     input:
     tuple val(meta), path(barnapp_extracted_rna), path(assembly)
-    val database
+    tuple val(db_name), path("database/*")
 
     output:
     path ".command.out"
@@ -23,7 +23,7 @@ process ALIGN_16S_BLAST {
     blastn \
       -word_size 10 \
       -task blastn \
-      -db !{database} \
+      -db "database/!{db_name}" \
       -num_threads "!{task.cpus}" \
       -query "!{barnapp_extracted_rna}" \
       -out "!{meta.id}.blast.tsv" \

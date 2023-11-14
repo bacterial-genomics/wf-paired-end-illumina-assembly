@@ -452,22 +452,10 @@ workflow ASSEMBLY {
         if ( ch_blast_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
             BLAST_DB_PREPARATION_UNIX (
-                Channel
-                    .of(ch_blast_db_file)
-                    .map{
-                        file ->
-                            def meta = [:]
-                            meta['id'] = file.getSimpleName()
-                            [ meta, file ]
-                    }
+                ch_blast_db_file
             )
             ch_versions = ch_versions.mix(BLAST_DB_PREPARATION_UNIX.out.versions)
-
             ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db
-                                .map{
-                                    file ->
-                                        [ file[0].getSimpleName(), file ]
-                                }
 
         } else if ( ch_blast_db_file.isDirectory() ) {
             ch_db_for_blast = Channel
