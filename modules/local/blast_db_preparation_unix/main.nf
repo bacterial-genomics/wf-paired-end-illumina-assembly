@@ -1,21 +1,22 @@
 process BLAST_DB_PREPARATION_UNIX {
 
     label "process_medium"
-    tag { "${meta.id}" }
+    tag { "${db_name}" }
     container "ubuntu:jammy"
 
     input:
-    tuple val(meta), path(database)
+    path(database)
 
     output:
     path ".command.out"
     path ".command.err"
-    path "versions.yml"                , emit: versions
-    path "database/16S_ribosomal_RNA.*", emit: db
+    path "versions.yml"                                     , emit: versions
+    tuple val(db_name), path("database/16S_ribosomal_RNA.*"), emit: db
 
     shell:
+    db_name = "16S_ribosomal_RNA"
     '''
-    mkdir db_tmp
+    mkdir -p db_tmp
     tar -xzf !{database} -C db_tmp
 
     mkdir database
