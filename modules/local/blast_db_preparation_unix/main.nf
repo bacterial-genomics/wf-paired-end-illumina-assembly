@@ -17,9 +17,9 @@ process BLAST_DB_PREPARATION_UNIX {
     db_name = "16S_ribosomal_RNA"
     '''
     mkdir -p db_tmp
-    tar -xzf !{database} -C db_tmp
+    tar -xzf !{database} -C db_tmp/
 
-    mkdir database
+    mkdir -p database
     mv `find db_tmp/ -name "16S_ribosomal_RNA*"` database/
 
     # Get process version information
