@@ -724,6 +724,7 @@ workflow ASSEMBLY {
             ALIGN_16S_BLAST.out.qc_filecheck,
             BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck
         )
+        .flatten()
         .collectFile(
             name:     "Summary.QC_File_Checks.tab",
             keepHeader: true,
