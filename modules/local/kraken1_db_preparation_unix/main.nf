@@ -17,16 +17,16 @@ process KRAKEN1_DB_PREPARATION_UNIX {
     '''
     source bash_functions.sh
 
-    mkdir db_tmp
-    tar -xzf !{database} -C db_tmp --strip-components 1
+    mkdir -p db_tmp
+    tar -xzf !{database} -C db_tmp/ --strip-components 1
 
     # Place kraken files in correct directory
     mkdir -p database/taxonomy
-    mv `find db_tmp -name "database.idx" -o -name "database.kdb"` database/
-    mv `find db_tmp -name "nodes.dmp" -o -name "names.dmp"` database/taxonomy/
+    mv `find db_tmp/ -name "database.idx" -o -name "database.kdb"` database/
+    mv `find db_tmp/ -name "nodes.dmp" -o -name "names.dmp"` database/taxonomy/
 
     # Verify all 4 files are found
-    if [[ $(find database -type f | wc -l) != 4 ]]; then
+    if [[ $(find database/ -type f | wc -l) != 4 ]]; then
         msg "ERROR: Missing one of the following files: `database.{idx,kdb}, {names,nodes}.dmp`."
         exit 1
     fi
