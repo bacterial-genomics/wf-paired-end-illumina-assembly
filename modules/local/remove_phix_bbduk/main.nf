@@ -27,45 +27,30 @@ process REMOVE_PHIX_BBDUK {
       echo -e "!{meta.id}\tPhiX Genome\tFAIL" >> !{meta.id}.PhiX_Genome_File.tsv
     fi
 
+    # Auto reformat FastQ files
+    msg "INFO: Auto reformatting FastQ files.."
+    for read in !{reads}; do
+      reformat.sh \
+        in="${read}" \
+        out="reformatted.${read}" \
+        tossbrokenreads=t
+    done
+
     # Remove PhiX
-    msg "INFO: Removing PhiX using BBDuk"
+    msg "INFO: Removing PhiX using BBDuk.."
 
-    run_bbduk() {
-      read1=$1
-      read2=$2
-
-      bbduk.sh \
-        k=31 \
-        hdist=1 \
-        qout=33 \
-        qin=auto \
-        overwrite=t \
-        in="${read1}" \
-        in2="${read2}" \
-        threads=!{task.cpus} \
-        out=!{meta.id}_noPhiX-R1.fsq \
-        out2=!{meta.id}_noPhiX-R2.fsq \
-        ref="!{phix_reference_file}"
-
-        echo $?
-    }
-
-    # Try reformatting reads if bbduk was unsuccessful
-    if [ $(run_bbduk "!{reads[0]}" "!{reads[1]}") == 1 ]; then
-      msg "ERROR: BBDuk failed.."
-      msg "INFO: Reformatting reads to try to fix errors.."
-      for read in !{reads}; do
-        reformat.sh \
-          in="${read}" \
-          out="reformatted.${read}" \
-          tossbrokenreads=t
-      done
-
-      # Run bbduk again on reformatted reads
-      #  If this fails, input reads are corrupted and will automatically exit
-      msg "INFO: Trying BBDuk again.."
-      run_bbduk "reformatted.!{reads[0]}" "reformatted.!{reads[1]}"
-    fi
+    bbduk.sh \
+      k=31 \
+      hdist=1 \
+      qout=33 \
+      qin=auto \
+      overwrite=t \
+      in="reformatted.!{reads[0]}" \
+      in2="reformatted.!{reads[1]}" \
+      threads=!{task.cpus} \
+      out=!{meta.id}_noPhiX-R1.fsq \
+      out2=!{meta.id}_noPhiX-R2.fsq \
+      ref="!{phix_reference_file}"
 
     for suff in R1.fsq R2.fsq; do
       if verify_minimum_file_size "!{meta.id}_noPhiX-${suff}" 'PhiX-removed FastQ Files' "!{params.min_filesize_fastq_phix_removed}"; then
