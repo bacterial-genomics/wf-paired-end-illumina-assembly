@@ -183,7 +183,9 @@ def checkQCFilechecks(it) {
             }
 
             // Move to QC log directory
-            file.copyTo(params.qc_filecheck_log_dir)
+            File dir = new File("${params.qc_filecheck_log_dir}/")
+            if ( !dir.exists() ) { dir.mkdirs() }
+            file.copyTo("${dir}")
 
             // Check file contents for failure
             if ( getData.contains('FAIL') ) {
