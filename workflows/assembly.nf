@@ -466,9 +466,8 @@ workflow ASSEMBLY {
             ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db
                                 .map{
                                     file ->
-                                        [ file[0].toString().split(".${file[0].getExtension()}") ]
+                                        [ file[0].getSimpleName(), file ]
                                 }
-                                .flatten()
 
         } else if ( ch_blast_db_file.isDirectory() ) {
             ch_db_for_blast = Channel
@@ -477,12 +476,11 @@ workflow ASSEMBLY {
                                     .map{
                                         file ->
                                             if (file.size() >= 3) {
-                                                [ file[0].toString().split(".${file[0].getExtension()}") ]
+                                                [ file[0].getSimpleName(), file ]
                                             } else {
                                                 error("16S_ribosomal_RNA BLAST database requires at least '16S_ribosomal_RNA.{nin,nsq,nhr}' files.")
                                             }
                                     }
-                                    .flatten()
         } else {
             error("Unsupported object given to --blast_db, database must be supplied as either a directory or a .tar.gz file!")
         }
