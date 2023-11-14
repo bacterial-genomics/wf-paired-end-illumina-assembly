@@ -70,7 +70,7 @@ workflow ASSEMBLE_CONTIGS {
     ch_cleaned_reads    // channel: [ val(meta), [read1], [read2], [single] ]
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions      = Channel.empty()
     ch_qc_filechecks = Channel.empty()
 
     if ( assembler == "skesa" ) {
@@ -137,6 +137,6 @@ workflow ASSEMBLE_CONTIGS {
     emit:
     bam_files     = ch_bam_files            // channel: [ val(meta), [paired.bam], [single.bam] ]
     assembly_file = ch_assembly_file        // channel: [ val(meta), [assembly.fna] ]
-    versions      = ch_versions
     qc_filecheck  = ch_qc_filechecks
+    versions      = ch_versions
 }
