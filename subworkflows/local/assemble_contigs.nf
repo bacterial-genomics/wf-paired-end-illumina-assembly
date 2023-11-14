@@ -26,13 +26,6 @@ include { POLISH_ASSEMBLY_BWA_PILON } from "../../modules/local/polish_assembly_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// Convert params.assembler to lowercase
-def toLower(it) {
-    it.toString().toLowerCase()
-}
-
-assembler = toLower(params.assembler)
-
 // Check QC filechecks for a failure
 def checkQCFilechecks(it) {
     it.flatten().map{
@@ -73,12 +66,12 @@ workflow ASSEMBLE_CONTIGS {
     ch_versions      = Channel.empty()
     ch_qc_filechecks = Channel.empty()
 
-    if ( assembler == "skesa" ) {
+    if ( params.assembler == "SKESA" ) {
         // SKESA assembler
         ch_cleaned_reads = ch_cleaned_reads
                                 .map{
                                     meta, r1, r2, single ->
-                                        meta.id = "${meta.id}-SKESA"
+                                        meta.id = "${meta.id}-${params.assembler}"
                                         [ meta, [r1], [r2], [single] ]
                                 }
 
@@ -115,7 +108,7 @@ workflow ASSEMBLE_CONTIGS {
         ch_cleaned_reads = ch_cleaned_reads
                                 .map{
                                     meta, r1, r2, single ->
-                                        meta.id = "${meta.id}-SPAdes"
+                                        meta.id = "${meta.id}-${params.assembler}"
                                         [ meta, [r1], [r2], [single] ]
                                 }
 
