@@ -7,8 +7,7 @@ process MLST_MLST {
     tuple val(meta), path(paired_bam), path(single_bam), path(assembly)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                 , emit: versions
     path "${meta.id}-${meta.assembler}.Summary.MLST.tab", emit: summary_mlst
 

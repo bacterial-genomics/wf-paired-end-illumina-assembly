@@ -9,8 +9,7 @@ process TRIM_READS_TRIMMOMATIC {
     path adapter_reference_file
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "${meta.id}.single.fq"
     path "${meta.id}.trimmomatic.tsv"
     path "versions.yml"                                                              , emit: versions

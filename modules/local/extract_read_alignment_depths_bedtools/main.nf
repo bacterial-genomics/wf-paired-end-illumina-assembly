@@ -7,8 +7,7 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     tuple val(meta), path(paired_bam), path(single_bam)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                                            , emit: versions
     tuple val(meta), path("${meta.id}-${meta.assembler}.CleanedReads-AlnStats.tsv"), emit: summary_alignment_stats
 

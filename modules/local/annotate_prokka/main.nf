@@ -8,8 +8,7 @@ process ANNOTATE_PROKKA {
     tuple val(meta), path(assembly)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "prokka/${meta.id}-${meta.assembler}.log.gz"
     path "versions.yml"                                           , emit: versions
     path "${meta.id}-${meta.assembler}.Annotated_GenBank_File.tsv", emit: qc_filecheck

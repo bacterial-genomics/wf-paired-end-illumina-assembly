@@ -8,8 +8,7 @@ process KRAKEN2_DB_PREPARATION_UNIX {
     path(database)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "database/"   , emit: db
     path "versions.yml", emit: versions
 

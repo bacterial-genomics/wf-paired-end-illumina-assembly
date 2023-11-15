@@ -8,8 +8,7 @@ process ASSEMBLE_CONTIGS_SKESA {
     tuple val(meta), path(R1), path(R2), path(single)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                      , emit: versions
     path "${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv", emit: qc_filecheck
     tuple val(meta), path("contigs.fasta")                   , emit: contigs

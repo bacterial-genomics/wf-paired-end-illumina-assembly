@@ -7,8 +7,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     tuple val(meta), path(blast_output), path(assembly)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "${meta.id}-${meta.assembler}.blast.tsv.gz"
     path "versions.yml"                                             , emit: versions
     path "${meta.id}-${meta.assembler}.Summary.16S.tab"             , emit: blast_summary

@@ -7,8 +7,7 @@ process ESTIMATE_GENOME_SIZE_KMC {
     tuple val(meta), path(reads)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                , emit: versions
     tuple val(meta), path("${meta.id}.genome_size.txt"), emit: genome_size
 

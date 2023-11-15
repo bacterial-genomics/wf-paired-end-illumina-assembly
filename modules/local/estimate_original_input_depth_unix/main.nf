@@ -7,8 +7,7 @@ process ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX {
     tuple val(meta), val(input_total_bp), val(genome_size)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                                                                   , emit: versions
     tuple val(meta), path("${meta.id}.initial_depth.txt"), path("${meta.id}.fraction_of_reads_to_use.txt"), emit: fraction_of_reads_to_use
 

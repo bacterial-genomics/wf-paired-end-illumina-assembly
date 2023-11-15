@@ -8,8 +8,7 @@ process ALIGN_16S_BLAST {
     tuple val(db_name), path("database/*")
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                            , emit: versions
     path "${meta.id}-${meta.assembler}.16S_BLASTn_Output_File.tsv" , emit: qc_filecheck
     tuple val(meta), path("${meta.id}-${meta.assembler}.blast.tsv"), emit: blast_output

@@ -8,8 +8,7 @@ process MAP_CONTIGS_BWA {
     tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(uncorrected_contigs)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                                                                              , emit: versions
     tuple val(meta), path("${meta.id}-${meta.assembler}.fna")                                                        , emit: assembly
     path("${meta.id}-${meta.assembler}.{Filtered,Binary,Final}*_File.tsv")                                           , emit: qc_filecheck

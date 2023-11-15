@@ -8,8 +8,7 @@ process BUSCO_DB_PREPARATION_UNIX {
     tuple val(meta), path(database)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml", emit: versions
     path "database/"   , emit: db
 

@@ -7,8 +7,7 @@ process CALCULATE_COVERAGE_UNIX {
     tuple val(meta), path(summary_assemblies), path(summary_reads), path(summary_stats)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                   , emit: versions
     path "${meta.id}-${meta.assembler}.GenomeCoverage.tsv", emit: genome_coverage
 

@@ -8,8 +8,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     tuple val(meta), path(paired_R1), path(paired_R2)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "${meta.id}.overlap.tsv"
     path "${meta.id}.clean-reads.tsv"
     path "versions.yml"                                                                                                     , emit: versions

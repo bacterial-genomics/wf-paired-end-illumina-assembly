@@ -9,8 +9,7 @@ process REMOVE_PHIX_BBDUK {
     path phix_reference_file
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                                                , emit: versions
     path "${meta.id}.Summary.PhiX.tsv"                                                 , emit: phix_summary
     path("${meta.id}.PhiX*_File.tsv")                                                  , emit: qc_filecheck

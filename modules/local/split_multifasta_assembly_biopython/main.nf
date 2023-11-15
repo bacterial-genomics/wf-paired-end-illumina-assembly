@@ -7,8 +7,7 @@ process SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON {
     tuple val(meta), path(assembly)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"            , emit: versions
     tuple val(meta), path("bins/*"), emit: split_multifasta_assembly_dir
 

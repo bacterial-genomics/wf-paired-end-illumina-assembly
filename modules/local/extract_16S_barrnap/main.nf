@@ -7,8 +7,7 @@ process EXTRACT_16S_BARRNAP {
     tuple val(meta), path(prokka_genbank_file), path(assembly), path(biopython_extracted_rna)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                                  , emit: versions
     path("${meta.id}-${meta.assembler}.SSU_{Renamed,Extracted}_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("16S.${meta.id}-${meta.assembler}.fa")         , emit: barnapp_extracted_rna

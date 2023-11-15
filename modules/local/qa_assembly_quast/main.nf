@@ -8,8 +8,7 @@ process QA_ASSEMBLY_QUAST {
     tuple val(meta), path(R1), path(R2), path(single), path(assembly)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                                                                                                , emit: versions
     path "${meta.id}-${meta.assembler}.QuastSummary.tsv"                                                                               , emit: summary_assemblies
     path "${meta.id}-${meta.assembler}.CleanedReads-Bases.tsv"                                                                         , emit: summary_reads
