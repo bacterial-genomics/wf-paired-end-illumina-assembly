@@ -15,6 +15,7 @@ process ANNOTATE_PROKKA {
     tuple val(meta), path("${meta.id}-${meta.assembler}.gbk")     , emit: prokka_genbank_file
 
     shell:
+    curated_proteins = params.prokka_curated_proteins ? "--proteins ${params.prokka_curated_proteins}" : ""
     '''
     source bash_functions.sh
 
@@ -29,14 +30,14 @@ process ANNOTATE_PROKKA {
     prokka \
       --outdir prokka \
       --prefix "!{meta.id}-!{meta.assembler}" \
+      --locustag "!{meta.id}-!{meta.assembler}" \
+      --evalue !{params.prokka_evalue} \
+      --mincontiglen 1 \
       --force \
       --addgenes \
-      --locustag "!{meta.id}-!{meta.assembler}" \
-      --mincontiglen 1 \
-      --evalue !{params.evalue} \
+      !{curated_proteins} \
       --cpus !{task.cpus} \
       !{assembly}
-      # !{params.curated_proteins} \
 
     # Regardless of the file extension, unify to GBK extension for GenBank format
     for ext in gb gbf gbff gbk; do
