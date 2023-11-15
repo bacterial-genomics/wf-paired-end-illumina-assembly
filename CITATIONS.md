@@ -22,6 +22,10 @@
 
   > Camacho C, Coulouris G, Avagyan V, et al. BLAST+: architecture and applications. BMC Bioinformatics. 2009/12/15 2009;10(1):421. doi:10.1186/1471-2105-10-421
 
+- [GTDB-Tk](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9710552/)
+
+  > Chaumeil PA, Mussig AJ, Hugenholtz P, Parks DH. GTDB-Tk v2: memory friendly classification with the genome taxonomy database. Bioinformatics. Nov 30 2022;38(23):5315-5316. doi:10.1093/bioinformatics/btac672
+
 - [BioPython](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2682512/)
 
   > Cock PJ, Antao T, Chang JT, et al. Biopython: freely available Python tools for computational molecular biology and bioinformatics. Bioinformatics. Jun 1 2009;25(11):1422-3. doi:10.1093/bioinformatics/btp163
@@ -49,6 +53,10 @@
 - [FLASH](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3198573/)
 
   > Magoč T, Salzberg SL. FLASH: fast length adjustment of short reads to improve genome assemblies. Bioinformatics. Nov 1 2011;27(21):2957-63. doi:10.1093/bioinformatics/btr507
+
+- [BUSCO](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8476166/)
+
+  > Manni M, Berkeley MR, Seppey M, Simão FA, Zdobnov EM. BUSCO Update: Novel and Streamlined Workflows along with Broader and Deeper Phylogenetic Coverage for Scoring of Eukaryotic, Prokaryotic, and Viral Genomes. Mol Biol Evol. Sep 27 2021;38(10):4647-4654. doi:10.1093/molbev/msab199
 
 - [BEDTools](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4213956/)
 
