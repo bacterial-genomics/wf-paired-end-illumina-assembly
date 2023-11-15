@@ -15,6 +15,8 @@ process ASSEMBLE_CONTIGS_SPADES {
     tuple val(meta), path("SPAdes/${meta.id}/contigs.fasta") , emit: contigs
 
     shell:
+    mode_list = ["--isolate", "--sc", "--meta", "--plasmid", "--rna", "--metaviral", "--metaplasmid", "--corona"]
+    mode = (params.spades_mode !in mode_list) ? "" : params.spades_mode
     '''
     source bash_functions.sh
 
@@ -42,11 +44,10 @@ process ASSEMBLE_CONTIGS_SPADES {
           -2 !{R2} \
           -s !{single} \
           -o SPAdes_output \
+          -k !{params.spades_kmer_sizes} \
+          !{mode} \
           --memory "${RAMSIZE}" \
           --threads !{task.cpus}
-          # param.mode
-          # -k !{params.kmer_sizes} \
-
       fi
       failed=$(( ${failed}+1 ))
     done
