@@ -153,14 +153,14 @@ if (params.busco_db) {
 if (params.kraken1_db) {
     ch_kraken1_db_file = file(params.kraken1_db, checkIfExists: true)
 } else {
-    ch_kraken1_db_file = Channel.empty()
+    ch_kraken1_db_file = []
 }
 
 // kraken2
 if (params.kraken2_db) {
     ch_kraken2_db_file = file(params.kraken2_db, checkIfExists: true)
 } else {
-    ch_kraken2_db_file = Channel.empty()
+    ch_kraken2_db_file = []
 }
 
 // NCBI BLAST
@@ -325,7 +325,7 @@ workflow ASSEMBLY {
         ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
 
     } else {
-        log.warn("Kraken could not be performed - missing database input!")
+        log.warn("Kraken could not be performed - database not specified using --kraken1_db!")
     }
 
     // Prepare kraken2 database for use
@@ -361,7 +361,7 @@ workflow ASSEMBLY {
         ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
 
     } else {
-        log.warn("Kraken2 could not be performed - missing database input!")
+        log.warn("Kraken2 could not be performed - database not specified using --kraken2_db!")
     }
 
     /*
