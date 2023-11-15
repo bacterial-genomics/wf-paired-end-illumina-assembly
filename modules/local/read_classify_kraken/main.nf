@@ -12,7 +12,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
     output:
     path(".command.{out,err}")
     path "${meta.id}.kraken_output.tab.gz"
-    path "${meta.id}.Summary.tsv"
+    path "${meta.id}.kraken_summary.tsv"
     path "versions.yml"                  , emit: versions
 
     shell:
@@ -21,7 +21,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
     source summarize_kraken.sh
 
     # Investigate taxonomic identity of cleaned reads
-    if [ ! -s !{meta.id}.Summary.tsv ]; then
+    if [ ! -s !{meta.id}.kraken_summary.tsv ]; then
       msg "INFO: Performing Kraken1 classifications"
       kraken \
         --fastq-input \
@@ -38,12 +38,12 @@ process READ_CLASSIFY_KRAKEN_ONE {
         > kraken.tab 2>&1 | tr '^M' '\n' 1>&2
 
       msg "INFO: Summarizing Kraken1"
-      summarize_kraken 'kraken.tab' > !{meta.id}.Summary.tsv
+      summarize_kraken 'kraken.tab' > !{meta.id}.kraken_summary.tsv
 
       # Add header to kraken summary
       sed -i \
         '1i % Reads\t# Reads\tUnclassified\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads' \
-        !{meta.id}.Summary.tsv
+        !{meta.id}.kraken_summary.tsv
 
       mv kraken.tab !{meta.id}.kraken_output.tab
       gzip !{meta.id}.kraken_output.tab
