@@ -25,7 +25,8 @@ def parseArgs():
         "--infile",
         metavar="FILE",
         required=True,
-        help="input FastA file from IDBA, SKESA, SPAdes, " "Unicycler, or Velvet, optionally gunzip compressed",
+        help="input FastA file from IDBA, SKESA, SPAdes, "
+        "Unicycler, or Velvet, optionally gunzip compressed",
     )
     opt = parser.add_argument_group("Optional")
     opt.add_argument(
@@ -52,11 +53,27 @@ def parseArgs():
         "--discarded",
         metavar="FILE",
         default=None,
-        help="output FastA file of discarded sequences which includes " "failed filters in the deflines [None]",
+        help="output FastA file of discarded sequences which includes "
+        "failed filters in the deflines [None]",
     )
-    opt.add_argument("-g", "--gcskew", default=True, action="store_false", help="keep >88 and <12%% GC contigs")
-    opt.add_argument("-h", "--help", action="help", help="show this help message and exit")
-    opt.add_argument("-l", "--len", type=int, default=500, metavar="INT", help="minimum contig length (in bp) [500]")
+    opt.add_argument(
+        "-g",
+        "--gcskew",
+        default=True,
+        action="store_false",
+        help="keep >88 and <12%% GC contigs",
+    )
+    opt.add_argument(
+        "-h", "--help", action="help", help="show this help message and exit"
+    )
+    opt.add_argument(
+        "-l",
+        "--len",
+        type=int,
+        default=500,
+        metavar="INT",
+        help="minimum contig length (in bp) [500]",
+    )
     opt.add_argument(
         "-m",
         "--complex",
@@ -64,7 +81,13 @@ def parseArgs():
         action="store_false",
         help="keep low-complexity contigs with only 1 or 2 nucleotides " "represented",
     )
-    opt.add_argument("-o", "--outfile", default=None, metavar="FILE", help="output filtered FastA file [stdout]")
+    opt.add_argument(
+        "-o",
+        "--outfile",
+        default=None,
+        metavar="FILE",
+        help="output filtered FastA file [stdout]",
+    )
     opt.add_argument(
         "--deflines",
         choices={"rename", "rename_retain", "retain"},
@@ -74,9 +97,17 @@ def parseArgs():
         "rename_retain: includes rename style prefix but also adds "
         "OrigDefln=<input defline> suffix [rename_retain]",
     )
-    opt.add_argument("--no-sort", default=False, action="store_true", help="skip sorting contigs by descending length")
     opt.add_argument(
-        "--quiet-removal", default=False, action="store_true", help="skip explanations for each record removal"
+        "--no-sort",
+        default=False,
+        action="store_true",
+        help="skip sorting contigs by descending length",
+    )
+    opt.add_argument(
+        "--quiet-removal",
+        default=False,
+        action="store_true",
+        help="skip explanations for each record removal",
     )
     opt.add_argument(
         "--quiet-coverage",
@@ -88,9 +119,12 @@ def parseArgs():
         "--quiet-stats",
         default=False,
         action="store_true",
-        help="skip final reporting of input, discard, and output tallies " "(records count, sequence lengths)",
+        help="skip final reporting of input, discard, and output tallies "
+        "(records count, sequence lengths)",
     )
-    opt.add_argument("--silent", default=False, action="store_true", help="no screen output")
+    opt.add_argument(
+        "--silent", default=False, action="store_true", help="no screen output"
+    )
     return parser.parse_args()
 
 
@@ -124,7 +158,9 @@ def string_is_float(s):
 
 def require_minimum_arg_value(arg_value, arg_name, min_value):
     if arg_value < min_value:
-        sys.stderr.write("ERROR: minimum {} must be at least {}\n".format(arg_name, arg_value))
+        sys.stderr.write(
+            "ERROR: minimum {} must be at least {}\n".format(arg_name, arg_value)
+        )
         sys.exit(1)
 
 
@@ -228,7 +264,9 @@ def filter_record_complexity(record, bool_complex, quiet):
             return i
         else:
             if not quiet:
-                sys.stderr.write("INFO: {} low compositional complexity\n".format(record.id))
+                sys.stderr.write(
+                    "INFO: {} low compositional complexity\n".format(record.id)
+                )
             return False
     else:
         return "skipped filter"
@@ -251,7 +289,9 @@ def calc_median(srt_floats_list):
     return median, idxs
 
 
-def calc_normalized_median_cov(records, assembly_fmt, cov_regex, coverage_filter_type, quiet):
+def calc_normalized_median_cov(
+    records, assembly_fmt, cov_regex, coverage_filter_type, quiet
+):
     """
     calculates the length-normalized median coverage value
     for a list of SeqIO records
@@ -283,15 +323,23 @@ def rename_record_defline(record, baseheader, i, rename_type):
     """
     if rename_type == "rename_retain":
         return SeqRecord.SeqRecord(
-            id="{}_{} OrigDefln={}".format(baseheader, i, record.description), seq=record.seq, description=""
+            id="{}_{} OrigDefln={}".format(baseheader, i, record.description),
+            seq=record.seq,
+            description="",
         )
     elif rename_type == "rename":
-        return SeqRecord.SeqRecord(id="{}_{}".format(baseheader, i), seq=record.seq, description="")
+        return SeqRecord.SeqRecord(
+            id="{}_{}".format(baseheader, i), seq=record.seq, description=""
+        )
     elif rename_type == "retain":
-        return SeqRecord.SeqRecord(id=record.description, seq=record.seq, description="")
+        return SeqRecord.SeqRecord(
+            id=record.description, seq=record.seq, description=""
+        )
     elif rename_type == "discarded":
         return SeqRecord.SeqRecord(
-            id="{}_{} {} OrigDefln={}".format(baseheader, i, record.description, record.id),
+            id="{}_{} {} OrigDefln={}".format(
+                baseheader, i, record.description, record.id
+            ),
             seq=record.seq,
             description="",
         )
@@ -311,7 +359,9 @@ def write_records(records, baseheader, defline_rename, outfile, bool_nosortbylen
 def main():
     args = parseArgs()
     if not string_is_int_or_float(args.cov):
-        sys.stderr.write("ERROR: --cov {} must be a float or integer\n".format(args.cov))
+        sys.stderr.write(
+            "ERROR: --cov {} must be a float or integer\n".format(args.cov)
+        )
         sys.exit(1)
     min_cov, min_len = float(args.cov), args.len
     require_minimum_arg_value(min_cov, "coverage", 0)
@@ -362,7 +412,9 @@ def main():
         cnts_input_reclengths.append(len(record.seq))
         d = {}
         d["length"] = filter_record_length(record, min_len, quiet_removal)
-        d["coverage"] = filter_record_coverage(record, min_cov, assembly_fmt, cov_regex, quiet_removal)
+        d["coverage"] = filter_record_coverage(
+            record, min_cov, assembly_fmt, cov_regex, quiet_removal
+        )
         d["gc_content"] = filter_record_gc(record, bool_gc, quiet_removal)
         d["complexity"] = filter_record_complexity(record, bool_complex, quiet_removal)
         if all(d.values()):
@@ -389,7 +441,10 @@ def main():
     median_cov = calc_normalized_median_cov(
         unfilt_records, assembly_fmt, cov_regex, coverage_filter_type, quiet_coverage
     )
-    unfilt_coverages = [extract_coverage_value_from_defline(r, assembly_fmt, cov_regex) for r in unfilt_records]
+    unfilt_coverages = [
+        extract_coverage_value_from_defline(r, assembly_fmt, cov_regex)
+        for r in unfilt_records
+    ]
     if not quiet_coverage:
         min_val, max_val = min(unfilt_coverages), max(unfilt_coverages)
         avg_cov = sum(unfilt_coverages) / float(len(unfilt_coverages))
@@ -399,7 +454,9 @@ def main():
             "    ({}cluding cov filt)\n"
             "    minimum={:.2f}\n"
             "    average={:.2f}\n"
-            "    maximum={:.2f}\n\n".format(d[coverage_filter_type], min_val, avg_cov, max_val)
+            "    maximum={:.2f}\n\n".format(
+                d[coverage_filter_type], min_val, avg_cov, max_val
+            )
         )
 
     # Relative coverage filtering of filtered recs only
@@ -407,7 +464,9 @@ def main():
         min_cov = median_cov * float(args.cov)
         records = []
         for rec in unfilt_records:
-            cov_val = filter_record_coverage(rec, min_cov, assembly_fmt, cov_regex, quiet_removal)
+            cov_val = filter_record_coverage(
+                rec, min_cov, assembly_fmt, cov_regex, quiet_removal
+            )
             if cov_val:
                 records.append((rec, len(rec.seq)))
             else:
@@ -417,7 +476,9 @@ def main():
             sys.stderr.write(
                 "\nINFO: {} minimum coverage applied from "
                 "{} input relative coverage value * "
-                "{:.2f} calculated median coverage\n\n".format(min_cov, args.cov, median_cov)
+                "{:.2f} calculated median coverage\n\n".format(
+                    min_cov, args.cov, median_cov
+                )
             )
 
     # Optionally report tallies

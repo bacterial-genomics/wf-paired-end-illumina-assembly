@@ -1,4 +1,4 @@
-process GTDBTK_DB_PREPARATION_UNIX {
+process KRAKEN2_DB_PREPARATION_UNIX {
 
     label "process_medium"
     tag { "${database.getSimpleName()}" }
@@ -9,13 +9,16 @@ process GTDBTK_DB_PREPARATION_UNIX {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                         , emit: versions
-    tuple val("${database.getSimpleName()}"), path("database/*"), emit: db
+    path "database/"   , emit: db
+    path "versions.yml", emit: versions
 
     shell:
     '''
+    mkdir db_tmp
+    tar -xzf !{database} -C db_tmp
+
     mkdir database
-    tar -xzf !{database} -C database --strip 1
+    mv `find db_tmp/ -name "*.k2d"` database/
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

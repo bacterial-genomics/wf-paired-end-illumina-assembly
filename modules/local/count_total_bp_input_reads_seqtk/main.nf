@@ -1,22 +1,15 @@
 process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
 
-    publishDir   "${params.process_log_dir}",
-        mode:    "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs:  { filename -> "${meta.id}.${task.process}${filename}" }
-
     tag { "${meta.id}" }
-
     container "gregorysprenger/seqtk@sha256:756bff7222c384d358cb22ecbbae443e112b296503cb0e1a6baf9cf80545ae20"
 
     input:
-    tuple val(meta), path(reads), path(qc_input_filecheck)
+    tuple val(meta), path(reads)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                             , emit: versions
-    tuple val(meta), path("${meta.id}.total_bp.txt"), emit: total_bp
+    tuple val(meta), path("${meta.id}.input_total_bp.txt"), emit: input_total_bp
 
     shell:
     total_bp = 0
@@ -46,7 +39,7 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
       exit 1
     fi
 
-    echo -n "${R1R2_total_bp}" > !{meta.id}.total_bp.txt
+    echo -n "${R1R2_total_bp}" > !{meta.id}.input_total_bp.txt
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

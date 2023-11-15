@@ -27,7 +27,7 @@ def hasExtension(it, extension) {
 workflow INPUT_MERGE_LANE_FILES {
 
     take:
-    input
+    input   // channel: path
 
     main:
     ch_versions = Channel.empty()
@@ -35,12 +35,12 @@ workflow INPUT_MERGE_LANE_FILES {
     if (params.merge_lanes) {
         // If merged_lanes parameter is used, merge
         // multiple lanes based on 'sample' column
-        MERGE_LANE_FILES_PYTHON(input)
+        MERGE_LANE_FILES_PYTHON(
+          input
+        )
+        ch_versions = ch_versions.mix(MERGE_LANE_FILES_PYTHON.out.versions)
 
         merged_output = MERGE_LANE_FILES_PYTHON.out.lanes_merged_samplesheet
-
-        ch_versions = ch_versions
-            .mix(MERGE_LANE_FILES_PYTHON.out.versions)
     } else {
         // If merged_lanes parameter is not used,
         // output the input channel
@@ -48,6 +48,6 @@ workflow INPUT_MERGE_LANE_FILES {
     }
 
     emit:
-    output   = merged_output
+    output   = merged_output    // channel: path
     versions = ch_versions
 }

@@ -1,20 +1,13 @@
 process ESTIMATE_GENOME_SIZE_KMC {
 
-    publishDir   "${params.process_log_dir}",
-        mode:    "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs:  { filename -> "${meta.id}.${task.process}${filename}" }
-
     tag { "${meta.id}" }
-
     container "gregorysprenger/kmc@sha256:27603041f8c8818aa71a1d0386df17eddca59dbd6441b7e84b78b8a09dc137df"
 
     input:
-    tuple val(meta), path(reads), path(qc_input_filecheck)
+    tuple val(meta), path(reads)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                , emit: versions
     tuple val(meta), path("${meta.id}.genome_size.txt"), emit: genome_size
 
@@ -23,6 +16,7 @@ process ESTIMATE_GENOME_SIZE_KMC {
     source bash_functions.sh
 
     # Calculate unique kmers in the R1 read file as a proxy for genome size
+    msg "INFO: Using kmc to estimate genome size"
     mkdir -p kmc-tmp-dir.!{meta.id}
     kmc \
       -t!{task.cpus} \
@@ -39,7 +33,7 @@ process ESTIMATE_GENOME_SIZE_KMC {
         | sed 's/[[:space:]]//g')
 
       if ! [[ ${genome_size} =~ ^[0-9]+$ ]]; then
-        msg "ERROR: genome size not estimated with kmc" >&2
+        msg "ERROR: Genome size not estimated with kmc" >&2
         exit 1
       fi
     else
@@ -50,7 +44,7 @@ process ESTIMATE_GENOME_SIZE_KMC {
     rm -rf kmc-binary-output-prefix.!{meta.id}*
 
     # Report the estimated genome size
-    msg "INFO: Genome size was estimated to be ${genome_size} bp with kmc"
+    msg "INFO: Estimated genome size of !{meta.id}: ${genome_size}"
 
     echo -n "${genome_size}" > !{meta.id}.genome_size.txt
 

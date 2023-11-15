@@ -1,62 +1,33 @@
 process POLISH_ASSEMBLY_BWA_PILON {
 
-    publishDir "${params.outdir}/asm",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.{txt,fna}"
-    publishDir "${params.qc_filecheck_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*File*.tsv"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     label "process_high"
-    tag { "${meta.id}" }
-
+    tag { "${meta.id}-${meta.assembler}" }
     container "gregorysprenger/bwa-samtools-pilon@sha256:209ac13b381188b4a72fe746d3ff93d1765044cbf73c3957e4e2f843886ca57f"
 
     input:
-    tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(qc_nonoverlap_filecheck), path(uncorrected_contigs)
+    tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(uncorrected_contigs)
 
     output:
-    path ".command.out"
-    path ".command.err"
-    path "versions.yml"                                                                              , emit: versions
-    path "${meta.id}.SNPs-corrected.cnt.txt"
-    path "${meta.id}.InDels-corrected.cnt.txt"
-    tuple val(meta), path("${meta.id}.fna")                                                          , emit: assembly
-    path "${meta.id}.Filtered_Assembly_File.tsv"                                                     , emit: qc_filtered_asm_filecheck
-    path "${meta.id}.Polished_Assembly_File.tsv"                                                     , emit: qc_polished_asm_filecheck
-    path "${meta.id}.Binary_PE_Alignment_Map_File.tsv"                                               , emit: qc_pe_alignment_filecheck
-    path "${meta.id}.Binary_SE_Alignment_Map_File.tsv"                                               , emit: qc_se_alignment_filecheck
-    path "${meta.id}.Final_Corrected_Assembly_FastA_File.tsv"                                        , emit: qc_corrected_asm_filecheck
-    tuple val(meta), path("${meta.id}.paired.bam"), path("${meta.id}.single.bam"), path("*File*.tsv"), emit: bam
+    path(".command.{out,err}")
+    path "versions.yml"                                                                                              , emit: versions
+    path("${meta.id}-${meta.assembler}.{SNPs,InDels}-corrected.cnt.txt")
+    tuple val(meta), path("${meta.id}-${meta.assembler}.fna")                                                        , emit: assembly
+    path("${meta.id}-${meta.assembler}.{Filtered,Polished,Binary,Final}*_File.tsv")                                  , emit: qc_filecheck
+    tuple val(meta), path("${meta.id}-${meta.assembler}.paired.bam"), path("${meta.id}-${meta.assembler}.single.bam"), emit: bam
 
     shell:
     '''
     source bash_functions.sh
 
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_nonoverlap_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
-
     # Correct cleaned SPAdes contigs with cleaned PE reads
     if verify_minimum_file_size "!{uncorrected_contigs}" 'Filtered Assembly File' "!{params.min_filesize_filtered_assembly}"; then
-      echo -e "!{meta.id}\tFiltered Assembly File\tPASS" > !{meta.id}.Filtered_Assembly_File.tsv
+      echo -e "!{meta.id}\tFiltered Assembly File\tPASS" > "!{meta.id}-!{meta.assembler}.Filtered_Assembly_File.tsv"
     else
-      echo -e "!{meta.id}\tFiltered Assembly File\tFAIL" > !{meta.id}.Filtered_Assembly_File.tsv
+      echo -e "!{meta.id}\tFiltered Assembly File\tFAIL" > "!{meta.id}-!{meta.assembler}.Filtered_Assembly_File.tsv"
     fi
 
-    echo -n '' > !{meta.id}.InDels-corrected.cnt.txt
-    echo -n '' > !{meta.id}.SNPs-corrected.cnt.txt
+    echo -n '' > "!{meta.id}-!{meta.assembler}.InDels-corrected.cnt.txt"
+    echo -n '' > "!{meta.id}-!{meta.assembler}.SNPs-corrected.cnt.txt"
 
     # Make sure polish_corrections is at least 1, if not set to 1
     polish_corrections=!{params.spades_polish_corrections}
@@ -81,23 +52,23 @@ process POLISH_ASSEMBLY_BWA_PILON {
         samtools sort \
         -l 9 \
         -@ !{task.cpus} \
-        -o !{meta.id}.paired.bam \
+        -o "!{meta.id}-!{meta.assembler}.paired.bam" \
         --reference !{uncorrected_contigs}
 
-      if verify_minimum_file_size "!{meta.id}.paired.bam" 'Binary PE Alignment Map File' "!{params.min_filesize_binary_pe_alignment}"; then
+      if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.paired.bam" 'Binary PE Alignment Map File' "!{params.min_filesize_binary_pe_alignment}"; then
         echo -e "!{meta.id}\tBinary PE Alignment Map File (${i} of 3)\tPASS" \
-          >> !{meta.id}.Binary_PE_Alignment_Map_File.tsv
+          >> "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
       else
         echo -e "!{meta.id}\tBinary PE Alignment Map File (${i} of 3)\tFAIL" \
-          >> !{meta.id}.Binary_PE_Alignment_Map_File.tsv
+          >> "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
       fi
 
-      samtools index !{meta.id}.paired.bam
+      samtools index "!{meta.id}-!{meta.assembler}.paired.bam"
 
       pilon \
         --genome !{uncorrected_contigs} \
-        --frags !{meta.id}.paired.bam \
-        --output "!{meta.id}" \
+        --frags "!{meta.id}-!{meta.assembler}.paired.bam" \
+        --output "!{meta.id}-!{meta.assembler}" \
         --changes \
         --fix snps,indels \
         --mindepth 0.50 \
@@ -105,60 +76,61 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
       if verify_minimum_file_size "!{uncorrected_contigs}" 'Polished Assembly File' "!{params.min_filesize_polished_assembly}"; then
         echo -e "!{meta.id}\tPolished Assembly File (${i} of 3)\tPASS" \
-          >> !{meta.id}.Polished_Assembly_File.tsv
+          >> "!{meta.id}-!{meta.assembler}.Polished_Assembly_File.tsv"
       else
         echo -e "!{meta.id}\tPolished Assembly File (${i} of 3)\tFAIL" \
-          >> !{meta.id}.Polished_Assembly_File.tsv
+          >> "!{meta.id}-!{meta.assembler}.Polished_Assembly_File.tsv"
       fi
 
-      echo $(grep -c '-' !{meta.id}.changes >> !{meta.id}.InDels-corrected.cnt.txt)
-      echo $(grep -vc '-' !{meta.id}.changes >> !{meta.id}.SNPs-corrected.cnt.txt)
+      echo $(grep -c '-' "!{meta.id}-!{meta.assembler}.changes" >> "!{meta.id}-!{meta.assembler}.InDels-corrected.cnt.txt")
+      echo $(grep -vc '-' "!{meta.id}-!{meta.assembler}.changes" >> "!{meta.id}-!{meta.assembler}.SNPs-corrected.cnt.txt")
 
-      rm -f !{meta.id}.{changes,uncorrected.fna}
-      rm -f "!{meta.id}"Pilon.bed
-      mv -f !{meta.id}.fasta !{meta.id}.uncorrected.fna
+      rm -f "!{meta.id}-!{meta.assembler}.{changes,uncorrected.fna}"
+      rm -f "!{meta.id}-!{meta.assembler}Pilon.bed"
+      mv -f "!{meta.id}-!{meta.assembler}.fasta" \
+        "!{meta.id}-!{meta.assembler}.uncorrected.fna"
 
-      sed -i 's/_pilon//1' !{meta.id}.uncorrected.fna
+      sed -i 's/_pilon//1' "!{meta.id}-!{meta.assembler}.uncorrected.fna"
     done
 
-    mv -f !{meta.id}.uncorrected.fna !{meta.id}.fna
+    mv -f "!{meta.id}-!{meta.assembler}.uncorrected.fna" "!{meta.id}-!{meta.assembler}.fna"
 
-    if verify_minimum_file_size "!{meta.id}.fna" 'Final Corrected Assembly FastA File' "!{params.min_filesize_final_assembly}"; then
+    if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.fna" 'Final Corrected Assembly FastA File' "!{params.min_filesize_final_assembly}"; then
       echo -e "!{meta.id}\tFinal Corrected Assembly FastA File\tPASS" \
-        > !{meta.id}.Final_Corrected_Assembly_FastA_File.tsv
+        > "!{meta.id}-!{meta.assembler}.Final_Corrected_Assembly_FastA_File.tsv"
     else
       echo -e "!{meta.id}\tFinal Corrected Assembly FastA File\tFAIL" \
-        > !{meta.id}.Final_Corrected_Assembly_FastA_File.tsv
+        > "!{meta.id}-!{meta.assembler}.Final_Corrected_Assembly_FastA_File.tsv"
     fi
 
     # Single read mapping if available for downstream depth of coverage
     #  calculations, not for assembly polishing.
     if [[ !{single_gz} ]]; then
       msg "INFO: Single read mapping"
-      bwa index !{meta.id}.fna
+      bwa index "!{meta.id}-!{meta.assembler}.fna"
 
       bwa mem \
         -v 2 \
         -x intractg \
-        !{meta.id}.fna \
+        "!{meta.id}-!{meta.assembler}.fna" \
         -t !{task.cpus} \
         !{single_gz} \
         | \
         samtools sort \
         -l 9 \
         -@ !{task.cpus} \
-        -o !{meta.id}.single.bam \
-        --reference !{meta.id}.fna
+        -o "!{meta.id}-!{meta.assembler}.single.bam" \
+        --reference "!{meta.id}-!{meta.assembler}.fna"
 
-      if verify_minimum_file_size "!{meta.id}.single.bam" 'Binary SE Alignment Map File' '!{params.min_filesize_binary_se_alignment}'; then
+      if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.single.bam" 'Binary SE Alignment Map File' '!{params.min_filesize_binary_se_alignment}'; then
         echo -e "!{meta.id}\tBinary SE Alignment Map File\tPASS" \
-          > !{meta.id}.Binary_SE_Alignment_Map_File.tsv
+          > "!{meta.id}-!{meta.assembler}.Binary_SE_Alignment_Map_File.tsv"
       else
         echo -e "!{meta.id}\tBinary SE Alignment Map File\tFAIL" \
-          > !{meta.id}.Binary_SE_Alignment_Map_File.tsv
+          > "!{meta.id}-!{meta.assembler}.Binary_SE_Alignment_Map_File.tsv"
       fi
 
-      samtools index !{meta.id}.single.bam
+      samtools index "!{meta.id}-!{meta.assembler}.single.bam"
     fi
 
     # Get process version information

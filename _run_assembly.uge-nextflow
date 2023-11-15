@@ -21,11 +21,11 @@ nextflow \
   --outdir ${OUT} \
   -ansi-log false \
   -N ${USER}@cdc.gov \
-  -w /scicomp/scratch/${USER}/work \
+  -w ${OUT}/.work \
+  --blast_db ${LAB_HOME}/.databases/ncbi \
+  --gtdb_db ${LAB_HOME}/.databases/GTDB/release207_v2 \
   --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
-  --blast_db /scicomp/groups/OID/NCEZID/DHCPP/BSPB/ZSAL/.databases/ncbi \
-  --kraken2_db /scicomp/groups/OID/NCEZID/DHCPP/BSPB/ZSAL/.databases/kraken2 \
-  --gtdbtk_db /scicomp/groups/OID/NCEZID/DHCPP/BSPB/ZSAL/.databases/GTDB/release207_v2 \
+  --kraken2_db ${LAB_HOME}/.databases/kraken2 \
   -resume
 
 # Check for errors and add to errors.tsv
@@ -84,9 +84,21 @@ while read -r line; do
   fi
 done < <(nextflow log ${run_name} -filter 'status == "FAILED"')
 
-# If errors.tsv found, add column headers
+# If errors.tsv found..
 if [[ -f "${OUT}/log/errors.tsv" ]]; then
+  # Add column headers
   sed -i '1i Sample Name\tProcess\tError\tError Directory\tTimestamp\tRun Name' ${OUT}/log/errors.tsv
+
+  # Remove duplicate lines and lines that have an empty first column
+  awk '!a[$0]++' ${OUT}/log/errors.tsv \
+    | awk -F '\t' '$1{print $0}' \
+    > ${OUT}/log/errors_new.tsv
+
+  # Delete original errors.tsv and rename errors_new.tsv
+  rm ${OUT}/log/errors.tsv
+
+  mv ${OUT}/log/errors_new.tsv \
+    ${OUT}/log/errors.tsv
 fi
 
 # Count lines in Summary.Illumina.GenomeCoverage.tab
@@ -118,3 +130,8 @@ elif [[ -f "${OUT}/log/errors.tsv" ]]; then
   -a "${OUT}/log/errors.tsv" \
   "${USER}@cdc.gov"
 fi
+
+# Move and symlink work directory
+date=$(date '+%Y-%m-%d_%H-%M-%S')
+mv ${OUT}/.work /scicomp/scratch/${USER}/work/ASM_${date}
+ln -s /scicomp/scratch/${USER}/work/ASM_${date} ${OUT}/.work

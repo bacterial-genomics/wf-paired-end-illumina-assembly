@@ -1,22 +1,15 @@
 process SUBSAMPLE_READS_TO_DEPTH_SEQTK {
 
-    publishDir   "${params.process_log_dir}",
-        mode:    "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs:  { filename -> "${meta.id}.${task.process}${filename}" }
-
     tag { "${meta.id}" }
-
     container "staphb/seqtk@sha256:e3105ea1c7375e6bfe0603f6e031b022068b3d4d529f295c5fa24e0a6709dd2c"
 
     input:
-    tuple val(meta), path(reads), path(qc_input_filecheck), path(depth), path(fraction_of_reads)
+    tuple val(meta), path(reads), path(depth), path(fraction_of_reads)
 
     output:
-    path ".command.out"
-    path ".command.err"
-    path "versions.yml"                                                                                  , emit: versions
-    tuple val(meta), path("*.fastq*", includeInputs: true), path(qc_input_filecheck, includeInputs: true), emit: reads
+    path(".command.{out,err}")
+    path "versions.yml"                                   , emit: versions
+    tuple val(meta), path("*.fastq*", includeInputs: true), emit: reads
 
     shell:
     '''

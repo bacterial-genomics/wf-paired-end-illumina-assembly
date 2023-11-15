@@ -1,20 +1,13 @@
 process ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX {
 
-    publishDir   "${params.process_log_dir}",
-        mode:    "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs:  { filename -> "${meta.id}.${task.process}${filename}" }
-
     tag { "${meta.id}" }
-
     container "ubuntu:jammy"
 
     input:
-    tuple val(meta), val(total_bp), val(genome_size)
+    tuple val(meta), val(input_total_bp), val(genome_size)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"                                                                                   , emit: versions
     tuple val(meta), path("${meta.id}.initial_depth.txt"), path("${meta.id}.fraction_of_reads_to_use.txt"), emit: fraction_of_reads_to_use
 
@@ -22,11 +15,11 @@ process ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX {
     '''
     source bash_functions.sh
 
-    bp=$(cat !{total_bp})
+    bp=$(cat !{input_total_bp})
     size=$(cat !{genome_size})
 
     initial_depth=$(( ${bp} / ${size} ))
-    msg "INFO: Initial input depth of coverage estimated to be ${initial_depth}x"
+    msg "INFO: Estimated coverage depth of !{meta.id}: ${initial_depth}x"
 
     # Calculate the fraction of reads to subsample
     fraction_of_reads_to_use=$(awk \

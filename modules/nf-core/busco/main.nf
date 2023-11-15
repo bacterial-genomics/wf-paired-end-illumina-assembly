@@ -55,7 +55,7 @@ process BUSCO {
         if [ "\${FASTA##*.}" == 'gz' ]; then
             gzip -cdf "\$FASTA" > \$( basename "\$FASTA" .gz )
         else
-            ln -s "\$FASTA" .
+            ln -sf "\$FASTA" .
         fi
     done
     cd ..

@@ -22,14 +22,39 @@
                     "format": "directory-path",
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
                     "fa_icon": "fas fa-folder-open"
+                },
+                "min_filesize_fastq_input": {
+                    "type": "string",
+                    "default": "10M",
+                    "hidden": true,
+                    "description": "Minimum file size of input FastQ files."
                 }
             }
         },
-        "analysis_options": {
+        "downsampling_options": {
+            "title": "Downsampling options",
+            "type": "object",
+            "description": "Downsampling options",
+            "default": "",
+            "properties": {
+                "depth": {
+                    "type": "integer",
+                    "default": 100,
+                    "hidden": true,
+                    "description": "Coverage depth to subsample FastQ files to."
+                },
+                "genome_size": {
+                    "type": "string",
+                    "hidden": true,
+                    "description": "Genome size to subsample FastQ files to."
+                }
+            }
+        },
+        "assembly_options": {
             "title": "Analysis options",
             "type": "object",
-            "fa_icon": "fas fa-terminal",
-            "description": "Parameters used to aid in the analysis of PE Illumina data.",
+            "description": "Assembly options",
+            "default": "",
             "properties": {
                 "assembler": {
                     "type": "string",
@@ -37,62 +62,32 @@
                     "description": "Specify which assembler to execute.",
                     "enum": ["spades", "skesa"]
                 },
-                "kraken1_db": {
+                "spades_mode": {
                     "type": "string",
-                    "format": "directory-path",
-                    "default": "Pre-loaded MiniKraken1 database",
-                    "description": "Path containing Kraken1 database files (must contain *.kdb, *.idk).",
-                    "fa_icon": "fas fa-folder-open"
+                    "default": "",
+                    "description": "SPAdes: Data type flags to add to SPAdes when assembling contigs.",
+                    "enum": [
+                        "",
+                        "--isolate",
+                        "--sc",
+                        "--meta",
+                        "--plasmid",
+                        "--rna",
+                        "--metaviral",
+                        "--metaplasmid",
+                        "--corona"
+                    ]
                 },
-                "kraken2_db": {
+                "spades_kmer_sizes": {
                     "type": "string",
-                    "format": "directory-path",
-                    "default": "Pre-loaded MiniKraken2 database",
-                    "description": "Path containing Kraken2 database files (must contain *.k2d).",
-                    "fa_icon": "fas fa-folder-open"
+                    "default": "auto",
+                    "description": "SPAdes: K-mer length values."
                 },
-                "blast_db": {
-                    "type": "string",
-                    "format": "directory-path",
-                    "default": "Pre-loaded NCBI's 16S rRNA database",
-                    "description": "Path to 16S ribosomal database for BLAST.",
-                    "fa_icon": "fas fa-folder-open"
-                },
-                "gtdb_db": {
-                    "type": "string",
-                    "format": "directory-path",
-                    "description": "Path to GTDB database.",
-                    "fa_icon": "fas fa-folder-open"
-                },
-                "skip_gtdbtk": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Skip GTDB-Tk classification of FastA assembly file."
-                },
-                "busco_db": {
-                    "type": "string",
-                    "format": "directory-path",
-                    "description": "Path to BUSCO lineage database.",
-                    "fa_icon": "fas fa-folder-open"
-                },
-                "skip_busco": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Skip BUSCO classification of each contig"
-                },
-                "phix_reference": {
-                    "type": "string",
-                    "format": "file-path",
-                    "default": "../../../bin/PhiX_NC_001422.1.fasta",
+                "spades_polish_corrections": {
+                    "type": "integer",
+                    "default": 3,
                     "hidden": true,
-                    "description": "Path to PhiX reference file."
-                },
-                "adapter_reference": {
-                    "type": "string",
-                    "format": "file-path",
-                    "default": "../../../bin/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas",
-                    "hidden": true,
-                    "description": "Path to adapter reference file."
+                    "description": "SPAdes: Number of rounds to correct contigs from SPAdes using cleaned paired-end reads."
                 },
                 "skesa_kmer_length": {
                     "type": "integer",
@@ -136,11 +131,125 @@
                     "hidden": true,
                     "description": "SKESA: Allow additional step for snp discovery."
                 },
-                "spades_polish_corrections": {
-                    "type": "integer",
-                    "default": 3,
+                "min_filesize_raw_assembly": {
+                    "type": "string",
+                    "default": "1M",
                     "hidden": true,
-                    "description": "Number of rounds to correct contigs from SPAdes using cleaned paired-end reads."
+                    "description": "Minimum file size of raw assembly file formed from the assembler software package."
+                },
+                "min_filesize_non_overlapping_fastq": {
+                    "type": "string",
+                    "default": "20M",
+                    "hidden": true,
+                    "description": "Minimum file size of non-overlapping FastQ files."
+                },
+                "min_filesize_filtered_assembly": {
+                    "type": "string",
+                    "default": "1M",
+                    "hidden": true,
+                    "description": "Minimum file size of assembly file after biopython filters away contigs."
+                },
+                "min_filesize_binary_pe_alignment": {
+                    "type": "string",
+                    "default": "25M",
+                    "hidden": true,
+                    "description": "Minimum file size of binary cleaned paired-end alignment file after paired-end reads are mapped onto the filtered assembly."
+                },
+                "min_filesize_polished_assembly": {
+                    "type": "string",
+                    "default": "1M",
+                    "hidden": true,
+                    "description": "Minimum file size of assembly file after SNP and InDel corrections."
+                },
+                "min_filesize_final_assembly": {
+                    "type": "string",
+                    "default": "1M",
+                    "hidden": true,
+                    "description": "Minimum file size of the final error-corrected contigs."
+                },
+                "min_filesize_binary_se_alignment": {
+                    "type": "string",
+                    "default": "1k",
+                    "hidden": true,
+                    "description": "Minimum file size of binary singleton alignment file after singletons are mapped to final assembly file."
+                }
+            }
+        },
+        "reference_file_options": {
+            "title": "Reference file options",
+            "type": "object",
+            "description": "Reference file options",
+            "default": "",
+            "properties": {
+                "phix_reference": {
+                    "type": "string",
+                    "default": "PhiX_NC_001422.1.fasta",
+                    "description": "File containing PhiX sequences in FastA format.",
+                    "help_text": "Path to PhiX reference file in FastA format. Recognized extensions are: {.fasta, .fas, .fa, .fna}."
+                },
+                "min_filesize_phix_genome": {
+                    "type": "string",
+                    "default": "5k",
+                    "hidden": true,
+                    "description": "Minimum file size of input PhiX reference file."
+                },
+                "min_filesize_fastq_phix_removed": {
+                    "type": "string",
+                    "default": "25M",
+                    "hidden": true,
+                    "description": "Minimum file size of FastQ files after PhiX is removed."
+                },
+                "adapters_reference": {
+                    "type": "string",
+                    "default": "adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas",
+                    "description": "File containing Illumina adapters in FastA format.",
+                    "help_text": "Path to adapter reference file in FastA format. Recognized extensions are: {.fasta, .fas, .fa, .fna}."
+                },
+                "min_filesize_adapters": {
+                    "type": "string",
+                    "default": "10k",
+                    "hidden": true,
+                    "description": "Minimum file size of input adapter reference file."
+                },
+                "min_filesize_fastq_adapters_removed": {
+                    "type": "string",
+                    "default": "25M",
+                    "hidden": true,
+                    "description": "Minimum file size of FastQ files after adapters are removed."
+                }
+            }
+        },
+        "taxonomic_profiling_options": {
+            "title": "Taxonomic profiling options",
+            "type": "object",
+            "description": "Taxonomic profiling options",
+            "default": "",
+            "properties": {
+                "kraken1_db": {
+                    "type": "string",
+                    "default": "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_8GB.tgz",
+                    "description": "Database for taxonomic profiling with kraken.",
+                    "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contain files `database.{idx,kdb}` and `taxonomy/{names,nodes}.dmp`."
+                },
+                "kraken2_db": {
+                    "type": "string",
+                    "default": "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_08gb_20231009.tar.gz",
+                    "description": "Database for taxonomic profiling with kraken2.",
+                    "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contain `{hash,opts,taxo}.k2d` files."
+                }
+            }
+        },
+        "ribosomal_rna_analysis_options": {
+            "title": "16S ribosomal RNA analysis options",
+            "type": "object",
+            "description": "16S ribosomal RNA analysis options",
+            "default": "",
+            "properties": {
+                "blast_db": {
+                    "type": "string",
+                    "default": "https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz",
+                    "description": "Database for 16S ribosomal RNA analysis with BLAST's 16S ribosomal RNA database.",
+                    "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contains BLAST 16S ribosomal RNA files."
                 },
                 "filter_blast_column": {
                     "type": "integer",
@@ -153,17 +262,6 @@
                     "default": "0.0",
                     "hidden": true,
                     "description": "Minimum BLASTn alignment bit score."
-                },
-                "merge_lanes": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "SAMPLESHEET ONLY: Merges multiple lane files into one."
-                },
-                "excel_sheet_name": {
-                    "type": "string",
-                    "default": "Sheet1",
-                    "hidden": true,
-                    "description": "EXCEL SAMPLESHEET ONLY: Sheet name of Excel (.XLSX, .XLS) samplesheet."
                 },
                 "genbank_query": {
                     "type": "string",
@@ -192,6 +290,38 @@
                     "description": "Type of query match to search in genbank file for extraction.",
                     "enum": ["all_q_in_rec", "any_q_in_rec", "any_q_is_rec"]
                 },
+                "min_filesize_blastn_db": {
+                    "type": "string",
+                    "default": "10c",
+                    "hidden": true,
+                    "description": "Minimum file size of 16S BLASTn database files."
+                },
+                "min_filesize_blastn_output": {
+                    "type": "string",
+                    "default": "10c",
+                    "hidden": true,
+                    "description": "Minimum file size of the output file generated by BLASTn."
+                },
+                "min_filesize_extracted_ssu_file": {
+                    "type": "string",
+                    "default": "500c",
+                    "hidden": true,
+                    "description": "Minimum file size of the file containing extracted 16S rRNA gene sequences."
+                },
+                "min_filesize_renamed_ssu_file": {
+                    "type": "string",
+                    "default": "500c",
+                    "hidden": true,
+                    "description": "Minimum file size of SSU extracted file that gets renamed to contain sample identifiers for each sequence."
+                }
+            }
+        },
+        "contig_filtering_options": {
+            "title": "Contig filtering options",
+            "type": "object",
+            "description": "Contig filtering options",
+            "default": "",
+            "properties": {
                 "filter_contigs_coverage": {
                     "type": "string",
                     "default": "5",
@@ -236,21 +366,32 @@
                     "hidden": true,
                     "description": "Skip sorting contigs by descending length when filtering contigs."
                 },
-                "split_multifasta_remove_gaps": {
+                "min_filesize_filtered_blastn": {
+                    "type": "string",
+                    "default": "10c",
+                    "hidden": true,
+                    "description": "Minimum file size of file containing the top 16S BLASTn alignments."
+                }
+            }
+        },
+        "contig_classification_options": {
+            "title": "Contig classification options",
+            "type": "object",
+            "description": "Contig classification options",
+            "default": "",
+            "properties": {
+                "gtdb_db": {
+                    "type": "string",
+                    "description": "Database for contig taxonomic classification with GTDB-Tk.",
+                    "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contains GTDB-Tk database."
+                },
+                "skip_gtdbtk": {
                     "type": "boolean",
                     "default": false,
-                    "hidden": true,
-                    "description": "Remove gaps from contigs when splitting contigs for BUSCO analysis."
-                },
-                "split_multifasta_extension": {
-                    "type": "string",
-                    "default": ".fasta",
-                    "hidden": true,
-                    "description": "File extension of contig file."
+                    "description": "Skip GTDB-Tk classification of contigs."
                 },
                 "gtdbtk_pplacer_scratch": {
                     "type": "string",
-                    "default": "",
                     "hidden": true,
                     "description": "Reduce pplacer memory usage by writing to disk (slower)."
                 },
@@ -272,154 +413,94 @@
                     "hidden": true,
                     "description": "Minimum alignment fraction to assign genome to a species cluster."
                 },
-                "depth": {
-                    "type": "integer",
-                    "default": 100,
-                    "hidden": true,
-                    "description": "Coverage depth to subsample FastQ files to."
+                "busco_db": {
+                    "type": "string",
+                    "description": "Database for intra-contig gene analysis with BUSCO.",
+                    "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contains BUSCO lineages. Can either be a lineage dataset or entire BUSCO database."
                 },
-                "genome_size": {
+                "skip_busco": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip BUSCO classification of each contig."
+                },
+                "busco_config": {
+                    "type": "string",
+                    "format": "file-path",
+                    "hidden": true,
+                    "description": "Path to configuration file for BUSCO."
+                },
+                "split_multifasta_remove_gaps": {
+                    "type": "boolean",
+                    "default": false,
+                    "hidden": true,
+                    "description": "Remove gaps from contigs when splitting contigs for BUSCO analysis."
+                },
+                "split_multifasta_extension": {
+                    "type": "string",
+                    "default": ".fasta",
+                    "hidden": true,
+                    "description": "File extension of contig file whens plitting contig file."
+                }
+            }
+        },
+        "genbank_annotation_options": {
+            "title": "Genbank annotation options",
+            "type": "object",
+            "description": "Genbank annotation options",
+            "properties": {
+                "prokka_curated_proteins": {
                     "type": "string",
                     "default": "",
-                    "hidden": true,
-                    "description": "Genome size to subsample FastQ files to."
-                }
-            }
-        },
-        "profile_options": {
-            "title": "Profile options",
-            "type": "object",
-            "fa_icon": "fas fa-terminal",
-            "description": "Parameters to select which profile to use.",
-            "properties": {
-                "profile singularity": {
-                    "type": "string",
-                    "description": "Use Singularity images to run the workflow. Will pull and convert Docker images from Dockerhub if not locally available."
+                    "description": "Additional protein encoding genes to use with Prokka."
                 },
-                "profile docker": {
+                "prokka_evalue": {
                     "type": "string",
-                    "description": "Use Docker images to run the workflow. Will pull images from Dockerhub if not locally available."
-                },
-                "profile conda": {
-                    "type": "string",
-                    "hidden": true,
-                    "description": "TODO: this is not implemented yet."
-                }
-            }
-        },
-        "minimum_file_size_options": {
-            "title": "Minimum file size options",
-            "type": "object",
-            "fa_icon": "fas fa-terminal",
-            "description": "Parameters used for workflow checks and verification tests.",
-            "properties": {
-                "min_filesize_fastq_input": {
-                    "type": "string",
-                    "default": "10M",
-                    "hidden": true,
-                    "description": "Minimum file size of input FastQ files."
-                },
-                "min_filesize_phix_genome": {
-                    "type": "string",
-                    "default": "5k",
-                    "hidden": true,
-                    "description": "Minimum file size of input PhiX reference file."
-                },
-                "min_filesize_fastq_phix_removed": {
-                    "type": "string",
-                    "default": "25M",
-                    "hidden": true,
-                    "description": "Minimum file size of FastQ files after PhiX is removed."
-                },
-                "min_filesize_adapters": {
-                    "type": "string",
-                    "default": "10k",
-                    "hidden": true,
-                    "description": "Minimum file size of input adapter reference file."
-                },
-                "min_filesize_fastq_adapters_removed": {
-                    "type": "string",
-                    "default": "25M",
-                    "hidden": true,
-                    "description": "Minimum file size of FastQ files after adapters are removed."
-                },
-                "min_filesize_non_overlapping_fastq": {
-                    "type": "string",
-                    "default": "20M",
-                    "hidden": true,
-                    "description": "Minimum file size of non-overlapping FastQ files."
-                },
-                "min_filesize_raw_assembly": {
-                    "type": "string",
-                    "default": "1M",
-                    "hidden": true,
-                    "description": "Minimum file size of raw assembly file formed from the assembler software package."
-                },
-                "min_filesize_filtered_assembly": {
-                    "type": "string",
-                    "default": "1M",
-                    "hidden": true,
-                    "description": "Minimum file size of assembly file after biopython filters away contigs."
-                },
-                "min_filesize_binary_pe_alignment": {
-                    "type": "string",
-                    "default": "25M",
-                    "hidden": true,
-                    "description": "Minimum file size of binary cleaned paired-end alignment file after paired-end reads are mapped onto the filtered assembly."
-                },
-                "min_filesize_polished_assembly": {
-                    "type": "string",
-                    "default": "1M",
-                    "hidden": true,
-                    "description": "Minimum file size of assembly file after SNP and InDel corrections."
-                },
-                "min_filesize_final_assembly": {
-                    "type": "string",
-                    "default": "1M",
-                    "hidden": true,
-                    "description": "Minimum file size of the final error-corrected contigs."
-                },
-                "min_filesize_binary_se_alignment": {
-                    "type": "string",
-                    "default": "1k",
-                    "hidden": true,
-                    "description": "Minimum file size of binary singleton alignment file after singletons are mapped to final assembly file."
+                    "default": "1e-08",
+                    "description": "Similarity e-value cut-off."
                 },
                 "min_filesize_annotated_genbank": {
                     "type": "string",
                     "default": "3M",
                     "hidden": true,
                     "description": "Minimum file size of annotated genbank file."
+                }
+            }
+        },
+        "spreadsheet_parsing_options": {
+            "title": "Spreadsheet parsing options",
+            "type": "object",
+            "description": "Spreadsheet parsing options",
+            "properties": {
+                "merge_lanes": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "SAMPLESHEET ONLY: Merges multiple lane files into one."
                 },
-                "min_filesize_extracted_ssu_file": {
+                "excel_sheet_name": {
                     "type": "string",
-                    "default": "500c",
+                    "default": "Sheet1",
                     "hidden": true,
-                    "description": "Minimum file size of the file containing extracted 16S rRNA gene sequences."
+                    "description": "EXCEL SAMPLESHEET ONLY: Sheet name of Excel (.XLSX, .XLS) samplesheet."
+                }
+            }
+        },
+        "profile_options": {
+            "title": "Profile options",
+            "type": "object",
+            "description": "Parameters to select which profile to use.",
+            "properties": {
+                "singularity": {
+                    "type": "string",
+                    "description": "Use Singularity images to run the workflow. Will pull and convert Docker images from Dockerhub if not locally available."
                 },
-                "min_filesize_renamed_ssu_file": {
+                "docker": {
                     "type": "string",
-                    "default": "500c",
-                    "hidden": true,
-                    "description": "Minimum file size of SSU extracted file that gets renamed to contain sample identifiers for each sequence."
+                    "description": "Use Docker images to run the workflow. Will pull images from Dockerhub if not locally available."
                 },
-                "min_filesize_blastn_db": {
+                "conda": {
                     "type": "string",
-                    "default": "10c",
                     "hidden": true,
-                    "description": "Minimum file size of 16S BLASTn database files."
-                },
-                "min_filesize_blastn_output": {
-                    "type": "string",
-                    "default": "10c",
-                    "hidden": true,
-                    "description": "Minimum file size of the output file generated by BLASTn."
-                },
-                "min_filesize_filtered_blastn": {
-                    "type": "string",
-                    "default": "10c",
-                    "hidden": true,
-                    "description": "Minimum file size of file containing the top 16S BLASTn alignments."
+                    "description": "TODO: this is not implemented yet."
                 }
             }
         },
@@ -598,7 +679,31 @@
             "$ref": "#/definitions/input_output_options"
         },
         {
-            "$ref": "#/definitions/analysis_options"
+            "$ref": "#/definitions/downsampling_options"
+        },
+        {
+            "$ref": "#/definitions/assembly_options"
+        },
+        {
+            "$ref": "#/definitions/reference_file_options"
+        },
+        {
+            "$ref": "#/definitions/taxonomic_profiling_options"
+        },
+        {
+            "$ref": "#/definitions/ribosomal_rna_analysis_options"
+        },
+        {
+            "$ref": "#/definitions/contig_filtering_options"
+        },
+        {
+            "$ref": "#/definitions/contig_classification_options"
+        },
+        {
+            "$ref": "#/definitions/genbank_annotation_options"
+        },
+        {
+            "$ref": "#/definitions/spreadsheet_parsing_options"
         },
         {
             "$ref": "#/definitions/profile_options"
@@ -611,9 +716,6 @@
         },
         {
             "$ref": "#/definitions/generic_options"
-        },
-        {
-            "$ref": "#/definitions/minimum_file_size_options"
         }
     ]
 }

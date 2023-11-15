@@ -15,10 +15,16 @@ def parseArgs():
     )
     req = parser.add_argument_group("Required")
     req.add_argument(
-        "-i", "--infile", required=True, metavar="FILE", help="input file in NCBI's BLAST -outfmt 6 format"
+        "-i",
+        "--infile",
+        required=True,
+        metavar="FILE",
+        help="input file in NCBI's BLAST -outfmt 6 format",
     )
     opt = parser.add_argument_group("Optional")
-    opt.add_argument("-h", "--help", action="help", help="show this help message and exit")
+    opt.add_argument(
+        "-h", "--help", action="help", help="show this help message and exit"
+    )
     opt.add_argument(
         "-c",
         "--column",
@@ -26,11 +32,19 @@ def parseArgs():
         metavar="{1,2}",
         choices=[1, 2],
         default=1,
-        help="report best hit per query label " "(1st column; '1') or target (2nd column; '2') [1]",
+        help="report best hit per query label "
+        "(1st column; '1') or target (2nd column; '2') [1]",
     )
-    opt.add_argument("-o", "--outfile", metavar="FILE", default=None, help="output file [stdout]")
     opt.add_argument(
-        "-s", "--bitscore", type=float, metavar="FLOAT", default=0.0, help="minimum alignment Bit score [0.0]"
+        "-o", "--outfile", metavar="FILE", default=None, help="output file [stdout]"
+    )
+    opt.add_argument(
+        "-s",
+        "--bitscore",
+        type=float,
+        metavar="FLOAT",
+        default=0.0,
+        help="minimum alignment Bit score [0.0]",
     )
     return parser.parse_args()
 
@@ -51,7 +65,9 @@ def main():
     with open(infile, "r") as ifh:
         for ln in ifh:
             data = ln.rstrip("\n").split("\t")
-            if float(data[11]) >= opts.bitscore and float(data[11]) > float(best[data[opts.column - 1]][11]):
+            if float(data[11]) >= opts.bitscore and float(data[11]) > float(
+                best[data[opts.column - 1]][11]
+            ):
                 best[data[opts.column - 1]] = data
 
     # Write output

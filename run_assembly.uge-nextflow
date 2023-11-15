@@ -80,10 +80,15 @@ prompt_if_previous_nextflow_run() {
       # Continue submission if user wants to possibly overwrite data
       echo -e "${YELLOW_TXT}\nData in ${1} will be overwritten."
       echo -e "Continuing to submit samples...${COLOR_OFF}"
+
+      # Rename .work directory
+      if [[ -d "${OUT}/.work" ]]; then
+        mv "${OUT}/.work" "${OUT}/.work_$(basename $(readlink -f ${OUT}/.work))"
+      fi
     else
       # If user doesn't want to continue, ask for a different output path
       prompt_new_outdir
-      prompt_if_previous_nextflow_run "${OUT}" "nextflow_log"
+      prompt_if_previous_nextflow_run "${OUT}/log" "nextflow_log"
     fi
   fi
 }
@@ -223,7 +228,7 @@ fi
 #  means this nextflow workflow has been ran before in the specified outdir.
 if [ -d "${OUT}/log" ] && \
   [ -f $(find "${OUT}" -maxdepth 2 -name "nextflow_log*" | grep -q '.') ]; then
-  prompt_if_previous_nextflow_run "${OUT}" "nextflow_log"
+  prompt_if_previous_nextflow_run "${OUT}/log" "nextflow_log"
 fi
 
 # Also check for unsupported behavior combining legacy bash and newer nextflow
@@ -291,6 +296,9 @@ if [[ ${#submitted[@]} -ge 10 ]]; then
   fi
 fi
 
+# Set up log directory in OUT directory
+mkdir -p ${OUT}/log
+
 # Get node number - <=230 = biolinux, >=231 = rosalind
 NODE_NUM=$(echo ${HOSTNAME%%.*} | sed 's/node//1')
 
@@ -347,6 +355,3 @@ for elem in "${submitted[@]}"; do
   echo "${elem}"
 done | xargs -L3 | column -t
 echo -e "${COLOR_OFF}"
-
-# Set up log directory in OUT directory
-mkdir -p ${OUT}/log

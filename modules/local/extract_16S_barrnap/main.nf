@@ -1,81 +1,57 @@
 process EXTRACT_16S_BARRNAP {
 
-    publishDir "${params.outdir}/ssu",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.fa"
-    publishDir "${params.qc_filecheck_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.{SSU_Extracted_File,SSU_Renamed_File}.tsv"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
-    tag { "${meta.id}" }
-
+    tag { "${meta.id}-${meta.assembler}" }
     container "snads/barrnap@sha256:e22cbd789c36d5626460feb6c7e5f6f7d55c8628dacae68ba0da30884195a837"
 
     input:
-    tuple val(meta), path(annotation), path(qc_annotated_filecheck), path(assembly), path(extracted_rna)
+    tuple val(meta), path(prokka_genbank_file), path(assembly), path(biopython_extracted_rna)
 
     output:
-    path ".command.out"
-    path ".command.err"
-    path "versions.yml"                                           , emit: versions
-    path "${meta.id}.SSU_Renamed_File.tsv"                        , emit: qc_ssu_renamed_filecheck
-    path "${meta.id}.SSU_Extracted_File.tsv"                      , emit: qc_ssu_extracted_filecheck
-    tuple val(meta), path("16S.${meta.id}.fa"), path("*File*.tsv"), emit: extracted_base
+    path(".command.{out,err}")
+    path "versions.yml"                                                  , emit: versions
+    path("${meta.id}-${meta.assembler}.SSU_{Renamed,Extracted}_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("16S.${meta.id}-${meta.assembler}.fa")         , emit: barnapp_extracted_rna
 
     shell:
     '''
     source bash_functions.sh
 
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_annotated_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
-
-    if [[ ! -f "!{extracted_rna}" ]] || [[ ! -s "!{extracted_rna}" ]]; then
-      msg "INFO: Absent 16S rRNA gene annotation in !{annotation}" >&2
+    if [[ ! -f "!{biopython_extracted_rna}" ]] || [[ ! -s "!{biopython_extracted_rna}" ]]; then
+      msg "INFO: Absent 16S rRNA gene prokka_genbank_file in !{prokka_genbank_file}" >&2
       msg 'Running barrnap' >&2
 
-      barrnap !{assembly} | grep "Name=16S_rRNA;product=16S" > !{meta.id}.gff
+      barrnap !{assembly} | grep "Name=16S_rRNA;product=16S" > "!{meta.id}-!{meta.assembler}.gff"
 
-      if [[ $(grep -c "Name=16S_rRNA;product=16S" "!{meta.id}.gff") -eq 0 ]]; then
+      if [[ $(grep -c "Name=16S_rRNA;product=16S" "!{meta.id}-!{meta.assembler}.gff") -eq 0 ]]; then
         msg "INFO: Barrnap was unable to locate a 16S rRNA gene sequence in !{assembly}" >&2
         exit 2
       fi
 
       bedtools getfasta \
         -fi !{assembly} \
-        -bed !{meta.id}.gff \
-        -fo 16S.!{meta.id}.fa
+        -bed "!{meta.id}-!{meta.assembler}.gff" \
+        -fo "16S.!{meta.id}-!{meta.assembler}.fa"
     fi
 
-    if verify_minimum_file_size "16S.!{meta.id}.fa" 'SSU Extracted File' "!{params.min_filesize_extracted_ssu_file}"; then
-      echo -e "!{meta.id}\tSSU Extracted File\tPASS" > !{meta.id}.SSU_Extracted_File.tsv
+    if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Extracted File' "!{params.min_filesize_extracted_ssu_file}"; then
+      echo -e "!{meta.id}\tSSU Extracted File\tPASS" > "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
     else
-      echo -e "!{meta.id}\tSSU Extracted File\tFAIL" > !{meta.id}.SSU_Extracted_File.tsv
+      echo -e "!{meta.id}\tSSU Extracted File\tFAIL" > "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
     fi
 
     awk -v awk_var="!{meta.id}" \
       '/^>/{print ">" awk_var "_" ++i; next} {print}' \
-      16S.!{meta.id}.fa \
-      > !{meta.id}.fa-renamed
+      "16S.!{meta.id}-!{meta.assembler}.fa" \
+      > "!{meta.id}-!{meta.assembler}.fa-renamed"
 
-    rm -f 16S.!{meta.id}.fa
-    mv -f !{meta.id}.fa-renamed 16S.!{meta.id}.fa
+    rm -f "16S.!{meta.id}-!{meta.assembler}.fa"
+    mv -f "!{meta.id}-!{meta.assembler}.fa-renamed" \
+      "16S.!{meta.id}-!{meta.assembler}.fa"
 
-    if verify_minimum_file_size "16S.!{meta.id}.fa" 'SSU Renamed File' "!{params.min_filesize_renamed_ssu_file}"; then
-      echo -e "!{meta.id}\tSSU Renamed File\tPASS" > !{meta.id}.SSU_Renamed_File.tsv
+    if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Renamed File' "!{params.min_filesize_renamed_ssu_file}"; then
+      echo -e "!{meta.id}\tSSU Renamed File\tPASS" > "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
     else
-      echo -e "!{meta.id}\tSSU Renamed File\tFAIL" > !{meta.id}.SSU_Renamed_File.tsv
+      echo -e "!{meta.id}\tSSU Renamed File\tFAIL" > "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
     fi
 
     # Get process version information

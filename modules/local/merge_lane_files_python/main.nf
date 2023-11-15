@@ -1,18 +1,13 @@
 process MERGE_LANE_FILES_PYTHON {
 
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
+    tag { "${samplesheet.getSimpleName()}" }
     container "gregorysprenger/pandas-excel@sha256:4fad4114df25726e24660d8550da48b926b80ce5b8a32b522b552a2d8e1df156"
 
     input:
     path samplesheet
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "versions.yml"              , emit: versions
     path "lanes_merged_samplesheet.*", emit: lanes_merged_samplesheet
 

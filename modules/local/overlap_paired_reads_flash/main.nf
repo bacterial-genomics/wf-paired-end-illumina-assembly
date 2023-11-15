@@ -1,47 +1,23 @@
 process OVERLAP_PAIRED_READS_FLASH {
 
-    publishDir "${params.outdir}/trim_reads",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.{overlap.tsv,clean-reads.tsv,gz}"
-    publishDir "${params.qc_filecheck_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: "*.Non-overlapping_FastQ_Files.tsv"
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${meta.id}.${task.process}${filename}" }
-
     label "process_low"
     tag { "${meta.id}" }
-
     container "snads/flash@sha256:363b2f44d040c669191efbc3d3ba99caf5efd3fdef370af8f00f3328932143a6"
 
     input:
-    tuple val(meta), path(paired_R1), path(paired_R2), path(qc_adapter_filecheck)
+    tuple val(meta), path(paired_R1), path(paired_R2)
 
     output:
-    path ".command.out"
-    path ".command.err"
+    path(".command.{out,err}")
     path "${meta.id}.overlap.tsv"
     path "${meta.id}.clean-reads.tsv"
-    path "versions.yml"                                                                                                                         , emit: versions
-    path "${meta.id}.Non-overlapping_FastQ_Files.tsv"                                                                                           , emit: qc_nonoverlap_filecheck
-    tuple val(meta), path("${meta.id}_R1.paired.fq.gz"), path("${meta.id}_R2.paired.fq.gz"), path("${meta.id}.single.fq.gz"), path("*File*.tsv"), emit: gzip_reads
+    path "versions.yml"                                                                                                     , emit: versions
+    path "${meta.id}.Non-overlapping_FastQ_Files.tsv"                                                                       , emit: qc_filecheck
+    tuple val(meta), path("${meta.id}_R1.paired.fq.gz"), path("${meta.id}_R2.paired.fq.gz"), path("${meta.id}.single.fq.gz"), emit: cleaned_fastq_files
 
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_adapter_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Determine read length based on the first 100 reads
     echo -e "$(cat "!{paired_R1}" | head -n 400 > read_R1_len.txt)"
@@ -86,21 +62,27 @@ process OVERLAP_PAIRED_READS_FLASH {
       fi
 
       msg "INFO: ${CNT_READS_OVERLAPPED:-0} pairs overlapped into singleton reads" >&2
-      echo -e "!{meta.id}\t${CNT_READS_OVERLAPPED:-0} reads Overlapped" \
+      echo -e "!{meta.id}\t${CNT_READS_OVERLAPPED:-0}" \
         > !{meta.id}.overlap.tsv
+
+      sed -i '1i Sample name\t# overlapped reads' !{meta.id}.overlap.tsv
     fi
 
     # Summarize final read set and compress
     count_R1=$(echo $(cat !{meta.id}_R1.paired.fq | wc -l))
     CNT_CLEANED_PAIRS=$(echo $((${count_R1}/4)))
-    msg "INFO: CNT_CLEANED_PAIRS ${CNT_CLEANED_PAIRS}"
+    msg "INFO: Number of reads cleaned: ${CNT_CLEANED_PAIRS}"
 
     count_single=$(echo $(cat !{meta.id}.single.fq | wc -l))
     CNT_CLEANED_SINGLETON=$(echo $((${count_single}/4)))
-    msg "INFO: CNT_CLEANED_SINGLETON ${CNT_CLEANED_SINGLETON}"
+    msg "INFO: Number of singletons cleaned: ${CNT_CLEANED_SINGLETON}"
 
-    echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS} cleaned pairs\t${CNT_CLEANED_SINGLETON} cleaned singletons" \
+    echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS}\t${CNT_CLEANED_SINGLETON}" \
       > !{meta.id}.clean-reads.tsv
+
+    sed -i \
+      '1i Sample name\t# cleaned reads (paired FastQ)\t# cleaned reads (singletons)' \
+      !{meta.id}.clean-reads.tsv
 
     gzip -f !{meta.id}.single.fq \
       !{meta.id}_R1.paired.fq \
