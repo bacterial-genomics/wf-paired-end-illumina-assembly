@@ -6,7 +6,6 @@ This process uses [prokka](https://github.com/tseemann/prokka) published in [201
 
 To boost prokka_genbank_file confidence, we default to an 1e-08 as a similarity e-value cut-off, but this parameter can be modified if a user wishes to relax the homology assignments which could be useful for novel taxa or highly distant homolog matching.
 
-
 ##### Alternatives
 
 Prokka is meant for rapid prokka_genbank_file, which performs very well in most cases. However, the NCBI's prokka_genbank_file pipeline "Prokaryotic Genome Annotation Pipeline" [(PGAP)](https://github.com/ncbi/pgap) is recommended for the most comprehensive annotations, especially if you believe the functional name is to a distant homolog or if the gene of interest appears to be missing in Bakta's GenBank output file. PGAP was first developed in 2001 by NCBI and [GATech](https://www.gatech.edu/) staff and published in [2016](https://pubmed.ncbi.nlm.nih.gov/27342282/). The most recent updates have been reported in [2021](https://pubmed.ncbi.nlm.nih.gov/33270901/).

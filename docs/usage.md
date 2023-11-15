@@ -80,6 +80,7 @@ CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
 The typical command for running the pipeline with `docker` is as follows:
 
 With `input_directory`:
+
 ```bash
 nextflow run \
   wf-paired-end-illumina-assembly \
@@ -89,6 +90,7 @@ nextflow run \
 ```
 
 With `samplesheet.csv`:
+
 ```bash
 nextflow run \
   wf-paired-end-illumina-assembly \

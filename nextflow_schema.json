@@ -66,7 +66,17 @@
                     "type": "string",
                     "default": "",
                     "description": "SPAdes: Data type flags to add to SPAdes when assembling contigs.",
-                    "enum": ["", "--isolate", "--sc", "--meta", "--plasmid", "--rna", "--metaviral", "--metaplasmid", "--corona"]
+                    "enum": [
+                        "",
+                        "--isolate",
+                        "--sc",
+                        "--meta",
+                        "--plasmid",
+                        "--rna",
+                        "--metaviral",
+                        "--metaplasmid",
+                        "--corona"
+                    ]
                 },
                 "spades_kmer_sizes": {
                     "type": "string",

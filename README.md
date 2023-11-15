@@ -25,7 +25,6 @@ _General schematic of the steps in the workflow_
 - [Contributions and Support](#contributions-and-support)
 - [Citations](#citations)
 
-
 ## Quick Start: Test
 
 Run the built-in test set to confirm all parts are working as-expected. It will also download all dependencies to make subsequent runs much faster.
@@ -89,7 +88,7 @@ Note the "`--`" long name arguments (e.g., `--help`, `--input`, `--outdir`) are 
 
 These are the most pertinent options for this workflow:
 
-####  Required parameters
+#### Required parameters
 
 ```
   ============================================

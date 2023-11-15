@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use channels for databases instead of passing params
 - Use downloadable database .tar.gz files instead of using built-in databases in docker images
 - Converted spades and skesa workflows into one workflow and use subworkflows "downsampling.nf" and "assemble_contigs.nf"
-- Renamed assemble_{spades,skesa} to assemble_contigs_{spades,skesa}
+- Renamed assemble*{spades,skesa} to assemble_contigs*{spades,skesa}
 - **CHANGED OUTPUT FILE STRUCTURE:** Output files are generally under the name of the tool that produced them
 - Updated docs/output.md to reflect new file structure
 - Removed QC file checking from modules and use checkQCFileChecks function in workflows/assembly.nf and subworkflows/assemble_contigs.nf
