@@ -41,9 +41,9 @@ workflow DOWNSAMPLE {
 
     } else {
         if (params.depth <= 0) {
-            println "Depth is set to ${params.genome_size}x. No subsampling to perform and therefore no genome size estimation required."
+            log.info("Depth is set to ${params.genome_size}x. No subsampling to perform and therefore no genome size estimation required.")
         } else {
-            println "Using the user-input genome size of ${params.genome_size}bp"
+            log.info("Using the user-input genome size of ${params.genome_size}bp")
         }
         // pass the genome_size val onto the next depth channel
         // Skip genome size estimation based on user input, but
@@ -51,7 +51,7 @@ workflow DOWNSAMPLE {
     }
 
     if (params.depth > 0) {
-        println "Estimating if the input exceeds ${params.depth}x"
+        log.info("Estimating if the input exceeds ${params.depth}x")
 
         // Use the genome size to figure out the expected depth
         COUNT_TOTAL_BP_INPUT_READS_SEQTK (
