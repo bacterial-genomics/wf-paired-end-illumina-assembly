@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Made bin directory executable when added to github so Nextflow can use them
 - Changed log directory to pipeline_info directory in run_assembly.uge-nextflow scripts
-- Dropped --gtdb_db from run_assembly.uge-nextflow scripts until GTDB-Tk module version is updated
+- Removed --gtdb_db from run_assembly.uge-nextflow scripts until GTDB-Tk module version is updated
 
 ### `Updated`
 
