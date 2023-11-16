@@ -23,7 +23,6 @@ nextflow \
   -N ${USER}@cdc.gov \
   -w ${OUT}/.work \
   --blast_db ${LAB_HOME}/.databases/ncbi \
-  --gtdb_db ${LAB_HOME}/.databases/GTDB/release207_v2 \
   --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
   --kraken2_db ${LAB_HOME}/.databases/kraken2 \
   -resume
