@@ -13,7 +13,7 @@ fi
 
 module load nextflow
 nextflow \
-  -log ${OUT}/log/nextflow_log.${SCRIPT_NAME}.txt \
+  -log ${OUT}/pipeline_info/nextflow_log.${SCRIPT_NAME}.txt \
   run \
   ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
   -profile ${HPC} \
@@ -23,14 +23,13 @@ nextflow \
   -N ${USER}@cdc.gov \
   -w ${OUT}/.work \
   --blast_db ${LAB_HOME}/.databases/ncbi \
-  --gtdb_db ${LAB_HOME}/.databases/GTDB/release207_v2 \
   --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
   --kraken2_db ${LAB_HOME}/.databases/kraken2 \
   -resume
 
 # Check for errors and add to errors.tsv
 # Get nextflow run name
-run_name=$(grep "Launching" ${OUT}/log/ASM_*.o${SCRIPT_NAME} | cut -d '[' -f 2 | cut -d ']' -f 1)
+run_name=$(grep "Launching" ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME} | cut -d '[' -f 2 | cut -d ']' -f 1)
 
 # Read each line from nextflow log, find info, and add to errors.tsv
 while read -r line; do
@@ -40,8 +39,8 @@ while read -r line; do
   # If process is already running, clean up error
   if [[ "${line}" =~ ^Unable[[:space:]]to[[:space:]]acquire[[:space:]]lock.* ]]; then
     error="You are trying to resume the execution of an already running pipeline."
-    ASM_OUT=$(realpath ${OUT}/log/ASM_*.o*)
-    echo -e "-\t-\t${error}\t${ASM_OUT}\t${time_stamp}\t${run_name}" >> ${OUT}/log/errors.tsv
+    ASM_OUT=$(realpath ${OUT}/pipeline_info/ASM_*.o*)
+    echo -e "-\t-\t${error}\t${ASM_OUT}\t${time_stamp}\t${run_name}" >> ${OUT}/pipeline_info/errors.tsv
   else
     # Workflow ran some processes
     sample_name=$(grep "nf-" ${line}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
@@ -75,30 +74,30 @@ while read -r line; do
     fi
 
     # If process for sample retried and succeeded, ignore
-    if [[ -f "$(ls ${OUT}/log/process_logs/${sample_name}.${process}*out)" ]] \
+    if [[ -f "$(ls ${OUT}/pipeline_info/process_logs/${sample_name}.${process}*out)" ]] \
       && [[ $(cat ${line}/.exitcode) = @(0|143|137|104|134|139|71|255) ]]; then
       continue
     else
-      echo -e "${sample_name}\t${process}\t${error}\t${line}\t${time_stamp}\t${run_name}" >> ${OUT}/log/errors.tsv
+      echo -e "${sample_name}\t${process}\t${error}\t${line}\t${time_stamp}\t${run_name}" >> ${OUT}/pipeline_info/errors.tsv
     fi
   fi
 done < <(nextflow log ${run_name} -filter 'status == "FAILED"')
 
 # If errors.tsv found..
-if [[ -f "${OUT}/log/errors.tsv" ]]; then
+if [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   # Add column headers
-  sed -i '1i Sample Name\tProcess\tError\tError Directory\tTimestamp\tRun Name' ${OUT}/log/errors.tsv
+  sed -i '1i Sample Name\tProcess\tError\tError Directory\tTimestamp\tRun Name' ${OUT}/pipeline_info/errors.tsv
 
   # Remove duplicate lines and lines that have an empty first column
-  awk '!a[$0]++' ${OUT}/log/errors.tsv \
+  awk '!a[$0]++' ${OUT}/pipeline_info/errors.tsv \
     | awk -F '\t' '$1{print $0}' \
-    > ${OUT}/log/errors_new.tsv
+    > ${OUT}/pipeline_info/errors_new.tsv
 
   # Delete original errors.tsv and rename errors_new.tsv
-  rm ${OUT}/log/errors.tsv
+  rm ${OUT}/pipeline_info/errors.tsv
 
-  mv ${OUT}/log/errors_new.tsv \
-    ${OUT}/log/errors.tsv
+  mv ${OUT}/pipeline_info/errors_new.tsv \
+    ${OUT}/pipeline_info/errors.tsv
 fi
 
 # Count lines in Summary.Illumina.GenomeCoverage.tab
@@ -108,12 +107,12 @@ fi
 
 # E-mail completion status
 if [[ -f "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" ]] \
-  && [[ -f "${OUT}/log/errors.tsv" ]]; then
+  && [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
   -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
   -a "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" \
-  -a "${OUT}/log/errors.tsv" \
+  -a "${OUT}/pipeline_info/errors.tsv" \
   "${USER}@cdc.gov"
 
 elif [[ -f "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" ]]; then
@@ -123,11 +122,11 @@ elif [[ -f "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" ]]; then
   -a "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" \
   "${USER}@cdc.gov"
 
-elif [[ -f "${OUT}/log/errors.tsv" ]]; then
+elif [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   echo -e "Assembly and QA could not be completed on $(date)\n${OUT}" | mail \
   -s "No assemblies found $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
-  -a "${OUT}/log/errors.tsv" \
+  -a "${OUT}/pipeline_info/errors.tsv" \
   "${USER}@cdc.gov"
 fi
 

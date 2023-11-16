@@ -88,7 +88,7 @@ prompt_if_previous_nextflow_run() {
     else
       # If user doesn't want to continue, ask for a different output path
       prompt_new_outdir
-      prompt_if_previous_nextflow_run "${OUT}/log" "nextflow_log"
+      prompt_if_previous_nextflow_run "${OUT}/pipeline_info" "nextflow_log"
     fi
   fi
 }
@@ -226,9 +226,9 @@ fi
 
 # Check for specific nextflow logfile for this workflow, which
 #  means this nextflow workflow has been ran before in the specified outdir.
-if [ -d "${OUT}/log" ] && \
+if [ -d "${OUT}/pipeline_info" ] && \
   [ -f $(find "${OUT}" -maxdepth 2 -name "nextflow_log*" | grep -q '.') ]; then
-  prompt_if_previous_nextflow_run "${OUT}/log" "nextflow_log"
+  prompt_if_previous_nextflow_run "${OUT}/pipeline_info" "nextflow_log"
 fi
 
 # Also check for unsupported behavior combining legacy bash and newer nextflow
@@ -297,7 +297,7 @@ if [[ ${#submitted[@]} -ge 10 ]]; then
 fi
 
 # Set up log directory in OUT directory
-mkdir -p ${OUT}/log
+mkdir -p ${OUT}/pipeline_info
 
 # Get node number - <=230 = biolinux, >=231 = rosalind
 NODE_NUM=$(echo ${HOSTNAME%%.*} | sed 's/node//1')
@@ -312,15 +312,15 @@ if [[ ${#submitted[@]} -ge 1 ]] && \
     -q all.q \
     -v IN=${IN} \
     -v OUT=${OUT} \
-    -o ${OUT}/log \
-    -e ${OUT}/log \
+    -o ${OUT}/pipeline_info \
+    -e ${OUT}/pipeline_info \
     -M ${USER}@cdc.gov \
     -v LAB_HOME=${LAB_HOME} \
     -N ASM_${#submitted[@]} \
     -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
     -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
     -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+    ${LAB_HOME}/workflows//wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
 
 elif [[ ${#submitted[@]} -ge 1 ]] && \
   [[ ${HOSTNAME%%.*} == 'rosalind01' ]] || \
@@ -331,8 +331,8 @@ elif [[ ${#submitted[@]} -ge 1 ]] && \
     -q all.q \
     -v IN=${IN} \
     -v OUT=${OUT} \
-    -o ${OUT}/log \
-    -e ${OUT}/log \
+    -o ${OUT}/pipeline_info \
+    -e ${OUT}/pipeline_info \
     -M ${USER}@cdc.gov \
     -v LAB_HOME=${LAB_HOME} \
     -N ASM_${#submitted[@]} \
@@ -340,7 +340,7 @@ elif [[ ${#submitted[@]} -ge 1 ]] && \
     -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
     -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
     -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+    ${LAB_HOME}/workflows//wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
 
 else
   echo -e "${RED_TXT}Biolinux/Aspen/Rosalind HPC is not detected.\nSubmission cancelled. ${COLOR_OFF}"

@@ -2,6 +2,7 @@ process ESTIMATE_GENOME_SIZE_KMC {
 
     tag { "${meta.id}" }
     container "gregorysprenger/kmc@sha256:27603041f8c8818aa71a1d0386df17eddca59dbd6441b7e84b78b8a09dc137df"
+    label "process_medium"
 
     input:
     tuple val(meta), path(reads)
