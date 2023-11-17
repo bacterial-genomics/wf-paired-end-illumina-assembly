@@ -19,6 +19,7 @@ nextflow \
   -profile ${HPC} \
   --input ${IN} \
   --outdir ${OUT} \
+  -ansi-log false \
   -N ${USER}@cdc.gov \
   -w ${OUT}/.work \
   --blast_db ${LAB_HOME}/.databases/ncbi \
