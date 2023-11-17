@@ -19,10 +19,12 @@ process ALIGN_16S_BLAST {
 
     msg "INFO: Performing BLASTn alignments"
 
+    export BLASTDB=database
+
     blastn \
       -word_size 10 \
       -task blastn \
-      -db "database/!{db_name}" \
+      -db "!{db_name}" \
       -num_threads "!{task.cpus}" \
       -query "!{barnapp_extracted_rna}" \
       -out "!{meta.id}-!{meta.assembler}.blast.tsv" \
