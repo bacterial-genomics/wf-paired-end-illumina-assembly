@@ -3,6 +3,20 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v2.0.2 - November 16, 2023
+
+### `Added`
+
+### `Fixed`
+
+- Added collect operators to database/reference channels to allow for all inputs to be analyzed for each process
+- Removed extra slashes '/' from run_assembly.uge-nextflow scripts
+- Updated paths for summary email when using run_assembly.uge-nextflow scripts
+
+### `Updated`
+
+### `Deprecated`
+
 ## v2.0.1 - November 16, 2023
 
 ### `Added`
@@ -24,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - nf-core Styling
 - Allow samplesheet (XLSX, CSV, TSV) OR directory as input
 - Use SKESA instead of SPAdes for assembling contigs
+- Downsampling of input FastQ files
 - Contig taxonomic classification using GTDB-Tk
 - Intra-contig gene information using BUSCO
 - Ability to use a BUSCO config file

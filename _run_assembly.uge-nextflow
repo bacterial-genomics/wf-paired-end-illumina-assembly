@@ -19,7 +19,6 @@ nextflow \
   -profile ${HPC} \
   --input ${IN} \
   --outdir ${OUT} \
-  -ansi-log false \
   -N ${USER}@cdc.gov \
   -w ${OUT}/.work \
   --blast_db ${LAB_HOME}/.databases/ncbi \
@@ -57,6 +56,12 @@ while read -r line; do
     if [[ ${process} =~ .*REMOVE_PHIX_BBDUK$ ]] \
       && [[ "${error}" =~ .*at.* ]]; then
       error=$(grep -A1 "java.lang" ${line}/.command.err | head -n 2 | tail -n 1)
+    fi
+
+    # Drop BBDuk reformatting message
+    if [[ ${process} =~ .*REMOVE_PHIX_BBDUK$ ]] \
+      && [[ "${error}" =~ "Input is being processed as unpaired" ]]; then
+      continue
     fi
 
     # Check if error is from file checks
@@ -101,25 +106,25 @@ if [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
 fi
 
 # Count lines in Summary.Illumina.GenomeCoverage.tab
-if [[ -f "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" ]]; then
-  num_assemblies=$(wc -l ${OUT}/qa/Summary.Illumina.GenomeCoverage.tab | awk '{print $1}')
+if [[ -f "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" ]]; then
+  num_assemblies=$(wc -l ${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab | awk '{print $1}')
 fi
 
 # E-mail completion status
-if [[ -f "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" ]] \
+if [[ -f "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" ]] \
   && [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
   -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
-  -a "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" \
+  -a "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" \
   -a "${OUT}/pipeline_info/errors.tsv" \
   "${USER}@cdc.gov"
 
-elif [[ -f "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" ]]; then
+elif [[ -f "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" ]]; then
   echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
   -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
-  -a "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" \
+  -a "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" \
   "${USER}@cdc.gov"
 
 elif [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
