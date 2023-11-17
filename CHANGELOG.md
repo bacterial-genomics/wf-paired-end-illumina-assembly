@@ -17,7 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Deprecated`
 
-
 ## v2.0.1 - November 16, 2023
 
 ### `Added`
@@ -31,7 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Updated`
 
 ### `Deprecated`
-
 
 ## v2.0.0 - November 15, 2023
 
@@ -84,7 +82,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed github actions to properly run
 
 ### `Deprecated`
-
 
 ## v1.0.0 - January 20, 2023
 
