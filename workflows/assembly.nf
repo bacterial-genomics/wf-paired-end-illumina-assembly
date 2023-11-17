@@ -115,6 +115,7 @@ if (params.phix_reference) {
                                         error("PhiX reference file not in supported extension: .fasta, .fas, .fa, .fna")
                                     }
                             }
+                            .collect()
 } else {
     error("Path to PhiX reference not specified. Please supply a PhiX reference file in FastA format via `--phix_reference` parameter.")
 }
@@ -131,6 +132,7 @@ if (params.adapter_reference) {
                                         error("Adapter reference file not in supported extension: .fasta, .fas, .fa, .fna")
                                     }
                             }
+                            .collect()
 } else {
     error("Path to Adapter reference not specified. Please supply an adapter reference file in FastA format via `--adapter_reference` parameter.")
 }
@@ -312,7 +314,8 @@ workflow ASSEMBLY {
                                             } else {
                                                 error("Kraken requires 'database.{idx,kdb}' and 'taxonomy/{names,nodes}.dmp' files!")
                                             }
-                                        }
+                                    }
+                                    .collect()
         } else {
             error("Unsupported object given to --kraken1_db, database must be supplied as either a directory or a .tar.gz file!")
         }
@@ -350,6 +353,7 @@ workflow ASSEMBLY {
                                                 error("Kraken2 requires '{hash,opts,taxo}.k2d' files!")
                                             }
                                     }
+                                    .collect()
         } else {
             error("Unsupported object given to --kraken2_db, database must be supplied as either a directory or a .tar.gz file!")
         }
@@ -588,10 +592,10 @@ workflow ASSEMBLY {
         } else if ( ch_gtdbtk_db_file.isDirectory() ) {
             ch_db_for_gtdbtk = Channel
                                 .fromPath( "${ch_gtdbtk_db_file}/*", type: 'dir', maxDepth: 1 )
-                                .collect()
                                 .map{
                                     [ it[0].getSimpleName(), it ]
                                 }
+                                .collect()
         } else {
             error("Unsupported object given to --gtdb_db, database must be supplied as either a directory or a .tar.gz file!")
         }
@@ -634,6 +638,7 @@ workflow ASSEMBLY {
                                             db
                                         }
                                 }
+                                .collect()
         } else {
             error("Unsupported object given to --busco_db, database must be supplied as either a directory or a .tar.gz file!")
         }
