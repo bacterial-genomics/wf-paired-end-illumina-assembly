@@ -461,7 +461,7 @@ workflow ASSEMBLY {
 
         } else if ( ch_blast_db_file.isDirectory() ) {
             ch_db_for_blast = Channel
-                                    .fromPath( "${ch_blast_db_file}/16S_ribosomal_RNA.n*" )
+                                    .fromPath( "${ch_blast_db_file}/{16S_ribosomal_RNA.n*,taxdb.b*}" )
                                     .collect()
                                     .map{
                                         file ->
