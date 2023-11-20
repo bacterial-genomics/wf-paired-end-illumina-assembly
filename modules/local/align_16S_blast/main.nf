@@ -9,7 +9,7 @@ process ALIGN_16S_BLAST {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                                             , emit: versions
+    path("versions.yml")                                                            , emit: versions
     tuple val(meta), path("${meta.id}-${meta.assembler}.16S_BLASTn_Output_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}-${meta.assembler}.blast.tsv")                 , emit: blast_output
 

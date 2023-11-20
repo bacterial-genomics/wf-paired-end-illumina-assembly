@@ -9,9 +9,9 @@ process OVERLAP_PAIRED_READS_FLASH {
 
     output:
     path(".command.{out,err}")
-    path "${meta.id}.overlap.tsv"
-    path "${meta.id}.clean-reads.tsv"
-    path "versions.yml"                                                , emit: versions
+    path("${meta.id}.overlap.tsv")
+    path("${meta.id}.clean-reads.tsv")
+    path("versions.yml")                                               , emit: versions
     tuple val(meta), path("${meta.id}.Non-overlapping_FastQ_Files.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}*{paired,single}.fq.gz")          , emit: cleaned_fastq_files
 

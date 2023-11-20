@@ -8,7 +8,7 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                                            , emit: versions
+    path("versions.yml")                                                           , emit: versions
     tuple val(meta), path("${meta.id}-${meta.assembler}.CleanedReads-AlnStats.tsv"), emit: summary_alignment_stats
 
     shell:

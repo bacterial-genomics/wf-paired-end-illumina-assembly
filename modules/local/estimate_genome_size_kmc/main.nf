@@ -9,7 +9,7 @@ process ESTIMATE_GENOME_SIZE_KMC {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                , emit: versions
+    path("versions.yml")                               , emit: versions
     tuple val(meta), path("${meta.id}.genome_size.txt"), emit: genome_size
 
     shell:

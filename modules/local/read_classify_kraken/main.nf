@@ -11,9 +11,9 @@ process READ_CLASSIFY_KRAKEN_ONE {
 
     output:
     path(".command.{out,err}")
-    path "${meta.id}.kraken_output.tab.gz"
-    path "${meta.id}.kraken_summary.tsv"
-    path "versions.yml"                  , emit: versions
+    path("${meta.id}.kraken_output.tab.gz")
+    path("${meta.id}.kraken_summary.tsv")
+    path("versions.yml")                   , emit: versions
 
     shell:
     '''

@@ -8,8 +8,8 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
 
     output:
     path(".command.{out,err}")
-    path "${meta.id}-${meta.assembler}.blast.tsv.gz"
-    path "versions.yml"                                                               , emit: versions
+    path("${meta.id}-${meta.assembler}.blast.tsv.gz")
+    path("versions.yml")                                                              , emit: versions
     tuple val(meta), path("${meta.id}-${meta.assembler}.Summary.16S.tab")             , emit: blast_summary
     tuple val(meta), path("${meta.id}-${meta.assembler}.16S-top-species.tsv")         , emit: top_blast_species
     tuple val(meta), path("${meta.id}-${meta.assembler}.Filtered_16S_BLASTn_File.tsv"), emit: qc_filecheck

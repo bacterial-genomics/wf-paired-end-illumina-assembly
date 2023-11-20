@@ -8,7 +8,7 @@ process SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"            , emit: versions
+    path("versions.yml")           , emit: versions
     tuple val(meta), path("bins/*"), emit: split_multifasta_assembly_dir
 
     shell:

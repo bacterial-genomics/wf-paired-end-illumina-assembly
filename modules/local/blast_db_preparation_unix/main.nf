@@ -9,7 +9,7 @@ process BLAST_DB_PREPARATION_UNIX {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                   , emit: versions
+    path("versions.yml")                  , emit: versions
     tuple val(db_name), path("database/*"), emit: db
 
     shell:

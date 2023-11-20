@@ -8,7 +8,7 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQTK {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                   , emit: versions
+    path("versions.yml")                                  , emit: versions
     tuple val(meta), path("*.fastq*", includeInputs: true), emit: reads
 
     shell:

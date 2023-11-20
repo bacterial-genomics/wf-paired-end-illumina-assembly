@@ -9,7 +9,7 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                                                             , emit: versions
+    path("versions.yml")                                                                            , emit: versions
     path("${meta.id}-${meta.assembler}.{SNPs,InDels}-corrected.cnt.txt")
     tuple val(meta), path("${meta.id}-${meta.assembler}.fna")                                       , emit: assembly
     tuple val(meta), path("${meta.id}-${meta.assembler}.{Filtered,Polished,Binary,Final}*_File.tsv"), emit: qc_filecheck

@@ -9,9 +9,9 @@ process QA_ASSEMBLY_QUAST {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                                                                                                , emit: versions
-    path "${meta.id}-${meta.assembler}.QuastSummary.tsv"                                                                               , emit: summary_assemblies
-    path "${meta.id}-${meta.assembler}.CleanedReads-Bases.tsv"                                                                         , emit: summary_reads
+    path("versions.yml")                                                                                                               , emit: versions
+    path("${meta.id}-${meta.assembler}.QuastSummary.tsv")                                                                              , emit: summary_assemblies
+    path("${meta.id}-${meta.assembler}.CleanedReads-Bases.tsv")                                                                        , emit: summary_reads
     tuple val(meta), path("${meta.id}-${meta.assembler}.QuastSummary.tsv"), path("${meta.id}-${meta.assembler}.CleanedReads-Bases.tsv"), emit: qa_summaries
 
     shell:

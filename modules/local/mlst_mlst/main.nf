@@ -8,8 +8,8 @@ process MLST_MLST {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                 , emit: versions
-    path "${meta.id}-${meta.assembler}.Summary.MLST.tab", emit: summary_mlst
+    path("versions.yml")                                 , emit: versions
+    path("${meta.id}-${meta.assembler}.Summary.MLST.tab"), emit: summary_mlst
 
     shell:
     '''

@@ -8,7 +8,7 @@ process FILTER_CONTIGS_BIOPYTHON {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                , emit: versions
+    path("versions.yml")                                                 , emit: versions
     tuple val(meta), path("${meta.id}-${meta.assembler}.uncorrected.fna"), emit: uncorrected_contigs
 
     shell:
