@@ -8,7 +8,7 @@ process ASSEMBLE_CONTIGS_SPADES {
     tuple val(meta), path(cleaned_fastq_files)
 
     output:
-    path("SPAdes/*")
+    path("SPAdes/**")
     path(".command.{out,err}")
     path "versions.yml"                                                        , emit: versions
     tuple val(meta), path("${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"), emit: qc_filecheck
