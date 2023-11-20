@@ -178,34 +178,25 @@ if (params.blast_db) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-// Convert var_assembler_name to lowercase
+// Convert params.assembler to lowercase
 def toLower(it) {
     it.toString().toLowerCase()
 }
 
 // Check QC filechecks for a failure
-def checkQCFilechecks(it) {
-    it.flatten().map{
-        file ->
-            // Obtain file contents
-            getData = file.getText()
+def qcfilecheck(qcfile, inputfile) {
+    qcfile.map{ meta, file -> [ meta, [file] ] }
+            .join(inputfile)
+            .map{ meta, qc, input ->
+                data = []
+                qc.flatten().each{ data += it.readLines() }
 
-            // Add header if needed
-            if ( !getData.split('\n').first().contains('Sample name') ) {
-                file.write("Sample name\tQC step\tOutcome (Pass/Fail)\n")
-                file.append(getData)
+                if ( data.any{ it.contains('FAIL') } ) {
+                    log.warn("QC check failed for sample: ${data.last().split('\t').first()}")
+                } else {
+                    [ meta, input ]
+                }
             }
-
-            // Move to QC log directory
-            File dir = new File("${params.qc_filecheck_log_dir}/")
-            if ( !dir.exists() ) { dir.mkdirs() }
-            file.copyTo("${dir}")
-
-            // Check file contents for failure
-            if ( getData.contains('FAIL') ) {
-                error("${file.getBaseName().split('\\.').last().replace('_', ' ')} check failed!")
-            }
-    }
 }
 
 /*
@@ -236,11 +227,16 @@ workflow ASSEMBLY {
         INPUT_CHECK.out.raw_reads
     )
     ch_versions = ch_versions.mix(INFILE_HANDLING_UNIX.out.versions)
-    checkQCFilechecks(INFILE_HANDLING_UNIX.out.qc_filecheck)
+    ch_infile_handling = qcfilecheck(INFILE_HANDLING_UNIX.out.qc_filecheck, INFILE_HANDLING_UNIX.out.input)
+
+    ch_infile_handling = ch_infile_handling.map{ meta, file ->
+                        meta['assembler'] = "${var_assembler_name}"
+                        [ meta, file]
+                    }
 
     // SUBWORKFLOW: Downsample FastQ files
     DOWNSAMPLE (
-        INFILE_HANDLING_UNIX.out.input
+        ch_infile_handling
     )
     ch_versions = ch_versions.mix(DOWNSAMPLE.out.versions)
 
@@ -250,7 +246,7 @@ workflow ASSEMBLY {
         ch_phix_reference
     )
     ch_versions = ch_versions.mix(REMOVE_PHIX_BBDUK.out.versions)
-    checkQCFilechecks(REMOVE_PHIX_BBDUK.out.qc_filecheck)
+    ch_removed_phix = qcfilecheck(REMOVE_PHIX_BBDUK.out.qc_filecheck, REMOVE_PHIX_BBDUK.out.fastq_phix_removed)
 
     // Collect PhiX removal summaries and concatenate into one file
     ch_phix_removal_summary = Channel.empty()
@@ -264,18 +260,18 @@ workflow ASSEMBLY {
 
     // PROCESS: Run trimmomatic to clip adapters and do quality trimming
     TRIM_READS_TRIMMOMATIC (
-        REMOVE_PHIX_BBDUK.out.fastq_phix_removed,
+        ch_removed_phix,
         ch_adapter_reference
     )
     ch_versions = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
-    checkQCFilechecks(TRIM_READS_TRIMMOMATIC.out.qc_filecheck)
+    ch_trim_reads_trimmomatic = qcfilecheck(TRIM_READS_TRIMMOMATIC.out.qc_filecheck, TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed)
 
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
     OVERLAP_PAIRED_READS_FLASH (
-        TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed
+        ch_trim_reads_trimmomatic
     )
     ch_versions = ch_versions.mix(OVERLAP_PAIRED_READS_FLASH.out.versions)
-    checkQCFilechecks(OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck)
+    ch_overlap_flash = qcfilecheck(OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck, OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files)
 
     /*
     ================================================================================
@@ -322,7 +318,7 @@ workflow ASSEMBLY {
 
         // PROCESS: Run kraken1 on paired cleaned reads
         READ_CLASSIFY_KRAKEN_ONE (
-            OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
+            ch_overlap_flash,
             ch_db_for_kraken1
         )
         ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
@@ -359,7 +355,7 @@ workflow ASSEMBLY {
         }
         // PROCESS: Run kraken2 on paired cleaned reads
         READ_CLASSIFY_KRAKEN_TWO (
-            OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
+            ch_overlap_flash,
             ch_db_for_kraken2
         )
         ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
@@ -375,7 +371,7 @@ workflow ASSEMBLY {
     */
 
     ASSEMBLE_CONTIGS (
-        OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
+        ch_overlap_flash,
         var_assembler_name
     )
     ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS.out.versions)
@@ -405,8 +401,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Run MLST to find MLST for each polished assembly
     MLST_MLST (
-        ASSEMBLE_CONTIGS.out.bam_files
-            .join(ASSEMBLE_CONTIGS.out.assembly_file)
+        ASSEMBLE_CONTIGS.out.assembly_file
     )
     ch_versions = ch_versions.mix(MLST_MLST.out.versions)
 
@@ -425,7 +420,7 @@ workflow ASSEMBLY {
         ASSEMBLE_CONTIGS.out.assembly_file
     )
     ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
-    checkQCFilechecks(ANNOTATE_PROKKA.out.qc_filecheck)
+    ch_genbank = qcfilecheck(ANNOTATE_PROKKA.out.qc_filecheck, ANNOTATE_PROKKA.out.prokka_genbank_file)
 
     /*
     ================================================================================
@@ -435,19 +430,19 @@ workflow ASSEMBLY {
 
     // PROCESS: Attempt to extract 16S rRNA gene records from prokka_genbank_file file
     EXTRACT_16S_BIOPYTHON (
-        ANNOTATE_PROKKA.out.prokka_genbank_file
+        ch_genbank
             .join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(EXTRACT_16S_BIOPYTHON.out.versions)
 
     // PROCESS: Extract 16S rRNA gene sequences with Barrnap if missing from 16S_EXTRACT_BIOPYTHON
     EXTRACT_16S_BARRNAP (
-        ANNOTATE_PROKKA.out.prokka_genbank_file
+        ch_genbank
             .join(ASSEMBLE_CONTIGS.out.assembly_file)
             .join(EXTRACT_16S_BIOPYTHON.out.biopython_extracted_rna)
     )
     ch_versions = ch_versions.mix(EXTRACT_16S_BARRNAP.out.versions)
-    checkQCFilechecks(EXTRACT_16S_BARRNAP.out.qc_filecheck)
+    ch_extracted_rna = qcfilecheck(EXTRACT_16S_BARRNAP.out.qc_filecheck, EXTRACT_16S_BARRNAP.out.barnapp_extracted_rna)
 
     // Prepare BLAST database for use
     if ( ch_blast_db_file ) {
@@ -480,20 +475,20 @@ workflow ASSEMBLY {
 
     // PROCESS: Run Blast on predicted 16S ribosomal RNA genes
     ALIGN_16S_BLAST (
-        EXTRACT_16S_BARRNAP.out.barnapp_extracted_rna
-            .join(ASSEMBLE_CONTIGS.out.assembly_file),
+        ch_extracted_rna.join(ASSEMBLE_CONTIGS.out.assembly_file),
         ch_db_for_blast
     )
     ch_versions = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
-    checkQCFilechecks(ALIGN_16S_BLAST.out.qc_filecheck)
+    ch_blast_output = qcfilecheck(ALIGN_16S_BLAST.out.qc_filecheck, ALIGN_16S_BLAST.out.blast_output)
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
-        ALIGN_16S_BLAST.out.blast_output
+        ch_blast_output
             .join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
-    checkQCFilechecks(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck)
+    ch_top_blast = qcfilecheck(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck, BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.top_blast_species)
+    ch_blast_summary = qcfilecheck(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck, BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary)
 
     // Collect BLASTn Summaries and concatenate into one file
     ch_blast_summary = Channel.empty()
@@ -528,13 +523,7 @@ workflow ASSEMBLY {
     // PROCESS: Run QUAST on the polished assembly for quality assessment and
     //  report the number of cleaned basepairs used to form the assembly
     QA_ASSEMBLY_QUAST (
-        OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files
-            .map{
-                meta, r1, r2, single ->
-                    def meta_new = meta + [assembler: var_assembler_name]
-                    [ meta_new, [r1], [r2], [single] ]
-            }
-            .join(ASSEMBLE_CONTIGS.out.assembly_file)
+        ch_overlap_flash.join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(QA_ASSEMBLY_QUAST.out.versions)
 
