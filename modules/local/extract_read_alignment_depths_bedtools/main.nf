@@ -38,7 +38,7 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-      bedtools: $(bedtools --version | awk 'NF>1{print $NF}')
+        bedtools: $(bedtools --version | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
 }
