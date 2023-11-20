@@ -115,8 +115,6 @@ workflow ASSEMBLE_CONTIGS {
         ch_bam_files = qcfilecheck(POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck, POLISH_ASSEMBLY_BWA_PILON.out.bam)
         ch_assembly_file  = qcfilecheck(POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck, POLISH_ASSEMBLY_BWA_PILON.out.assembly)
 
-        // ch_bam_files = POLISH_ASSEMBLY_BWA_PILON.out.bam
-        // ch_assembly_file = POLISH_ASSEMBLY_BWA_PILON.out.assembly
         // Collect QC File Checks
         ch_qc_filechecks = ch_qc_filechecks
                                 .mix(ASSEMBLE_CONTIGS_SPADES.out.qc_filecheck)
