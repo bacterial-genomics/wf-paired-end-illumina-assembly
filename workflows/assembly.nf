@@ -493,6 +493,7 @@ workflow ASSEMBLY {
     // Collect BLASTn Summaries and concatenate into one file
     ch_blast_summary.collect()
                     .map{ meta, file -> file }
+                    .collect()
                     .collectFile(
                         name:     "Summary.16S.tab",
                         keepHeader: true,
@@ -502,6 +503,7 @@ workflow ASSEMBLY {
     // Collect top BLASTn species and concatenate into one file
     ch_top_blast.collect()
                 .map{ meta, file -> file }
+                .collect()
                 .collectFile(
                     name:     "16S-top-species.tsv",
                     keepHeader: true,
