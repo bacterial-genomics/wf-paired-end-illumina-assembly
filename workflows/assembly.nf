@@ -491,24 +491,22 @@ workflow ASSEMBLY {
     ch_blast_summary = qcfilecheck(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck, BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary)
 
     // Collect BLASTn Summaries and concatenate into one file
-    ch_blast_summary = Channel.empty()
-    ch_blast_summary = ch_blast_summary
-                        .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary)
-                        .collectFile(
-                            name:     "Summary.16S.tab",
-                            keepHeader: true,
-                            storeDir: "${params.outdir}/Summaries"
-                        )
+    ch_blast_summary.collect()
+                    .map{ meta, file -> file }
+                    .collectFile(
+                        name:     "Summary.16S.tab",
+                        keepHeader: true,
+                        storeDir: "${params.outdir}/Summaries"
+                    )
 
     // Collect top BLASTn species and concatenate into one file
-    ch_ssu_species = Channel.empty()
-    ch_ssu_species = ch_ssu_species
-                        .mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.top_blast_species)
-                        .collectFile(
-                            name:     "16S-top-species.tsv",
-                            keepHeader: true,
-                            storeDir: "${params.outdir}/SSU"
-                        )
+    ch_top_blast.collect()
+                .map{ meta, file -> file }
+                .collectFile(
+                    name:     "16S-top-species.tsv",
+                    keepHeader: true,
+                    storeDir: "${params.outdir}/SSU"
+                )
 
     /*
     ================================================================================
