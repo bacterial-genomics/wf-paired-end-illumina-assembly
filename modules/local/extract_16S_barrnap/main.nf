@@ -33,10 +33,13 @@ process EXTRACT_16S_BARRNAP {
         -fo "16S.!{meta.id}-!{meta.assembler}.fa"
     fi
 
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
     if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Extracted File' "!{params.min_filesize_extracted_ssu_file}"; then
-      echo -e "!{meta.id}\tSSU Extracted File\tPASS" > "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
+      echo -e "!{meta.id}\tSSU Extracted File\tPASS"  \
+        >> "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
     else
-      echo -e "!{meta.id}\tSSU Extracted File\tFAIL" > "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
+      echo -e "!{meta.id}\tSSU Extracted File\tFAIL" \
+        >> "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
     fi
 
     awk -v awk_var="!{meta.id}" \
@@ -48,10 +51,13 @@ process EXTRACT_16S_BARRNAP {
     mv -f "!{meta.id}-!{meta.assembler}.fa-renamed" \
       "16S.!{meta.id}-!{meta.assembler}.fa"
 
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
     if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Renamed File' "!{params.min_filesize_renamed_ssu_file}"; then
-      echo -e "!{meta.id}\tSSU Renamed File\tPASS" > "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
+      echo -e "!{meta.id}\tSSU Renamed File\tPASS"  \
+        >> "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
     else
-      echo -e "!{meta.id}\tSSU Renamed File\tFAIL" > "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
+      echo -e "!{meta.id}\tSSU Renamed File\tFAIL" \
+        >> "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
     fi
 
     # Get process version information

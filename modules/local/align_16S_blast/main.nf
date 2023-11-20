@@ -30,10 +30,13 @@ process ALIGN_16S_BLAST {
       -out "!{meta.id}-!{meta.assembler}.blast.tsv" \
       -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovhsp ssciname"
 
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.blast.tsv" '16S BLASTn Output File' "!{params.min_filesize_blastn_output}"; then
-      echo -e "!{meta.id}\t16S BLASTn Output File\tPASS" > "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
+      echo -e "!{meta.id}\t16S BLASTn Output File\tPASS"  \
+        >> "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     else
-      echo -e "!{meta.id}\t16S BLASTn Output File\tFAIL" > "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
+      echo -e "!{meta.id}\t16S BLASTn Output File\tFAIL" \
+        >> "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     fi
 
     # Get process version information

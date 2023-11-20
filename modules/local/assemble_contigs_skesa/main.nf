@@ -36,8 +36,10 @@ process ASSEMBLE_CONTIGS_SKESA {
         --vector_percent !{params.skesa_vector_percent}
     fi
 
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     if verify_minimum_file_size "contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then
-      echo -e "!{meta.id}\tRaw Assembly File\tPASS" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
+      echo -e "!{meta.id}\tRaw Assembly File\tPASS"  \
+        >> "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     else
       echo -e "!{meta.id}\tRaw Assembly File\tFAIL" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     fi
