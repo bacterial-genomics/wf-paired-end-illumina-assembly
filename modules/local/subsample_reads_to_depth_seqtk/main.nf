@@ -25,8 +25,10 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQTK {
       exit 1
     fi
     if [ ${depth%.*} -gt 0 ] && [ ${initial_depth%.*} -gt ${depth%.*} ]; then
-      seqtk sample !{reads[0]} ${fraction_of_reads_to_use} > "!{meta.id}.R1.subsampled.fastq"
-      seqtk sample !{reads[1]} ${fraction_of_reads_to_use} > "!{meta.id}.R2.subsampled.fastq"
+      seqtk sample !{reads[0]} ${fraction_of_reads_to_use} > "!{meta.id}_R1.subsampled.fastq"
+      seqtk sample !{reads[1]} ${fraction_of_reads_to_use} > "!{meta.id}_R2.subsampled.fastq"
+
+      rm -f !{reads[0]} !{reads[1]}
 
     else
       msg "INFO: Subsampling not requested or required"
