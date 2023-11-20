@@ -5,14 +5,14 @@ process MAP_CONTIGS_BWA {
     container "gregorysprenger/bwa-samtools-pilon@sha256:209ac13b381188b4a72fe746d3ff93d1765044cbf73c3957e4e2f843886ca57f"
 
     input:
-    tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz), path(uncorrected_contigs)
+    tuple val(meta), path(cleaned_fastq_files), path(uncorrected_contigs)
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                                                                              , emit: versions
-    tuple val(meta), path("${meta.id}-${meta.assembler}.fna")                                                        , emit: assembly
-    path("${meta.id}-${meta.assembler}.{Filtered,Binary,Final}*_File.tsv")                                           , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}-${meta.assembler}.paired.bam"), path("${meta.id}-${meta.assembler}.single.bam"), emit: bam
+    path "versions.yml"                                                                    , emit: versions
+    tuple val(meta), path("${meta.id}-${meta.assembler}.fna")                              , emit: assembly
+    tuple val(meta), path("${meta.id}-${meta.assembler}.{Filtered,Binary,Final}*_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}-${meta.assembler}.{paired,single}.bam")              , emit: bam
 
     shell:
     '''
@@ -32,7 +32,7 @@ process MAP_CONTIGS_BWA {
       -x intractg \
       -t !{task.cpus} \
       !{uncorrected_contigs} \
-      !{paired_R1_gz} !{paired_R2_gz} \
+      !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} \
       | \
       samtools sort \
       -@ !{task.cpus} \
@@ -61,7 +61,7 @@ process MAP_CONTIGS_BWA {
     fi
 
     # Single read mapping if available for downstream depth of coverage calculations
-    if [[ !{single_gz} ]]; then
+    if [[ !{cleaned_fastq_files[2]} ]]; then
       msg "INFO: Single read mapping"
       bwa index "!{meta.id}-!{meta.assembler}.fna"
 
@@ -69,7 +69,7 @@ process MAP_CONTIGS_BWA {
         -v 2 \
         -x intractg \
         "!{meta.id}-!{meta.assembler}.fna" \
-        !{single_gz} \
+        !{cleaned_fastq_files[2]} \
         -t !{task.cpus} \
         | \
         samtools sort \

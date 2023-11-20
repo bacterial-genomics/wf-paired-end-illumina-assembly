@@ -6,7 +6,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
     container "gregorysprenger/kraken@sha256:b5ab4b75fb197b16e81d8cc3878e08479bc7d105ac0b2e948e6f6a9985cfc93e"
 
     input:
-    tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz)
+    tuple val(meta), path(cleaned_fastq_files)
     path database
 
     output:
@@ -28,7 +28,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
         --db !{database} \
         --gzip-compressed \
         --threads !{task.cpus} \
-        !{paired_R1_gz} !{paired_R2_gz} !{single_gz} \
+        !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} !{cleaned_fastq_files[2]} \
         > !{meta.id}_kraken.output
 
       msg "INFO: Creating Kraken Report"

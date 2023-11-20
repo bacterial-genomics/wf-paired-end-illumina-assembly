@@ -5,14 +5,14 @@ process ASSEMBLE_CONTIGS_SPADES {
     container "gregorysprenger/spades@sha256:3fe1ebda8f5746ca3e3ff79c74c220d2ca75e3120f20441c3e6ae88eff03b4dc"
 
     input:
-    tuple val(meta), path(R1), path(R2), path(single)
+    tuple val(meta), path(cleaned_fastq_files)
 
     output:
     path("SPAdes/*")
     path(".command.{out,err}")
-    path "versions.yml"                                      , emit: versions
-    path "${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv", emit: qc_filecheck
-    tuple val(meta), path("SPAdes/${meta.id}/contigs.fasta") , emit: contigs
+    path "versions.yml"                                                        , emit: versions
+    tuple val(meta), path("${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("SPAdes/${meta.id}/contigs.fasta")                   , emit: contigs
 
     shell:
     mode_list = ["--isolate", "--sc", "--meta", "--plasmid", "--rna", "--metaviral", "--metaplasmid", "--corona"]
@@ -40,9 +40,9 @@ process ASSEMBLE_CONTIGS_SPADES {
       else
 
         spades.py \
-          -1 !{R1} \
-          -2 !{R2} \
-          -s !{single} \
+          -1 !{cleaned_fastq_files[0]} \
+          -2 !{cleaned_fastq_files[1]} \
+          -s !{cleaned_fastq_files[2]} \
           -o SPAdes_output \
           -k !{params.spades_kmer_sizes} \
           !{mode} \

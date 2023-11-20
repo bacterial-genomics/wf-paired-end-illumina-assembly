@@ -5,13 +5,13 @@ process ASSEMBLE_CONTIGS_SKESA {
     container "gregorysprenger/skesa@sha256:4455882b5d0fd968630325428729395422be7340301c31d15874a295904b7f26"
 
     input:
-    tuple val(meta), path(R1), path(R2), path(single)
+    tuple val(meta), path(cleaned_fastq_files)
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                      , emit: versions
-    path "${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv", emit: qc_filecheck
-    tuple val(meta), path("contigs.fasta")                   , emit: contigs
+    path "versions.yml"                                                        , emit: versions
+    tuple val(meta), path("${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("contigs.fasta")                                     , emit: contigs
 
     shell:
     allow_snps = params.skesa_allow_snps ? "--allow snps" : ""
@@ -22,8 +22,8 @@ process ASSEMBLE_CONTIGS_SKESA {
 
     if [[ ! -f contigs.fasta ]]; then
       skesa \
-        --reads !{R1},!{R2} \
-        --reads !{single} \
+        --reads !{cleaned_fastq_files[0]},!{cleaned_fastq_files[1]} \
+        --reads !{cleaned_fastq_files[2]} \
         !{allow_snps} \
         --cores !{task.cpus} \
         --memory !{task.memory} \

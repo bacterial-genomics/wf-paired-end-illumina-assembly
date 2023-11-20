@@ -5,16 +5,16 @@ process TRIM_READS_TRIMMOMATIC {
     container "snads/trimmomatic@sha256:afbb19fdf540e6bd508b657e8dafffb6b411b5b0bf0e302347889220a0b571f1"
 
     input:
-    tuple val(meta), path(noPhiX_R1), path(noPhiX_R2)
+    tuple val(meta), path(noPhiX)
     path adapter_reference_file
 
     output:
     path(".command.{out,err}")
-    path "${meta.id}.single.fq"
+    path "${meta.id}_single.fq"
     path "${meta.id}.trimmomatic.tsv"
-    path "versions.yml"                                                              , emit: versions
-    path("${meta.id}.Adapter*_File.tsv")                                             , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}_R1.paired.fq"), path("${meta.id}_R2.paired.fq"), emit: fastq_adapters_removed
+    path "versions.yml"                                  , emit: versions
+    tuple val(meta), path("${meta.id}.Adapter*_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}_R{1,2}.paired.fq") , emit: fastq_adapters_removed
 
     shell:
     '''
@@ -33,7 +33,7 @@ process TRIM_READS_TRIMMOMATIC {
     trimmomatic PE \
       -phred33 \
       -threads !{task.cpus} \
-      !{noPhiX_R1} !{noPhiX_R2} \
+      !{noPhiX[0]} !{noPhiX[1]} \
       !{meta.id}_R1.paired.fq !{meta.id}_R1.unpaired.fq \
       !{meta.id}_R2.paired.fq !{meta.id}_R2.unpaired.fq \
       MINLEN:50 \
@@ -66,7 +66,7 @@ process TRIM_READS_TRIMMOMATIC {
 
     sed -i '1i Sample name\t# discarded reads\t# singleton reads' !{meta.id}.trimmomatic.tsv
 
-    cat !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq > !{meta.id}.single.fq
+    cat !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq > !{meta.id}_single.fq
 
     rm -f !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq
 

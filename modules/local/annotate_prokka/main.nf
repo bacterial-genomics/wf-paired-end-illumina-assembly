@@ -10,9 +10,9 @@ process ANNOTATE_PROKKA {
     output:
     path(".command.{out,err}")
     path "prokka/${meta.id}-${meta.assembler}.log.gz"
-    path "versions.yml"                                           , emit: versions
-    path "${meta.id}-${meta.assembler}.Annotated_GenBank_File.tsv", emit: qc_filecheck
-    tuple val(meta), path("${meta.id}-${meta.assembler}.gbk")     , emit: prokka_genbank_file
+    path "versions.yml"                                                             , emit: versions
+    tuple val(meta), path("${meta.id}-${meta.assembler}.Annotated_GenBank_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}-${meta.assembler}.gbk")                       , emit: prokka_genbank_file
 
     shell:
     curated_proteins = params.prokka_curated_proteins ? "--proteins ${params.prokka_curated_proteins}" : ""

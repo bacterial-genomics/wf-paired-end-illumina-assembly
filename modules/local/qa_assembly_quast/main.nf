@@ -5,7 +5,7 @@ process QA_ASSEMBLY_QUAST {
     container "snads/quast@sha256:c8147a279feafbc88bafeeda3817ff32d43db87d31dd0978df1cd2f8022d324c"
 
     input:
-    tuple val(meta), path(R1), path(R2), path(single), path(assembly)
+    tuple val(meta), path(cleaned_fastq_files), path(assembly)
 
     output:
     path(".command.{out,err}")
@@ -46,9 +46,9 @@ process QA_ASSEMBLY_QUAST {
     # Count nucleotides per read set
     echo -n '' > "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
     for (( i=0; i<3; i+=3 )); do
-      R1=$(basename "!{R1}" _R1.paired.fq.gz)
-      R2=$(basename "!{R2}" _R2.paired.fq.gz)
-      single=$(basename "!{single}" .single.fq.gz)
+      R1=$(basename "!{cleaned_fastq_files[0]}" _R1.paired.fq.gz)
+      R2=$(basename "!{cleaned_fastq_files[1]}" _R2.paired.fq.gz)
+      single=$(basename "!{cleaned_fastq_files[2]}" _single.fq.gz)
 
       # Verify each set of reads groups properly
       nr_uniq_str=$(echo -e "${R1}\n${R2}\n${single}" | sort -u | wc -l)
@@ -57,7 +57,7 @@ process QA_ASSEMBLY_QUAST {
         exit 1
       fi
       echo -ne "${R1}\t" >> "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
-      zcat "!{R1}" "!{R2}" "!{single}" | \
+      zcat "!{cleaned_fastq_files[0]}" "!{cleaned_fastq_files[1]}" "!{cleaned_fastq_files[2]}" | \
         awk 'BEGIN{SUM=0} {if(NR%4==2){SUM+=length($0)}} END{print SUM}' \
           >> "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
 

@@ -4,7 +4,7 @@ process MLST_MLST {
     container "gregorysprenger/mlst@sha256:69c8c8027474b8f361ef4a579df171702f3ed52f45e3fb388a41ccbf4542706f"
 
     input:
-    tuple val(meta), path(paired_bam), path(single_bam), path(assembly)
+    tuple val(meta), path(assembly)
 
     output:
     path(".command.{out,err}")

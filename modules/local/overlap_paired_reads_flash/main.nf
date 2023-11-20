@@ -5,22 +5,22 @@ process OVERLAP_PAIRED_READS_FLASH {
     container "snads/flash@sha256:363b2f44d040c669191efbc3d3ba99caf5efd3fdef370af8f00f3328932143a6"
 
     input:
-    tuple val(meta), path(paired_R1), path(paired_R2)
+    tuple val(meta), path(fastq_pairs)
 
     output:
     path(".command.{out,err}")
     path "${meta.id}.overlap.tsv"
     path "${meta.id}.clean-reads.tsv"
-    path "versions.yml"                                                                                                     , emit: versions
-    path "${meta.id}.Non-overlapping_FastQ_Files.tsv"                                                                       , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}_R1.paired.fq.gz"), path("${meta.id}_R2.paired.fq.gz"), path("${meta.id}.single.fq.gz"), emit: cleaned_fastq_files
+    path "versions.yml"                                                , emit: versions
+    tuple val(meta), path("${meta.id}.Non-overlapping_FastQ_Files.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}*{paired,single}.fq.gz")          , emit: cleaned_fastq_files
 
     shell:
     '''
     source bash_functions.sh
 
     # Determine read length based on the first 100 reads
-    echo -e "$(cat "!{paired_R1}" | head -n 400 > read_R1_len.txt)"
+    echo -e "$(cat "!{fastq_pairs[0]}" | head -n 400 > read_R1_len.txt)"
     READ_LEN=$(awk 'NR%4==2 {if(length > x) {x=length; y=$0}} END{print length(y)}' read_R1_len.txt)
 
     OVERLAP_LEN=$(echo | awk -v n=${READ_LEN} '{print int(n*0.8)}')
@@ -36,7 +36,7 @@ process OVERLAP_PAIRED_READS_FLASH {
         -M ${READ_LEN} \
         -t !{task.cpus} \
         -m ${OVERLAP_LEN} \
-        !{paired_R1} !{paired_R2}
+        !{fastq_pairs[0]} !{fastq_pairs[1]}
 
       for suff in notCombined_1.fastq notCombined_2.fastq; do
         if verify_minimum_file_size "flash.${suff}" 'Non-overlapping FastQ Files' "!{params.min_filesize_non_overlapping_fastq}"; then
@@ -48,7 +48,7 @@ process OVERLAP_PAIRED_READS_FLASH {
         fi
       done
 
-      rm !{paired_R1} !{paired_R2}
+      rm !{fastq_pairs[0]} !{fastq_pairs[1]}
       mv flash.notCombined_1.fastq !{meta.id}_R1.paired.fq
       mv flash.notCombined_2.fastq !{meta.id}_R2.paired.fq
 
@@ -57,7 +57,7 @@ process OVERLAP_PAIRED_READS_FLASH {
         CNT_READS_OVERLAPPED=$(awk '{lines++} END{print lines/4}' \
         flash.extendedFrags.fastq)
 
-        cat flash.extendedFrags.fastq >> !{meta.id}.single.fq
+        cat flash.extendedFrags.fastq >> !{meta.id}_single.fq
         rm flash.extendedFrags.fastq
       fi
 
@@ -73,7 +73,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     CNT_CLEANED_PAIRS=$(echo $((${count_R1}/4)))
     msg "INFO: Number of reads cleaned: ${CNT_CLEANED_PAIRS}"
 
-    count_single=$(echo $(cat !{meta.id}.single.fq | wc -l))
+    count_single=$(echo $(cat !{meta.id}_single.fq | wc -l))
     CNT_CLEANED_SINGLETON=$(echo $((${count_single}/4)))
     msg "INFO: Number of singletons cleaned: ${CNT_CLEANED_SINGLETON}"
 
@@ -84,7 +84,7 @@ process OVERLAP_PAIRED_READS_FLASH {
       '1i Sample name\t# cleaned reads (paired FastQ)\t# cleaned reads (singletons)' \
       !{meta.id}.clean-reads.tsv
 
-    gzip -f !{meta.id}.single.fq \
+    gzip -f !{meta.id}_single.fq \
       !{meta.id}_R1.paired.fq \
       !{meta.id}_R2.paired.fq
 

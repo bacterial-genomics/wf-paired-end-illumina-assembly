@@ -5,7 +5,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
     container "gregorysprenger/kraken2@sha256:213e70b0f465464b2e52f9f128dcb0cc6761705f6e99b7ce48a5a27a6851083a"
 
     input:
-    tuple val(meta), path(paired_R1_gz), path(paired_R2_gz), path(single_gz)
+    tuple val(meta), path(cleaned_fastq_files)
     path database
 
     output:
@@ -29,7 +29,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
         --output /dev/null \
         --report kraken2.tab \
         --threads !{task.cpus} \
-        !{paired_R1_gz} !{paired_R2_gz} !{single_gz}
+        !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} !{cleaned_fastq_files[2]}
 
       msg "INFO: Summarizing Kraken2"
       summarize_kraken 'kraken2.tab' > !{meta.id}.kraken2_summary.tsv

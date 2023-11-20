@@ -8,9 +8,9 @@ process EXTRACT_16S_BARRNAP {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                                  , emit: versions
-    path("${meta.id}-${meta.assembler}.SSU_{Renamed,Extracted}_File.tsv"), emit: qc_filecheck
-    tuple val(meta), path("16S.${meta.id}-${meta.assembler}.fa")         , emit: barnapp_extracted_rna
+    path "versions.yml"                                                                   , emit: versions
+    tuple val(meta), path("${meta.id}-${meta.assembler}.SSU_{Renamed,Extracted}_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("16S.${meta.id}-${meta.assembler}.fa")                          , emit: barnapp_extracted_rna
 
     shell:
     '''
