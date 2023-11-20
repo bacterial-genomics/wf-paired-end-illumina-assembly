@@ -27,28 +27,19 @@ include { POLISH_ASSEMBLY_BWA_PILON } from "../../modules/local/polish_assembly_
 */
 
 // Check QC filechecks for a failure
-def checkQCFilechecks(it) {
-    it.flatten().map{
-        file ->
-            // Obtain file contents
-            getData = file.getText()
+def qcfilecheck(qcfile, inputfile) {
+    qcfile.map{ meta, file -> [ meta, [file] ] }
+            .join(inputfile)
+            .map{ meta, qc, input ->
+                data = []
+                qc.flatten().each{ data += it.readLines() }
 
-            // Add header if needed
-            if ( !getData.split('\n').first().contains('Sample name') ) {
-                file.write("Sample name\tQC step\tOutcome (Pass/Fail)\n")
-                file.append(getData)
+                if ( data.any{ it.contains('FAIL') } ) {
+                    log.warn("QC check failed for sample: ${data.last().split('\t').first()}")
+                } else {
+                    [ meta, input ]
+                }
             }
-
-            // Move to QC log directory
-            File dir = new File("${params.qc_filecheck_log_dir}/")
-            if ( !dir.exists() ) { dir.mkdirs() }
-            file.copyTo("${dir}")
-
-            // Check file contents for failure
-            if ( getData.contains('FAIL') ) {
-                error("${file.getBaseName().split('\\.').last().replace('_', ' ')} check failed!")
-            }
-    }
 }
 
 /*
@@ -60,7 +51,7 @@ def checkQCFilechecks(it) {
 workflow ASSEMBLE_CONTIGS {
 
     take:
-    ch_cleaned_reads    // channel: [ val(meta), [read1], [read2], [single] ]
+    ch_cleaned_reads    // channel: [ val(meta), [cleaned_fastq_files (R1, R2, single)] ]
     var_assembler_name  // var (str): assembler_name
 
     main:
@@ -68,13 +59,6 @@ workflow ASSEMBLE_CONTIGS {
     ch_qc_filechecks = Channel.empty()
 
     // Update meta to include meta.assembler
-    ch_cleaned_reads = ch_cleaned_reads
-                        .map{
-                            meta, r1, r2, single ->
-                                def meta_new = meta + [assembler: var_assembler_name]
-                                [ meta_new, [r1], [r2], [single] ]
-                        }
-
     if ( var_assembler_name == "SKESA" ) {
         // SKESA assembler
         // PROCESS: Run SKESA to assemble contigs with cleaned paired reads and cleaned singletons
@@ -82,11 +66,11 @@ workflow ASSEMBLE_CONTIGS {
             ch_cleaned_reads
         )
         ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS_SKESA.out.versions)
-        checkQCFilechecks(ASSEMBLE_CONTIGS_SKESA.out.qc_filecheck)
+        ch_contigs = qcfilecheck(ASSEMBLE_CONTIGS_SKESA.out.qc_filecheck, ASSEMBLE_CONTIGS_SKESA.out.contigs)
 
         // PROCESS: Filter contigs based on length, coverage, GC skew, and compositional complexity
         FILTER_CONTIGS_BIOPYTHON (
-            ch_cleaned_reads.join(ASSEMBLE_CONTIGS_SKESA.out.contigs)
+            ch_contigs
         )
         ch_versions = ch_versions.mix(FILTER_CONTIGS_BIOPYTHON.out.versions)
 
@@ -95,11 +79,10 @@ workflow ASSEMBLE_CONTIGS {
             ch_cleaned_reads.join(FILTER_CONTIGS_BIOPYTHON.out.uncorrected_contigs)
         )
         ch_versions = ch_versions.mix(MAP_CONTIGS_BWA.out.versions)
-        checkQCFilechecks(MAP_CONTIGS_BWA.out.qc_filecheck)
 
         // Collect output files
-        ch_bam_files      = MAP_CONTIGS_BWA.out.bam
-        ch_assembly_file  = MAP_CONTIGS_BWA.out.assembly
+        ch_bam_files      = qcfilecheck(MAP_CONTIGS_BWA.out.qc_filecheck, MAP_CONTIGS_BWA.out.bam)
+        ch_assembly_file  = qcfilecheck(MAP_CONTIGS_BWA.out.qc_filecheck, MAP_CONTIGS_BWA.out.assembly)
 
         // Collect QC File Checks
         ch_qc_filechecks = ch_qc_filechecks
@@ -112,11 +95,13 @@ workflow ASSEMBLE_CONTIGS {
             ch_cleaned_reads
         )
         ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS_SPADES.out.versions)
-        checkQCFilechecks(ASSEMBLE_CONTIGS_SPADES.out.qc_filecheck)
+
+        // ch_contigs = ASSEMBLE_CONTIGS_SPADES.out.contigs.map{ meta, file -> [ meta, [file] ] }
+        ch_contigs = qcfilecheck(ASSEMBLE_CONTIGS_SPADES.out.qc_filecheck, ASSEMBLE_CONTIGS_SPADES.out.contigs)
 
         // PROCESS: Filter contigs based on length, coverage, GC skew, and compositional complexity
         FILTER_CONTIGS_BIOPYTHON (
-            ch_cleaned_reads.join(ASSEMBLE_CONTIGS_SPADES.out.contigs)
+            ch_contigs
         )
         ch_versions = ch_versions.mix(FILTER_CONTIGS_BIOPYTHON.out.versions)
 
@@ -125,12 +110,13 @@ workflow ASSEMBLE_CONTIGS {
             ch_cleaned_reads.join(FILTER_CONTIGS_BIOPYTHON.out.uncorrected_contigs)
         )
         ch_versions = ch_versions.mix(POLISH_ASSEMBLY_BWA_PILON.out.versions)
-        checkQCFilechecks(POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck)
 
         // Collect output files
-        ch_bam_files      = POLISH_ASSEMBLY_BWA_PILON.out.bam
-        ch_assembly_file  = POLISH_ASSEMBLY_BWA_PILON.out.assembly
+        ch_bam_files = qcfilecheck(POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck, POLISH_ASSEMBLY_BWA_PILON.out.bam)
+        ch_assembly_file  = qcfilecheck(POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck, POLISH_ASSEMBLY_BWA_PILON.out.assembly)
 
+        // ch_bam_files = POLISH_ASSEMBLY_BWA_PILON.out.bam
+        // ch_assembly_file = POLISH_ASSEMBLY_BWA_PILON.out.assembly
         // Collect QC File Checks
         ch_qc_filechecks = ch_qc_filechecks
                                 .mix(ASSEMBLE_CONTIGS_SPADES.out.qc_filecheck)
@@ -138,7 +124,7 @@ workflow ASSEMBLE_CONTIGS {
     }
 
     emit:
-    bam_files     = ch_bam_files            // channel: [ val(meta), [paired.bam], [single.bam] ]
+    bam_files     = ch_bam_files            // channel: [ val(meta), [{paired,single}.bam] ]
     assembly_file = ch_assembly_file        // channel: [ val(meta), [assembly.fna] ]
     qc_filecheck  = ch_qc_filechecks
     versions      = ch_versions
