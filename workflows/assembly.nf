@@ -671,17 +671,15 @@ workflow ASSEMBLY {
     // Collect QC file checks and concatenate into one file
     ch_qc_filecheck = Channel.empty()
     ch_qc_filecheck = ch_qc_filecheck
-        .concat(
-            INFILE_HANDLING_UNIX.out.qc_filecheck,
-            REMOVE_PHIX_BBDUK.out.qc_filecheck,
-            TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
-            OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,
-            ASSEMBLE_CONTIGS.out.qc_filecheck,
-            ANNOTATE_PROKKA.out.qc_filecheck,
-            EXTRACT_16S_BARRNAP.out.qc_filecheck,
-            ALIGN_16S_BLAST.out.qc_filecheck,
-            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck
-        )
+        .combine(INFILE_HANDLING_UNIX.out.qc_filecheck)
+        .combine(REMOVE_PHIX_BBDUK.out.qc_filecheck)
+        .combine(TRIM_READS_TRIMMOMATIC.out.qc_filecheck)
+        .combine(OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck)
+        .combine(ASSEMBLE_CONTIGS.out.qc_filecheck)
+        .combine(ANNOTATE_PROKKA.out.qc_filecheck)
+        .combine(EXTRACT_16S_BARRNAP.out.qc_filecheck)
+        .combine(ALIGN_16S_BLAST.out.qc_filecheck)
+        .combine(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck)
         .flatten()
         .collectFile(
             name:     "Summary.QC_File_Checks.tab",
