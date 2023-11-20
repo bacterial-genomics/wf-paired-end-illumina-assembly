@@ -50,7 +50,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
     fi
 
     # Get process version information
-    cat <<-END_VERSIONS | sed -r 's/^ {4}//' | sed "s/\bEND_VERSIONS\b//" > versions.yml
+    cat <<-"    END_VERSIONS" | sed -r 's/^ {4}//' > versions.yml
     "!{task.process}":
         kraken: $(kraken --version | head -n 1 | awk 'NF>1{print $NF}')
     END_VERSIONS

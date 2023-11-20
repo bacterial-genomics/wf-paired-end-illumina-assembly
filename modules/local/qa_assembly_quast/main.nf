@@ -65,7 +65,7 @@ process QA_ASSEMBLY_QUAST {
     done
 
     # Get process version information
-    cat <<-END_VERSIONS | sed -r 's/^ {4}//' | sed "s/\bEND_VERSIONS\b//" > versions.yml
+    cat <<-"    END_VERSIONS" | sed -r 's/^ {4}//' > versions.yml
     "!{task.process}":
         quast: $(quast.py --version | awk 'NF>1{print $NF}')
     END_VERSIONS
