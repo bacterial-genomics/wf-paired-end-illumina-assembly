@@ -32,7 +32,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
         !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} !{cleaned_fastq_files[2]}
 
       msg "INFO: Summarizing Kraken2"
-      summarize_kraken 'kraken2.tab' > !{meta.id}.kraken2_summary.tsv
+      summarize_kraken 'kraken2.tab' > "!{meta.id}.kraken2_summary.tsv"
 
       # Add header to kraken summary
       sed -i \

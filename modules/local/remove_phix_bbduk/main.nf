@@ -52,7 +52,7 @@ process REMOVE_PHIX_BBDUK {
       out2=!{meta.id}_noPhiX-R2.fsq \
       ref="!{phix_reference_file}"
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > !{meta.id}.PhiX-removed_FastQ_File.tsv
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.PhiX-removed_FastQ_File.tsv"
     for suff in R1.fsq R2.fsq; do
       if verify_minimum_file_size "!{meta.id}_noPhiX-${suff}" 'PhiX-removed FastQ Files' "!{params.min_filesize_fastq_phix_removed}"; then
         echo -e "!{meta.id}\tPhiX-removed FastQ ($suff) File\tPASS" \
@@ -115,8 +115,8 @@ process REMOVE_PHIX_BBDUK {
       ${TOT_BASES}
       "
 
-    echo -e $SUMMARY_HEADER > !{meta.id}.Summary.PhiX.tsv
-    echo -e $SUMMARY_OUTPUT >> !{meta.id}.Summary.PhiX.tsv
+    echo -e $SUMMARY_HEADER > "!{meta.id}.Summary.PhiX.tsv"
+    echo -e $SUMMARY_OUTPUT >> "!{meta.id}.Summary.PhiX.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

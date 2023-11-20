@@ -42,10 +42,10 @@ process OVERLAP_PAIRED_READS_FLASH {
       for suff in notCombined_1.fastq notCombined_2.fastq; do
         if verify_minimum_file_size "flash.${suff}" 'Non-overlapping FastQ Files' "!{params.min_filesize_non_overlapping_fastq}"; then
           echo -e "!{meta.id}\tNon-overlapping FastQ File (${suff})\tPASS" \
-            >> !{meta.id}.Non-overlapping_FastQ_Files.tsv
+            >> "!{meta.id}.Non-overlapping_FastQ_Files.tsv"
         else
           echo -e "!{meta.id}\tNon-overlapping FastQ File (${suff})\tFAIL" \
-            >> !{meta.id}.Non-overlapping_FastQ_Files.tsv
+            >> "!{meta.id}.Non-overlapping_FastQ_Files.tsv"
         fi
       done
 
@@ -58,13 +58,13 @@ process OVERLAP_PAIRED_READS_FLASH {
         CNT_READS_OVERLAPPED=$(awk '{lines++} END{print lines/4}' \
         flash.extendedFrags.fastq)
 
-        cat flash.extendedFrags.fastq >> !{meta.id}_single.fq
+        cat flash.extendedFrags.fastq >> "!{meta.id}_single.fq"
         rm flash.extendedFrags.fastq
       fi
 
       msg "INFO: ${CNT_READS_OVERLAPPED:-0} pairs overlapped into singleton reads" >&2
       echo -e "!{meta.id}\t${CNT_READS_OVERLAPPED:-0}" \
-        > !{meta.id}.overlap.tsv
+        > "!{meta.id}.overlap.tsv"
 
       sed -i '1i Sample name\t# overlapped reads' !{meta.id}.overlap.tsv
     fi
@@ -79,7 +79,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     msg "INFO: Number of singletons cleaned: ${CNT_CLEANED_SINGLETON}"
 
     echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS}\t${CNT_CLEANED_SINGLETON}" \
-      > !{meta.id}.clean-reads.tsv
+      > "!{meta.id}.clean-reads.tsv"
 
     sed -i \
       '1i Sample name\t# cleaned reads (paired FastQ)\t# cleaned reads (singletons)' \

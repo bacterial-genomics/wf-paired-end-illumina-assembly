@@ -34,8 +34,8 @@ process ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX {
     fi
     msg "INFO: Fraction of reads to use: ${fraction_of_reads_to_use}"
 
-    echo -n "${initial_depth}" > !{meta.id}.initial_depth.txt
-    echo -n "${fraction_of_reads_to_use}" > !{meta.id}.fraction_of_reads_to_use.txt
+    echo -n "${initial_depth}" > "!{meta.id}.initial_depth.txt"
+    echo -n "${fraction_of_reads_to_use}" > "!{meta.id}.fraction_of_reads_to_use.txt"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

@@ -21,7 +21,7 @@ process TRIM_READS_TRIMMOMATIC {
     source bash_functions.sh
 
     # Verify adapter reference file size
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > !{meta.id}.Adapters_FastA_File.tsv
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.Adapters_FastA_File.tsv"
     if verify_minimum_file_size !{adapter_reference_file} 'Adapters FastA' "!{params.min_filesize_adapters}"; then
       echo -e "!{meta.id}\tAdapters FastA File\tPASS" >> "!{meta.id}.Adapters_FastA_File.tsv"
     else
@@ -63,15 +63,15 @@ process TRIM_READS_TRIMMOMATIC {
     msg "INFO: $CNT_BROKEN total broken read pairs were saved as singletons" >&2
 
     echo -e "!{meta.id}\t${TRIMMO_DISCARD}\t${CNT_BROKEN}" \
-    > !{meta.id}.trimmomatic.tsv
+    > "!{meta.id}.trimmomatic.tsv"
 
     sed -i '1i Sample name\t# discarded reads\t# singleton reads' !{meta.id}.trimmomatic.tsv
 
-    cat !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq > !{meta.id}_single.fq
+    cat !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq > "!{meta.id}_single.fq"
 
     rm -f !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > !{meta.id}.Adapter-removed_FastQ_File.tsv
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.Adapter-removed_FastQ_File.tsv"
     for suff in R1.paired.fq R2.paired.fq; do
       if verify_minimum_file_size "!{meta.id}_${suff}" 'Adapter-removed FastQ Files' "!{params.min_filesize_fastq_adapters_removed}"; then
         echo -e "!{meta.id}\tAdapter-removed ($suff) FastQ File\tPASS" \

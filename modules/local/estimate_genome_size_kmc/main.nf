@@ -47,7 +47,7 @@ process ESTIMATE_GENOME_SIZE_KMC {
     # Report the estimated genome size
     msg "INFO: Estimated genome size of !{meta.id}: ${genome_size}"
 
-    echo -n "${genome_size}" > !{meta.id}.genome_size.txt
+    echo -n "${genome_size}" > "!{meta.id}.genome_size.txt"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

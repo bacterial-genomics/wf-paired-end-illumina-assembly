@@ -29,7 +29,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
         --gzip-compressed \
         --threads !{task.cpus} \
         !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} !{cleaned_fastq_files[2]} \
-        > !{meta.id}_kraken.output
+        > "!{meta.id}_kraken.output"
 
       msg "INFO: Creating Kraken Report"
       kraken-report \
@@ -38,7 +38,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
         > kraken.tab 2>&1 | tr '^M' '\n' 1>&2
 
       msg "INFO: Summarizing Kraken1"
-      summarize_kraken 'kraken.tab' > !{meta.id}.kraken_summary.tsv
+      summarize_kraken 'kraken.tab' > "!{meta.id}.kraken_summary.tsv"
 
       # Add header to kraken summary
       sed -i \
