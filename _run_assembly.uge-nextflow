@@ -53,11 +53,13 @@ while read -r line; do
       continue
     fi
 
-    # BBDuk java error for wonky input FastQ files
+    # BBDuk java errors
     if [[ ${process} =~ .*REMOVE_PHIX_BBDUK$ ]] \
       && [[ "${error}" =~ .*at.* ]]; then
       error=$(grep -A1 "java.lang" ${line}/.command.err | head -n 2 | tail -n 1)
-      if [[ ${error} =~ ^Mismatch.* ]]; then
+      if [[ ! ${error} ]]; then
+        continue
+      elif [[ ${error} =~ ^Mismatch.* ]]; then
         error=${error}
       else
         error=$(grep "java.lang" ${line}/.command.err | awk -F ': ' '{print $2}')
@@ -115,7 +117,7 @@ fi
 
 # Count lines in Summary.Illumina.GenomeCoverage.tab
 if [[ -f "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" ]]; then
-  num_assemblies=$(wc -l ${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab | awk '{print $1}')
+  num_assemblies=$(awk 'NR>1 {print $NR}' "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab")
 fi
 
 # E-mail completion status
@@ -144,6 +146,6 @@ elif [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
 fi
 
 # Move and symlink work directory
-date=$(date '+%Y-%m-%d_%H-%M-%S')
-mv ${OUT}/.work /scicomp/scratch/${USER}/work/ASM_${date}
-ln -s /scicomp/scratch/${USER}/work/ASM_${date} ${OUT}/.work
+# date=$(date '+%Y-%m-%d_%H-%M-%S')
+# mv ${OUT}/.work /scicomp/scratch/${USER}/work/ASM_${date}
+# ln -s /scicomp/scratch/${USER}/work/ASM_${date} ${OUT}/.work
