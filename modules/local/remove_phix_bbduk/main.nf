@@ -28,13 +28,13 @@ process REMOVE_PHIX_BBDUK {
     fi
 
     # Auto reformat FastQ files
-    msg "INFO: Auto reformatting FastQ files.."
-    for read in !{reads}; do
-      reformat.sh \
-        in="${read}" \
-        out="reformatted.${read}" \
-        tossbrokenreads=t
-    done
+    # msg "INFO: Auto reformatting FastQ files.."
+    # for read in !{reads}; do
+    #   reformat.sh \
+    #     in="${read}" \
+    #     out="reformatted.${read}" \
+    #     tossbrokenreads=t
+    # done
 
     # Remove PhiX
     msg "INFO: Removing PhiX using BBDuk.."
@@ -45,8 +45,8 @@ process REMOVE_PHIX_BBDUK {
       qout=33 \
       qin=auto \
       overwrite=t \
-      in="reformatted.!{reads[0]}" \
-      in2="reformatted.!{reads[1]}" \
+      in="!{reads[0]}" \
+      in2="!{reads[1]}" \
       threads=!{task.cpus} \
       out=!{meta.id}_noPhiX-R1.fsq \
       out2=!{meta.id}_noPhiX-R2.fsq \
