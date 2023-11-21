@@ -9,8 +9,7 @@ process OVERLAP_PAIRED_READS_FLASH {
 
     output:
     path(".command.{out,err}")
-    path("${meta.id}.overlap.tsv")
-    path("${meta.id}.clean-reads.tsv")
+    path("${meta.id}.{clean-reads,overlap}.tsv")
     path("versions.yml")                                               , emit: versions
     tuple val(meta), path("${meta.id}.Non-overlapping_FastQ_Files.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}*{paired,single}.fq.gz")          , emit: cleaned_fastq_files
@@ -20,7 +19,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     source bash_functions.sh
 
     # Determine read length based on the first 100 reads
-    echo -e "$(cat "!{fastq_pairs[0]}" | head -n 400 > read_R1_len.txt)"
+    cat "!{fastq_pairs[0]}" | head -n 400 > read_R1_len.txt
     READ_LEN=$(awk 'NR%4==2 {if(length > x) {x=length; y=$0}} END{print length(y)}' read_R1_len.txt)
 
     OVERLAP_LEN=$(echo | awk -v n=${READ_LEN} '{print int(n*0.8)}')
@@ -60,13 +59,15 @@ process OVERLAP_PAIRED_READS_FLASH {
 
         cat flash.extendedFrags.fastq >> "!{meta.id}_single.fq"
         rm flash.extendedFrags.fastq
+      else
+        cat "!{meta.id}_R2.paired.fq" | tail -n 4 >> "!{meta.id}_single.fq"
       fi
 
       msg "INFO: ${CNT_READS_OVERLAPPED:-0} pairs overlapped into singleton reads" >&2
-      echo -e "!{meta.id}\t${CNT_READS_OVERLAPPED:-0}" \
-        > "!{meta.id}.overlap.tsv"
 
-      sed -i '1i Sample name\t# overlapped reads' !{meta.id}.overlap.tsv
+      echo -e "Sample name\t# overlapped reads" > "!{meta.id}.overlap.tsv"
+      echo -e "!{meta.id}\t${CNT_READS_OVERLAPPED:-0}" \
+        >> "!{meta.id}.overlap.tsv"
     fi
 
     # Summarize final read set and compress
@@ -78,16 +79,14 @@ process OVERLAP_PAIRED_READS_FLASH {
     CNT_CLEANED_SINGLETON=$(echo $((${count_single}/4)))
     msg "INFO: Number of singletons cleaned: ${CNT_CLEANED_SINGLETON}"
 
-    echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS}\t${CNT_CLEANED_SINGLETON}" \
+    echo -e "Sample name\t# cleaned reads (paired FastQ)\t# cleaned reads (singletons)" \
       > "!{meta.id}.clean-reads.tsv"
+    echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS}\t${CNT_CLEANED_SINGLETON}" \
+      >> "!{meta.id}.clean-reads.tsv"
 
-    sed -i \
-      '1i Sample name\t# cleaned reads (paired FastQ)\t# cleaned reads (singletons)' \
-      !{meta.id}.clean-reads.tsv
-
-    gzip -f !{meta.id}_single.fq \
-      !{meta.id}_R1.paired.fq \
-      !{meta.id}_R2.paired.fq
+    gzip -9f "!{meta.id}_single.fq" \
+      "!{meta.id}_R1.paired.fq" \
+      "!{meta.id}_R2.paired.fq"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
