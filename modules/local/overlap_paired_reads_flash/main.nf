@@ -19,7 +19,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     source bash_functions.sh
 
     # Determine read length based on the first 100 reads
-    cat "!{fastq_pairs[0]}" | head -n 400 > read_R1_len.txt
+    echo "$(cat !{fastq_pairs[0]} | head -n 400)" > read_R1_len.txt
     READ_LEN=$(awk 'NR%4==2 {if(length > x) {x=length; y=$0}} END{print length(y)}' read_R1_len.txt)
 
     OVERLAP_LEN=$(echo | awk -v n=${READ_LEN} '{print int(n*0.8)}')
@@ -60,7 +60,7 @@ process OVERLAP_PAIRED_READS_FLASH {
         cat flash.extendedFrags.fastq >> "!{meta.id}_single.fq"
         rm flash.extendedFrags.fastq
       else
-        cat "!{meta.id}_R2.paired.fq" | tail -n 4 >> "!{meta.id}_single.fq"
+        echo "$(cat !{meta.id}_R2.paired.fq | tail -n 4)" >> "!{meta.id}_single.fq"
       fi
 
       msg "INFO: ${CNT_READS_OVERLAPPED:-0} pairs overlapped into singleton reads" >&2
@@ -75,7 +75,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     CNT_CLEANED_PAIRS=$(echo $((${count_R1}/4)))
     msg "INFO: Number of reads cleaned: ${CNT_CLEANED_PAIRS}"
 
-    count_single=$(echo $(cat !{meta.id}_single.fq | wc -l))
+    count_single=$(echo $(cat "!{meta.id}_single.fq" | wc -l))
     CNT_CLEANED_SINGLETON=$(echo $((${count_single}/4)))
     msg "INFO: Number of singletons cleaned: ${CNT_CLEANED_SINGLETON}"
 
