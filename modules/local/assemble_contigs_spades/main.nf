@@ -8,7 +8,7 @@ process ASSEMBLE_CONTIGS_SPADES {
     tuple val(meta), path(cleaned_fastq_files)
 
     output:
-    path("SPAdes/**")
+    path("SPAdes/${meta.id}/*.{fasta,log,gfa,gz}")
     path(".command.{out,err}")
     path("versions.yml")                                                       , emit: versions
     tuple val(meta), path("${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"), emit: qc_filecheck
@@ -73,8 +73,8 @@ process ASSEMBLE_CONTIGS_SPADES {
       SPAdes_output/params.txt
 
     # Most a few spades files into a new sample name dir for storage
-    mkdir -p SPAdes/!{meta.id}
-    mv -t SPAdes/!{meta.id} \
+    mkdir -p "SPAdes/!{meta.id}"
+    mv -t "SPAdes/!{meta.id}" \
       SPAdes_output/spades.log.gz \
       SPAdes_output/params.txt.gz \
       SPAdes_output/contigs.fasta \
@@ -82,10 +82,10 @@ process ASSEMBLE_CONTIGS_SPADES {
 
     # Move extra logfiles if exist
     if [ -f SPAdes_output/warnings.log ]; then
-      mv SPAdes_output/warnings.log SPAdes/!{meta.id}
+      mv SPAdes_output/warnings.log "SPAdes/!{meta.id}"
     fi
     if [ -f SPAdes_output/*of3-asm-attempt-failed.spades.log ]; then
-      mv SPAdes_output/*of3-asm-attempt-failed.spades.log SPAdes/!{meta.id}
+      mv SPAdes_output/*of3-asm-attempt-failed.spades.log "SPAdes/!{meta.id}"
     fi
 
     # Get process version information
