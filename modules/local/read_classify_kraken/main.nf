@@ -1,7 +1,6 @@
 process READ_CLASSIFY_KRAKEN_ONE {
 
     label "process_high"
-    label "process_high_memory"
     tag { "${meta.id}" }
     container "gregorysprenger/kraken@sha256:b5ab4b75fb197b16e81d8cc3878e08479bc7d105ac0b2e948e6f6a9985cfc93e"
 
@@ -11,8 +10,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
 
     output:
     path(".command.{out,err}")
-    path("${meta.id}.kraken_output.tab.gz")
-    path("${meta.id}.kraken_summary.tsv")
+    path("*.kraken_{output.tab,summary}*")
     path("versions.yml")                   , emit: versions
 
     shell:
@@ -43,8 +41,8 @@ process READ_CLASSIFY_KRAKEN_ONE {
 
       summarize_kraken 'kraken.tab' >> "!{meta.id}.kraken_summary.tsv"
 
-      mv kraken.tab !{meta.id}.kraken_output.tab
-      gzip !{meta.id}.kraken_output.tab
+      mv kraken.tab "!{meta.id}.kraken_output.tab"
+      gzip "!{meta.id}.kraken_output.tab"
     fi
 
     # Get process version information
