@@ -32,12 +32,10 @@ process READ_CLASSIFY_KRAKEN_TWO {
         !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} !{cleaned_fastq_files[2]}
 
       msg "INFO: Summarizing Kraken2"
-      summarize_kraken 'kraken2.tab' > "!{meta.id}.kraken2_summary.tsv"
+      echo -e "% Reads\t# Reads\tUnclassified\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads" \
+        > "!{meta.id}.kraken2_summary.tsv"
 
-      # Add header to kraken summary
-      sed -i \
-        '1i % Reads\t# Reads\tUnclassified\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads' \
-        !{meta.id}.kraken2_summary.tsv
+      summarize_kraken 'kraken2.tab' >> "!{meta.id}.kraken2_summary.tsv"
 
       mv kraken2.tab !{meta.id}.kraken2_output.tab
       gzip !{meta.id}.kraken2_output.tab
