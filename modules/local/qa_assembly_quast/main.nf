@@ -51,7 +51,7 @@ process QA_ASSEMBLY_QUAST {
       single=$(basename "!{cleaned_fastq_files[2]}" _single.fq.gz)
 
       # Verify each set of reads groups properly
-      nr_uniq_str=$(echo -e "${R1}\n${R2}\n${single}" | sort -u | wc -l)
+      nr_uniq_str=$(echo -e "${R1}\\n${R2}\\n${single}" | sort -u | wc -l)
       if [ "${nr_uniq_str}" -ne 1 ]; then
         msg "ERROR: improperly grouped ${R1} ${R2} ${single}" >&2
         exit 1
@@ -65,7 +65,7 @@ process QA_ASSEMBLY_QUAST {
     done
 
     # Get process version information
-    cat <<-"    END_VERSIONS" | sed -r 's/^ {4}//' > versions.yml
+    cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         quast: $(quast.py --version | awk 'NF>1{print $NF}')
     END_VERSIONS

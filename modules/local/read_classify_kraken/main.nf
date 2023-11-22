@@ -35,7 +35,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
       kraken-report \
         --db !{database} \
         !{meta.id}_kraken.output \
-        > kraken.tab 2>&1 | tr '^M' '\n' 1>&2
+        > kraken.tab 2>&1 | tr '^M' '\\n' 1>&2
 
       msg "INFO: Summarizing Kraken1"
       echo -e "% Reads\t# Reads\tUnclassified\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads" \
@@ -48,7 +48,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
     fi
 
     # Get process version information
-    cat <<-"    END_VERSIONS" | sed -r 's/^ {4}//' > versions.yml
+    cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         kraken: $(kraken --version | head -n 1 | awk 'NF>1{print $NF}')
     END_VERSIONS
