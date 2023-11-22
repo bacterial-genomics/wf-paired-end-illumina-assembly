@@ -15,7 +15,7 @@ module load nextflow
 nextflow \
   -log ${OUT}/pipeline_info/nextflow_log.${SCRIPT_NAME}.txt \
   run \
-  ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
+  ${LAB_HOME}/.dev/wf-paired-end-illumina-assembly/main.nf \
   -profile ${HPC} \
   --input ${IN} \
   --outdir ${OUT} \
@@ -117,7 +117,7 @@ fi
 
 # Count lines in Summary.Illumina.GenomeCoverage.tab
 if [[ -f "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" ]]; then
-  num_assemblies=$(awk 'NR>1 {print $NR}' "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab")
+  num_assemblies=$(awk 'END {print NR-1}' "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab")
 fi
 
 # E-mail completion status
