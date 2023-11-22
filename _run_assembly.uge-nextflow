@@ -44,7 +44,7 @@ while read -r line; do
   else
     # Workflow ran some processes
     sample_name=$(grep "nf-" ${line}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
-    process=$(grep "nf-" ${line}/.command.run | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
+    process=$(grep "NEXTFLOW TASK" ${line}/.command.run | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
     error=$(tail -n 1 ${line}/.command.err | sed -e 's/\[[^][]*\] //g')
 
     # Kraken 2 places "Loading database information... done." in error log
