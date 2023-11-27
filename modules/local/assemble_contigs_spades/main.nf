@@ -22,35 +22,17 @@ process ASSEMBLE_CONTIGS_SPADES {
 
     # Run SPAdes assembler; try up to 3 times
     msg "INFO: Assembling contigs using SPAdes"
-    failed=0
-    while [[ ! -f SPAdes/contigs.fasta ]] && [ ${failed} -lt 2 ]; do
-      RAMSIZE=$(echo !{task.memory} | cut -d ' ' -f 1)
+    RAMSIZE=$(echo !{task.memory} | cut -d ' ' -f 1)
 
-      if [ ${failed} -gt 0 ]; then
-        msg "ERROR: assembly file not produced by SPAdes for !{meta.id}" >&2
-        mv -f SPAdes/spades.log \
-          SPAdes/"${failed}"of3-asm-attempt-failed.spades.log 2> /dev/null
-        msg "INFO: SPAdes failure ${failed}; retrying assembly for !{meta.id}" >&2
-
-        spades.py \
-          --restart-from last \
-          -o SPAdes \
-          -t !{task.cpus} >&2
-
-      else
-
-        spades.py \
-          -1 !{cleaned_fastq_files[0]} \
-          -2 !{cleaned_fastq_files[1]} \
-          -s !{cleaned_fastq_files[2]} \
-          -o SPAdes \
-          -k !{params.spades_kmer_sizes} \
-          !{mode} \
-          --memory "${RAMSIZE}" \
-          --threads !{task.cpus}
-      fi
-      failed=$(( ${failed}+1 ))
-    done
+    spades.py \
+      -1 !{cleaned_fastq_files[0]} \
+      -2 !{cleaned_fastq_files[1]} \
+      -s !{cleaned_fastq_files[2]} \
+      -o SPAdes \
+      -k !{params.spades_kmer_sizes} \
+      !{mode} \
+      --memory "${RAMSIZE}" \
+      --threads !{task.cpus}
 
     # Verify file output
     echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
@@ -82,9 +64,6 @@ process ASSEMBLE_CONTIGS_SPADES {
     if [ -f SPAdes/warnings.log ]; then
       mv SPAdes/warnings.log "!{meta.id}-!{meta.assembler}_warnings.log"
     fi
-    # if [ -f SPAdes/*of3-asm-attempt-failed.spades.log ]; then
-    #   mv SPAdes/*of3-asm-attempt-failed.spades.log "SPAdes/!{meta.id}"
-    # fi
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
