@@ -8,9 +8,9 @@ process INFILE_HANDLING_UNIX {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                             , emit: versions
-    tuple val(meta), path(reads)                    , emit: input
-    path "${meta.id}.Raw_Initial_FastQ_File.tsv"   , emit: qc_filecheck
+    path("versions.yml")                                          , emit: versions
+    tuple val(meta), path(reads)                                  , emit: input
+    tuple val(meta), path("${meta.id}.Raw_Initial_FastQ_File.tsv"), emit: qc_filecheck
 
     shell:
     '''
@@ -19,14 +19,16 @@ process INFILE_HANDLING_UNIX {
     msg "INFO: Read 1: !{reads[0]}"
     msg "INFO: Read 2: !{reads[1]}"
 
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.Raw_Initial_FastQ_File.tsv"
+
     i=1
     for fastq in !{reads}; do
       if verify_minimum_file_size "${fastq}" 'Raw Initial FastQ Files' "!{params.min_filesize_fastq_input}"; then
         echo -e "!{meta.id}\tRaw Initial FastQ (R${i}) File\tPASS" \
-        >> !{meta.id}.Raw_Initial_FastQ_File.tsv
+          >> "!{meta.id}.Raw_Initial_FastQ_File.tsv"
       else
         echo -e "!{meta.id}\tRaw Initial FastQ (R${i}) File\tFAIL" \
-        >> !{meta.id}.Raw_Initial_FastQ_File.tsv
+          >> "!{meta.id}.Raw_Initial_FastQ_File.tsv"
       fi
       ((i++))
     done

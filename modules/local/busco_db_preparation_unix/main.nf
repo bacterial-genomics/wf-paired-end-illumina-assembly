@@ -9,8 +9,8 @@ process BUSCO_DB_PREPARATION_UNIX {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml", emit: versions
-    path("${dir}")   , emit: db
+    path("versions.yml"), emit: versions
+    path("${dir}")      , emit: db
 
     shell:
     db_name = database.getSimpleName()

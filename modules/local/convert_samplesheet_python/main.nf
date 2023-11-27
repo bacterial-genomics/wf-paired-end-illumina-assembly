@@ -7,8 +7,8 @@ process CONVERT_SAMPLESHEET_PYTHON {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"   , emit: versions
-    path "samplesheet.tsv", emit: converted_samplesheets
+    path("versions.yml")      , emit: versions
+    path("samplesheet.tsv")   , emit: converted_samplesheets
 
     shell:
     '''

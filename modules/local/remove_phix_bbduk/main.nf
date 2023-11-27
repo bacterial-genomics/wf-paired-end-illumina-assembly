@@ -10,30 +10,31 @@ process REMOVE_PHIX_BBDUK {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                                                , emit: versions
-    path "${meta.id}.Summary.PhiX.tsv"                                                 , emit: phix_summary
-    path("${meta.id}.PhiX*_File.tsv")                                                  , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}_noPhiX-R1.fsq"), path("${meta.id}_noPhiX-R2.fsq"), emit: fastq_phix_removed
+    path("versions.yml")                                 , emit: versions
+    path("${meta.id}.Summary.PhiX.tsv")                  , emit: phix_summary
+    tuple val(meta), path("${meta.id}.PhiX*_File.tsv")   , emit: qc_filecheck
+    tuple val(meta), path("${meta.id}_noPhiX-R{1,2}.fsq"), emit: fastq_phix_removed
 
     shell:
     '''
     source bash_functions.sh
 
     # Verify PhiX reference file size
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.PhiX_Genome_File.tsv"
     if verify_minimum_file_size !{phix_reference_file} 'PhiX Genome' "!{params.min_filesize_phix_genome}"; then
-      echo -e "!{meta.id}\tPhiX Genome\tPASS" >> !{meta.id}.PhiX_Genome_File.tsv
+      echo -e "!{meta.id}\tPhiX Genome\tPASS" >> "!{meta.id}.PhiX_Genome_File.tsv"
     else
-      echo -e "!{meta.id}\tPhiX Genome\tFAIL" >> !{meta.id}.PhiX_Genome_File.tsv
+      echo -e "!{meta.id}\tPhiX Genome\tFAIL" >> "!{meta.id}.PhiX_Genome_File.tsv"
     fi
 
     # Auto reformat FastQ files
-    msg "INFO: Auto reformatting FastQ files.."
-    for read in !{reads}; do
-      reformat.sh \
-        in="${read}" \
-        out="reformatted.${read}" \
-        tossbrokenreads=t
-    done
+    # msg "INFO: Auto reformatting FastQ files.."
+    # for read in !{reads}; do
+    #   reformat.sh \
+    #     in="${read}" \
+    #     out="reformatted.${read}" \
+    #     tossbrokenreads=t
+    # done
 
     # Remove PhiX
     msg "INFO: Removing PhiX using BBDuk.."
@@ -44,20 +45,21 @@ process REMOVE_PHIX_BBDUK {
       qout=33 \
       qin=auto \
       overwrite=t \
-      in="reformatted.!{reads[0]}" \
-      in2="reformatted.!{reads[1]}" \
+      in="!{reads[0]}" \
+      in2="!{reads[1]}" \
       threads=!{task.cpus} \
       out=!{meta.id}_noPhiX-R1.fsq \
       out2=!{meta.id}_noPhiX-R2.fsq \
       ref="!{phix_reference_file}"
 
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.PhiX-removed_FastQ_File.tsv"
     for suff in R1.fsq R2.fsq; do
       if verify_minimum_file_size "!{meta.id}_noPhiX-${suff}" 'PhiX-removed FastQ Files' "!{params.min_filesize_fastq_phix_removed}"; then
         echo -e "!{meta.id}\tPhiX-removed FastQ ($suff) File\tPASS" \
-          >> !{meta.id}.PhiX-removed_FastQ_File.tsv
+          >> "!{meta.id}.PhiX-removed_FastQ_File.tsv"
       else
         echo -e "!{meta.id}\tPhiX-removed FastQ ($suff) File\tFAIL" \
-          >> !{meta.id}.PhiX-removed_FastQ_File.tsv
+          >> "!{meta.id}.PhiX-removed_FastQ_File.tsv"
       fi
     done
 
@@ -113,8 +115,8 @@ process REMOVE_PHIX_BBDUK {
       ${TOT_BASES}
       "
 
-    echo -e $SUMMARY_HEADER > !{meta.id}.Summary.PhiX.tsv
-    echo -e $SUMMARY_OUTPUT >> !{meta.id}.Summary.PhiX.tsv
+    echo -e $SUMMARY_HEADER > "!{meta.id}.Summary.PhiX.tsv"
+    echo -e $SUMMARY_OUTPUT >> "!{meta.id}.Summary.PhiX.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

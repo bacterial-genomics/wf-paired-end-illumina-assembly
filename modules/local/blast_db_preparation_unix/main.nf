@@ -9,17 +9,20 @@ process BLAST_DB_PREPARATION_UNIX {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                     , emit: versions
-    tuple val(db_name), path("database/16S_ribosomal_RNA.*"), emit: db
+    path("versions.yml")                  , emit: versions
+    tuple val(db_name), path("database/*"), emit: db
 
     shell:
     db_name = "16S_ribosomal_RNA"
     '''
-    mkdir -p db_tmp
-    tar -xzf !{database} -C db_tmp/
-
     mkdir -p database
-    mv `find db_tmp/ -name "16S_ribosomal_RNA*"` database/
+    tar -xzf !{database} -C database/
+
+    # Make sure database contains 16S_ribosomal_RNA files
+    if [[ $(find database/ -type f -name "16S_ribosomal_RNA*" | wc -l) -lt 1 ]]; then
+        msg "ERROR: Missing 16S ribosomal RNA database files from NCBI BLAST!"
+        exit 1
+    fi
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

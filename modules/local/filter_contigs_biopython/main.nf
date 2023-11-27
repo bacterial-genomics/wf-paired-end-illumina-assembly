@@ -4,11 +4,11 @@ process FILTER_CONTIGS_BIOPYTHON {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-    tuple val(meta), path(R1), path(R2), path(single), path(contigs)
+    tuple val(meta), path(contigs)
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                , emit: versions
+    path("versions.yml")                                                 , emit: versions
     tuple val(meta), path("${meta.id}-${meta.assembler}.uncorrected.fna"), emit: uncorrected_contigs
 
     shell:

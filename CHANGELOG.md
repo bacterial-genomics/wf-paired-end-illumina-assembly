@@ -3,6 +3,39 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v2.0.3 - November 27, 2023
+
+### `Added`
+
+- Catching of errors in bash runner scripts for BBDuk and SPAdes.
+- Add sample name and assembler name to outputs.
+- Added and sorted error codes in bash runner script to ignore if process is resubmitted and completes.
+- Allow output of "fastq" or "fq" files from subsampled reads module.
+- Within rosalind_hpc.config, resubmit SPAdes if the exit code is anything other than zero.
+
+### `Fixed`
+
+- Fixed parsing of 16S BLAST database input so that results have species names.
+- Quast and Kraken1 software versions information is now parsed correctly.
+- Bash runner scripts are updated to correctly parse run information for errors.
+- Fixed publishDir for SPAdes and Kraken1 so that output files are placed into outdir.
+- Concatenation of QC filechecks to create one large summary.
+- Removal of input reads if reads are subsampled to avoid original and subsampled reads to be passed to downstream processes.
+
+### `Updated`
+
+- Ignore header when counting number of lines in genome coverage summary file within bash runner script.
+- Changed number of retries for SPAdes in rosalind_hpc.config to 5.
+- Removed non-working loop in SPAdes module as the process should be resubmitted to abide by resource constraints.
+- Changed rosalind_hpc.config high memory parameter and allow memory to be increased for resubmissions.
+- Consolidated input and outputs for each module.
+- Updated QC filecheck function to remove failed inputs from downstream processes without terminating entire workflow.
+- Parsed out meta information when collecting outputfiles to create a concatenated summary file.
+- Added the addition of headers to QC filechecks within each module.
+- Dropped forced reformatting of FastQ files within BBDuk module.
+
+### `Deprecated`
+
 ## v2.0.2 - November 16, 2023
 
 ### `Added`

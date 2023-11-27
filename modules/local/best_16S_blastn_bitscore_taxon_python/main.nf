@@ -8,11 +8,11 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
 
     output:
     path(".command.{out,err}")
-    path "${meta.id}-${meta.assembler}.blast.tsv.gz"
-    path "versions.yml"                                             , emit: versions
-    path "${meta.id}-${meta.assembler}.Summary.16S.tab"             , emit: blast_summary
-    path "${meta.id}-${meta.assembler}.16S-top-species.tsv"         , emit: top_blast_species
-    path "${meta.id}-${meta.assembler}.Filtered_16S_BLASTn_File.tsv", emit: qc_filecheck
+    path("${meta.id}-${meta.assembler}.blast.tsv.gz")
+    path("versions.yml")                                                              , emit: versions
+    tuple val(meta), path("${meta.id}-${meta.assembler}.Summary.16S.tab")             , emit: blast_summary
+    tuple val(meta), path("${meta.id}-${meta.assembler}.16S-top-species.tsv")         , emit: top_blast_species
+    tuple val(meta), path("${meta.id}-${meta.assembler}.Filtered_16S_BLASTn_File.tsv"), emit: qc_filecheck
 
     shell:
     '''
@@ -25,9 +25,11 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
       -c !{params.filter_blast_column} \
       -s !{params.filter_blast_bitscore}
 
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
+
     if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.blast.tab" 'Filtered 16S BLASTn File' "!{params.min_filesize_filtered_blastn}"; then
       echo -e "!{meta.id}\tFiltered 16S BLASTn File\tPASS" \
-        > "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
+        >> "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
 
       # Report the top alignment match data: %nucl iden, %query cov aln, taxon
       awk -F $'\t' 'BEGIN{OFS=FS}; {print $1, $3 "% identity", $13 "% alignment", $14}' \
@@ -42,7 +44,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
 
     else
       echo -e "!{meta.id}\tFiltered 16S BLASTn File\tFAIL" \
-        > "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
+        >> "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
 
       # Empty files to avoid errors
       touch "!{meta.id}-!{meta.assembler}.16S-top-species.tsv" \

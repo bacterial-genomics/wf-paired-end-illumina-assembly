@@ -8,8 +8,8 @@ process MERGE_LANE_FILES_PYTHON {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"              , emit: versions
-    path "lanes_merged_samplesheet.*", emit: lanes_merged_samplesheet
+    path("versions.yml")              , emit: versions
+    path("lanes_merged_samplesheet.*"), emit: lanes_merged_samplesheet
 
     shell:
     '''

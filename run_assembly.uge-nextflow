@@ -82,9 +82,9 @@ prompt_if_previous_nextflow_run() {
       echo -e "Continuing to submit samples...${COLOR_OFF}"
 
       # Rename .work directory
-      if [[ -d "${OUT}/.work" ]]; then
-        mv "${OUT}/.work" "${OUT}/.work_$(basename $(readlink -f ${OUT}/.work))"
-      fi
+      # if [[ -d "${OUT}/.work" ]]; then
+      #   mv "${OUT}/.work" "${OUT}/.work_$(basename $(readlink -f ${OUT}/.work))"
+      # fi
     else
       # If user doesn't want to continue, ask for a different output path
       prompt_new_outdir

@@ -8,7 +8,7 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                             , emit: versions
+    path("versions.yml")                                  , emit: versions
     tuple val(meta), path("${meta.id}.input_total_bp.txt"), emit: input_total_bp
 
     shell:
@@ -39,7 +39,7 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
       exit 1
     fi
 
-    echo -n "${R1R2_total_bp}" > !{meta.id}.input_total_bp.txt
+    echo -n "${R1R2_total_bp}" > "!{meta.id}.input_total_bp.txt"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

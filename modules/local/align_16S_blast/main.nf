@@ -9,9 +9,9 @@ process ALIGN_16S_BLAST {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                            , emit: versions
-    path "${meta.id}-${meta.assembler}.16S_BLASTn_Output_File.tsv" , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}-${meta.assembler}.blast.tsv"), emit: blast_output
+    path("versions.yml")                                                            , emit: versions
+    tuple val(meta), path("${meta.id}-${meta.assembler}.16S_BLASTn_Output_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}-${meta.assembler}.blast.tsv")                 , emit: blast_output
 
     shell:
     '''
@@ -19,19 +19,24 @@ process ALIGN_16S_BLAST {
 
     msg "INFO: Performing BLASTn alignments"
 
+    export BLASTDB=database
+
     blastn \
       -word_size 10 \
       -task blastn \
-      -db "database/!{db_name}" \
+      -db "!{db_name}" \
       -num_threads "!{task.cpus}" \
       -query "!{barnapp_extracted_rna}" \
       -out "!{meta.id}-!{meta.assembler}.blast.tsv" \
       -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovhsp ssciname"
 
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.blast.tsv" '16S BLASTn Output File' "!{params.min_filesize_blastn_output}"; then
-      echo -e "!{meta.id}\t16S BLASTn Output File\tPASS" > "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
+      echo -e "!{meta.id}\t16S BLASTn Output File\tPASS"  \
+        >> "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     else
-      echo -e "!{meta.id}\t16S BLASTn Output File\tFAIL" > "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
+      echo -e "!{meta.id}\t16S BLASTn Output File\tFAIL" \
+        >> "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     fi
 
     # Get process version information

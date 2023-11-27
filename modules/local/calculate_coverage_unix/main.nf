@@ -8,8 +8,8 @@ process CALCULATE_COVERAGE_UNIX {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                   , emit: versions
-    path "${meta.id}-${meta.assembler}.GenomeCoverage.tsv", emit: genome_coverage
+    path("versions.yml")                                   , emit: versions
+    path("${meta.id}-${meta.assembler}.GenomeCoverage.tsv"), emit: genome_coverage
 
     shell:
     '''
