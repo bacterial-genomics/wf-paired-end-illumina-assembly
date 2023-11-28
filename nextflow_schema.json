@@ -199,7 +199,7 @@
                     "hidden": true,
                     "description": "Minimum file size of FastQ files after PhiX is removed."
                 },
-                "adapters_reference": {
+                "adapter_reference": {
                     "type": "string",
                     "default": "adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas",
                     "description": "File containing Illumina adapters in FastA format.",
