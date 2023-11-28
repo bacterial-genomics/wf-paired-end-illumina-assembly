@@ -17,7 +17,7 @@ process EXTRACT_16S_BARRNAP {
     source bash_functions.sh
 
     if [[ ! -f "!{biopython_extracted_rna}" ]] || [[ ! -s "!{biopython_extracted_rna}" ]]; then
-      msg "INFO: Absent 16S rRNA gene prokka_genbank_file in !{prokka_genbank_file}" >&2
+      msg "INFO: Absent 16S rRNA gene annotation in !{prokka_genbank_file}" >&2
       msg 'Running barrnap' >&2
 
       barrnap !{assembly} | grep "Name=16S_rRNA;product=16S" > "!{meta.id}-!{meta.assembler}.gff"
