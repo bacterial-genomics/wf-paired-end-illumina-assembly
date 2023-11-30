@@ -31,11 +31,10 @@ nextflow \
 # Get nextflow run name
 run_name=$(grep "Launching" ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME} | cut -d '[' -f 2 | cut -d ']' -f 1)
 
+time_stamp=$(date '+%Y-%b-%d %a %H:%M:%S')
+
 # Read each line from nextflow log, find info, and add to errors.tsv
 while read -r line; do
-  # Get time stamp
-  time_stamp=$(date '+%Y-%b-%d %a %H:%M:%S')
-
   # If process is already running, clean up error
   if [[ "${line}" =~ ^Unable[[:space:]]to[[:space:]]acquire[[:space:]]lock.* ]]; then
     error="You are trying to resume the execution of an already running pipeline."
@@ -97,6 +96,39 @@ while read -r line; do
     fi
   fi
 done < <(nextflow log ${run_name} -filter 'status == "FAILED"')
+
+# Look for errors from process EXTRACT_16S_BIOPYTHON
+biopython_rna_errors=( $(find ${OUT}/.work -type f -name ".command.err" -exec grep -l "ERROR: \['16S ribosomal RNA'\]" '{}' \;) )
+if [[ $biopython_rna_errors ]]; then
+  for line in ${biopython_rna_errors[@]}; do
+    work_dir=$(dirname ${line})
+    error=$(tail -n 1 ${line} | sed -e 's/[][]//g' | awk -F '/' '{print $1 $NF}')
+    sample_name=$(grep "nf-" ${work_dir}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
+    process=$(grep "NEXTFLOW TASK" ${work_dir}/.command.run | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
+
+    # Append to errors.tsv
+    echo -e "${sample_name}\t${process}\t${error}\t${work_dir}\t${time_stamp}\t${run_name}" >> errors.tsv
+  done
+fi
+
+# Parse HPC stdout file for QC check failures
+QC_FAILURES=($(awk '/QC check failed/ {print $NF}' ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME}))
+if [[ $QC_FAILURES ]]; then
+  # Loop over each QC failure
+  for f in ${QC_FAILURES[@]}; do
+    # Get work directory
+    short_wd=$(grep $f ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME} | grep -B1 "QC check failed" | head -n 1 | awk -F '[][]' '{print $2}')
+    wd_path=$(realpath ${OUT}/.work/${wd}*)
+
+    # Get first error
+    error=$(grep "ERROR" ${wd_path}/.command.err | head -n 1 | sed -e 's/\[[^][]*\] //g')
+
+    process=$(grep "NEXTFLOW TASK" ${wd_path}/.command.run | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
+
+    # Append to errors.tsv
+    echo -e "${f}\t${process}\t${error}\t${wd_path}\t${time_stamp}\t${run_name}" >> errors.tsv
+  done
+fi
 
 # If errors.tsv found..
 if [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
