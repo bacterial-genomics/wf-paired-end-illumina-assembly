@@ -192,7 +192,8 @@ def qcfilecheck(qcfile, inputfile) {
                 qc.flatten().each{ data += it.readLines() }
 
                 if ( data.any{ it.contains('FAIL') } ) {
-                    log.warn("QC check failed for sample: ${data.last().split('\t').first()}")
+                    line = data.last().split('\t')
+                    log.warn("${line[1]} QC check failed for sample ${line.first()}")
                 } else {
                     [ meta, input ]
                 }
