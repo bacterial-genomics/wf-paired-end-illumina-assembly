@@ -107,7 +107,7 @@ if [[ $biopython_rna_errors ]]; then
     process=$(grep "NEXTFLOW TASK" ${work_dir}/.command.run | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
 
     # Append to errors.tsv
-    echo -e "${sample_name}\t${process}\t${error}\t${work_dir}\t${time_stamp}\t${run_name}" >> errors.tsv
+    echo -e "${sample_name}\t${process}\t${error}\t${work_dir}\t${time_stamp}\t${run_name}" >> ${OUT}/pipeline_info/errors.tsv
   done
 fi
 
@@ -126,7 +126,7 @@ if [[ $QC_FAILURES ]]; then
     process=$(grep "NEXTFLOW TASK" ${wd_path}/.command.run | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
 
     # Append to errors.tsv
-    echo -e "${f}\t${process}\t${error}\t${wd_path}\t${time_stamp}\t${run_name}" >> errors.tsv
+    echo -e "${f}\t${process}\t${error}\t${wd_path}\t${time_stamp}\t${run_name}" >> ${OUT}/pipeline_info/errors.tsv
   done
 fi
 
@@ -136,7 +136,7 @@ if [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   sed -i '1i Sample Name\tProcess\tError\tError Directory\tTimestamp\tRun Name' ${OUT}/pipeline_info/errors.tsv
 
   # Remove duplicate lines and lines that have an empty first column
-  awk '!a[$0]++' ${OUT}/pipeline_info/errors.tsv \
+  awk -F '\t' '!_[$1,$2,$3,$6]++' ${OUT}/pipeline_info/errors.tsv \
     | awk -F '\t' '$1{print $0}' \
     > ${OUT}/pipeline_info/errors_new.tsv
 
