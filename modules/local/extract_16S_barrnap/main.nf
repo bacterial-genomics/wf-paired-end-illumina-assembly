@@ -30,7 +30,7 @@ process EXTRACT_16S_BARRNAP {
 
       if [[ $(grep -c "Name=16S_rRNA;product=16S" "!{meta.id}-!{meta.assembler}.gff") -eq 0 ]]; then
         msg "INFO: Barrnap was unable to locate a 16S rRNA gene sequence in !{assembly}" >&2
-        exit 2
+        exit 1
       fi
 
       bedtools getfasta \
