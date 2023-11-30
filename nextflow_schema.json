@@ -526,6 +526,7 @@
                     "hidden": true,
                     "description": "The output directory where process module containers and/or conda environments will be saved. You have to use absolute paths to storage on Cloud infrastructure."
                 }
+            }
         },
         "institutional_config_options": {
             "title": "Institutional config options",
@@ -693,11 +694,6 @@
                     "description": "Show all params when using `--help`",
                     "hidden": true,
                     "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters."
-                },
-                "schema_ignore_params": {
-                    "type": "string",
-                    "hidden": true,
-                    "description": "List of parameters to ignore warnings of when not in use."
                 }
             }
         }
