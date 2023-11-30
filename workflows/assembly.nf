@@ -439,7 +439,7 @@ workflow ASSEMBLY {
     EXTRACT_16S_BARRNAP (
         ch_genbank
             .join(ASSEMBLE_CONTIGS.out.assembly_file)
-            .join(EXTRACT_16S_BIOPYTHON.out.biopython_extracted_rna.ifEmpty([]))
+            .join(EXTRACT_16S_BIOPYTHON.out.biopython_extracted_rna)
     )
     ch_versions = ch_versions.mix(EXTRACT_16S_BARRNAP.out.versions)
     ch_extracted_rna = qcfilecheck(EXTRACT_16S_BARRNAP.out.qc_filecheck, EXTRACT_16S_BARRNAP.out.barnapp_extracted_rna)
