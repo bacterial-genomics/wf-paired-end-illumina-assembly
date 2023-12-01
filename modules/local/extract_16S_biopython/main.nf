@@ -9,7 +9,7 @@ process EXTRACT_16S_BIOPYTHON {
     output:
     path(".command.{out,err}")
     path("versions.yml")                                        , emit: versions
-    tuple val(meta), path("16S.${meta.id}-${meta.assembler}.fa"), emit: biopython_extracted_rna
+    tuple val(meta), path("16S.${meta.id}-${meta.assembler}.fa"), emit: extracted_rna
 
     shell:
     '''

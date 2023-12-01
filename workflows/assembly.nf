@@ -439,10 +439,10 @@ workflow ASSEMBLY {
     // PROCESS: Extract 16S rRNA gene sequences with Barrnap if missing from 16S_EXTRACT_BIOPYTHON
     EXTRACT_16S_BARRNAP (
         ASSEMBLE_CONTIGS.out.assembly_file
-            .join(EXTRACT_16S_BIOPYTHON.out.biopython_extracted_rna)
+            .join(EXTRACT_16S_BIOPYTHON.out.extracted_rna)
     )
     ch_versions = ch_versions.mix(EXTRACT_16S_BARRNAP.out.versions)
-    ch_extracted_rna = qcfilecheck(EXTRACT_16S_BARRNAP.out.qc_filecheck, EXTRACT_16S_BARRNAP.out.barnapp_extracted_rna)
+    ch_extracted_rna = qcfilecheck(EXTRACT_16S_BARRNAP.out.qc_filecheck, EXTRACT_16S_BARRNAP.out.extracted_rna)
 
     // Prepare BLAST database for use
     if ( ch_blast_db_file ) {
