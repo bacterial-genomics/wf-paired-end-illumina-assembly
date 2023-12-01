@@ -8,11 +8,11 @@ process QA_ASSEMBLY_QUAST {
     tuple val(meta), path(cleaned_fastq_files), path(assembly)
 
     output:
-    path(".command.{out,err}")
-    path("versions.yml")                                                                                                               , emit: versions
+    tuple val(meta), path("${meta.id}-${meta.assembler}.QuastSummary.tsv"), path("${meta.id}-${meta.assembler}.CleanedReads-Bases.tsv"), emit: qa_summaries
     path("${meta.id}-${meta.assembler}.QuastSummary.tsv")                                                                              , emit: summary_assemblies
     path("${meta.id}-${meta.assembler}.CleanedReads-Bases.tsv")                                                                        , emit: summary_reads
-    tuple val(meta), path("${meta.id}-${meta.assembler}.QuastSummary.tsv"), path("${meta.id}-${meta.assembler}.CleanedReads-Bases.tsv"), emit: qa_summaries
+    path(".command.{out,err}")
+    path("versions.yml")                                                                                                               , emit: versions
 
     shell:
     '''

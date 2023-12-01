@@ -7,9 +7,9 @@ process MLST_MLST {
     tuple val(meta), path(assembly)
 
     output:
+    path("${meta.id}-${meta.assembler}.Summary.MLST.tab"), emit: summary_mlst
     path(".command.{out,err}")
     path("versions.yml")                                 , emit: versions
-    path("${meta.id}-${meta.assembler}.Summary.MLST.tab"), emit: summary_mlst
 
     shell:
     '''

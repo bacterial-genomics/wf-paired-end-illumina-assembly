@@ -8,9 +8,9 @@ process GTDBTK_DB_PREPARATION_UNIX {
     path(database)
 
     output:
+    tuple val("${database.getSimpleName()}"), path("database/*"), emit: db
     path(".command.{out,err}")
     path("versions.yml")                                        , emit: versions
-    tuple val("${database.getSimpleName()}"), path("database/*"), emit: db
 
     shell:
     '''

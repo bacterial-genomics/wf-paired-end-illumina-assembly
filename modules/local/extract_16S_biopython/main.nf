@@ -7,9 +7,9 @@ process EXTRACT_16S_BIOPYTHON {
     tuple val(meta), path(prokka_genbank_file), path(assembly)
 
     output:
+    tuple val(meta), path("16S.${meta.id}-${meta.assembler}.fa"), emit: extracted_rna
     path(".command.{out,err}")
     path("versions.yml")                                        , emit: versions
-    tuple val(meta), path("16S.${meta.id}-${meta.assembler}.fa"), emit: extracted_rna
 
     shell:
     '''

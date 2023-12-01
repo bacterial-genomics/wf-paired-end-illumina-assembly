@@ -8,11 +8,11 @@ process MAP_CONTIGS_BWA {
     tuple val(meta), path(cleaned_fastq_files), path(uncorrected_contigs)
 
     output:
-    path(".command.{out,err}")
-    path("versions.yml")                                                                   , emit: versions
-    tuple val(meta), path("${meta.id}-${meta.assembler}.fna")                              , emit: assembly
     tuple val(meta), path("${meta.id}-${meta.assembler}.{Filtered,Binary,Final}*_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}-${meta.assembler}.{paired,single}.bam")              , emit: bam
+    tuple val(meta), path("${meta.id}-${meta.assembler}.fna")                              , emit: assembly
+    path(".command.{out,err}")
+    path("versions.yml")                                                                   , emit: versions
 
     shell:
     '''

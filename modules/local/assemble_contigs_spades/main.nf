@@ -8,11 +8,11 @@ process ASSEMBLE_CONTIGS_SPADES {
     tuple val(meta), path(cleaned_fastq_files)
 
     output:
+    tuple val(meta), path("${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}-${meta.assembler}_contigs.fasta")        , emit: contigs
     path("${meta.id}-${meta.assembler}*.{log,gfa,gz,fasta}")
     path(".command.{out,err}")
     path("versions.yml")                                                       , emit: versions
-    tuple val(meta), path("${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"), emit: qc_filecheck
-    tuple val(meta), path("${meta.id}-${meta.assembler}_contigs.fasta")        , emit: contigs
 
     shell:
     mode_list = ["--isolate", "--sc", "--meta", "--plasmid", "--rna", "--metaviral", "--metaplasmid", "--corona"]

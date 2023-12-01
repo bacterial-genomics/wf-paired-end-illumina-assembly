@@ -8,10 +8,10 @@ process ASSEMBLE_CONTIGS_SKESA {
     tuple val(meta), path(cleaned_fastq_files)
 
     output:
-    path(".command.{out,err}")
-    path("versions.yml")                                                       , emit: versions
     tuple val(meta), path("${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("contigs.fasta")                                     , emit: contigs
+    path(".command.{out,err}")
+    path("versions.yml")                                                       , emit: versions
 
     shell:
     allow_snps = params.skesa_allow_snps ? "--allow snps" : ""
