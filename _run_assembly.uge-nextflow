@@ -118,7 +118,7 @@ if [[ $QC_FAILURES ]]; then
   for f in ${QC_FAILURES[@]}; do
     # Get work directory
     short_wd=$(grep $f ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME} | grep -B1 "QC check failed" | head -n 1 | awk -F '[][]' '{print $2}')
-    wd_path=$(realpath ${OUT}/.work/${wd}*)
+    wd_path=$(realpath ${OUT}/.work/${short_wd}*)
 
     # Get first error
     error=$(grep "ERROR" ${wd_path}/.command.err | head -n 1 | sed -e 's/\[[^][]*\] //g')
