@@ -8,16 +8,12 @@
                     "busco": {
                         "branch": "master",
                         "git_sha": "726ee59cd9360a965d96ea9ea8770f16b8ddd6cc",
-                        "installed_by": [
-                            "modules"
-                        ]
+                        "installed_by": ["modules"]
                     },
                     "gtdbtk/classifywf": {
                         "branch": "master",
                         "git_sha": "c67eaf89682a12966f60008a8fa30f5dd29239df",
-                        "installed_by": [
-                            "modules"
-                        ]
+                        "installed_by": ["modules"]
                     }
                 }
             },
