@@ -4,7 +4,7 @@ process EXTRACT_16S_BARRNAP {
     container "snads/barrnap@sha256:e22cbd789c36d5626460feb6c7e5f6f7d55c8628dacae68ba0da30884195a837"
 
     input:
-    tuple val(meta), path(prokka_genbank_file), path(assembly), path(biopython_extracted_rna)
+    tuple val(meta), path(assembly), path(biopython_extracted_rna)
 
     output:
     path(".command.{out,err}")
@@ -17,7 +17,7 @@ process EXTRACT_16S_BARRNAP {
     source bash_functions.sh
 
     if [[ ! -s "!{biopython_extracted_rna}" ]]; then
-      msg "INFO: Absent 16S rRNA gene annotation in !{prokka_genbank_file}" >&2
+      msg "INFO: Absent 16S rRNA gene annotation in !{meta.id}-!{meta.assembler}.gbk" >&2
       msg 'Running barrnap' >&2
 
       rm "!{biopython_extracted_rna}"
@@ -26,17 +26,18 @@ process EXTRACT_16S_BARRNAP {
         --reject 0.1 \
         !{assembly} \
         | grep "Name=16S_rRNA;product=16S" \
-        > "!{meta.id}-!{meta.assembler}.gff"
+        > "!{meta.id}-!{meta.assembler}.gff" \
+        || :
 
       if [[ $(grep -c "Name=16S_rRNA;product=16S" "!{meta.id}-!{meta.assembler}.gff") -eq 0 ]]; then
         msg "INFO: Barrnap was unable to locate a 16S rRNA gene sequence in !{assembly}" >&2
-        exit 1
+        touch "16S.!{meta.id}-!{meta.assembler}.fa"
+      else
+        bedtools getfasta \
+          -fi !{assembly} \
+          -bed "!{meta.id}-!{meta.assembler}.gff" \
+          -fo "16S.!{meta.id}-!{meta.assembler}.fa"
       fi
-
-      bedtools getfasta \
-        -fi !{assembly} \
-        -bed "!{meta.id}-!{meta.assembler}.gff" \
-        -fo "16S.!{meta.id}-!{meta.assembler}.fa"
     fi
 
     echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"

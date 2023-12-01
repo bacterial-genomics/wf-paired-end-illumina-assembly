@@ -438,8 +438,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Extract 16S rRNA gene sequences with Barrnap if missing from 16S_EXTRACT_BIOPYTHON
     EXTRACT_16S_BARRNAP (
-        ch_genbank
-            .join(ASSEMBLE_CONTIGS.out.assembly_file)
+        ASSEMBLE_CONTIGS.out.assembly_file
             .join(EXTRACT_16S_BIOPYTHON.out.biopython_extracted_rna)
     )
     ch_versions = ch_versions.mix(EXTRACT_16S_BARRNAP.out.versions)
