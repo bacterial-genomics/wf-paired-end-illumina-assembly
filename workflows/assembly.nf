@@ -230,10 +230,12 @@ workflow ASSEMBLY {
     ch_versions = ch_versions.mix(INFILE_HANDLING_UNIX.out.versions)
     ch_infile_handling = qcfilecheck(INFILE_HANDLING_UNIX.out.qc_filecheck, INFILE_HANDLING_UNIX.out.input)
 
-    ch_infile_handling = ch_infile_handling.map{ meta, file ->
-                        meta['assembler'] = "${var_assembler_name}"
-                        [ meta, file]
-                    }
+    ch_infile_handling = ch_infile_handling
+                            .map{
+                                meta, file ->
+                                    meta['assembler'] = "${var_assembler_name}"
+                                    [ meta, file]
+                            }
 
     // SUBWORKFLOW: Downsample FastQ files
     DOWNSAMPLE (
