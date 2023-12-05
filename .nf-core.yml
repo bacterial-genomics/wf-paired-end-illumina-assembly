@@ -1,1 +1,30 @@
+lint:
+  actions_awsfulltest: False
+  actions_awstest: False
+  files_exist:
+    - aws.config
+    - conf/igenomes.config
+    - assets/multiqc_config.yml
+    - .github/workflows/awstest.yml
+    - .github/workflows/awsfulltest.yml
+    - lib/WorkflowWf-paired-end-illumina-assembly.groovy
+    - assets/nf-core-wf-paired-end-illumina-assembly_logo_light.png
+    - docs/images/nf-core-wf-paired-end-illumina-assembly_logo_light.png
+    - docs/images/nf-core-wf-paired-end-illumina-assembly_logo_dark.png
+  files_unchanged:
+    - LICENSE
+  multiqc_config: False
+  nextflow_config:
+    - manifest.name
+    - manifest.homePage
+  schema_params: False
+  system_exit: False
+
 repository_type: pipeline
+
+template:
+  name: gregorysprenger/wf-paired-end-illumina-assembly
+
+update:
+  https://github.com/nf-core/modules.git:
+    nf-core: False
