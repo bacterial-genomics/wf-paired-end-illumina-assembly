@@ -184,7 +184,7 @@ def toLower(it) {
 }
 
 // Check QC filechecks for a failure
-def qcfilecheck(qcfile, inputfile) {
+def qcfilecheck(process, qcfile, inputfile) {
     qcfile.map{ meta, file -> [ meta, [file] ] }
             .join(inputfile)
             .map{ meta, qc, input ->
@@ -193,7 +193,7 @@ def qcfilecheck(qcfile, inputfile) {
 
                 if ( data.any{ it.contains('FAIL') } ) {
                     line = data.last().split('\t')
-                    log.warn("${line[1]} QC check failed for sample ${line.first()}")
+                    log.warn("${line[1]} QC check failed during process ${process} for sample ${line.first()}")
                 } else {
                     [ meta, input ]
                 }
@@ -228,7 +228,11 @@ workflow ASSEMBLY {
         INPUT_CHECK.out.raw_reads
     )
     ch_versions = ch_versions.mix(INFILE_HANDLING_UNIX.out.versions)
-    ch_infile_handling = qcfilecheck(INFILE_HANDLING_UNIX.out.qc_filecheck, INFILE_HANDLING_UNIX.out.input)
+    ch_infile_handling = qcfilecheck(
+                            "INFILE_HANDLING_UNIX",
+                            INFILE_HANDLING_UNIX.out.qc_filecheck,
+                            INFILE_HANDLING_UNIX.out.input
+                        )
 
     ch_infile_handling = ch_infile_handling
                             .map{
@@ -249,7 +253,11 @@ workflow ASSEMBLY {
         ch_phix_reference
     )
     ch_versions = ch_versions.mix(REMOVE_PHIX_BBDUK.out.versions)
-    ch_removed_phix = qcfilecheck(REMOVE_PHIX_BBDUK.out.qc_filecheck, REMOVE_PHIX_BBDUK.out.fastq_phix_removed)
+    ch_removed_phix = qcfilecheck(
+                        "REMOVE_PHIX_BBDUK",
+                        REMOVE_PHIX_BBDUK.out.qc_filecheck,
+                        REMOVE_PHIX_BBDUK.out.fastq_phix_removed
+                    )
 
     // Collect PhiX removal summaries and concatenate into one file
     ch_phix_removal_summary = Channel.empty()
@@ -267,14 +275,22 @@ workflow ASSEMBLY {
         ch_adapter_reference
     )
     ch_versions = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
-    ch_trim_reads_trimmomatic = qcfilecheck(TRIM_READS_TRIMMOMATIC.out.qc_filecheck, TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed)
+    ch_trim_reads_trimmomatic = qcfilecheck(
+                                    "TRIM_READS_TRIMMOMATIC",
+                                    TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
+                                    TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed
+                                )
 
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
     OVERLAP_PAIRED_READS_FLASH (
         ch_trim_reads_trimmomatic
     )
     ch_versions = ch_versions.mix(OVERLAP_PAIRED_READS_FLASH.out.versions)
-    ch_overlap_flash = qcfilecheck(OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck, OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files)
+    ch_overlap_flash = qcfilecheck(
+                            "OVERLAP_PAIRED_READS_FLASH",
+                            OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,
+                            OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files
+                        )
 
     /*
     ================================================================================
@@ -423,7 +439,11 @@ workflow ASSEMBLY {
         ASSEMBLE_CONTIGS.out.assembly_file
     )
     ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
-    ch_genbank = qcfilecheck(ANNOTATE_PROKKA.out.qc_filecheck, ANNOTATE_PROKKA.out.prokka_genbank_file)
+    ch_genbank = qcfilecheck(
+                    "ANNOTATE_PROKKA",
+                    ANNOTATE_PROKKA.out.qc_filecheck,
+                    ANNOTATE_PROKKA.out.prokka_genbank_file
+                )
 
     /*
     ================================================================================
@@ -444,7 +464,11 @@ workflow ASSEMBLY {
             .join(EXTRACT_16S_BIOPYTHON.out.extracted_rna)
     )
     ch_versions = ch_versions.mix(EXTRACT_16S_BARRNAP.out.versions)
-    ch_extracted_rna = qcfilecheck(EXTRACT_16S_BARRNAP.out.qc_filecheck, EXTRACT_16S_BARRNAP.out.extracted_rna)
+    ch_extracted_rna = qcfilecheck(
+                            "EXTRACT_16S_BARRNAP",
+                            EXTRACT_16S_BARRNAP.out.qc_filecheck,
+                            EXTRACT_16S_BARRNAP.out.extracted_rna
+                        )
 
     // Prepare BLAST database for use
     if ( ch_blast_db_file ) {
@@ -481,7 +505,11 @@ workflow ASSEMBLY {
         ch_db_for_blast
     )
     ch_versions = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
-    ch_blast_output = qcfilecheck(ALIGN_16S_BLAST.out.qc_filecheck, ALIGN_16S_BLAST.out.blast_output)
+    ch_blast_output = qcfilecheck(
+                        "ALIGN_16S_BLAST",
+                        ALIGN_16S_BLAST.out.qc_filecheck,
+                        ALIGN_16S_BLAST.out.blast_output
+                    )
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
@@ -489,8 +517,16 @@ workflow ASSEMBLY {
             .join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
-    ch_top_blast = qcfilecheck(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck, BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.top_blast_species)
-    ch_blast_summary = qcfilecheck(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck, BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary)
+    ch_top_blast = qcfilecheck(
+                        "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
+                        BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
+                        BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.top_blast_species
+                    )
+    ch_blast_summary = qcfilecheck(
+                            "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
+                            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
+                            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary
+                        )
 
     // Collect BLASTn Summaries and concatenate into one file
     ch_blast_summary.map{ meta, file -> file }
