@@ -105,21 +105,26 @@ if [[ $biopython_rna_errors ]]; then
 fi
 
 # Parse HPC stdout file for QC check failures
-QC_FAILURES=($(awk '/QC check failed/ {print $NF}' ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME}))
+QC_FAILURES=()
+while read -r line; do
+  QC_FAILURES+=("$line")
+done < <(awk '/QC check failed/ {print $(NF-3), "("$NF")"}' ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME})
+
 if [[ $QC_FAILURES ]]; then
   # Loop over each QC failure
-  for f in ${QC_FAILURES[@]}; do
+  for f in "${QC_FAILURES[@]}"; do
     # Get work directory
-    short_wd=$(grep $f ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME} | grep -B1 "QC check failed" | head -n 1 | awk -F '[][]' '{print $2}')
+    short_wd=$(grep "$f" ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME} | awk -F '[][]' '{print $2}')
     wd_path=$(realpath ${OUT}/.work/${short_wd}*)
 
     # Get first error
     error=$(grep "ERROR" ${wd_path}/.command.err | head -n 1 | sed -e 's/\[[^][]*\] //g')
 
     process=$(grep "NEXTFLOW TASK" ${wd_path}/.command.run | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
+    sample_name=$(echo "$f" | awk -F "[()]" '{print $2}')
 
     # Append to errors.tsv
-    echo -e "${f}\t${process}\t${error}\t${wd_path}\t${time_stamp}\t${run_name}" >> ${OUT}/pipeline_info/errors.tsv
+    echo -e "${sample_name}\t${process}\t${error}\t${wd_path}\t${time_stamp}\t${run_name}" >> ${OUT}/pipeline_info/errors.tsv
   done
 fi
 
