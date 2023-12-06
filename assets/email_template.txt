@@ -38,4 +38,4 @@ Pipeline Configuration:
 
 --
 wf-paired-end-illumina-assembly
-https://github.com/gregorysprenger/wf-paired-end-illumina-assembly
+https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly

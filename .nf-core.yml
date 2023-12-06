@@ -23,7 +23,7 @@ lint:
 repository_type: pipeline
 
 template:
-  name: gregorysprenger/wf-paired-end-illumina-assembly
+  name: bacterial-genomics/wf-paired-end-illumina-assembly
 
 update:
   https://github.com/nf-core/modules.git:

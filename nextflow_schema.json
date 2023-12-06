@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/gregorysprenger/wf-paired-end-illumina-assembly/master/nextflow_schema.json",
-    "title": "gregorysprenger/wf-paired-end-illumina-assembly pipeline parameters",
+    "$id": "https://raw.githubusercontent.com/bacterial-genomics/wf-paired-end-illumina-assembly/master/nextflow_schema.json",
+    "title": "bacterial-genomics/wf-paired-end-illumina-assembly pipeline parameters",
     "description": "Trim, assemble, and annotate paired end illumina reads.",
     "type": "object",
     "definitions": {
