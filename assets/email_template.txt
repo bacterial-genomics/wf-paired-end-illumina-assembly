@@ -1,0 +1,41 @@
+--------------------------------------------------------
+     __     __       __  __ __      __     __
+|  ||_  __ |__) /\ ||__)|_ |  \ __ |_ |\ ||  \ __
+|/\||      |   /--\|| \ |__|__/    |__| \||__/
+                                 __ __ __     __
+||  |  |  ||\/|||\ | /\  __  /\ (_ (_ |_ |\/||__)|  \_/
+||__|__\__/|  ||| \|/--\    /--\__)__)|__|  ||__)|__ |
+
+      wf-paired-end-illumina-assembly v${version}
+--------------------------------------------------------
+Run Name: $runName
+
+<% if (success){
+    out << "## wf-paired-end-illumina-assembly execution completed successfully! ##"
+} else {
+    out << """####################################################
+## wf-paired-end-illumina-assembly execution completed unsuccessfully! ##
+####################################################
+The exit status of the task that caused the workflow execution to fail was: $exitStatus.
+The full error message was:
+
+${errorReport}
+"""
+} %>
+
+
+The workflow was completed at $dateComplete (duration: $duration)
+
+The command used to launch the workflow was as follows:
+
+  $commandLine
+
+
+
+Pipeline Configuration:
+-----------------------
+<% out << summary.collect{ k,v -> " - $k: $v" }.join("\n") %>
+
+--
+wf-paired-end-illumina-assembly
+https://github.com/gregorysprenger/wf-paired-end-illumina-assembly

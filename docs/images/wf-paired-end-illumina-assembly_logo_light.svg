@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg9"
+   width="5982"
+   height="1000"
+   viewBox="0 0 5982 1000"
+   sodipodi:docname="nf-core-wf-paired-end-illumina-assembly_logo_light.svg"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   inkscape:export-filename="nf-core-wf-paired-end-illumina-assembly_logo_dark.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs13">
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#a"
+       id="linearGradient4332"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(-78.422223,-61.2695,61.2695,-78.422223,4230.9004,498.43088)"
+       x2="1" />
+    <linearGradient
+       id="a"
+       x2="1"
+       gradientTransform="matrix(47.34875,36.9925,-36.9925,47.34875,344.325,162.1875)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         stop-color="#0c542a"
+         offset="0"
+         id="stop15" />
+      <stop
+         stop-color="#0c542a"
+         offset=".21472"
+         id="stop17" />
+      <stop
+         stop-color="#25af64"
+         offset=".57995"
+         id="stop19" />
+      <stop
+         stop-color="#25af64"
+         offset=".84663"
+         id="stop21" />
+      <stop
+         stop-color="#25af64"
+         offset="1"
+         id="stop23" />
+    </linearGradient>
+  </defs>
+  <sodipodi:namedview
+     id="namedview11"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     showgrid="false"
+     inkscape:zoom="0.17772234"
+     inkscape:cx="2599.5606"
+     inkscape:cy="500.78116"
+     inkscape:window-width="1720"
+     inkscape:window-height="1377"
+     inkscape:window-x="3632"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g540" />
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="Image"
+     id="g15">
+    <g
+       id="g540">
+      <text
+         xml:space="preserve"
+         style="font-weight:bold;font-size:315.257px;font-family:'maven bold';-inkscape-font-specification:'maven bold,  Bold';fill:#24b064;stroke-width:1.64196"
+         x="31.052294"
+         y="578.14886"
+         id="text303"><tspan
+           sodipodi:role="line"
+           id="tspan301"
+           x="31.052294"
+           y="578.14886"
+           style="font-size:315.257px;stroke-width:1.64196"><tspan
+   style="fill:#ffffff;stroke-width:1.64196"
+   id="tspan355">wf-paired-end-illumina</tspan>-assembly</tspan></text>
+      <path
+         d="m 4221.1489,498.59654 44.5121,-44.6861 h -126.2904 v 44.6861 z"
+         id="path4330"
+         style="display:inline;fill:url(#linearGradient4332);stroke-width:1.68819"
+         inkscape:connector-curvature="0" />
+    </g>
+  </g>
+</svg>

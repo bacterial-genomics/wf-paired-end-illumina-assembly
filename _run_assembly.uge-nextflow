@@ -2,81 +2,150 @@
 
 SCRIPT_NAME="$(basename ${0#_} .uge-nextflow)"
 
+# Set profile
+# Get node number - <=230 = biolinux, >=231 = rosalind
+NODE_NUM=$(echo ${HOSTNAME%%.*} | sed 's/node//1')
+if [[ ${NODE_NUM} -ge 231 ]]; then
+  HPC='rosalind_hpc'
+else
+  HPC='aspen_hpc'
+fi
+
 module load nextflow
 nextflow \
-  -log ${OUT}/nextflow_log.${SCRIPT_NAME}.txt \
+  -log ${OUT}/pipeline_info/nextflow_log.${SCRIPT_NAME}.txt \
   run \
   ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
+  -profile ${HPC} \
+  --input ${IN} \
+  --outdir ${OUT} \
   -ansi-log false \
-  -profile singularity,sge \
-  -resume \
-  --outpath ${OUT} \
-  --inpath ${IN} \
+  -N ${USER}@cdc.gov \
+  -w ${OUT}/.work \
+  --blast_db ${LAB_HOME}/.databases/ncbi \
   --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
-  --kraken2_db /scicomp/reference-pure/kraken/OLD/2.0.0 \
-  --blast_db /scicomp/reference-pure/ncbi-blast/blast/db \
-  -w /scicomp/scratch/${USER}/work \
-  -N ${USER}@cdc.gov
+  --kraken2_db ${LAB_HOME}/.databases/kraken2 \
+  -resume
 
 # Check for errors and add to errors.tsv
 # Get nextflow run name
-run_name=$(grep "Launching" ${OUT}/log/ASM_*.o${SCRIPT_NAME} | cut -d '[' -f 2 | cut -d ']' -f 1)
+run_name=$(grep "Launching" ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME} | cut -d '[' -f 2 | cut -d ']' -f 1)
 
 # Read each line from nextflow log, find info, and add to errors.tsv
 while read -r line; do
-  sample_name=$(grep "nf-" ${line}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
-  process=$(grep "nf-" ${line}/.command.run | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
-  error=$(tail -n 1 ${line}/.command.err | sed -e 's/\[[^][]*\] //g')
+  # Get time stamp
+  time_stamp=$(date '+%Y-%b-%d %a %H:%M:%S')
 
-  # Check if error is from file checks
-  if [[ ${error} =~ .+Check[[:space:]]FAILED$ ]]; then
-    get_previous_process_workdir=$(dirname $(grep "ln -s" ${line}/.command.run | grep "work" | awk 'END {print $(NF-1)}' ))
-    process=$(grep "nf-" ${get_previous_process_workdir}/.command.run | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
-    line="${get_previous_process_workdir}"
-
-  # Check if process is EXTRACT_16S_BIOPYTHON -> requires different sed commands
-  elif [[ ${process} == "EXTRACT_16S_BIOPYTHON" ]]; then
-    get_filename=$(tail -n 1 ${line}/.command.err | awk -F '/' '{print $NF}')
-    remove_filepath=$(tail -n 1 ${line}/.command.err | sed -e 's/[][]//g' | cut -d '/' -f 1)
-    error=$(echo -e "${remove_filepath} ${get_filename}")
-  fi
-
-  # If process for sample retried and succeeded, ignore
-  if [[ -f $(ls ${OUT}/log/process_logs/${sample_name}.${process}*out) ]] \
-    && [[ $(cat ${line}/.exitcode) = @(143|137|104|134|139|71|255) ]]; then
-    continue
+  # If process is already running, clean up error
+  if [[ "${line}" =~ ^Unable[[:space:]]to[[:space:]]acquire[[:space:]]lock.* ]]; then
+    error="You are trying to resume the execution of an already running pipeline."
+    ASM_OUT=$(realpath ${OUT}/pipeline_info/ASM_*.o*)
+    echo -e "-\t-\t${error}\t${ASM_OUT}\t${time_stamp}\t${run_name}" >> ${OUT}/pipeline_info/errors.tsv
   else
-    echo -e "${sample_name}\t${process}\t${error}\t${line}" >> ${OUT}/log/errors.tsv
+    # Workflow ran some processes
+    sample_name=$(grep "nf-" ${line}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
+    process=$(grep "NEXTFLOW TASK" ${line}/.command.run | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
+    error=$(tail -n 1 ${line}/.command.err | sed -e 's/\[[^][]*\] //g')
+
+    # Kraken 2 places "Loading database information... done." in error log
+    if [[ ${process} =~ .*READ_CLASSIFY_KRAKEN_TWO$ ]] \
+      && [[ "${error}" =~ Loading[[:space:]]database[[:space:]]information.*$ ]]; then
+      continue
+    fi
+
+    # BBDuk java errors
+    if [[ ${process} =~ .*REMOVE_PHIX_BBDUK$ ]] \
+      && [[ "${error}" =~ .*at.* ]]; then
+      error=$(grep -A1 "java.lang" ${line}/.command.err | head -n 2 | tail -n 1)
+      if [[ ! ${error} ]]; then
+        continue
+      elif [[ ${error} =~ ^Mismatch.* ]]; then
+        error=${error}
+      else
+        error=$(grep "java.lang" ${line}/.command.err | awk -F ': ' '{print $2}')
+      fi
+    elif [[ ${process} =~ .*REMOVE_PHIX_BBDUK$ ]] \
+      && [[ "${error}" =~ "Input is being processed as unpaired" ]]; then
+      continue
+    fi
+
+    # SPAdes errors - typically ran out of memory
+    if [[ ${process} =~ .*ASSEMBLE_CONTIGS_SPADES$ ]]; then
+      error="ERROR: SPAdes failed. Did it run out of memory?"
+    fi
+
+    # Check if error is from file checks
+    if [[ ${error} =~ .+Check[[:space:]]failed$ ]]; then
+      get_previous_process_workdir=$(dirname $(grep "ln -s" ${line}/.command.run | grep "work" | awk 'END {print $(NF-1)}' ))
+      process=$(grep "nf-" ${get_previous_process_workdir}/.command.run | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
+      line="${get_previous_process_workdir}"
+    fi
+
+    # Check if process is EXTRACT_16S_BIOPYTHON -> requires different sed commands
+    if [[ ${process} =~ .*EXTRACT_16S_BIOPYTHON$ ]]; then
+      get_filename=$(tail -n 1 ${line}/.command.err | awk -F '/' '{print $NF}')
+      remove_filepath=$(tail -n 1 ${line}/.command.err | sed -e 's/[][]//g' | cut -d '/' -f 1)
+      error=$(echo -e "${remove_filepath} ${get_filename}")
+    fi
+
+    # If process for sample retried and succeeded, ignore
+    if [[ -f "$(ls ${OUT}/pipeline_info/process_logs/${sample_name}.*${process}*.command.out)" ]] \
+      && [[ $(cat ${line}/.exitcode) = @(0|71|104|134|137|139|140|143|245|250|255) ]]; then
+      continue
+    else
+      echo -e "${sample_name}\t${process}\t${error}\t${line}\t${time_stamp}\t${run_name}" >> ${OUT}/pipeline_info/errors.tsv
+    fi
   fi
 done < <(nextflow log ${run_name} -filter 'status == "FAILED"')
 
-# If errors.tsv found, add column headers
-if [[ -f "${OUT}/log/errors.tsv" ]]; then
-  sed -i '1i Sample Name\tProcess\tError\tError Directory' ${OUT}/log/errors.tsv
+# If errors.tsv found..
+if [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
+  # Add column headers
+  sed -i '1i Sample Name\tProcess\tError\tError Directory\tTimestamp\tRun Name' ${OUT}/pipeline_info/errors.tsv
+
+  # Remove duplicate lines and lines that have an empty first column
+  awk '!a[$0]++' ${OUT}/pipeline_info/errors.tsv \
+    | awk -F '\t' '$1{print $0}' \
+    > ${OUT}/pipeline_info/errors_new.tsv
+
+  # Delete original errors.tsv and rename errors_new.tsv
+  rm ${OUT}/pipeline_info/errors.tsv
+
+  mv ${OUT}/pipeline_info/errors_new.tsv \
+    ${OUT}/pipeline_info/errors.tsv
 fi
 
 # Count lines in Summary.Illumina.GenomeCoverage.tab
-num_assemblies=$(wc -l ${OUT}/qa/Summary.Illumina.GenomeCoverage.tab | awk '{print $1}')
+if [[ -f "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" ]]; then
+  num_assemblies=$(awk 'END {print NR-1}' "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab")
+fi
 
 # E-mail completion status
-if [[ -f "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" ]] \
-  && [[ -f "${OUT}/log/errors.tsv" ]]; then
+if [[ -f "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" ]] \
+  && [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
   -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
-  -a "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" \
-  -a "${OUT}/log/errors.tsv" \
+  -a "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" \
+  -a "${OUT}/pipeline_info/errors.tsv" \
   "${USER}@cdc.gov"
-elif [[ -f "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" ]]; then
+
+elif [[ -f "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" ]]; then
   echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
   -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
-  -a "${OUT}/qa/Summary.Illumina.GenomeCoverage.tab" \
+  -a "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" \
   "${USER}@cdc.gov"
-elif [[ -f "${OUT}/log/errors.tsv" ]]; then
+
+elif [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   echo -e "Assembly and QA could not be completed on $(date)\n${OUT}" | mail \
   -s "No assemblies found $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
-  -a "${OUT}/log/errors.tsv" \
+  -a "${OUT}/pipeline_info/errors.tsv" \
   "${USER}@cdc.gov"
 fi
+
+# Move and symlink work directory
+# date=$(date '+%Y-%m-%d_%H-%M-%S')
+# mv ${OUT}/.work /scicomp/scratch/${USER}/work/ASM_${date}
+# ln -s /scicomp/scratch/${USER}/work/ASM_${date} ${OUT}/.work

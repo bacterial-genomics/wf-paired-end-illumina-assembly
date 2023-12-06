@@ -1,59 +1,44 @@
 process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
 
-    publishDir "${params.process_log_dir}",
-        mode: "${params.publish_dir_mode}",
-        pattern: ".command.*",
-        saveAs: { filename -> "${base}.${task.process}${filename}"}
-
-    tag { "${base}" }
-    
+    tag { "${meta.id}-${meta.assembler}" }
     container "snads/bedtools@sha256:9b80fb5c5ef1b6f4a4a211d8739fa3fe107da34d1fb6609d6b70ddc7afdce12c"
 
     input:
-        tuple val(base), path(paired_bam), path(single_bam), path(qc_assembly_filecheck)
+    tuple val(meta), path(bam_files)
 
     output:
-        tuple val(base), path("${base}.Summary.Illumina.CleanedReads-AlnStats.tab"), emit: summary_stats
-        path "${base}.Summary.Illumina.CleanedReads-AlnStats.tab", emit: summary_alnstats
-        path ".command.out"
-        path ".command.err"
-        path "versions.yml", emit: versions
+    path(".command.{out,err}")
+    path("versions.yml")                                                           , emit: versions
+    tuple val(meta), path("${meta.id}-${meta.assembler}.CleanedReads-AlnStats.tsv"), emit: summary_alignment_stats
 
     shell:
-        '''
-        source bash_functions.sh
+    '''
+    source bash_functions.sh
 
-        # Exit if previous process fails qc filecheck
-        for filecheck in !{qc_assembly_filecheck}; do
-          if [[ $(grep "FAIL" ${filecheck}) ]]; then
-            error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-            msg "${error_message} Check FAILED" >&2
-            exit 1
-          else
-            rm ${filecheck}
-          fi
-        done
+    # Calculate and report coverage of paired-reads and singleton reads separately
+    msg "INFO: Extracting read alignment depths using bedtools"
 
-        # Calculate and report coverage of paired-reads and singleton reads separately
-        msg "INFO: Running bedtools"
+    single_cov='0 bp TooFewToMap Singleton Reads (0.0x)\t'
+    if [ -s !{bam_files[1]} ]; then
+      single_cov=$(bedtools genomecov -d -split -ibam !{bam_files[1]} |\
+        awk '{sum+=$3} END{print sum " bp Singleton Reads Mapped (" sum/NR "x)\t"}')
+    fi
 
-        single_cov='0 bp TooFewToMap Singleton Reads (0.0x)\t'
-        if [ -s !{single_bam} ]; then
-          single_cov=$(bedtools genomecov -d -split -ibam !{single_bam} |\
-           awk '{sum+=$3} END{print sum " bp Singleton Reads Mapped (" sum/NR "x)\t"}')
-        fi
+    cov_info=$(bedtools genomecov -d -split -ibam "!{bam_files[0]}" |\
+      awk -v OFS='\t' -v SEcov="${single_cov}" 'BEGIN{sum=0} {sum+=$3} END{
+      print sum " bp Paired Reads Mapped (" sum/NR "x)\t" SEcov NR " bp Genome"}')
 
-        cov_nfo=$(bedtools genomecov -d -split -ibam !{base}.paired.bam |\
-         awk -v SEcov="${single_cov}" 'BEGIN{sum=0} {sum+=$3} END{
-         print sum " bp Paired Reads Mapped (" sum/NR "x)\t" SEcov NR " bp Genome"}')
+    echo -e "!{meta.id}\t${cov_info}" \
+      > "!{meta.id}-!{meta.assembler}.CleanedReads-AlnStats.tsv"
 
-        echo -e "!{base}\t${cov_nfo}" \
-         >> !{base}.Summary.Illumina.CleanedReads-AlnStats.tab
+    sed -i \
+      '1i Sample name\tCoverage of paired reads\tCoverage of singleton reads\tGenome size' \
+      "!{meta.id}-!{meta.assembler}.CleanedReads-AlnStats.tsv"
 
-        # Get process version
-        cat <<-END_VERSIONS > versions.yml
-        "!{task.process} (!{base})":
-            bedtools: $(bedtools --version | awk 'NF>1{print $NF}')
-        END_VERSIONS
-        '''
+    # Get process version information
+    cat <<-END_VERSIONS > versions.yml
+    "!{task.process}":
+        bedtools: $(bedtools --version | awk 'NF>1{print $NF}')
+    END_VERSIONS
+    '''
 }

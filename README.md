@@ -1,168 +1,183 @@
-# Assembly Paired End Illumina Workflow
+# ![wf-paired-end-illumina-assembly](docs/images/wf-paired-end-illumina-assembly_logo_light.png#gh-light-mode-only) ![wf-paired-end-illumina-assembly](docs/images/wf-paired-end-illumina-assembly_logo_dark.png#gh-dark-mode-only)
 
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/gregorysprenger/wf-paired-end-illumina-assembly)
+[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A522.04.3-23aa62.svg)](https://www.nextflow.io/)
+[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
+[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 
-![workflow](docs/images/simplified_workflow_v1.1.0.svg)
+![workflow](docs/images/wf-paired-end-illumina-assembly_workflow.png)
 
-*General schematic of the steps in the workflow*
+_General schematic of the steps in the workflow_
+
+## Contents
+
+- [Quick Start](#quick-start-test)
+- [Introduction](#introduction)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Parameters](#parameters)
+  - [Required parameters](#required-parameters)
+  - [Optional parameters](#optional-parameters)
+  - [Additonal parameters](#additional-parameters)
+- [Resource Managers](#resource-Managers)
+- [Output](#output)
+- [Troubleshooting](#troubleshooting)
+- [Contributions and Support](#contributions-and-support)
+- [Citations](#citations)
 
 ## Quick Start: Test
 
 Run the built-in test set to confirm all parts are working as-expected. It will also download all dependencies to make subsequent runs much faster.
+
 ```
 nextflow run \
- wf-paired-end-illumina-assembly \
- -r v1.1.0 \
- -profile YOURPROFILE,test
+  wf-paired-end-illumina-assembly \
+  -r v1.1.0 \
+  -profile ,test
 ```
+
 ## Quick Start: Run
 
-Example command on FastQs in "new-fastq-dir" data with singularity:
+Example command on FastQs in "new-fastq-dir" data using **SPAdes** with singularity:
+
 ```
 nextflow run \
- wf-paired-end-illumina-assembly/ \
- -r v1.1.0 \
- -profile singularity
- --inpath new-fastq-dir \
- --outpath my-results
+  wf-paired-end-illumina-assembly/ \
+  -r v1.1.0 \
+  -profile singularity \
+  --input new-fastq-dir \
+  --outdir my-results \
+  --assembler spades
 ```
 
-## Contents
-- [Introduction](#Introduction)
-- [Installation](#Installation)
-- [Output File Structure](#Output-File-Structure)
-- [Parameters](#parameters)
-- [Quick Start](#Quick-Start-Test)
-- [Resource Managers](#Resource-Managers)
-- [Troubleshooting](#Troubleshooting)
-- [Usage](#usage)
-- [Workflow](#Workflow)
+Example command on FastQs in "new-fastq-dir" data using **Skesa** with singularity:
+
+```
+nextflow run \
+  wf-paired-end-illumina-assembly/ \
+  -r v1.1.0 \
+  -profile singularity \
+  --input new-fastq-dir \
+  --outdir my-results \
+  --assembler skesa
+```
 
 ## Introduction
+
 This workflow assembles bacterial isolate genomes from paired-end Illumina FastQ files. Post-assembly contig correction is performed, and a variety of quality assessment processes are recorded throughout the workflow.
 
 This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed cultures) sequenced with whole genome (WGS) or selective whole genome (SWGA) library preparation strategies. It is inappropriate for metagenomics analysis. The data files must be paired read sets (not single ended) and can come from any Illumina sequencing instrument which generates a FastQ file format (e.g., iSeq, HiSeq, MiSeq, NextSeq, NovaSeq). The read set files can be obtained from an external source, local storage device, or sequencing instrument. Other sequencing manufacturers such as Ion Torrent, PacBio, Roche 454, and Nanopore generate data files that cannot be directly used with this procedure.
 
 ## Installation
+
 - [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation) `>=21.10.3`
 - [Docker](https://docs.docker.com/engine/installation/) or [Singularity](https://www.sylabs.io/guides/3.0/user-guide/) `>=3.8.0`
 - [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) is currently unsupported
 
 ## Usage
+
 ```
-nextflow run wf-paired-end-illumina-assembly -profile <docker|singularity> --inpath <input directory> --outpath <directory for results>
+nextflow run wf-paired-end-illumina-assembly -profile <docker|singularity> --input <input directory|samplesheet> --outdir <directory for results>
 ```
+
+Please see the [usage documentation](docs/usage.md) for further information on using this workflow.
 
 ## Parameters
-Note the "`--`" long name arguments (e.g., `--help`, `--inpath`, `--outpath`) are generally specific to this workflow's options, whereas "`-`" long name options (e.g., `-help`, `-latest`, `-profile`) are general nextflow options.
+
+Note the "`--`" long name arguments (e.g., `--help`, `--input`, `--outdir`) are generally specific to this workflow's options, whereas "`-`" long name options (e.g., `-help`, `-latest`, `-profile`) are general nextflow options.
 
 These are the most pertinent options for this workflow:
-```
-  --inpath             Path to input data directory containing FastQ assemblies. Recognized extensions are:  fastq.gz, fq.gz.
 
-  --outpath            The output directory where the results will be saved.
-
-  --kraken1_db         Specify path to database for Kraken1. Default database is Mini Kraken.
-
-  --kraken2_db         Specify path to database for Kraken2. Default database is Mini Kraken.
-
-  --blast_db           Specify path to 16S ribosomal database for BLAST. Default database is NCBI's 16S ribosomal database.
-
-  -profile singularity Use Singularity images to run the workflow. Will pull and convert Docker images from Dockerhub if not locally available.
-
-  -profile docker      Use Docker images to run the workflow. Will pull images from Dockerhub if not locally available.
+#### Required parameters
 
 ```
+  ============================================
+        Input/Output
+  ============================================
+  --input                 Path to input data directory containing FastQ assemblies or samplesheet. Recognized extensions are: .fastq and .fq with optional gzip compression (.gz)
+
+  --outdir                The output directory where the results will be saved.
+
+
+  ============================================
+        Container platforms
+  ============================================
+  -profile singularity    Use Singularity images to run the workflow. Will pull and convert Docker images from Dockerhub if not locally available.
+
+  -profile docker         Use Docker images to run the workflow. Will pull images from Dockerhub if not locally available.
+
+
+  ============================================
+        Optional assemblers
+  ============================================
+  --assembler             Specify which assembler to execute (spades, skesa). [Default: spades]
+
+
+  ============================================
+        Reference files
+  ============================================
+  --phix_reference        Path to PhiX reference file in FastA format. Recognized extensions are: {.fasta, .fas, .fa, .fna}. [Default: PhiX_NC_001422.1.fasta]
+
+  --adapters_reference    Path to adapter reference file in FastA format. Recognized extensions are: {.fasta, .fas, .fa, .fna}. [Default: adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas]
+
+```
+
+PhiX reference [NC_001422.1](https://www.ncbi.nlm.nih.gov/nuccore/NC_001422.1) can be obtained from NCBI.
+
+#### Optional parameters
+
+```
+  ============================================
+        Optional databases
+  ============================================
+  --kraken1_db         Path to a local directory, archive file, or a URL to compressed tar archive that contain files `database.{idx,kdb}` and `taxonomy/{names,nodes}.dmp`. [Default: MiniKraken 8GB]
+
+  --kraken2_db         Path to a local directory, archive file, or a URL to compressed tar archive that contain `{hash,opts,taxo}.k2d` files. [Default: Kraken2 Standard 8GB]
+
+  --blast_db           Path to a local directory, archive file, or a URL to compressed tar archive that contains BLAST 16S ribosomal RNA files. [Default: NCBI's 16S ribosomal RNA database]
+
+  --gtdb_db            Path to a local directory, archive file, or a URL to compressed tar archive that contains GTDBTk database. [Default: NaN]
+
+  --busco_db           Path to a local directory, archive file, or a URL to compressed tar archive that contains BUSCO lineages. Can either be a lineage dataset or entire BUSCO database. [Default: NaN]
+```
+
+_If user does not specify inputs for parameters with a default set to `NaN`, these options will not be performed during workflow analysis._
+
+#### Additional parameters
 
 View help menu of all workflow options:
+
 ```
 nextflow run \
- wf-paired-end-illumina-assembly \
- -r v1.1.0 \
- --help
+  wf-paired-end-illumina-assembly \
+  -r v1.1.0 \
+  --help \
+  --show_hidden_params
 ```
 
 ## Resource Managers
+
 The most well-tested and supported is a Univa Grid Engine (UGE) job scheduler with Singularity for dependency handling.
 
-1. UGE/SGE 
-    - Additional tips for UGE processing are [here](docs/HPC-UGE-scheduler.md).
-1. no scheduler
+1. UGE/SGE
+   - Additional tips for UGE processing are [here](docs/HPC-UGE-scheduler.md).
+2. No Scheduler
+   - It has also been confirmed to work on desktop and laptop environments without a job scheduler using Docker with more tips [here](docs/local-device.md).
 
-    - It has also been confirmed to work on desktop and laptop environments without a job scheduler using Docker with more tips [here](docs/local-device.md).
+## Output
 
-
-## Output File Structure
-| Output Directory | Filename | Explanation |
-| ---------------- | ---------------- | ---------------- |
-| **annot** | | **Annotation files** |
-| | \<SampleName\>.gbk | Genbank annotation |
-| **asm** | | **Assembly files** |
-| | \<SampleName\>.fna | Corrected assembly |
-| | \<SampleName\>.InDels-corrected.cnt.txt | Each line represents number of corrected InDels (per correction round) |
-| | \<SampleName\>.SNPs-corrected.cnt.txt | Each line represents number of corrected SNPs (per correction round) |
-| **asm/\<SampleName\>** | | **SPAdes Assembly files** |
-| | assembly_graph_with_scaffolds.gfa | Contains SPAdes assembly graph and scaffolds paths |
-| | contigs.fasta | Assembled contigs from SPAdes |
-| | params.txt.gz | Parameters used with SPAdes |
-| | spades.log.gz | Log information from SPAdes |
-| **qa** | | **Quality Assurance files** |
-| | Summary.Illumina.CleanedReads-AlnStats.tab | Basepairs of Paired Reads and Singnleton Reads mapped |
-| | Summary.MLST.tab | MLST result |
-| | Summary.16S.tab | Top BLAST hit results |
-| | Summary.Assemblies.tab | Contig summary information |
-| | Summary.Illumina.GenomeCoverage.tab | Genome Coverage |
-| | Summary.QC_File_Checks.tab | QC file checks |
-| **ssu** | | **Small Subunit (16S) files** |
-| | \<SampleName\>.blast.tsv.gz | BLAST output |
-| | 16S-top-species.tsv | Top BlAST hit results |
-| | 16S.\<SampleName\>.fa | Top BLAST hit in FastA format |
-| **trim_reads** | | **Trimmed Reads** |
-| | \<SampleName\>.raw.tsv | Total reads |
-| | \<SampleName\>.phix.tsv | PhiX reads |
-| | \<SampleName\>.trimmo.tsv | Discarded reads and singletons |
-| | \<SampleName\>_{R1,R2}.paired.fq.gz | Cleaned paired reads |
-| | \<SampleName\>.single.fq.gz | Cleaned single read |
-| | \<SampleName\>.overlap.tsv | Number of overlapping reads |
-| | \<SampleName\>.clean-reads.tsv | Number of cleaned reads |
-| | \<SampleName\>.taxonomy1-reads.tab | Summary output of Kraken 1 |
-| | \<SampleName\>.taxonomy2-reads.tab | Summary output of Kraken 2 |
-| | \<SampleName\>_kraken1.tab.gz | Full output of Kraken 1 |
-| | \<SampleName\>_kraken2.tab.gz | Full output of Kraken 2 |
-| **log** | | **Log files** |
-| | ASM_\<Number of Samples\>.o\<Submission Number\> | HPC output report |
-| | ASM_\<Number of Samples\>.e\<Submission Number\> | HPC error report |
-| | pipeline_dag.\<YYYY-MM-DD_HH-MM-SS\>.html | Direct acrylic graph of workflow |
-| | report.\<YYYY-MM-DD_HH-MM-SS\>.html | Nextflow summary report of workflow |
-| | timeline.\<YYYY-MM-DD_HH-MM-SS\>.html | Nextflow execution timeline of each process in workflow |
-| | trace.\<YYYY-MM-DD_HH-MM-SS\>.txt | Nextflow execution tracing of workflow, which includes percent of CPU and memory usage |
-| | software_versions.yml | Versions of software used in each process |
-| | errors.tsv | Errors file if errors exist and summarizes the errors |
-| **log/process_logs** | | **Process log files** |
-| | \<SampleName\>.\<ProcessName\>.command.out | Standard output for \<SampleName\> during process \<ProcessName\> |
-| | \<SampleName\>.\<ProcessName\>.command.err | Standard error for \<SampleName\> during process \<ProcessName\> |
-| **log/qc_file_checks** | | QC file check log files |
-| | \<SampleName\>.Raw_Initial_FastQ_Files.tsv | Raw Initial FastQ File Check |
-| | \<SampleName\>.PhiX_Genome.tsv | PhiX Genome Check |
-| | \<SampleName\>.PhiX-removed_FastQ_Files.tsv | PhiX-removed FastQ File Check |
-| | \<SampleName\>.Adapters_FastA.tsv | Adapters FastA File Check |
-| | \<SampleName\>.Adapter-removed_FastQ_Files.tsv | Adapter-removed FastQ File Check |
-| | \<SampleName\>.Non-overlapping_FastQ_Files.tsv | Non-overlapping FastQ File Check |
-| | \<SampleName\>.Raw_Assembly_File.tsv | Raw Assembly File Check |
-| | \<SampleName\>.Filtered_Assembly_File.tsv | Filtered Assembly File Check |
-| | \<SampleName\>.Binary_PE_Alignment_Map_File.tsv | Binary Paired-End Alignment Map File Check |
-| | \<SampleName\>.Polished_Assembly_File.tsv | Polished Assembly File Check |
-| | \<SampleName\>.Final_Corrected_Assembly_FastA_File.tsv | Final Corrected Assembly FastA File Check |
-| | \<SampleName\>.Binary_SE_Alignment_Map_File.tsv | Binary Singletons Alignment Map File Check |
-| | \<SampleName\>.Annotated_GenBank_File.tsv | Annotated GenBank File Check |
-| | \<SampleName\>.SSU_Extracted_File.tsv | SSU Extracted File Check |
-| | \<SampleName\>.16S_BLASTn_Output_File.tsv | 16S BLASTn Output File Check |
-| | \<SampleName\>.Filtered_16S_BLASTn_File.tsv | Filtered 16S BLASTn File Check |
-
-## Workflow
-The complete directed acyclic graph (DAG) this workflow performs is this:
-![full-workflow](docs/images/workflow_dag_v1.1.0.png)
+Please see the [output documentation](docs/output.md) for a table of all outputs created by this workflow.
 
 ## Troubleshooting
+
 Q: It failed, how do I find out what went wrong?
 
-A: View file contents in the `<outpath>/log` directory.
+A: View file contents in the `<outdir>/pipeline_info` directory.
+
+## Contributions and Support
+
+If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
+
+## Citations
+
+An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
