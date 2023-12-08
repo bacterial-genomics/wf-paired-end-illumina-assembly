@@ -34,7 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - "Bigdata" parameter is no longer used as resources are different for everyone - create a custom config instead.
 
-
 ## v2.0.3 - November 27, 2023
 
 ### `Added`
