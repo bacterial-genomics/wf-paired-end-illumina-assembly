@@ -122,13 +122,14 @@ nextflow pull wf-paired-end-illumina-assembly
 
 It is a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
 
-First, go to the [wf-paired-end-illumina-assembly releases page](https://github.com/gregorysprenger/wf-paired-end-illumina-assembly/releases) and find the latest pipeline version - numeric only (eg. `1.0.0`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 1.0.0`. Of course, you can switch to another version by changing the number after the `-r` flag.
+First, go to the [wf-paired-end-illumina-assembly releases page](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/releases) and find the latest pipeline version - numeric only (eg. `1.0.0`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 1.0.0`. Of course, you can switch to another version by changing the number after the `-r` flag.
 
 This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future.
 
 ## Core Nextflow arguments
 
-> **NB:** These options are part of Nextflow and use a _single_ hyphen (pipeline parameters use a double-hyphen).
+:::note These options are part of Nextflow and use a _single_ hyphen (pipeline parameters use a double-hyphen).
+:::
 
 ### `-profile`
 
@@ -136,7 +137,8 @@ Use this parameter to choose a configuration profile. Profiles can give configur
 
 Several generic profiles are bundled with the pipeline which instruct the pipeline to use software packaged using different methods (Docker, Singularity, Conda) - see below.
 
-> We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility, however when this is not possible, Conda is also supported.
+:::tip We highly recommend the use of Docker or Singularity containers for full pipeline reproducibility, however when this is not possible, Conda is also supported.
+:::
 
 The pipeline also dynamically loads configurations from [https://github.com/nf-core/configs](https://github.com/nf-core/configs) when it runs, making multiple config profiles for various institutional clusters available at run time. For more information and to see if your system is available in these configs please see the [nf-core/configs documentation](https://github.com/nf-core/configs#documentation).
 
@@ -169,7 +171,7 @@ Specify the path to a specific config file (this is a core Nextflow command). Se
 
 ### Resource requests
 
-Whilst the default requirements set within the pipeline will hopefully work for most people and with most input data, you may find that you want to customise the compute resources that the pipeline requests. Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the steps in the pipeline, if the job exits with any of the error codes specified [here](https://github.com/gregorysprenger/wf-paired-end-illumina-assembly/blob/main/conf/base.config?plain=1#L13) it will automatically be resubmitted with higher requests (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.
+Whilst the default requirements set within the pipeline will hopefully work for most people and with most input data, you may find that you want to customise the compute resources that the pipeline requests. Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the steps in the pipeline, if the job exits with any of the error codes specified [here](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/blob/main/conf/base.config?plain=1#L13) it will automatically be resubmitted with higher requests (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.
 
 For example, if the pipeline is failing after multiple re-submissions of the `READ_CLASSIFY_KRAKEN_ONE` process due to an exit code of `137` this would indicate that there is an out of memory issue:
 
@@ -206,15 +208,15 @@ Tip: you can replicate the issue by changing to the process work dir and enterin
 
 #### For beginners
 
-A first step to bypass this error, you could try to increase the amount of CPUs, memory, and time for the whole pipeline. Therefor you can try to increase the resource for the parameters `--max_cpus`, `--max_memory`, and `--max_time`. Based on the error above, you have to increase the amount of memory. Therefore you can go to the [params.config](https://github.com/gregorysprenger/wf-paired-end-illumina-assembly/blob/main/conf/params.config?plain=1#L48) and see the default value for memory. In this case 128.GB, you than can try to run your pipeline again with `--max_memory 200GB -resume` to skip all process, that were already calculated. If you can not increase the resource of the complete pipeline, you can try to adapt the resource for a single process as mentioned below.
+A first step to bypass this error, you could try to increase the amount of CPUs, memory, and time for the whole pipeline. Therefor you can try to increase the resource for the parameters `--max_cpus`, `--max_memory`, and `--max_time`. Based on the error above, you have to increase the amount of memory. Therefore you can go to the [params.config](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/blob/main/conf/params.config?plain=1#L48) and see the default value for memory. In this case 128.GB, you than can try to run your pipeline again with `--max_memory 200GB -resume` to skip all process, that were already calculated. If you can not increase the resource of the complete pipeline, you can try to adapt the resource for a single process as mentioned below.
 
 #### Advanced option on process level
 
-To bypass this error you would need to find exactly which resources are set by the `READ_CLASSIFY_KRAKEN_ONE` process. The quickest way is to search for `process READ_CLASSIFY_KRAKEN_ONE` in the [wf-paired-end-illumina-assembly Github repo](https://github.com/gregorysprenger/wf-paired-end-illumina-assembly/search?q=process+READ_CLASSIFY_KRAKEN_ONE).
+To bypass this error you would need to find exactly which resources are set by the `READ_CLASSIFY_KRAKEN_ONE` process. The quickest way is to search for `process READ_CLASSIFY_KRAKEN_ONE` in the [wf-paired-end-illumina-assembly Github repo](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/search?q=process+READ_CLASSIFY_KRAKEN_ONE).
 We have standardised the structure of Nextflow DSL2 pipelines such that all module files will be present in the `modules/` directory and so, based on the search results, the file we want is `modules/local/read_classify_kraken/main.nf`.
-If you click on the link to that file you will notice that there is a `label` directive at the top of the module that is set to [`label process_high`](https://github.com/gregorysprenger/wf-paired-end-illumina-assembly/blob/main/modules/local/read_classify_kraken/main.nf?plain=1#L11).
+If you click on the link to that file you will notice that there is a `label` directive at the top of the module that is set to [`label process_high`](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/blob/main/modules/local/read_classify_kraken/main.nf?plain=1#L11).
 The [Nextflow `label`](https://www.nextflow.io/docs/latest/process.html#label) directive allows us to organise workflow processes in separate groups which can be referenced in a configuration file to select and configure subset of processes having similar computing requirements.
-The default values for the `process_high` label are set in the pipeline's [`base.config`](https://github.com/gregorysprenger/wf-paired-end-illumina-assembly/blob/main/conf/base.config?plain=1#L33-L37) which in this case is defined as 72.GB.
+The default values for the `process_high` label are set in the pipeline's [`base.config`](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/blob/main/conf/base.config?plain=1#L33-L37) which in this case is defined as 72.GB.
 Providing you haven't set any other standard nf-core parameters to **cap** the [maximum resources](https://nf-co.re/usage/configuration#max-resources) used by the pipeline then we can try and bypass the `READ_CLASSIFY_KRAKEN_ONE` process failure by creating a custom config file that sets at least 72.GB of memory, in this case increased to 100.GB.
 The custom config below can then be provided to the pipeline via the [`-c`](#-c) parameter as highlighted in previous sections.
 
@@ -226,9 +228,11 @@ process {
 }
 ```
 
-> **NB:** We specify the full process name i.e. `SPADES:READ_CLASSIFY_KRAKEN_ONE` in the config file because this takes priority over the short name (`READ_CLASSIFY_KRAKEN_ONE`) and allows existing configuration using the full process name to be correctly overridden.
->
-> If you get a warning suggesting that the process selector isn't recognised check that the process name has been specified correctly.
+:::note We specify the full process name i.e. `SPADES:READ_CLASSIFY_KRAKEN_ONE` in the config file because this takes priority over the short name (`READ_CLASSIFY_KRAKEN_ONE`) and allows existing configuration using the full process name to be correctly overridden.
+:::
+
+:::tip If you get a warning suggesting that the process selector isn't recognised check that the process name has been specified correctly.
+:::
 
 ### Updating containers
 
@@ -268,7 +272,9 @@ The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementatio
    }
    ```
 
-> **NB:** If you wish to periodically update individual tool-specific results (e.g. Pangolin) generated by the pipeline then you must ensure to keep the `work/` directory otherwise the `-resume` ability of the pipeline will be compromised and it will restart from scratch.
+:::note
+If you wish to periodically update individual tool-specific results (e.g. Pangolin) generated by the pipeline then you must ensure to keep the `work/` directory otherwise the `-resume` ability of the pipeline will be compromised and it will restart from scratch.
+:::
 
 ### nf-core/configs
 

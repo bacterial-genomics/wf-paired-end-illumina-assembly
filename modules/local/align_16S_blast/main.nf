@@ -8,10 +8,10 @@ process ALIGN_16S_BLAST {
     tuple val(db_name), path("database/*")
 
     output:
-    path(".command.{out,err}")
-    path("versions.yml")                                                            , emit: versions
     tuple val(meta), path("${meta.id}-${meta.assembler}.16S_BLASTn_Output_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}-${meta.assembler}.blast.tsv")                 , emit: blast_output
+    path(".command.{out,err}")
+    path("versions.yml")                                                            , emit: versions
 
     shell:
     '''
@@ -35,7 +35,7 @@ process ALIGN_16S_BLAST {
       echo -e "!{meta.id}\t16S BLASTn Output File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     else
-      echo -e "!{meta.id}\t16S BLASTn Output File\tFAIL" \
+      echo -e "!{meta.id}-!{meta.assembler}\t16S BLASTn Output File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     fi
 

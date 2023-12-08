@@ -7,12 +7,12 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     tuple val(meta), path(blast_output), path(assembly)
 
     output:
-    path(".command.{out,err}")
-    path("${meta.id}-${meta.assembler}.blast.tsv.gz")
-    path("versions.yml")                                                              , emit: versions
-    tuple val(meta), path("${meta.id}-${meta.assembler}.Summary.16S.tab")             , emit: blast_summary
-    tuple val(meta), path("${meta.id}-${meta.assembler}.16S-top-species.tsv")         , emit: top_blast_species
     tuple val(meta), path("${meta.id}-${meta.assembler}.Filtered_16S_BLASTn_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}-${meta.assembler}.16S-top-species.tsv")         , emit: top_blast_species
+    tuple val(meta), path("${meta.id}-${meta.assembler}.Summary.16S.tab")             , emit: blast_summary
+    path("${meta.id}-${meta.assembler}.blast.tsv.gz")
+    path(".command.{out,err}")
+    path("versions.yml")                                                              , emit: versions
 
     shell:
     '''
@@ -28,7 +28,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
 
     if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.blast.tab" 'Filtered 16S BLASTn File' "!{params.min_filesize_filtered_blastn}"; then
-      echo -e "!{meta.id}\tFiltered 16S BLASTn File\tPASS" \
+      echo -e "!{meta.id}-!{meta.assembler}\tFiltered 16S BLASTn File\tPASS" \
         >> "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
 
       # Report the top alignment match data: %nucl iden, %query cov aln, taxon
@@ -43,7 +43,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
       cat "!{meta.id}-!{meta.assembler}.16S-top-species.tsv" >> "!{meta.id}-!{meta.assembler}.Summary.16S.tab"
 
     else
-      echo -e "!{meta.id}\tFiltered 16S BLASTn File\tFAIL" \
+      echo -e "!{meta.id}-!{meta.assembler}\tFiltered 16S BLASTn File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
 
       # Empty files to avoid errors

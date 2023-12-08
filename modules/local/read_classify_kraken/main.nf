@@ -9,8 +9,8 @@ process READ_CLASSIFY_KRAKEN_ONE {
     path database
 
     output:
-    path(".command.{out,err}")
     path("*.kraken_{output.tab,summary}*")
+    path(".command.{out,err}")
     path("versions.yml")                   , emit: versions
 
     shell:

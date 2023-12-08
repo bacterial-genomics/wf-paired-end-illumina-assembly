@@ -3,6 +3,37 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v2.0.4 - December 8, 2023
+
+### `Added`
+
+- Added ability to use nf-core lint on pipeline.
+- Validation parameters added to params.config for nf-core lint.
+- Removal of duplicate entries in errors.tsv when using the bash runner scripts.
+- Process name is now displayed when QC failures occur.
+- Assembler name is appended to sample name in QC filechecks.
+
+### `Fixed`
+
+- Barrnap module now receives all biopython outputs.
+
+### `Updated`
+
+- Renamed container cache parameter and added it to conda, docker, and singularity profiles.
+- Added missing parameters to nextflow_schema.json.
+- Removed system.exit(1) from extract.record.from.genbank.py script.
+- Updated error catching of biopython, barrnap, and QC failure that are added to errors.tsv when using bash runner scripts.
+- Use exit 1 instead of exit 2 in barrnap module.
+- Minimum nextflow version in github actions now matches the minimum version in nextflow.config.
+- Markdown files now use `:::tip` or `:::note` for tips and notes.
+- Removed genbank file input for barrnap module as it is not used.
+- Updated .nf-core.yml file to ignore certain lints when using nf-core lint.
+- Replaced `gregorysprenger` workflow prefixes with `bacterial-genomics`.
+
+### `Deprecated`
+
+- "Bigdata" parameter is no longer used as resources are different for everyone - create a custom config instead.
+
 ## v2.0.3 - November 27, 2023
 
 ### `Added`

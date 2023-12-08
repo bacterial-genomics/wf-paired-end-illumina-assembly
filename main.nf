@@ -3,9 +3,9 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     wf-paired-end-illumina-assembly
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/gregorysprenger/wf-paired-end-illumina-assembly
+    Github : https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly
 
-    Website: https://github.com/gregorysprenger/wf-paired-end-illumina-assembly
+    Website: https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly
 ----------------------------------------------------------------------------------------
 */
 

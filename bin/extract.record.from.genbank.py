@@ -100,7 +100,7 @@ def main():
 
     if len(query_match) == 0:
         sys.stderr.write("ERROR: {} absent in {}\n".format(qry, infile))
-        sys.exit(1)
+        # sys.exit(1)
     elif len(query_match) > 1:
         sys.stderr.write("WARNING: found >1 {} in {}\n".format(qry, infile))
 

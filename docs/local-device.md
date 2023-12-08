@@ -12,7 +12,7 @@ _A schematic of the steps in the workflow._
 ## Install Worflow Locally
 
 ```
-git clone https://github.com/gregorysprenger/wf-paired-end-illumina-assembly.git
+git clone https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly.git
 ```
 
 # Run Workflow

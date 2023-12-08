@@ -9,11 +9,11 @@ process REMOVE_PHIX_BBDUK {
     path phix_reference_file
 
     output:
+    tuple val(meta), path("${meta.id}_noPhiX-R{1,2}.fsq"), emit: fastq_phix_removed
+    tuple val(meta), path("${meta.id}.PhiX*_File.tsv")   , emit: qc_filecheck
+    path("${meta.id}.Summary.PhiX.tsv")                  , emit: phix_summary
     path(".command.{out,err}")
     path("versions.yml")                                 , emit: versions
-    path("${meta.id}.Summary.PhiX.tsv")                  , emit: phix_summary
-    tuple val(meta), path("${meta.id}.PhiX*_File.tsv")   , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}_noPhiX-R{1,2}.fsq"), emit: fastq_phix_removed
 
     shell:
     '''

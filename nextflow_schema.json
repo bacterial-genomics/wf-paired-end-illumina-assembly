@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/gregorysprenger/wf-paired-end-illumina-assembly/master/nextflow_schema.json",
-    "title": "wf-paired-end-illumina-assembly pipeline parameters",
+    "$id": "https://raw.githubusercontent.com/bacterial-genomics/wf-paired-end-illumina-assembly/master/nextflow_schema.json",
+    "title": "bacterial-genomics/wf-paired-end-illumina-assembly pipeline parameters",
     "description": "Trim, assemble, and annotate paired end illumina reads.",
     "type": "object",
     "definitions": {
@@ -28,6 +28,24 @@
                     "default": "10M",
                     "hidden": true,
                     "description": "Minimum file size of input FastQ files."
+                },
+                "logpath": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "hidden": true,
+                    "description": "The output directory where pipeline information will be saved. You have to use absolute paths to storage on Cloud infrastructure."
+                },
+                "process_log_dir": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "hidden": true,
+                    "description": "The output directory where output and error log files for each process will be saved. You have to use absolute paths to storage on Cloud infrastructure."
+                },
+                "qc_filecheck_log_dir": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "hidden": true,
+                    "description": "The output directory where individual QC file checks for each sample will be saved. You have to use absolute paths to storage on Cloud infrastructure."
                 }
             }
         },
@@ -199,7 +217,7 @@
                     "hidden": true,
                     "description": "Minimum file size of FastQ files after PhiX is removed."
                 },
-                "adapters_reference": {
+                "adapter_reference": {
                     "type": "string",
                     "default": "adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas",
                     "description": "File containing Illumina adapters in FastA format.",
@@ -501,6 +519,12 @@
                     "type": "string",
                     "hidden": true,
                     "description": "TODO: this is not implemented yet."
+                },
+                "profile_cache_dir": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "hidden": true,
+                    "description": "The output directory where process module containers and/or conda environments will be saved. You have to use absolute paths to storage on Cloud infrastructure."
                 }
             }
         },

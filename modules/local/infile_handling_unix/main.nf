@@ -7,10 +7,10 @@ process INFILE_HANDLING_UNIX {
     tuple val(meta), path(reads)
 
     output:
+    tuple val(meta), path("${meta.id}.Raw_Initial_FastQ_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path(reads)                                  , emit: input
     path(".command.{out,err}")
     path("versions.yml")                                          , emit: versions
-    tuple val(meta), path(reads)                                  , emit: input
-    tuple val(meta), path("${meta.id}.Raw_Initial_FastQ_File.tsv"), emit: qc_filecheck
 
     shell:
     '''

@@ -4,41 +4,48 @@ process EXTRACT_16S_BARRNAP {
     container "snads/barrnap@sha256:e22cbd789c36d5626460feb6c7e5f6f7d55c8628dacae68ba0da30884195a837"
 
     input:
-    tuple val(meta), path(prokka_genbank_file), path(assembly), path(biopython_extracted_rna)
+    tuple val(meta), path(assembly), path(biopython_extracted_rna)
 
     output:
+    tuple val(meta), path("${meta.id}-${meta.assembler}.SSU_{Renamed,Extracted}_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("16S.${meta.id}-${meta.assembler}.fa")                          , emit: extracted_rna
     path(".command.{out,err}")
     path("versions.yml")                                                                  , emit: versions
-    tuple val(meta), path("${meta.id}-${meta.assembler}.SSU_{Renamed,Extracted}_File.tsv"), emit: qc_filecheck
-    tuple val(meta), path("16S.${meta.id}-${meta.assembler}.fa")                          , emit: barnapp_extracted_rna
 
     shell:
     '''
     source bash_functions.sh
 
-    if [[ ! -f "!{biopython_extracted_rna}" ]] || [[ ! -s "!{biopython_extracted_rna}" ]]; then
-      msg "INFO: Absent 16S rRNA gene prokka_genbank_file in !{prokka_genbank_file}" >&2
+    if [[ ! -s "!{biopython_extracted_rna}" ]]; then
+      msg "INFO: Absent 16S rRNA gene annotation in !{meta.id}-!{meta.assembler}.gbk" >&2
       msg 'Running barrnap' >&2
 
-      barrnap !{assembly} | grep "Name=16S_rRNA;product=16S" > "!{meta.id}-!{meta.assembler}.gff"
+      rm "!{biopython_extracted_rna}"
+
+      barrnap \
+        --reject 0.1 \
+        !{assembly} \
+        | grep "Name=16S_rRNA;product=16S" \
+        > "!{meta.id}-!{meta.assembler}.gff" \
+        || :
 
       if [[ $(grep -c "Name=16S_rRNA;product=16S" "!{meta.id}-!{meta.assembler}.gff") -eq 0 ]]; then
         msg "INFO: Barrnap was unable to locate a 16S rRNA gene sequence in !{assembly}" >&2
-        exit 2
+        touch "16S.!{meta.id}-!{meta.assembler}.fa"
+      else
+        bedtools getfasta \
+          -fi !{assembly} \
+          -bed "!{meta.id}-!{meta.assembler}.gff" \
+          -fo "16S.!{meta.id}-!{meta.assembler}.fa"
       fi
-
-      bedtools getfasta \
-        -fi !{assembly} \
-        -bed "!{meta.id}-!{meta.assembler}.gff" \
-        -fo "16S.!{meta.id}-!{meta.assembler}.fa"
     fi
 
     echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
     if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Extracted File' "!{params.min_filesize_extracted_ssu_file}"; then
-      echo -e "!{meta.id}\tSSU Extracted File\tPASS"  \
+      echo -e "!{meta.id}-!{meta.assembler}\tSSU Extracted File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
     else
-      echo -e "!{meta.id}\tSSU Extracted File\tFAIL" \
+      echo -e "!{meta.id}-!{meta.assembler}\tSSU Extracted File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
     fi
 
@@ -53,10 +60,10 @@ process EXTRACT_16S_BARRNAP {
 
     echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
     if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Renamed File' "!{params.min_filesize_renamed_ssu_file}"; then
-      echo -e "!{meta.id}\tSSU Renamed File\tPASS"  \
+      echo -e "!{meta.id}-!{meta.assembler}\tSSU Renamed File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
     else
-      echo -e "!{meta.id}\tSSU Renamed File\tFAIL" \
+      echo -e "!{meta.id}-!{meta.assembler}\tSSU Renamed File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
     fi
 

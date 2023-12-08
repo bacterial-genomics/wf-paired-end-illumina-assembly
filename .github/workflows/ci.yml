@@ -20,12 +20,12 @@ jobs:
   test:
     name: Run pipeline with test data
     # Only run on push if this is the nf-core dev branch (merged PRs)
-    if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'gregorysprenger/wf-paired-end-illumina-assembly') }}"
+    if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'bacterial-genomics/wf-paired-end-illumina-assembly') }}"
     runs-on: ubuntu-latest
     strategy:
       matrix:
         NXF_VER:
-          - "22.10.1"
+          - "22.04.3"
           - "latest-everything"
     steps:
       - name: Free some space
@@ -48,7 +48,7 @@ jobs:
   assemblers:
     name: Run workflow assemblers
     # Only run on push if this is the nf-core dev branch (merged PRs)
-    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'gregorysprenger/wf-paired-end-illumina-assembly') }}
+    if: ${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'bacterial-genomics/wf-paired-end-illumina-assembly') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:

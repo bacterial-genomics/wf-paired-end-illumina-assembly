@@ -7,9 +7,9 @@ process FILTER_CONTIGS_BIOPYTHON {
     tuple val(meta), path(contigs)
 
     output:
+    tuple val(meta), path("${meta.id}-${meta.assembler}.uncorrected.fna"), emit: uncorrected_contigs
     path(".command.{out,err}")
     path("versions.yml")                                                 , emit: versions
-    tuple val(meta), path("${meta.id}-${meta.assembler}.uncorrected.fna"), emit: uncorrected_contigs
 
     shell:
     gcskew = params.filter_contigs_gcskew ? "" : "-g"

@@ -7,9 +7,9 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
     tuple val(meta), path(reads)
 
     output:
+    tuple val(meta), path("${meta.id}.input_total_bp.txt"), emit: input_total_bp
     path(".command.{out,err}")
     path("versions.yml")                                  , emit: versions
-    tuple val(meta), path("${meta.id}.input_total_bp.txt"), emit: input_total_bp
 
     shell:
     total_bp = 0

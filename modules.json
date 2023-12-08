@@ -1,6 +1,6 @@
 {
-    "name": "wf-paired-end-illumina-assembly",
-    "homePage": "https://github.com/gregorysprenger/wf-paired-end-illumina-assembly",
+    "name": "bacterial-genomics/wf-paired-end-illumina-assembly",
+    "homePage": "https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly",
     "repos": {
         "https://github.com/nf-core/modules.git": {
             "modules": {
@@ -16,9 +16,6 @@
                         "installed_by": ["modules"]
                     }
                 }
-            },
-            "subworkflows": {
-                "nf-core": {}
             }
         }
     }

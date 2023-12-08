@@ -8,11 +8,11 @@ process ANNOTATE_PROKKA {
     tuple val(meta), path(assembly)
 
     output:
-    path(".command.{out,err}")
-    path("prokka/${meta.id}-${meta.assembler}.log.gz")
-    path("versions.yml")                                                            , emit: versions
     tuple val(meta), path("${meta.id}-${meta.assembler}.Annotated_GenBank_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}-${meta.assembler}.gbk")                       , emit: prokka_genbank_file
+    path("prokka/${meta.id}-${meta.assembler}.log.gz")
+    path(".command.{out,err}")
+    path("versions.yml")                                                            , emit: versions
 
     shell:
     curated_proteins = params.prokka_curated_proteins ? "--proteins ${params.prokka_curated_proteins}" : ""
@@ -51,10 +51,10 @@ process ANNOTATE_PROKKA {
     # Verify output file
     echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Annotated_GenBank_File.tsv"
     if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.gbk" 'Annotated GenBank File' "!{params.min_filesize_annotated_genbank}"; then
-      echo -e "!{meta.id}\tAnnotated GenBank File\tPASS" \
+      echo -e "!{meta.id}-!{meta.assembler}\tAnnotated GenBank File\tPASS" \
         >> "!{meta.id}-!{meta.assembler}.Annotated_GenBank_File.tsv"
     else
-      echo -e "!{meta.id}\tAnnotated GenBank File\tFAIL" \
+      echo -e "!{meta.id}-!{meta.assembler}\tAnnotated GenBank File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.Annotated_GenBank_File.tsv"
     fi
 

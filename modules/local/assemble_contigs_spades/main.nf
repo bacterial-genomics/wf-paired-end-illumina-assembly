@@ -8,11 +8,11 @@ process ASSEMBLE_CONTIGS_SPADES {
     tuple val(meta), path(cleaned_fastq_files)
 
     output:
+    tuple val(meta), path("${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}-${meta.assembler}_contigs.fasta")        , emit: contigs
     path("${meta.id}-${meta.assembler}*.{log,gfa,gz,fasta}")
     path(".command.{out,err}")
     path("versions.yml")                                                       , emit: versions
-    tuple val(meta), path("${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"), emit: qc_filecheck
-    tuple val(meta), path("${meta.id}-${meta.assembler}_contigs.fasta")        , emit: contigs
 
     shell:
     mode_list = ["--isolate", "--sc", "--meta", "--plasmid", "--rna", "--metaviral", "--metaplasmid", "--corona"]
@@ -37,10 +37,10 @@ process ASSEMBLE_CONTIGS_SPADES {
     # Verify file output
     echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     if verify_minimum_file_size "SPAdes/contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then
-      echo -e "!{meta.id}\tRaw Assembly File\tPASS"  \
+      echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     else
-      echo -e "!{meta.id}\tRaw Assembly File\tFAIL" \
+      echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     fi
 

@@ -8,9 +8,9 @@ process BLAST_DB_PREPARATION_UNIX {
     path(database)
 
     output:
+    tuple val(db_name), path("database/*"), emit: db
     path(".command.{out,err}")
     path("versions.yml")                  , emit: versions
-    tuple val(db_name), path("database/*"), emit: db
 
     shell:
     db_name = "16S_ribosomal_RNA"
