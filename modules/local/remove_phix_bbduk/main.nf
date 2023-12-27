@@ -87,36 +87,36 @@ process REMOVE_PHIX_BBDUK {
     msg "INFO: Input contains ${TOT_BASES} bp and $TOT_READS reads"
     msg "INFO: ${PHIX_BASES:-0} bp of PhiX were detected and ${PHIX_READS:-0} reads were removed"
 
-    SUMMARY_HEADER="
-      Sample name\t
-      # Cleaned reads\t
-      % Cleaned reads\t
-      # Cleaned bp\t
-      % Cleaned bp\t
-      # PhiX reads\t
-      % PhiX reads\t
-      # PhiX Bp\t
-      % PhiX bp\t
-      # Raw reads\t
-      # Raw bp
-      "
+    SUMMARY_HEADER=(
+      "Sample name",
+      "# Cleaned reads",
+      "% Cleaned reads",
+      "# Cleaned bp",
+      "% Cleaned bp",
+      "# PhiX reads",
+      "% PhiX reads",
+      "# PhiX Bp",
+      "% PhiX bp",
+      "# Raw reads",
+      "# Raw bp"
+    )
 
-    SUMMARY_OUTPUT="
-      !{meta.id}\t
-      ${NUM_CLEANED_READS}\t
-      ${PERCENT_CLEANED_READS}\t
-      ${NUM_CLEANED_BASES}\t
-      ${PERCENT_CLEANED_BASES}\t
-      ${NUM_PHIX_READS}\t
-      ${PERCENT_PHIX_READS}\t
-      ${NUM_PHIX_BASES}\t
-      ${PERCENT_PHIX_BASES}\t
-      ${TOT_READS}\t
-      ${TOT_BASES}
-      "
+    SUMMARY_OUTPUT=(
+      "!{meta.id}",
+      "${NUM_CLEANED_READS}",
+      "${PERCENT_CLEANED_READS}",
+      "${NUM_CLEANED_BASES}",
+      "${PERCENT_CLEANED_BASES}",
+      "${NUM_PHIX_READS}",
+      "${PERCENT_PHIX_READS}",
+      "${NUM_PHIX_BASES}",
+      "${PERCENT_PHIX_BASES}",
+      "${TOT_READS}",
+      "${TOT_BASES}",
+      )
 
-    echo -e $SUMMARY_HEADER > "!{meta.id}.Summary.PhiX.tsv"
-    echo -e $SUMMARY_OUTPUT >> "!{meta.id}.Summary.PhiX.tsv"
+    printf "%s" "${SUMMARY_HEADER[@]}" | tr ',' '\t' > "!{meta.id}.Summary.PhiX.tsv"
+    printf "%s" "${SUMMARY_OUTPUT[@]}" | tr ',' '\t' >> "!{meta.id}.Summary.PhiX.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
