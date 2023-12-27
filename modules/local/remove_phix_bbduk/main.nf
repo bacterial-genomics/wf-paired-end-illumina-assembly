@@ -114,7 +114,7 @@ process REMOVE_PHIX_BBDUK {
       "${TOT_READS}",
       "${TOT_BASES}",
       )
-    
+
     printf "%s" "${SUMMARY_HEADER[@]}" | tr ',' '\t' > "!{meta.id}.Summary.PhiX.tsv"
     printf "%s" "${SUMMARY_OUTPUT[@]}" | tr ',' '\t' >> "!{meta.id}.Summary.PhiX.tsv"
 
