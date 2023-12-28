@@ -6,4 +6,6 @@ results/
 testing/
 testing*
 *.pyc
+assets/.cache/
 singularity.cache/
+null/
