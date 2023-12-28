@@ -5,28 +5,17 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
     container "ncbi/sra-human-scrubber@sha256:96723dba29c70dcda1e26663c92675c55f9a2340b592db7b1f7013a8b8247fe4"
 
     input:
-    tuple val(meta), path(reads), path(qc_input_filecheck)
+    tuple val(meta), path(reads)
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                                                                            , emit: versions
-    path "${meta.id}.Summary.SRA-Human-Scrubber-Removal.tsv"                                                       , emit: sra_human_scrubber_summary
-    tuple val(meta), path("${meta.id}_scrubbed.fastq.gz"), path("${meta.id}_scrubbed.fastq.gz"), path("*File*.tsv"), emit: sra_human_scrubber_removed
+    path "versions.yml"                                     , emit: versions
+    path "${meta.id}.Summary.SRA-Human-Scrubber-Removal.tsv", emit: sra_human_scrubber_summary
+    tuple val(meta), path("${meta.id}_R*_scrubbed.fastq.gz"), emit: sra_human_scrubber_removed
 
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_input_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Use a non-default host to remove only if user-specified
     # TO-DO:  implementing this is much more difficult because it needs an
@@ -45,12 +34,12 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
       zcat "!{reads[0]}" | \
         scrub.sh \
         -p !{task.cpus} | \
-        gzip > "!{reads[0]}"_scrubbed.fastq.gz
+        gzip > "!{meta.id}"_R1_scrubbed.fastq.gz
     else
       scrub.sh \
         -i "!{reads[0]}" \
         -p !{task.cpus} | \
-        gzip > "!{reads[0]}"_scrubbed.fastq.gz
+        gzip > "!{meta.id}"_R1_scrubbed.fastq.gz
     fi
 
     # Parse R1 counts input/output/removed
@@ -65,12 +54,12 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
       zcat "!{reads[1]}" | \
         scrub.sh \
         -p !{task.cpus} | \
-        gzip > "!{reads[1]}"_scrubbed.fastq.gz
+        gzip > "!{meta.id}"_R2_scrubbed.fastq.gz
     else
       scrub.sh \
         -i "!{reads[1]}" \
         -p !{task.cpus} | \
-        gzip > "!{reads[1]}"_scrubbed.fastq.gz
+        gzip > "!{meta.id}"_R2_scrubbed.fastq.gz
     fi
 
     # Parse R2 counts input/output/removed

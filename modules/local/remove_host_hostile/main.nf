@@ -5,28 +5,17 @@ process REMOVE_HOST_HOSTILE {
     container "quay.io/biocontainers/hostile:0.2.0--pyhdfd78af_0@sha256:08b38e53f01f78877bdac9638263be0f5b6e02b709c302f56812532d448728b8"
 
     input:
-    tuple val(meta), path(reads), path(qc_input_filecheck)
+    tuple val(meta), path(reads)
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                                                                    , emit: versions
-    path "${meta.id}.Summary.Hostile-Removal.tsv"                                                          , emit: hostile_summary
-    tuple val(meta), path("${meta.id}_noPhiX-R1.fsq"), path("${meta.id}_noPhiX-R2.fsq"), path("*File*.tsv"), emit: hostile_removed
+    path "versions.yml"                                 , emit: versions
+    path "${meta.id}.Summary.Hostile-Removal.tsv"       , emit: hostile_summary
+    tuple val(meta), path("hostile/${meta.id}*.clean_*"), emit: hostile_removed
 
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_input_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Use a non-default host to remove only if user-specified
     HOST_INDEX_ARGUMENT=''
@@ -68,6 +57,8 @@ process REMOVE_HOST_HOSTILE {
     # NOTE: grep used because `jq` absent from package
     RELATIVE_OUTPATH_R1=$(grep '"fastq1_out_path":' command.err | awk '{print $2}' | sed 's/[",]//g')
     RELATIVE_OUTPATH_R2=$(grep '"fastq2_out_path":' command.err | awk '{print $2}' | sed 's/[",]//g')
+
+
 
     # Validate output files are sufficient size to continue
     for file in ${RELATIVE_OUTPATH_R1} ${RELATIVE_OUTPATH_R2}; do
