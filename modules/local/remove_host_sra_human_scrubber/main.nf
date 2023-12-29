@@ -121,7 +121,7 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
       "${COUNT_READS_REMOVED}"
       "${COUNT_PERCENT_REMOVED}"
     )
-    SUMMARY_OUTPUT=$(printf "%s${DELIM}" "${SUMMARY_OUTPUT[@]}"
+    SUMMARY_OUTPUT=$(printf "%s${DELIM}" "${SUMMARY_OUTPUT[@]}")
     SUMMARY_OUTPUT="${SUMMARY_OUTPUT%${DELIM}}"
 
     # Store input/output counts

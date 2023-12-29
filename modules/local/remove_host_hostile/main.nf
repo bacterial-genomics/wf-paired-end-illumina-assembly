@@ -120,17 +120,17 @@ process REMOVE_HOST_HOSTILE {
       "${COUNT_READS_REMOVED}"
       "${COUNT_PERCENT_REMOVED}"
     )
-    SUMMARY_OUTPUT=$(printf "%s${DELIM}" "${SUMMARY_OUTPUT[@]}"
+    SUMMARY_OUTPUT=$(printf "%s${DELIM}" "${SUMMARY_OUTPUT[@]}")
     SUMMARY_OUTPUT="${SUMMARY_OUTPUT%${DELIM}}"
 
     # Store input/output counts
     echo -e "${SUMMARY_HEADER}" > !{meta.id}.Summary.Hostile-Removal.tsv
     echo -e "${SUMMARY_OUTPUT}" >> !{meta.id}.Summary.Hostile-Removal.tsv
 
-    # # Get process version information
-    # cat <<-END_VERSIONS > versions.yml
-    # "!{task.process}":
-    #     hostile: $(hostile --version)
-    # END_VERSIONS
+    # Get process version information
+    cat <<-END_VERSIONS > versions.yml
+    "!{task.process}":
+        hostile: $(hostile --version)
+    END_VERSIONS
     '''
 }
