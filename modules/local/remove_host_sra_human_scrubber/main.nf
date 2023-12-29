@@ -29,17 +29,18 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
     # NOTE: output .gz filename doesn't compress, so requires gzip
     # NOTE: no handling for PE, do paired files 1-by-1
     # scrub the R1 FastQ file
-    RELATIVE_OUTPATH_R1=$(pwd)
+    OUTFILE_SCRUBBED_R1="!{meta.id}"_R1_scrubbed.fastq.gz
     if [[ "!{reads[0]}" =~ .gz ]]; then
       zcat "!{reads[0]}" | \
         scrub.sh \
+        -d /scicomp/groups-pure/OID/NCEZID/DHCPP/BSPB/ZSAL/.databases/sra-human-scrubber/data/human_filter.db \
         -p !{task.cpus} | \
-        gzip > "!{meta.id}"_R1_scrubbed.fastq.gz
+        gzip > "${OUTFILE_SCRUBBED_R1}"
     else
       scrub.sh \
         -i "!{reads[0]}" \
         -p !{task.cpus} | \
-        gzip > "!{meta.id}"_R1_scrubbed.fastq.gz
+        gzip > "${OUTFILE_SCRUBBED_R1}"
     fi
 
     # Parse R1 counts input/output/removed
@@ -49,17 +50,18 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
     R1_COUNT_READS_OUTPUT=$(("${R1_COUNT_READS_INPUT}"-"${R1_COUNT_READS_REMOVED}"))
 
     # scrub the R2 FastQ file
-    RELATIVE_OUTPATH_R2=$(pwd)
+    OUTFILE_SCRUBBED_R2="!{meta.id}"_R2_scrubbed.fastq.gz
     if [[ "!{reads[1]}" =~ .gz ]]; then
       zcat "!{reads[1]}" | \
         scrub.sh \
+        -d /scicomp/groups-pure/OID/NCEZID/DHCPP/BSPB/ZSAL/.databases/sra-human-scrubber/data/human_filter.db \
         -p !{task.cpus} | \
-        gzip > "!{meta.id}"_R2_scrubbed.fastq.gz
+        gzip > "${OUTFILE_SCRUBBED_R2}"
     else
       scrub.sh \
         -i "!{reads[1]}" \
         -p !{task.cpus} | \
-        gzip > "!{meta.id}"_R2_scrubbed.fastq.gz
+        gzip > "${OUTFILE_SCRUBBED_R2}"
     fi
 
     # Parse R2 counts input/output/removed
@@ -69,8 +71,8 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
     R2_COUNT_READS_OUTPUT=$(("${R2_COUNT_READS_INPUT}"-"${R2_COUNT_READS_REMOVED}"))
 
     # Validate output files are sufficient size to continue
-    for file in ${RELATIVE_OUTPATH_R1} ${RELATIVE_OUTPATH_R2}; do
-      if verify_minimum_file_size "${file}"_scrubbed.fastq.gz 'SRA-Human-Scrubber-removed FastQ Files' "!{params.min_filesize_fastq_sra_human_scrubber_removed}"; then
+    for file in ${OUTFILE_SCRUBBED_R1} ${OUTFILE_SCRUBBED_R2}; do
+      if verify_minimum_file_size "${file}" 'SRA-Human-Scrubber-removed FastQ Files' "!{params.min_filesize_fastq_sra_human_scrubber_removed}"; then
         echo -e "!{meta.id}\tSRA-Human-Scrubber-removed FastQ ($file) File\tPASS" \
           >> !{meta.id}.SRA_Human_Scrubber_FastQ_File.tsv
       else
