@@ -1,8 +1,8 @@
 process REMOVE_HOST_HOSTILE {
 
-    label "process_low"
+    label "process_high"
     tag { "${meta.id}" }
-    container "quay.io/biocontainers/hostile:0.2.0--pyhdfd78af_0@sha256:08b38e53f01f78877bdac9638263be0f5b6e02b709c302f56812532d448728b8"
+    container "quay.io/biocontainers/hostile:0.2.0--pyhdfd78af_0"
 
     input:
     tuple val(meta), path(reads)
@@ -34,29 +34,37 @@ process REMOVE_HOST_HOSTILE {
         1> !{meta.id}.bowtie2-inspect.stdout.log \
         2> !{meta.id}.bowtie2-inspect.stderr.log
       HOST_INDEX_ARGUMENT="--index !{params.hostile_host_reference_path_prefix}"
-      fi
     fi
 
     # Remove Host Reads
     msg "INFO: Removing host reads using Hostile"
 
-    hostile \
-      clean \
-      --fastq1 "!{reads[0]}" \
-      --fastq2 "!{reads[0]}" \
-      --out-dir hostile \
-      "${HOST_INDEX_ARGUMENT}" \
-      --threads !{task.cpus}
+    if [[ ! -z "!{params.hostile_host_reference_path_prefix}" ]]; then
+      hostile \
+        clean \
+        --fastq1 "!{reads[0]}" \
+        --fastq2 "!{reads[1]}" \
+        --out-dir hostile \
+        "${HOST_INDEX_ARGUMENT}" \
+        --threads !{task.cpus}
+    else
+      hostile \
+        clean \
+        --fastq1 "!{reads[0]}" \
+        --fastq2 "!{reads[1]}" \
+        --out-dir hostile \
+        --threads !{task.cpus}
+    fi
 
     # JSON format stdout reports input/output filenames and read counts
-    if ! verify_minimum_file_size command.err 'JSON stdout for Hostile' '1k'; then
+    if ! verify_minimum_file_size .command.out 'JSON stdout for Hostile' '1k'; then
       msg "ERROR: JSON stdout missing or empty for reporting Hostile results" >&2
       exit 1
     fi
 
     # NOTE: grep used because `jq` absent from package
-    RELATIVE_OUTPATH_R1=$(grep '"fastq1_out_path":' command.err | awk '{print $2}' | sed 's/[",]//g')
-    RELATIVE_OUTPATH_R2=$(grep '"fastq2_out_path":' command.err | awk '{print $2}' | sed 's/[",]//g')
+    RELATIVE_OUTPATH_R1=$(grep '"fastq1_out_path":' .command.out | awk '{print $2}' | sed 's/[",]//g')
+    RELATIVE_OUTPATH_R2=$(grep '"fastq2_out_path":' .command.out | awk '{print $2}' | sed 's/[",]//g')
 
 
 
@@ -72,10 +80,10 @@ process REMOVE_HOST_HOSTILE {
     done
 
     # NOTE: grep used because `jq` absent from package
-    COUNT_READS_INPUT=$(grep '"reads_in":' command.err | awk '{print $2}' | sed 's/,//g')
-    COUNT_READS_OUTPUT=$(grep '"reads_out":' command.err | awk '{print $2}' | sed 's/,//g')
-    COUNT_READS_REMOVED=$(grep '"reads_removed":' command.err | awk '{print $2}' | sed 's/,//g')
-    COUNT_PERCENT_REMOVED=$(grep '"reads_removed_proportion":' command.err | awk '{$2=$2*100; print $2}')
+    COUNT_READS_INPUT=$(grep '"reads_in":' .command.out | awk '{print $2}' | sed 's/,//g')
+    COUNT_READS_OUTPUT=$(grep '"reads_out":' .command.out | awk '{print $2}' | sed 's/,//g')
+    COUNT_READS_REMOVED=$(grep '"reads_removed":' .command.out | awk '{print $2}' | sed 's/,//g')
+    COUNT_PERCENT_REMOVED=$(grep '"reads_removed_proportion":' .command.out | awk '{$2=$2*100; print $2}')
 
     # Ensure all values parsed properly from JSON output report
     for val in $COUNT_READS_INPUT $COUNT_READS_OUTPUT $COUNT_READS_REMOVED; do
@@ -94,7 +102,7 @@ process REMOVE_HOST_HOSTILE {
     msg "INFO: ${COUNT_PERCENT_REMOVED}% of input reads were removed (${COUNT_READS_REMOVED} reads)"
     msg "INFO: ${COUNT_READS_OUTPUT} non-host reads were retained"
 
-    DELIM=$'\t'
+    DELIM='\t'
     SUMMARY_HEADER=(
       "Sample name"
       "# Input reads"
@@ -119,10 +127,10 @@ process REMOVE_HOST_HOSTILE {
     echo -e "${SUMMARY_HEADER}" > !{meta.id}.Summary.Hostile-Removal.tsv
     echo -e "${SUMMARY_OUTPUT}" >> !{meta.id}.Summary.Hostile-Removal.tsv
 
-    # Get process version information
-    cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        hostile: $(hostile --version)
-    END_VERSIONS
+    # # Get process version information
+    # cat <<-END_VERSIONS > versions.yml
+    # "!{task.process}":
+    #     hostile: $(hostile --version)
+    # END_VERSIONS
     '''
 }
