@@ -1,0 +1,11 @@
+name: Miscellaneous request
+description: For creating a new issue that does not fall under bug reports or feature requests
+labels: question
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of feature
+      description: Please describe your request. Please use bug report or feature request for any bugs that are encountered or features to implement.
+    validations:
+      required: true
