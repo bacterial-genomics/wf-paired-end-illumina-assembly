@@ -83,8 +83,10 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
     COUNT_READS_INPUT=$(("${R1_COUNT_READS_INPUT}"+"${R2_COUNT_READS_INPUT}"))
     COUNT_READS_REMOVED=$(("${R1_COUNT_READS_REMOVED}"+"${R2_COUNT_READS_REMOVED}"))
     COUNT_READS_OUTPUT=$(("${R1_COUNT_READS_OUTPUT}"+"${R2_COUNT_READS_OUTPUT}"))
-    COUNT_PERCENT_REMOVED=$(echo "${COUNT_READS_REMOVED}" "${COUNT_READS_INPUT}" \
+    PERCENT_REMOVED=$(echo "${COUNT_READS_REMOVED}" "${COUNT_READS_INPUT}" \
      | awk '{proportion=$1/$2} END{printf("%.6f", proportion*100)}')
+    PERCENT_OUTPUT=$(echo "${COUNT_READS_REMOVED}" "${COUNT_READS_INPUT}" \
+     | awk '{proportion=$1/$2} END{printf("%.6f", 100-(proportion*100))}')
 
     # Ensure all values parsed properly from stderr output
     for val in $COUNT_READS_INPUT $COUNT_READS_OUTPUT $COUNT_READS_REMOVED; do
@@ -93,21 +95,24 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
         exit 1
       fi
     done
-    if [[ ! "${COUNT_PERCENT_REMOVED}" =~ [0-9.] ]]; then
-        msg "ERROR: expected percentage parsed from SRA Human Scrubber stderr instead of:${COUNT_PERCENT_REMOVED}" >&2
-        exit 1
-    fi
+    for val in $PERCENT_REMOVED $PERCENT_OUTPUT; do
+      if [[ ! "${val}" =~ [0-9.] ]]; then
+          msg "ERROR: expected percentage parsed from SRA Human Scrubber stderr instead of:${val}" >&2
+          exit 1
+      fi
+    done
 
     # Print read counts input/output from this process
     msg "INFO: Input contains ${COUNT_READS_INPUT} reads"
-    msg "INFO: ${COUNT_PERCENT_REMOVED}% of input reads were removed (${COUNT_READS_REMOVED} reads)"
-    msg "INFO: ${COUNT_READS_OUTPUT} non-host reads were retained"
+    msg "INFO: ${PERCENT_REMOVED}% of input reads were removed (${COUNT_READS_REMOVED} reads)"
+    msg "INFO: ${COUNT_READS_OUTPUT} non-host reads (${PERCENT_OUTPUT}%) were retained"
 
     DELIM=$'\t'
     SUMMARY_HEADER=(
       "Sample name"
       "# Input reads"
       "# Output reads"
+      "% Output reads"
       "# Removed reads"
       "% Removed reads"
     )
@@ -118,8 +123,9 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
       "!{meta.id}"
       "${COUNT_READS_INPUT}"
       "${COUNT_READS_OUTPUT}"
+      "${PERCENT_OUTPUT}"
       "${COUNT_READS_REMOVED}"
-      "${COUNT_PERCENT_REMOVED}"
+      "${PERCENT_REMOVED}"
     )
     SUMMARY_OUTPUT=$(printf "%s${DELIM}" "${SUMMARY_OUTPUT[@]}")
     SUMMARY_OUTPUT="${SUMMARY_OUTPUT%${DELIM}}"

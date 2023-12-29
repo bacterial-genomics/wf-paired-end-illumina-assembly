@@ -66,8 +66,6 @@ process REMOVE_HOST_HOSTILE {
     RELATIVE_OUTPATH_R1=$(grep '"fastq1_out_path":' .command.out | awk '{print $2}' | sed 's/[",]//g')
     RELATIVE_OUTPATH_R2=$(grep '"fastq2_out_path":' .command.out | awk '{print $2}' | sed 's/[",]//g')
 
-
-
     # Validate output files are sufficient size to continue
     for file in ${RELATIVE_OUTPATH_R1} ${RELATIVE_OUTPATH_R2}; do
       if verify_minimum_file_size "${file}" 'Hostile-removed FastQ Files' "!{params.min_filesize_fastq_hostile_removed}"; then
@@ -82,8 +80,9 @@ process REMOVE_HOST_HOSTILE {
     # NOTE: grep used because `jq` absent from package
     COUNT_READS_INPUT=$(grep '"reads_in":' .command.out | awk '{print $2}' | sed 's/,//g')
     COUNT_READS_OUTPUT=$(grep '"reads_out":' .command.out | awk '{print $2}' | sed 's/,//g')
+    PERCENT_OUTPUT=$(grep '"reads_removed_proportion":' .command.out | awk '{$2=$2*100; print 100-$2}')
     COUNT_READS_REMOVED=$(grep '"reads_removed":' .command.out | awk '{print $2}' | sed 's/,//g')
-    COUNT_PERCENT_REMOVED=$(grep '"reads_removed_proportion":' .command.out | awk '{$2=$2*100; print $2}')
+    PERCENT_REMOVED=$(grep '"reads_removed_proportion":' .command.out | awk '{$2=$2*100; print $2}')
 
     # Ensure all values parsed properly from JSON output report
     for val in $COUNT_READS_INPUT $COUNT_READS_OUTPUT $COUNT_READS_REMOVED; do
@@ -92,21 +91,24 @@ process REMOVE_HOST_HOSTILE {
         exit 1
       fi
     done
-    if [[ ! "${COUNT_PERCENT_REMOVED}" =~ [0-9.] ]]; then
-        msg "ERROR: expected percentage parsed from Hostile JSON instead of:${COUNT_PERCENT_REMOVED}" >&2
-        exit 1
-    fi
+    for val in $PERCENT_REMOVED $PERCENT_OUTPUT; do
+      if [[ ! "${val}" =~ [0-9.] ]]; then
+          msg "ERROR: expected percentage parsed from Hostile JSON instead of:${val}" >&2
+          exit 1
+      fi
+    done
 
     # Print read counts input/output from this process
     msg "INFO: Input contains ${COUNT_READS_INPUT} reads"
-    msg "INFO: ${COUNT_PERCENT_REMOVED}% of input reads were removed (${COUNT_READS_REMOVED} reads)"
-    msg "INFO: ${COUNT_READS_OUTPUT} non-host reads were retained"
+    msg "INFO: ${PERCENT_REMOVED}% of input reads were removed (${COUNT_READS_REMOVED} reads)"
+    msg "INFO: ${COUNT_READS_OUTPUT} non-host reads (${PERCENT_OUTPUT}%) were retained"
 
     DELIM='\t'
     SUMMARY_HEADER=(
       "Sample name"
       "# Input reads"
       "# Output reads"
+      "% Output reads"
       "# Removed reads"
       "% Removed reads"
     )
@@ -117,8 +119,9 @@ process REMOVE_HOST_HOSTILE {
       "!{meta.id}"
       "${COUNT_READS_INPUT}"
       "${COUNT_READS_OUTPUT}"
+      "${PERCENT_OUTPUT}"
       "${COUNT_READS_REMOVED}"
-      "${COUNT_PERCENT_REMOVED}"
+      "${PERCENT_REMOVED}"
     )
     SUMMARY_OUTPUT=$(printf "%s${DELIM}" "${SUMMARY_OUTPUT[@]}")
     SUMMARY_OUTPUT="${SUMMARY_OUTPUT%${DELIM}}"
