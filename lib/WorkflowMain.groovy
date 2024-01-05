@@ -15,7 +15,7 @@ class WorkflowMain {
             "* The nf-core framework\n" +
             "  https://doi.org/10.1038/s41587-020-0439-x\n\n" +
             "* Software dependencies\n" +
-            "  https://github.com/bacterial-genomics/${workflow.manifest.name}/blob/master/CITATIONS.md"
+            "  https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/blob/master/CITATIONS.md"
     }
 
     //
