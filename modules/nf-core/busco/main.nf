@@ -25,6 +25,7 @@ process BUSCO {
     tuple val(meta), path("*-busco/*/translated_proteins")            , emit: translated_dir, optional: true
     tuple val(meta), path("*-busco")                                  , emit: busco_dir
     path "versions.yml"                                               , emit: versions
+    path(".command.{out,err}")
 
     when:
     task.ext.when == null || task.ext.when
