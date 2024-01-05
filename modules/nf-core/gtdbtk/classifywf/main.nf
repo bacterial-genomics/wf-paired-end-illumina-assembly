@@ -24,6 +24,7 @@ process GTDBTK_CLASSIFYWF {
     tuple val(meta), path("gtdbtk.${prefix}.log")                   , emit: log
     tuple val(meta), path("gtdbtk.${prefix}.warnings.log")          , emit: warnings
     path("versions.yml")                           , emit: versions
+    path(".command.{out,err}")
 
     when:
     task.ext.when == null || task.ext.when
