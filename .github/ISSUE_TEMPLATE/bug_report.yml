@@ -8,7 +8,7 @@ body:
         Before you post this issue, please check the documentation:
 
         - [nf-core website: troubleshooting](https://nf-co.re/usage/troubleshooting)
-        - [wf-paired-end-illumina-assembly pipeline documentation](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/docs/usage.md)
+        - [wf-paired-end-illumina-assembly pipeline documentation](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/blob/main/docs/usage.md)
 
   - type: textarea
     id: description
