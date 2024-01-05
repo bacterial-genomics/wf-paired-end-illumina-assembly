@@ -16,10 +16,10 @@ process FILTER_CONTIGS_BIOPYTHON {
     keep_low_complexity = params.filter_contigs_keep_low_complexity ? "" : "-m"
     no_sort = params.filter_contigs_no_sort ? "--no-sort" : ""
 
-    if (params.filter_contigs_discard_file == "None") {
-      discard_file = ""
-    } else {
+    if (params.filter_contigs_discard_file) {
       discard_file = "-d ${params.filter_contigs_discard_file}"
+    } else {
+      discard_file = ""
     }
     '''
     source bash_functions.sh
