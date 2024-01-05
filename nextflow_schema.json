@@ -264,7 +264,7 @@
                 },
                 "filter_blast_bitscore": {
                     "type": "string",
-                    "default": 0,
+                    "default": "0",
                     "hidden": true,
                     "description": "Minimum BLASTn alignment bit score."
                 },
@@ -329,7 +329,7 @@
             "properties": {
                 "filter_contigs_coverage": {
                     "type": "string",
-                    "default": 5,
+                    "default": "5",
                     "hidden": true,
                     "description": "Minimum coverage of each contig, where an integer is an absolute coverage and a float is a minimum percentage, when filtering contigs."
                 },
@@ -408,7 +408,7 @@
                 },
                 "gtdbtk_min_af": {
                     "type": "string",
-                    "default": 0.65,
+                    "default": "0.65",
                     "hidden": true,
                     "description": "Minimum alignment fraction to assign genome to a species cluster."
                 },
@@ -451,7 +451,7 @@
                 },
                 "prokka_evalue": {
                     "type": "string",
-                    "default": 1e-8,
+                    "default": "1e-8",
                     "description": "Similarity e-value cut-off."
                 },
                 "min_filesize_annotated_genbank": {
