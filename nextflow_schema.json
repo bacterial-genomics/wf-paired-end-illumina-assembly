@@ -84,6 +84,22 @@
                     "default": "",
                     "hidden": true,
                     "description": "Prefix path to hostile bowtie2 index files to use for removal"
+                },
+                "sra_scrubber_db": {
+                    "type": "string",
+                    "default": "https://ftp.ncbi.nlm.nih.gov/sra/dbs/human_filter/human_filter.db.20230410v2",
+                    "description": "Database for NCBI's SRA Human Scrubber .db file",
+                    "help_text": "Path to a local file, or a URL to .DB file format that contains NCBI's STAT k-mers to remove from reads."
+                },
+                "update_sra_human_scrubber_db": {
+                    "type": "boolean",
+                    "description": "Automatically update SRA-Human-Scrubber database file."
+                },
+                "min_filesize_broken_pairs_bbtools_repair_removed": {
+                    "type": "string",
+                    "default": "25M",
+                    "hidden": true,
+                    "description": "Minimum output filesize for each FastQ file after BBTools Repair on SRA-Human-Scrubber reads"
                 }
             }
         },

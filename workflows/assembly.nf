@@ -104,6 +104,13 @@ if ( toLower(params.assembler) == "skesa" ) {
     var_assembler_name = "SPAdes"
 }
 
+// NCBI's SRA Human Scrubber
+if (params.sra_scrubber_db) {
+    ch_sra_scrubber_db_file = file(params.sra_scrubber_db, checkIfExists: true)
+} else {
+    ch_sra_scrubber_db_file = []
+}
+
 // PhiX Reference
 if (params.phix_reference) {
     ch_phix_reference = Channel
@@ -244,7 +251,8 @@ workflow ASSEMBLY {
 
     // SUBWORKFLOW: Remove host from FastQ files
     HOST_REMOVAL (
-        ch_infile_handling
+        ch_infile_handling,
+        ch_sra_scrubber_db_file
     )
     ch_versions = ch_versions.mix(HOST_REMOVAL.out.versions)
 
@@ -481,9 +489,9 @@ workflow ASSEMBLY {
     if ( ch_blast_db_file ) {
         if ( ch_blast_db_file.extension in ['gz', 'tgz'] ) {
             // Expects to be .tar.gz!
-            BLAST_DB_PREPARATION_UNIX (
-                ch_blast_db_file
-            )
+                BLAST_DB_PREPARATION_UNIX (
+                    ch_blast_db_file
+                )
             ch_versions = ch_versions.mix(BLAST_DB_PREPARATION_UNIX.out.versions)
             ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db
 
