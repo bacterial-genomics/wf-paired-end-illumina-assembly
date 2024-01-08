@@ -175,8 +175,3 @@ elif [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   -a "${OUT}/pipeline_info/errors.tsv" \
   "${USER}@cdc.gov"
 fi
-
-# Move and symlink work directory
-# date=$(date '+%Y-%m-%d_%H-%M-%S')
-# mv ${OUT}/.work /scicomp/scratch/${USER}/work/ASM_${date}
-# ln -s /scicomp/scratch/${USER}/work/ASM_${date} ${OUT}/.work
