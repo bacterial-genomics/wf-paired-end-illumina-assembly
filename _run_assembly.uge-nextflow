@@ -1,4 +1,5 @@
 #!/bin/bash -l
+#$ -cwd
 
 SCRIPT_NAME="$(basename ${0#_} .uge-nextflow)"
 
@@ -15,13 +16,14 @@ module load nextflow
 nextflow \
   -log ${OUT}/pipeline_info/nextflow_log.${SCRIPT_NAME}.txt \
   run \
-  ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
+  -r main \
   -profile ${HPC} \
   --input ${IN} \
   --outdir ${OUT} \
   -ansi-log false \
   -N ${USER}@cdc.gov \
-  -w ${OUT}/.work \
+  -w /scicomp/scratch/${USER}/work \
   --blast_db ${LAB_HOME}/.databases/ncbi \
   --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
   --kraken2_db ${LAB_HOME}/.databases/kraken2 \
@@ -174,8 +176,3 @@ elif [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   -a "${OUT}/pipeline_info/errors.tsv" \
   "${USER}@cdc.gov"
 fi
-
-# Move and symlink work directory
-# date=$(date '+%Y-%m-%d_%H-%M-%S')
-# mv ${OUT}/.work /scicomp/scratch/${USER}/work/ASM_${date}
-# ln -s /scicomp/scratch/${USER}/work/ASM_${date} ${OUT}/.work

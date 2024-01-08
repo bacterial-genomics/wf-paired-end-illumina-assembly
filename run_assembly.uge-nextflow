@@ -302,6 +302,10 @@ mkdir -p ${OUT}/pipeline_info
 # Get node number - <=230 = biolinux, >=231 = rosalind
 NODE_NUM=$(echo ${HOSTNAME%%.*} | sed 's/node//1')
 
+# Update workflow
+module load nextflow
+nextflow pull bacterial-genomics/wf-paired-end-illumina-assembly -r main
+
 # If FastQ files are able to be submitted, submit and display basenames
 if [[ ${#submitted[@]} -ge 1 ]] && \
   [[ ${HOSTNAME%%.*} == 'biolinux' || 'login02' ]] || \
@@ -320,7 +324,7 @@ if [[ ${#submitted[@]} -ge 1 ]] && \
     -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
     -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
     -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+    "${HOME}/.nextflow/assets/bacterial-genomics/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow"
 
 elif [[ ${#submitted[@]} -ge 1 ]] && \
   [[ ${HOSTNAME%%.*} == 'rosalind01' ]] || \
@@ -340,7 +344,7 @@ elif [[ ${#submitted[@]} -ge 1 ]] && \
     -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
     -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
     -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+    "${HOME}/.nextflow/assets/bacterial-genomics/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow"
 
 else
   echo -e "${RED_TXT}Biolinux/Aspen/Rosalind HPC is not detected.\nSubmission cancelled. ${COLOR_OFF}"

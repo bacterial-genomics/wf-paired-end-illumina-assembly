@@ -3,11 +3,20 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v2.0.5 
+## v2.0.5
 
 ### `Added`
 
 - [#23](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Added a miscellanous issue template (@taylorpaisie).
+- [#27](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/27) Added new branch where bash scripts update the location of pipelines from LAB_HOME to HOME area (@gregorysprenger).
+
+### `Fixed`
+
+### `Updated`
+
+- [#28](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/28) Updated bash scripts to pull and run this workflow based off of the main branch (@gregorysprenger).
+
+### `Deprecated`
 
 ## v2.0.4 - December 8, 2023
 
