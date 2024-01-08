@@ -144,6 +144,13 @@ if (params.gtdb_db) {
     ch_gtdbtk_db_file = Channel.empty()
 }
 
+// Mash database for GTDB-Tk
+if (params.mash_db) {
+    ch_mash_db_file = file(params.mash_db)
+} else {
+    ch_mash_db_file = []
+}
+
 // BUSCO
 if (params.busco_db) {
     ch_busco_db_file = file(params.busco_db, checkIfExists: true)
@@ -626,7 +633,8 @@ workflow ASSEMBLY {
         // PROCESS: Perform GTDBTk on assembly FastA file
         QA_ASSEMBLY_GTDBTK (
             ASSEMBLE_CONTIGS.out.assembly_file,
-            ch_db_for_gtdbtk
+            ch_db_for_gtdbtk,
+            ch_mash_db_file
         )
         ch_versions = ch_versions.mix(QA_ASSEMBLY_GTDBTK.out.versions)
     }
