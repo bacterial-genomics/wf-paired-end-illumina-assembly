@@ -15,7 +15,8 @@ module load nextflow
 nextflow \
   -log ${OUT}/pipeline_info/nextflow_log.${SCRIPT_NAME}.txt \
   run \
-  ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
+  -r main \
   -profile ${HPC} \
   --input ${IN} \
   --outdir ${OUT} \
