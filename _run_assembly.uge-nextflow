@@ -22,7 +22,7 @@ nextflow \
   --outdir ${OUT} \
   -ansi-log false \
   -N ${USER}@cdc.gov \
-  -w ${OUT}/.work \
+  -w /scicomp/scratch/${USER}/work \
   --blast_db ${LAB_HOME}/.databases/ncbi \
   --kraken1_db /scicomp/reference-pure/kraken/OLD/1.0.0/kraken_db \
   --kraken2_db ${LAB_HOME}/.databases/kraken2 \
