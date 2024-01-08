@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 - [#23](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Added a miscellanous issue template (@taylorpaisie).
+- [#27](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/27) Added new branch where bash scripts update the location of pipelines from LAB_HOME to HOME area (@gregorysprenger).
+
+### `Fixed`
+
+### `Updated`
+
+### `Deprecated`
 
 ## v2.0.4 - December 8, 2023
 
