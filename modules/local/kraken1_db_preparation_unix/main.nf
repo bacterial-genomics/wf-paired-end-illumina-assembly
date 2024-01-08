@@ -1,11 +1,11 @@
 process KRAKEN1_DB_PREPARATION_UNIX {
 
     label "process_medium"
-    tag { "${database.getSimpleName()}" }
+    tag { "${meta.id}" }
     container "ubuntu:jammy"
 
     input:
-    path database
+    tuple val(meta), path(database)
 
     output:
     path("database/")         , emit: db
