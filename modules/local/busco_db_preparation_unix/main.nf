@@ -1,40 +1,39 @@
 process BUSCO_DB_PREPARATION_UNIX {
 
     label "process_medium"
-    tag { "${database.getSimpleName()}" }
+    tag { "${meta.id}" }
     container "ubuntu:jammy"
 
     input:
-    path(database)
+    tuple val(meta), path(database)
 
     output:
-    path("${dir}")            , emit: db
+    path("${output_dir}")     , emit: db
     path(".command.{out,err}")
     path("versions.yml")      , emit: versions
 
     shell:
-    db_name = database.getSimpleName()
-    dir = db_name.contains('odb10') ? "BUSCO/lineages/${db_name}" : db_name
+    output_dir = meta['id'].contains('odb10') ? "BUSCO/lineages/${meta.id}" : "${meta.id}"
     '''
     source bash_functions.sh
 
-    mkdir -p !{dir}
-    tar -xzf !{database} -C !{dir} --strip-components 1
+    mkdir -p !{output_dir}
+    tar -xzf !{database} -C !{output_dir} --strip-components 1
 
     # Check for `info` and `hmms` directories
     # Check lineage dataset
-    if [[ !{db_name} =~ odb10 ]]; then
+    if [[ !{meta.id} =~ odb10 ]]; then
       for directory in info hmms; do
-        if [[ ! -d "!{dir}/${directory}" ]]; then
+        if [[ ! -d "!{output_dir}/${directory}" ]]; then
           msg "ERROR: BUSCO dataset is missing required directory: `${directory}`."
           exit 1
         fi
       done
     else
       # Check if larger BUSCO database
-      num_odb10_dirs=$(find !{dir}/ -maxdepth 2 -type d -name "*_odb10" | wc -l)
-      num_hmms_dirs=$(find !{dir}/ -maxdepth 3 -type d -name "hmms" | wc -l)
-      num_info_dirs=$(find !{dir}/ -maxdepth 3 -type d -name "info" | wc -l)
+      num_odb10_dirs=$(find !{output_dir}/ -maxdepth 2 -type d -name "*_odb10" | wc -l)
+      num_hmms_dirs=$(find !{output_dir}/ -maxdepth 3 -type d -name "hmms" | wc -l)
+      num_info_dirs=$(find !{output_dir}/ -maxdepth 3 -type d -name "info" | wc -l)
 
       if [[ $num_odb10_dirs != $num_hmms_dirs ]] && [[ $num_odb10_dirs != $num_info_dirs ]]; then
         msg "ERROR: BUSCO database does not have the required directories `hmms` and `info` in each lineage dataseet."
