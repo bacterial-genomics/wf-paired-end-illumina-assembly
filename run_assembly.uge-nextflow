@@ -324,7 +324,7 @@ if [[ ${#submitted[@]} -ge 1 ]] && \
     -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
     -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
     -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    ${HOME}/.nextflow/assets/bacterial-genomic/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+    "${HOME}/.nextflow/assets/bacterial-genomics/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow"
 
 elif [[ ${#submitted[@]} -ge 1 ]] && \
   [[ ${HOSTNAME%%.*} == 'rosalind01' ]] || \
@@ -344,7 +344,7 @@ elif [[ ${#submitted[@]} -ge 1 ]] && \
     -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
     -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
     -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    ${HOME}/.nextflow/assets/bacterial-genomic/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+    "${HOME}/.nextflow/assets/bacterial-genomics/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow"
 
 else
   echo -e "${RED_TXT}Biolinux/Aspen/Rosalind HPC is not detected.\nSubmission cancelled. ${COLOR_OFF}"
