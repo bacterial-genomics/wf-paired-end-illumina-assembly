@@ -452,6 +452,12 @@
                     "description": "Database for contig taxonomic classification with GTDB-Tk.",
                     "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contains GTDB-Tk database."
                 },
+                "mash_db": {
+                    "type": "string",
+                    "description": "Database using within GTDB-Tk for ANI screening.",
+                    "default": "https://gembox.cbcb.umd.edu/mash/refseq.genomes.k21s1000.msh",
+                    "help_text": "Path to a local file or a URL a file that contains the Mash database that ends in `.msh`."
+                },
                 "skip_gtdbtk": {
                     "type": "boolean",
                     "default": false,
