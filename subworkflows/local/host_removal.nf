@@ -133,6 +133,11 @@ workflow HOST_REMOVAL {
 
         ch_host_removed_reads = REMOVE_HOST_HOSTILE.out.hostile_removed
 
+    } else if ( toLower(params.host_remove) == "skip" ) {
+        // User-specified skip host removal
+        log.warn("Host removal user-specified to skip.")
+        ch_host_removed_reads = ch_infile_handling
+
     } else {
         // Defaulting to no host removal
         log.warn("Host removal is not being performed.")
