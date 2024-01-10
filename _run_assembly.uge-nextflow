@@ -145,26 +145,26 @@ if [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
     ${OUT}/pipeline_info/errors.tsv
 fi
 
-# Count lines in Summary.Illumina.GenomeCoverage.tab
-if [[ -f "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" ]]; then
-  num_assemblies=$(awk 'END {print NR-1}' "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab")
+# Count lines in Summary.GenomeCoverage.tab
+if [[ -f "${OUT}/Summaries/Summary.GenomeCoverage.tab" ]]; then
+  num_assemblies=$(awk 'END {print NR-1}' "${OUT}/Summaries/Summary.GenomeCoverage.tab")
 fi
 
 # E-mail completion status
-if [[ -f "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" ]] \
+if [[ -f "${OUT}/Summaries/Summary.GenomeCoverage.tab" ]] \
   && [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
   -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
-  -a "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" \
+  -a "${OUT}/Summaries/Summary.GenomeCoverage.tab" \
   -a "${OUT}/pipeline_info/errors.tsv" \
   "${USER}@cdc.gov"
 
-elif [[ -f "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" ]]; then
+elif [[ -f "${OUT}/Summaries/Summary.GenomeCoverage.tab" ]]; then
   echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
   -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
-  -a "${OUT}/Summaries/Summary.Illumina.GenomeCoverage.tab" \
+  -a "${OUT}/Summaries/Summary.GenomeCoverage.tab" \
   "${USER}@cdc.gov"
 
 elif [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
