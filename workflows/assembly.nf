@@ -428,7 +428,7 @@ workflow ASSEMBLY {
                             .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_alignment_stats)
                             .map{ meta, file -> file }
                             .collectFile(
-                                name:     "Summary.Illumina.CleanedReads-AlignmentStats.tab",
+                                name:     "Summary.CleanedReads-AlignmentStats.tab",
                                 keepHeader: true,
                                 storeDir: "${params.outdir}/Summaries"
                             )
@@ -591,7 +591,7 @@ workflow ASSEMBLY {
     ch_cleaned_summary = ch_cleaned_summary
                             .mix(QA_ASSEMBLY_QUAST.out.summary_reads)
                             .collectFile(
-                                name:     "Summary.Illumina.CleanedReads-Bases.tab",
+                                name:     "Summary.CleanedReads-Bases.tab",
                                 keepHeader: true,
                                 storeDir: "${params.outdir}/Summaries"
                             )
@@ -608,7 +608,7 @@ workflow ASSEMBLY {
     ch_genome_cov_summary = ch_genome_cov_summary
                                 .mix(CALCULATE_COVERAGE_UNIX.out.genome_coverage)
                                 .collectFile(
-                                    name:     "Summary.Illumina.GenomeCoverage.tab",
+                                    name:     "Summary.GenomeCoverage.tab",
                                     keepHeader: true,
                                     storeDir: "${params.outdir}/Summaries"
                                 )
