@@ -29,7 +29,7 @@ process TRIM_READS_TRIMMOMATIC {
     simple_clip_threshold     = (params.trimmomatic_simple_clip_threshold >= 1)                                         ? params.trimmomatic_simple_clip_threshold     : 10
     palindrome_clip_threshold = (params.trimmomatic_palindrome_clip_threshold >= 1)                                     ? params.trimmomatic_palindrome_clip_threshold : 20
 
-    illumina_clip_params      = "${seed_mismatches}:${palindrome_clip_threshold}:${simple_clip_threshold}:${min_adapter_length}:${keep_both_reads}";
+    illumina_clip_params      = "${seed_mismatches}:${palindrome_clip_threshold}:${simple_clip_threshold}:${min_adapter_length}:${keep_both_reads}"
     '''
     source bash_functions.sh
 
