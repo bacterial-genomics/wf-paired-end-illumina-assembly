@@ -228,12 +228,6 @@
                     "default": "10k",
                     "hidden": true,
                     "description": "Minimum file size of input adapter reference file."
-                },
-                "min_filesize_fastq_adapters_removed": {
-                    "type": "string",
-                    "default": "25M",
-                    "hidden": true,
-                    "description": "Minimum file size of FastQ files after adapters are removed."
                 }
             }
         },
@@ -254,6 +248,87 @@
                     "default": "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_08gb_20231009.tar.gz",
                     "description": "Database for taxonomic profiling with kraken2.",
                     "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contain `{hash,opts,taxo}.k2d` files."
+                }
+            }
+        },
+        "read_trimming_options": {
+            "title": "Read trimming options",
+            "type": "object",
+            "description": "Read trimming options",
+            "default": "",
+            "properties": {
+                "min_filesize_fastq_adapters_removed": {
+                    "type": "string",
+                    "default": "25M",
+                    "hidden": true,
+                    "description": "Minimum file size of FastQ files after adapters are removed."
+                },
+                "trimmomatic_phred": {
+                    "type": "integer",
+                    "default": 33,
+                    "hidden": true,
+                    "description": "Phred quality score of Illumina FastQ files.",
+                    "enum": [33, 64]
+                },
+                "trimmomatic_min_length": {
+                    "type": "integer",
+                    "default": 50,
+                    "hidden": true,
+                    "description": "Minimum length of reads to keep."
+                },
+                "trimmomatic_leading_quality": {
+                    "type": "integer",
+                    "default": 10,
+                    "hidden": true,
+                    "description": "Remove bases at the start of a read that are below this quality threshold."
+                },
+                "trimmomatic_trailing_quality": {
+                    "type": "integer",
+                    "default": 10,
+                    "hidden": true,
+                    "description": "Remove bases at the end of a read that are below this quality threshold."
+                },
+                "trimmomatic_window_size": {
+                    "type": "integer",
+                    "default": 6,
+                    "hidden": true,
+                    "description": "Number of bases to scan when performing a sliding window to trim reads."
+                },
+                "trimmomatic_required_quality": {
+                    "type": "integer",
+                    "default": 30,
+                    "hidden": true,
+                    "description": "Average quality per base to keep when performing the sliding window."
+                },
+                "trimmomatic_seed_mismatches": {
+                    "type": "integer",
+                    "default": 2,
+                    "hidden": true,
+                    "description": "Maximum mismatch count which will still allow a full match to be performed."
+                },
+                "trimmomatic_palindrome_clip_threshold": {
+                    "type": "integer",
+                    "default": 20,
+                    "hidden": true,
+                    "description": "Quality threshold between two ligated adapters."
+                },
+                "trimmomatic_simple_clip_threshold": {
+                    "type": "integer",
+                    "default": 10,
+                    "hidden": true,
+                    "description": "Quality threshold between any adapter sequence."
+                },
+                "trimmomatic_min_adapter_length": {
+                    "type": "integer",
+                    "default": 8,
+                    "hidden": true,
+                    "description": "Minimum length of adapter when using palindrome mode."
+                },
+                "trimmomatic_keep_both": {
+                    "type": "boolean",
+                    "default": true,
+                    "hidden": true,
+                    "description": "Keep both paired-end reads."
                 }
             }
         },
