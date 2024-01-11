@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 - [#23](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Added a miscellanous issue template (@taylorpaisie).
+- [#25](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/25) Fix broken repository links (@gregorysprenger).
+- [#24](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/24) Update .nfcore.yml file to ignore specific nf-core file checks that do not apply to this workflow (@gregorysprenger)
+
+### `Fixed`
+
+- [#26](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/26) Updated database preparation modules to use `meta.id` to correctly rename `.command.{out,err}` files in the log directory (@gregorysprenger).
+
+### `Updated`
+
+### `Deprecated`
 
 ### `Fixed`
 
