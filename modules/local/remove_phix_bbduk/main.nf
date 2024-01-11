@@ -115,8 +115,7 @@ process REMOVE_PHIX_BBDUK {
       "${TOT_BASES}",
       )
 
-    printf "%s" "${SUMMARY_HEADER[@]}" | tr ',' '\t' > "!{meta.id}.Summary.PhiX.tsv"
-    printf "\n" >> "!{meta.id}.Summary.PhiX.tsv"
+    printf "%s\n" "${SUMMARY_HEADER[@]}" | tr ',' '\t' > "!{meta.id}.Summary.PhiX.tsv"
     printf "%s" "${SUMMARY_OUTPUT[@]}" | tr ',' '\t' >> "!{meta.id}.Summary.PhiX.tsv"
 
     # Get process version information
