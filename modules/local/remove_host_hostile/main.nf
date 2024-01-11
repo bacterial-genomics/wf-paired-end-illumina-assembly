@@ -1,32 +1,21 @@
 process REMOVE_HOST_HOSTILE {
 
-    label "process_low"
+    label "process_high"
     tag { "${meta.id}" }
-    container "quay.io/biocontainers/hostile:0.2.0--pyhdfd78af_0@sha256:08b38e53f01f78877bdac9638263be0f5b6e02b709c302f56812532d448728b8"
+    container "quay.io/biocontainers/hostile:0.2.0--pyhdfd78af_0"
 
     input:
-    tuple val(meta), path(reads), path(qc_input_filecheck)
+    tuple val(meta), path(reads)
 
     output:
     path(".command.{out,err}")
-    path "versions.yml"                                                                                    , emit: versions
-    path "${meta.id}.Summary.Hostile-Removal.tsv"                                                          , emit: hostile_summary
-    tuple val(meta), path("${meta.id}_noPhiX-R1.fsq"), path("${meta.id}_noPhiX-R2.fsq"), path("*File*.tsv"), emit: hostile_removed
+    path "versions.yml"                                 , emit: versions
+    path "${meta.id}.Summary.Hostile-Removal.tsv"       , emit: hostile_summary
+    tuple val(meta), path("hostile/${meta.id}*.clean_*"), emit: hostile_removed
 
     shell:
     '''
     source bash_functions.sh
-
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_input_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
 
     # Use a non-default host to remove only if user-specified
     HOST_INDEX_ARGUMENT=''
@@ -45,29 +34,37 @@ process REMOVE_HOST_HOSTILE {
         1> !{meta.id}.bowtie2-inspect.stdout.log \
         2> !{meta.id}.bowtie2-inspect.stderr.log
       HOST_INDEX_ARGUMENT="--index !{params.hostile_host_reference_path_prefix}"
-      fi
     fi
 
     # Remove Host Reads
     msg "INFO: Removing host reads using Hostile"
 
-    hostile \
-      clean \
-      --fastq1 "!{reads[0]}" \
-      --fastq2 "!{reads[0]}" \
-      --out-dir hostile \
-      "${HOST_INDEX_ARGUMENT}" \
-      --threads !{task.cpus}
+    if [[ ! -z "!{params.hostile_host_reference_path_prefix}" ]]; then
+      hostile \
+        clean \
+        --fastq1 "!{reads[0]}" \
+        --fastq2 "!{reads[1]}" \
+        --out-dir hostile \
+        "${HOST_INDEX_ARGUMENT}" \
+        --threads !{task.cpus}
+    else
+      hostile \
+        clean \
+        --fastq1 "!{reads[0]}" \
+        --fastq2 "!{reads[1]}" \
+        --out-dir hostile \
+        --threads !{task.cpus}
+    fi
 
     # JSON format stdout reports input/output filenames and read counts
-    if ! verify_minimum_file_size command.err 'JSON stdout for Hostile' '1k'; then
+    if ! verify_minimum_file_size .command.out 'JSON stdout for Hostile' '1k'; then
       msg "ERROR: JSON stdout missing or empty for reporting Hostile results" >&2
       exit 1
     fi
 
     # NOTE: grep used because `jq` absent from package
-    RELATIVE_OUTPATH_R1=$(grep '"fastq1_out_path":' command.err | awk '{print $2}' | sed 's/[",]//g')
-    RELATIVE_OUTPATH_R2=$(grep '"fastq2_out_path":' command.err | awk '{print $2}' | sed 's/[",]//g')
+    RELATIVE_OUTPATH_R1=$(grep '"fastq1_out_path":' .command.out | awk '{print $2}' | sed 's/[",]//g')
+    RELATIVE_OUTPATH_R2=$(grep '"fastq2_out_path":' .command.out | awk '{print $2}' | sed 's/[",]//g')
 
     # Validate output files are sufficient size to continue
     for file in ${RELATIVE_OUTPATH_R1} ${RELATIVE_OUTPATH_R2}; do
@@ -81,10 +78,11 @@ process REMOVE_HOST_HOSTILE {
     done
 
     # NOTE: grep used because `jq` absent from package
-    COUNT_READS_INPUT=$(grep '"reads_in":' command.err | awk '{print $2}' | sed 's/,//g')
-    COUNT_READS_OUTPUT=$(grep '"reads_out":' command.err | awk '{print $2}' | sed 's/,//g')
-    COUNT_READS_REMOVED=$(grep '"reads_removed":' command.err | awk '{print $2}' | sed 's/,//g')
-    COUNT_PERCENT_REMOVED=$(grep '"reads_removed_proportion":' command.err | awk '{$2=$2*100; print $2}')
+    COUNT_READS_INPUT=$(grep '"reads_in":' .command.out | awk '{print $2}' | sed 's/,//g')
+    COUNT_READS_OUTPUT=$(grep '"reads_out":' .command.out | awk '{print $2}' | sed 's/,//g')
+    PERCENT_OUTPUT=$(grep '"reads_removed_proportion":' .command.out | awk '{$2=$2*100; print 100-$2}')
+    COUNT_READS_REMOVED=$(grep '"reads_removed":' .command.out | awk '{print $2}' | sed 's/,//g')
+    PERCENT_REMOVED=$(grep '"reads_removed_proportion":' .command.out | awk '{$2=$2*100; print $2}')
 
     # Ensure all values parsed properly from JSON output report
     for val in $COUNT_READS_INPUT $COUNT_READS_OUTPUT $COUNT_READS_REMOVED; do
@@ -93,21 +91,24 @@ process REMOVE_HOST_HOSTILE {
         exit 1
       fi
     done
-    if [[ ! "${COUNT_PERCENT_REMOVED}" =~ [0-9.] ]]; then
-        msg "ERROR: expected percentage parsed from Hostile JSON instead of:${COUNT_PERCENT_REMOVED}" >&2
-        exit 1
-    fi
+    for val in $PERCENT_REMOVED $PERCENT_OUTPUT; do
+      if [[ ! "${val}" =~ [0-9.] ]]; then
+          msg "ERROR: expected percentage parsed from Hostile JSON instead of:${val}" >&2
+          exit 1
+      fi
+    done
 
     # Print read counts input/output from this process
     msg "INFO: Input contains ${COUNT_READS_INPUT} reads"
-    msg "INFO: ${COUNT_PERCENT_REMOVED}% of input reads were removed (${COUNT_READS_REMOVED} reads)"
-    msg "INFO: ${COUNT_READS_OUTPUT} non-host reads were retained"
+    msg "INFO: ${PERCENT_REMOVED}% of input reads were removed (${COUNT_READS_REMOVED} reads)"
+    msg "INFO: ${COUNT_READS_OUTPUT} non-host reads (${PERCENT_OUTPUT}%) were retained"
 
-    DELIM=$'\t'
+    DELIM='\t'
     SUMMARY_HEADER=(
       "Sample name"
       "# Input reads"
       "# Output reads"
+      "% Output reads"
       "# Removed reads"
       "% Removed reads"
     )
@@ -118,10 +119,11 @@ process REMOVE_HOST_HOSTILE {
       "!{meta.id}"
       "${COUNT_READS_INPUT}"
       "${COUNT_READS_OUTPUT}"
+      "${PERCENT_OUTPUT}"
       "${COUNT_READS_REMOVED}"
-      "${COUNT_PERCENT_REMOVED}"
+      "${PERCENT_REMOVED}"
     )
-    SUMMARY_OUTPUT=$(printf "%s${DELIM}" "${SUMMARY_OUTPUT[@]}"
+    SUMMARY_OUTPUT=$(printf "%s${DELIM}" "${SUMMARY_OUTPUT[@]}")
     SUMMARY_OUTPUT="${SUMMARY_OUTPUT%${DELIM}}"
 
     # Store input/output counts
