@@ -56,7 +56,7 @@ These tests are run both with the latest available version of `Nextflow` and als
 
 ## Getting help
 
-For further information/help, please consult the [bacterial-genomics/wf-paired-end-illumina-assembly documentation](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/docs/usage.md) and don't hesitate to create an issue for any clarifications!
+For further information/help, please consult the [bacterial-genomics/wf-paired-end-illumina-assembly documentation](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/blob/main/docs/usage.md) and don't hesitate to create an issue for any clarifications!
 
 ## Pipeline contribution conventions
 

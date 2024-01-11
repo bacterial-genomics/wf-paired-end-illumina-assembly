@@ -13,11 +13,23 @@ lint:
     - docs/images/nf-core-wf-paired-end-illumina-assembly_logo_dark.png
   files_unchanged:
     - LICENSE
+    - docs/README.md
+    - pyproject.toml
+    - .github/CONTRIBUTING.md
+    - assets/email_template.txt
+    - lib/NfcoreTemplate.groovy
+    - assets/email_template.html
+    - .github/workflows/branch.yml
+    - assets/sendmail_template.txt
+    - .github/workflows/linting.yml
+    - .github/PULL_REQUEST_TEMPLATE.md
+    - .github/ISSUE_TEMPLATE/bug_report.yml
+    - .github/ISSUE_TEMPLATE/feature_request.yml
   multiqc_config: False
   nextflow_config:
     - manifest.name
     - manifest.homePage
-  schema_params: False
+  pipeline_name_conventions: False
   system_exit: False
 
 repository_type: pipeline
