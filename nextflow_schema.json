@@ -60,12 +60,7 @@
                     "default": "both",
                     "hidden": true,
                     "description": "Remove host reads from FastQ files",
-                    "enum": [
-                        "skip",
-                        "both",
-                        "hostile",
-                        "sra-human-scrubber"
-                    ]
+                    "enum": ["skip", "both", "hostile", "sra-human-scrubber"]
                 },
                 "min_filesize_fastq_sra_human_scrubber_removed": {
                     "type": "string",

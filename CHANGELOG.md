@@ -4,15 +4,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
 ### `Added`
+
 - Added ability to run `hostile` in remove_host_hostile channel
 - Added ability to run NCBI's SRA Human Scrubber (`scrub.sh`) in remove_host_sra_human_scrubber channel
-    - Added ability to remove the broken sister reads from scrub.sh in the remove_broken_pairs_bbtools_repair channel
-    - Added new prepare_db_sra_human_scrubber channel for future proofing in case a DB file retreived eventually gets gunzip compressed
-    - Added new update_db_sra_human_scrubber channel to fetch the human_filter.db file and avoid requiring it inside the container environment
+  - Added ability to remove the broken sister reads from scrub.sh in the remove_broken_pairs_bbtools_repair channel
+  - Added new prepare_db_sra_human_scrubber channel for future proofing in case a DB file retreived eventually gets gunzip compressed
+  - Added new update_db_sra_human_scrubber channel to fetch the human_filter.db file and avoid requiring it inside the container environment
 - Added 2 new test config files to locally run the miniburk test data with and without host removal
 - Added a new subworkflow for human host removal `subworkflows/host_removal.nf`
+
 ### `Updated`
+
 - Updated usage to include the new `--host_remove {both,hostile,skip,sra_human_scrubber}`. Default uses "both" SRA Human Scrubber first and then hostile, but options also exist to "skip" host removal entirely, or invoke just one as "hostile" or "sra_human_scrubber"
 - Updated `workflows/assembly.nf` to run the host removal subworkflow after infile handling and prior to downsampling
 
