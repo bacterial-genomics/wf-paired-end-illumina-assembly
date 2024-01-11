@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Deprecated`
 
+### `Fixed`
+
+### `Updated`
+
+- [#29](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/29) Updated nf-core GTDB-Tk and BUSCO modules to latest release and added `mash_db` parameter for GTDB-Tk (@gregorysprenger).
+
+### `Deprecated`
+
 ## v2.0.4 - December 8, 2023
 
 ### `Added`

@@ -144,6 +144,13 @@ if (params.gtdb_db) {
     ch_gtdbtk_db_file = Channel.empty()
 }
 
+// Mash database for GTDB-Tk
+if (params.mash_db) {
+    ch_mash_db_file = file(params.mash_db)
+} else {
+    ch_mash_db_file = []
+}
+
 // BUSCO
 if (params.busco_db) {
     ch_busco_db_file = file(params.busco_db, checkIfExists: true)
@@ -647,10 +654,11 @@ workflow ASSEMBLY {
         } else if ( ch_gtdbtk_db_file.isDirectory() ) {
             ch_db_for_gtdbtk = Channel
                                 .fromPath( "${ch_gtdbtk_db_file}/*", type: 'dir', maxDepth: 1 )
+                                .collect()
                                 .map{
                                     [ it[0].getSimpleName(), it ]
                                 }
-                                .collect()
+
         } else {
             error("Unsupported object given to --gtdb_db, database must be supplied as either a directory or a .tar.gz file!")
         }
@@ -658,7 +666,8 @@ workflow ASSEMBLY {
         // PROCESS: Perform GTDBTk on assembly FastA file
         QA_ASSEMBLY_GTDBTK (
             ASSEMBLE_CONTIGS.out.assembly_file,
-            ch_db_for_gtdbtk
+            ch_db_for_gtdbtk,
+            ch_mash_db_file
         )
         ch_versions = ch_versions.mix(QA_ASSEMBLY_GTDBTK.out.versions)
     }
