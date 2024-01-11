@@ -35,6 +35,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Deprecated`
 
+### `Fixed`
+
+- [#31](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/31) Removed the possibility of scientific notation in `Summary.CleanedReads-Bases.tab` file (@gregorysprenger).
+
+### `Updated`
+
+### `Deprecated`
+
 ## v2.0.4 - December 8, 2023
 
 ### `Added`
