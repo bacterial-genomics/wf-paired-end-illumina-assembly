@@ -324,7 +324,7 @@
                     "hidden": true,
                     "description": "Minimum length of adapter when using palindrome mode."
                 },
-                "trimmomatic_keep_both": {
+                "trimmomatic_keep_both_reads": {
                     "type": "boolean",
                     "default": true,
                     "hidden": true,
