@@ -787,6 +787,9 @@
             "$ref": "#/definitions/reference_file_options"
         },
         {
+            "$ref": "#/definitions/read_trimming_options"
+        },
+        {
             "$ref": "#/definitions/taxonomic_profiling_options"
         },
         {
