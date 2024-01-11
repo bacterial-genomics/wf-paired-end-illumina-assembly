@@ -27,6 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Deprecated`
 
+### `Fixed`
+
+- [#30](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Fixed the the parsing of PhiX removal information from BBDuk to be added to the summary files (@gregorysprenger).
+
+### `Updated`
+
+### `Deprecated`
+
 ## v2.0.4 - December 8, 2023
 
 ### `Added`
