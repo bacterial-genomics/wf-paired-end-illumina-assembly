@@ -69,7 +69,7 @@ _Note: \<Assembler\> is the name of the assembler (SPAdes, SKESA) given to `--as
 |                                                          | Summary.CleanedReads-Bases.tab                         | Number of cleaned bases                                                                |
 |                                                          | Summary.GenomeCoverage.tab                             | Genome Coverage                                                                        |
 |                                                          | Summary.MLST.tab                                       | MLST result                                                                            |
-|                                                          | Summary.PhiX.tsv                                       | Information on the removal of PhiX reads                                               |
+|                                                          | Summary.PhiX.tab                                       | Information on the removal of PhiX reads                                               |
 |                                                          | Summary.QC_File_Checks.tab                             | QC file checks                                                                         |
 | <a id="taxonomy">Taxonomy</a>                            |                                                        | **Taxonomic Classification**                                                           |
 | Taxonomy/kraken/\<SampleName\>                           |                                                        | Kraken Output for each \<SampleName\>                                                  |
