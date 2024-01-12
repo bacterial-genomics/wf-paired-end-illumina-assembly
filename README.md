@@ -32,7 +32,7 @@ Run the built-in test set to confirm all parts are working as-expected. It will 
 ```
 nextflow run \
   wf-paired-end-illumina-assembly \
-  -r v1.1.0 \
+  -r main \
   -profile ,test
 ```
 
@@ -43,7 +43,7 @@ Example command on FastQs in "new-fastq-dir" data using **SPAdes** with singular
 ```
 nextflow run \
   wf-paired-end-illumina-assembly/ \
-  -r v1.1.0 \
+  -r main \
   -profile singularity \
   --input new-fastq-dir \
   --outdir my-results \
@@ -55,7 +55,7 @@ Example command on FastQs in "new-fastq-dir" data using **Skesa** with singulari
 ```
 nextflow run \
   wf-paired-end-illumina-assembly/ \
-  -r v1.1.0 \
+  -r main \
   -profile singularity \
   --input new-fastq-dir \
   --outdir my-results \
@@ -150,7 +150,7 @@ View help menu of all workflow options:
 ```
 nextflow run \
   wf-paired-end-illumina-assembly \
-  -r v1.1.0 \
+  -r main \
   --help \
   --show_hidden_params
 ```
