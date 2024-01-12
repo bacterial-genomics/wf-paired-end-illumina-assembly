@@ -475,7 +475,7 @@
             "properties": {
                 "merge_lanes": {
                     "type": "boolean",
-                    "description": "SAMPLESHEET ONLY: Merges multiple lane files into one."
+                    "description": "SAMPLESHEET ONLY: Merges multiple lane files from an Illumina HiSeq instrument."
                 },
                 "excel_sheet_name": {
                     "type": "string",
