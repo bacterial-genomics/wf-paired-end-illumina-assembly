@@ -77,7 +77,7 @@ This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed c
 ## Usage
 
 ```
-nextflow run bacterial-genomics/wf-paired-end-illumina-assembly -r main -profile <docker|singularity> --input <input directory|samplesheet> --outdir <directory for results>
+nextflow run bacterial-genomics/wf-paired-end-illumina-assembly -r main -profile <docker|singularity> --input <input directory|samplesheet> --outdir <directory for results> --assembler <spades|skesa>
 ```
 
 Please see the [usage documentation](docs/usage.md) for further information on using this workflow.
