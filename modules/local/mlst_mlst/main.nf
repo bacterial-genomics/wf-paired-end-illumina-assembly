@@ -12,8 +12,8 @@ process MLST_MLST {
     path("versions.yml")                                 , emit: versions
 
     shell:
-    scheme       = params.mlst_scheme        ? params.mlst_scheme                     : ''
-    exclude      = params.mlst_ignore_scheme ? params.mlst_ignore_scheme              : ''
+    scheme       = params.mlst_scheme        ? "${params.mlst_scheme}"                : ''
+    exclude      = params.mlst_ignore_scheme ? "${params.mlst_ignore_scheme}"         : ''
     min_score    = params.mlst_min_score     ? "--minscore ${params.mlst_min_score}"  : "--minscore '50'"
     min_identity = params.mlst_min_identity  ? "--minid ${params.mlst_min_identity}"  : "--minid '95'"
     min_coverage = params.mlst_min_coverage  ? "--mincov ${params.mlst_min_coverage}" : "--mincov '10'"
@@ -37,6 +37,7 @@ process MLST_MLST {
       if [[ "${e}" != '' ]] && \
         [[ $(mlst --list 2>&1 | tail -n 1 | grep -w "${e}") ]]; then
         exclude_list+=( "${e}" )
+      fi
     done
 
     # Reformat exclude list
