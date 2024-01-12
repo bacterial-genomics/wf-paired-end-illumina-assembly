@@ -19,7 +19,7 @@ _General schematic of the steps in the workflow_
   - [Required parameters](#required-parameters)
   - [Optional parameters](#optional-parameters)
   - [Additonal parameters](#additional-parameters)
-- [Resource Managers](#resource-Managers)
+- [Resource Managers](#resource-managers)
 - [Output](#output)
 - [Troubleshooting](#troubleshooting)
 - [Contributions and Support](#contributions-and-support)
