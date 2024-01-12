@@ -12,16 +12,26 @@ process MLST_MLST {
     path("versions.yml")                                 , emit: versions
 
     shell:
+    scheme = params.mlst_scheme ? params.mlst_scheme : ''
     '''
     source bash_functions.sh
 
     # MLST for each assembly
     msg "INFO: Performing MLST"
 
+    # Check if input scheme is in mlst's database
+    mlst_scheme=!{scheme}
+    if [[ !{scheme} != '' ]] && \
+      [[ ! $(mlst --list 2>&1 | tail -n 1 | grep -w $scheme) ]]; then
+      msg "WARN: Specified MLST scheme is not valid. Defaulting to auto detecting the scheme."
+      mlst_scheme=''
+    fi
+
     if [[ -s !{assembly} ]]; then
       mlst \
         "!{assembly}" \
         --threads !{task.cpus} \
+        --scheme ${mlst_scheme} \
         >> "!{meta.id}-!{meta.assembler}.Summary.MLST.tab"
 
       sed -i \
