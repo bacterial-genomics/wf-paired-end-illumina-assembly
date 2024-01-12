@@ -37,7 +37,11 @@ process MLST_MLST {
     done
 
     # Reformat exclude list
-    exclude_list=$(echo ${exclude_list[@]} | tr ' ' ',')
+    if [[ -z ${exclude_list[@]} ]]; then
+      exclude_list=''
+    else
+      exclude_list=$(echo ${exclude_list[@]} | tr ' ' ',')
+    fi
 
     if [[ -s !{assembly} ]]; then
       mlst \
