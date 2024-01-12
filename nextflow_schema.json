@@ -144,7 +144,7 @@
                     "default": 3,
                     "hidden": true,
                     "description": "SPAdes: Number of rounds to correct contigs from SPAdes using cleaned paired-end reads."
-
+                }
             }
         },
         "skesa_assembler_options": {
