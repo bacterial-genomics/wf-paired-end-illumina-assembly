@@ -71,6 +71,7 @@
                 "spades_mode": {
                     "type": "string",
                     "description": "SPAdes: Data type flags to add to SPAdes when assembling contigs.",
+                    "default": "--isolate",
                     "enum": [
                         "",
                         "--isolate",
@@ -81,8 +82,7 @@
                         "--metaviral",
                         "--metaplasmid",
                         "--corona"
-                    ],
-                    "default": "--isolate"
+                    ]
                 },
                 "spades_kmer_sizes": {
                     "type": "string",
