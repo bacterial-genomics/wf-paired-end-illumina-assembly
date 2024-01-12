@@ -120,7 +120,7 @@
             "properties": {
                 "spades_mode": {
                     "type": "string",
-                    "description": "SPAdes: Data type flags to add to SPAdes when assembling contigs.",
+                    "description": "Data type flags to add to SPAdes when assembling contigs.",
                     "default": "--isolate",
                     "enum": [
                         "",
@@ -137,13 +137,13 @@
                 "spades_kmer_sizes": {
                     "type": "string",
                     "default": "auto",
-                    "description": "SPAdes: K-mer length values."
+                    "description": "K-mer length values."
                 },
                 "spades_polish_corrections": {
                     "type": "integer",
                     "default": 3,
                     "hidden": true,
-                    "description": "SPAdes: Number of rounds to correct contigs from SPAdes using cleaned paired-end reads."
+                    "description": "Number of rounds to correct contigs from SPAdes using cleaned paired-end reads."
                 }
             }
         },
@@ -157,42 +157,42 @@
                     "type": "integer",
                     "default": 21,
                     "hidden": true,
-                    "description": "SKESA: Kmer length for assembly."
+                    "description": "Kmer length for assembly."
                 },
                 "skesa_vector_percent": {
                     "type": "string",
                     "default": "0.05",
                     "hidden": true,
-                    "description": "SKESA: Percentage of reads containing 19-mer for the 19-mer to be considered a vector."
+                    "description": "Percentage of reads containing 19-mer for the 19-mer to be considered a vector."
                 },
                 "skesa_steps": {
                     "type": "integer",
                     "default": 11,
                     "hidden": true,
-                    "description": "SKESA: Number of assembly iterations from minimal to maximal kmer length in reads."
+                    "description": "Number of assembly iterations from minimal to maximal kmer length in reads."
                 },
                 "skesa_fraction": {
                     "type": "string",
                     "default": "0.1",
                     "hidden": true,
-                    "description": "SKESA: Maximum noise to signal ratio acceptable for extension"
+                    "description": "Maximum noise to signal ratio acceptable for extension"
                 },
                 "skesa_max_snp_length": {
                     "type": "integer",
                     "default": 150,
                     "hidden": true,
-                    "description": "SKESA: Maximal snp length."
+                    "description": "Maximal snp length."
                 },
                 "skesa_min_contig_length": {
                     "type": "integer",
                     "default": 200,
                     "hidden": true,
-                    "description": "SKESA: Minimal contig length reported in output."
+                    "description": "Minimal contig length reported in output."
                 },
                 "skesa_allow_snps": {
                     "type": "boolean",
                     "hidden": true,
-                    "description": "SKESA: Allow additional step for snp discovery."
+                    "description": "Allow additional step for snp discovery."
                 }
             }
         },
