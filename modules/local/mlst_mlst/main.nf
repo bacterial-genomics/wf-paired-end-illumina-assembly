@@ -12,11 +12,11 @@ process MLST_MLST {
     path("versions.yml")                                 , emit: versions
 
     shell:
-    scheme = params.mlst_scheme ? params.mlst_scheme : ''
-    exclude = params.mlst_ignore_scheme ? params.mlst_ignore_scheme : ''
-    min_identity = params.mlst_min_identity ? "--minid ${params.mlst_min_identity}" : "--minid '95'"
-    min_coverage = params.mlst_min_coverage ? "--mincov ${params.mlst_min_coverage}" : "--mincov '10'"
-    min_score = params.mlst_min_score ? "--minscore ${params.mlst_min_score}" : "--minscore '50'"
+    scheme       = params.mlst_scheme        ? params.mlst_scheme                     : ''
+    exclude      = params.mlst_ignore_scheme ? params.mlst_ignore_scheme              : ''
+    min_score    = params.mlst_min_score     ? "--minscore ${params.mlst_min_score}"  : "--minscore '50'"
+    min_identity = params.mlst_min_identity  ? "--minid ${params.mlst_min_identity}"  : "--minid '95'"
+    min_coverage = params.mlst_min_coverage  ? "--mincov ${params.mlst_min_coverage}" : "--mincov '10'"
     '''
     source bash_functions.sh
 
@@ -49,12 +49,12 @@ process MLST_MLST {
     if [[ -s !{assembly} ]]; then
       mlst \
         "!{assembly}" \
-        --threads !{task.cpus} \
-        --scheme "${mlst_scheme}" \
-        --exclude "${exclude_list}" \
         !{min_score} \
         !{min_identity} \
         !{min_coverage} \
+        --threads !{task.cpus} \
+        --scheme "${mlst_scheme}" \
+        --exclude "${exclude_list}" \
         >> "!{meta.id}-!{meta.assembler}.Summary.MLST.tab"
 
       sed -i \
