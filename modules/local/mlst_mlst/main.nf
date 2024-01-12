@@ -47,8 +47,8 @@ process MLST_MLST {
       mlst \
         "!{assembly}" \
         --threads !{task.cpus} \
-        --scheme ${mlst_scheme} \
-        --exclude ${exclude_list} \
+        --scheme "${mlst_scheme}" \
+        --exclude "${exclude_list}" \
         >> "!{meta.id}-!{meta.assembler}.Summary.MLST.tab"
 
       sed -i \
