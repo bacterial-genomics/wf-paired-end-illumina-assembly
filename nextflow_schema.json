@@ -57,7 +57,7 @@
             }
         },
         "assembly_options": {
-            "title": "Analysis options",
+            "title": "Assembly options",
             "type": "object",
             "description": "Assembly options",
             "default": "",
