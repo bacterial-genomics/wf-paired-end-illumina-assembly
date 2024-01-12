@@ -31,7 +31,8 @@ Example analysis using Nextflow command:
 nextflow run main.nf \
   -profile singularity \
   --input INPUT_DIRECTORY \
-  --outdir OUTPUT_DIRECTORY
+  --outdir OUTPUT_DIRECTORY \
+  --assembler <spades|skesa>
 ```
 
 When running locally, `--max_cpus` and `--max_memory` may need to be specified. Below, max cpus is set to 4 and max memory is set to 16 (for 16GB).
