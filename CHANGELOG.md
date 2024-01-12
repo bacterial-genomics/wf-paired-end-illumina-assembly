@@ -14,32 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Fixed`
 
 - [#26](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/26) Updated database preparation modules to use `meta.id` to correctly rename `.command.{out,err}` files in the log directory (@gregorysprenger).
-
-### `Updated`
-
-### `Deprecated`
-
-### `Fixed`
+- [#30](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Fixed the the parsing of PhiX removal information from BBDuk to be added to the summary files (@gregorysprenger).
+- [#31](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/31) Removed the possibility of scientific notation in `Summary.CleanedReads-Bases.tab` file (@gregorysprenger).
 
 ### `Updated`
 
 - [#29](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/29) Updated nf-core GTDB-Tk and BUSCO modules to latest release and added `mash_db` parameter for GTDB-Tk (@gregorysprenger).
-
-### `Deprecated`
-
-### `Fixed`
-
-- [#30](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Fixed the the parsing of PhiX removal information from BBDuk to be added to the summary files (@gregorysprenger).
-
-### `Updated`
-
-### `Deprecated`
-
-### `Fixed`
-
-- [#31](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/31) Removed the possibility of scientific notation in `Summary.CleanedReads-Bases.tab` file (@gregorysprenger).
-
-### `Updated`
+- [#36](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/36) Updated readme and markdown files in `docs/`, as well as separate skea and spades options in nextflow schema file (@gregorysprenger).
 
 ### `Deprecated`
 
