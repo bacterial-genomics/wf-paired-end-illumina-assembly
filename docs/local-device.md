@@ -7,7 +7,7 @@ _A schematic of the steps in the workflow._
 ## Requirements
 
 - [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=22.04.3`)
-- [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity >=3.8.0`](https://www.sylabs.io/guides/3.0/user-guide/)
+- [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) (`>=3.8.0`)
 
 ## Install Worflow Locally
 
