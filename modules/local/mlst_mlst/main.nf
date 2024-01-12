@@ -26,7 +26,7 @@ process MLST_MLST {
     # Check if input scheme is in mlst's database
     mlst_scheme="!{scheme}"
     if [[ "!{scheme}" != '' ]] && \
-      [[ ! $(mlst --list 2>&1 | tail -n 1 | grep -w "${scheme}") ]]; then
+      [[ ! $(mlst --list 2>&1 | tail -n 1 | grep -w "${mlst_scheme}") ]]; then
       msg "WARN: Specified MLST scheme is not valid. Defaulting to auto detecting the scheme."
       mlst_scheme=''
     fi
