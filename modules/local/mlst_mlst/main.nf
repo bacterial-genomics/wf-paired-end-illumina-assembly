@@ -13,6 +13,7 @@ process MLST_MLST {
 
     shell:
     scheme = params.mlst_scheme ? params.mlst_scheme : ''
+    exclude = params.mlst_ignore_scheme ? params.mlst_ignore_scheme : ''
     '''
     source bash_functions.sh
 
@@ -27,11 +28,23 @@ process MLST_MLST {
       mlst_scheme=''
     fi
 
+    # Check if scheme to ignore is in mlst's database
+    exclude_list=()
+    for e in $(echo !{exclude} | tr ',' ' '); do
+      if [[ ${e} != '' ]] && \
+        [[ $(mlst --list 2>&1 | tail -n 1 | grep -w $e) ]]; then
+        exclude_list+=( ${e} )
+    done
+
+    # Reformat exclude list
+    exclude_list=$(echo ${exclude_list[@]} | tr ' ' ',')
+
     if [[ -s !{assembly} ]]; then
       mlst \
         "!{assembly}" \
         --threads !{task.cpus} \
         --scheme ${mlst_scheme} \
+        --exclude ${exclude_list} \
         >> "!{meta.id}-!{meta.assembler}.Summary.MLST.tab"
 
       sed -i \
