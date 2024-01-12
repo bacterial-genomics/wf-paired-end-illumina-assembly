@@ -715,6 +715,12 @@
             "$ref": "#/definitions/assembly_options"
         },
         {
+            "$ref": "#/definitions/spades_assembler_options"
+        },
+        {
+            "$ref": "#/definitions/skesa_assembler_options"
+        },
+        {
             "$ref": "#/definitions/reference_file_options"
         },
         {
