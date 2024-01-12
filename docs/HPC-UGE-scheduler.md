@@ -45,8 +45,7 @@ cd $LAB_HOME/workflows/wf-paired-end-illumina-assembly
 
 module load nextflow
 
-nextflow run main.nf \
-  -profile singularity,test
+nextflow run main.nf -profile singularity,test
 ```
 
 To minimize typing all of the parameters above, a bash script was created for UGE HPCs. It can take PE FastQ files from selected directory OR if FastQ files not found in that directory, it will look in subdirectories for FastQ files. To run:
