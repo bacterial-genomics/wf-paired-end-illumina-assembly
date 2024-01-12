@@ -81,7 +81,7 @@ process REMOVE_PHIX_BBDUK {
     # Cleaned FastQ file information
     NUM_CLEANED_READS=$(grep '^Result: ' .command.err | awk '{print $2}')
     PERCENT_CLEANED_READS=$(grep '^Result: ' .command.err | awk '{print $4}' | sed 's/[()]//g')
-    NUM_CLEANED_BASES=$(grep '^Result: ' .command.err | awk '{print $4}')
+    NUM_CLEANED_BASES=$(grep '^Result: ' .command.err | awk '{print $5}')
     PERCENT_CLEANED_BASES=$(grep '^Result: ' .command.err | awk '{print $7}' | sed 's/[()]//g')
 
     msg "INFO: Input contains ${TOT_BASES} bp and $TOT_READS reads"
@@ -115,7 +115,7 @@ process REMOVE_PHIX_BBDUK {
       "${TOT_BASES}",
       )
 
-    printf "%s" "${SUMMARY_HEADER[@]}" | tr ',' '\t' > "!{meta.id}.Summary.PhiX.tsv"
+    printf "%s\n" "${SUMMARY_HEADER[@]}" | tr ',' '\t' > "!{meta.id}.Summary.PhiX.tsv"
     printf "%s" "${SUMMARY_OUTPUT[@]}" | tr ',' '\t' >> "!{meta.id}.Summary.PhiX.tsv"
 
     # Get process version information

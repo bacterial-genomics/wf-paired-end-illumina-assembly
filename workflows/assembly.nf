@@ -144,6 +144,13 @@ if (params.gtdb_db) {
     ch_gtdbtk_db_file = Channel.empty()
 }
 
+// Mash database for GTDB-Tk
+if (params.mash_db) {
+    ch_mash_db_file = file(params.mash_db)
+} else {
+    ch_mash_db_file = []
+}
+
 // BUSCO
 if (params.busco_db) {
     ch_busco_db_file = file(params.busco_db, checkIfExists: true)
@@ -301,9 +308,17 @@ workflow ASSEMBLY {
     // Prepare kraken1 database for use
     if ( ch_kraken1_db_file ) {
         if ( ch_kraken1_db_file.extension in ['gz', 'tgz'] ) {
+            // Add meta information
+            ch_kraken1_db = Channel.of(ch_kraken1_db_file)
+                                .map{
+                                    db ->
+                                        def meta = [:]
+                                        meta['id'] = db.getSimpleName()
+                                        [ meta, db ]
+                                }
             // Expects to be .tar.gz!
             KRAKEN1_DB_PREPARATION_UNIX (
-                ch_kraken1_db_file
+                ch_kraken1_db
             )
             ch_versions = ch_versions.mix(KRAKEN1_DB_PREPARATION_UNIX.out.versions)
             ch_db_for_kraken1 = KRAKEN1_DB_PREPARATION_UNIX.out.db
@@ -349,9 +364,17 @@ workflow ASSEMBLY {
     // Prepare kraken2 database for use
     if ( ch_kraken2_db_file ) {
         if ( ch_kraken2_db_file.extension in ['gz', 'tgz'] ) {
+            // Add meta information
+            ch_kraken2_db = Channel.of(ch_kraken1_db_file)
+                                .map{
+                                    db ->
+                                        def meta = [:]
+                                        meta['id'] = db.getSimpleName()
+                                        [ meta, db ]
+                                }
             // Expects to be .tar.gz!
             KRAKEN2_DB_PREPARATION_UNIX (
-                ch_kraken2_db_file
+                ch_kraken2_db
             )
             ch_versions = ch_versions.mix(KRAKEN2_DB_PREPARATION_UNIX.out.versions)
             ch_db_for_kraken2 = KRAKEN2_DB_PREPARATION_UNIX.out.db
@@ -413,7 +436,7 @@ workflow ASSEMBLY {
                             .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_alignment_stats)
                             .map{ meta, file -> file }
                             .collectFile(
-                                name:     "Summary.Illumina.CleanedReads-AlignmentStats.tab",
+                                name:     "Summary.CleanedReads-AlignmentStats.tab",
                                 keepHeader: true,
                                 storeDir: "${params.outdir}/Summaries"
                             )
@@ -473,9 +496,17 @@ workflow ASSEMBLY {
     // Prepare BLAST database for use
     if ( ch_blast_db_file ) {
         if ( ch_blast_db_file.extension in ['gz', 'tgz'] ) {
+            // Add meta information
+            ch_blast_db = Channel.of(ch_blast_db_file)
+                            .map{
+                                db ->
+                                    def meta = [:]
+                                    meta['id'] = db.getSimpleName()
+                                    [ meta, db ]
+                            }
             // Expects to be .tar.gz!
             BLAST_DB_PREPARATION_UNIX (
-                ch_blast_db_file
+                ch_blast_db
             )
             ch_versions = ch_versions.mix(BLAST_DB_PREPARATION_UNIX.out.versions)
             ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db
@@ -576,7 +607,7 @@ workflow ASSEMBLY {
     ch_cleaned_summary = ch_cleaned_summary
                             .mix(QA_ASSEMBLY_QUAST.out.summary_reads)
                             .collectFile(
-                                name:     "Summary.Illumina.CleanedReads-Bases.tab",
+                                name:     "Summary.CleanedReads-Bases.tab",
                                 keepHeader: true,
                                 storeDir: "${params.outdir}/Summaries"
                             )
@@ -593,7 +624,7 @@ workflow ASSEMBLY {
     ch_genome_cov_summary = ch_genome_cov_summary
                                 .mix(CALCULATE_COVERAGE_UNIX.out.genome_coverage)
                                 .collectFile(
-                                    name:     "Summary.Illumina.GenomeCoverage.tab",
+                                    name:     "Summary.GenomeCoverage.tab",
                                     keepHeader: true,
                                     storeDir: "${params.outdir}/Summaries"
                                 )
@@ -605,9 +636,17 @@ workflow ASSEMBLY {
     // PROCESS: Classify assembly FastA file using GTDB-Tk
     if (!params.skip_gtdbtk && params.gtdb_db) {
         if ( ch_gtdbtk_db_file.extension in ['gz', 'tgz'] ) {
+            // Add meta information
+            ch_gtdb_db = Channel.of(ch_gtdbtk_db_file)
+                            .map{
+                                db ->
+                                    def meta = [:]
+                                    meta['id'] = db.getSimpleName()
+                                    [ meta, db ]
+                            }
             // Expects to be .tar.gz!
             GTDBTK_DB_PREPARATION_UNIX (
-                ch_gtdbtk_db_file
+                ch_gtdb_db
             )
             ch_versions = ch_versions.mix(GTDBTK_DB_PREPARATION_UNIX.out.versions)
             ch_db_for_gtdbtk = GTDBTK_DB_PREPARATION_UNIX.out.db
@@ -615,10 +654,11 @@ workflow ASSEMBLY {
         } else if ( ch_gtdbtk_db_file.isDirectory() ) {
             ch_db_for_gtdbtk = Channel
                                 .fromPath( "${ch_gtdbtk_db_file}/*", type: 'dir', maxDepth: 1 )
+                                .collect()
                                 .map{
                                     [ it[0].getSimpleName(), it ]
                                 }
-                                .collect()
+
         } else {
             error("Unsupported object given to --gtdb_db, database must be supplied as either a directory or a .tar.gz file!")
         }
@@ -626,7 +666,8 @@ workflow ASSEMBLY {
         // PROCESS: Perform GTDBTk on assembly FastA file
         QA_ASSEMBLY_GTDBTK (
             ASSEMBLE_CONTIGS.out.assembly_file,
-            ch_db_for_gtdbtk
+            ch_db_for_gtdbtk,
+            ch_mash_db_file
         )
         ch_versions = ch_versions.mix(QA_ASSEMBLY_GTDBTK.out.versions)
     }
@@ -638,9 +679,17 @@ workflow ASSEMBLY {
     // PROCESS: Classify contigs with BUSCO
     if (!params.skip_busco && params.busco_db) {
         if ( ch_busco_db_file.extension in ['gz', 'tgz'] ) {
+            // Add meta information
+            ch_busco_db = Channel.of(ch_busco_db_file)
+                            .map{
+                                db ->
+                                    def meta = [:]
+                                    meta['id'] = db.getSimpleName()
+                                    [ meta, db ]
+                            }
             // Expects to be tar.gz!
             BUSCO_DB_PREPARATION_UNIX(
-                ch_busco_db_file
+                ch_busco_db
             )
             ch_versions = ch_versions.mix(BUSCO_DB_PREPARATION_UNIX.out.versions)
             ch_db_for_busco = BUSCO_DB_PREPARATION_UNIX.out.db
