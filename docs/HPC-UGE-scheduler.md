@@ -60,7 +60,8 @@ Example analysis using Nextflow command:
 nextflow run main.nf \
   -profile singularity \
   --input INPUT_DIRECTORY \
-  --outdir OUTPUT_DIRECTORY
+  --outdir OUTPUT_DIRECTORY \
+  --assembler <spades|skesa>
 ```
 
 Help menu of all options:
