@@ -34,18 +34,6 @@
                     "format": "directory-path",
                     "hidden": true,
                     "description": "The output directory where pipeline information will be saved. You have to use absolute paths to storage on Cloud infrastructure."
-                },
-                "process_log_dir": {
-                    "type": "string",
-                    "format": "directory-path",
-                    "hidden": true,
-                    "description": "The output directory where output and error log files for each process will be saved. You have to use absolute paths to storage on Cloud infrastructure."
-                },
-                "qc_filecheck_log_dir": {
-                    "type": "string",
-                    "format": "directory-path",
-                    "hidden": true,
-                    "description": "The output directory where individual QC file checks for each sample will be saved. You have to use absolute paths to storage on Cloud infrastructure."
                 }
             }
         },
@@ -131,7 +119,6 @@
                 },
                 "spades_mode": {
                     "type": "string",
-                    "default": "",
                     "description": "SPAdes: Data type flags to add to SPAdes when assembling contigs.",
                     "enum": [
                         "",
@@ -143,7 +130,8 @@
                         "--metaviral",
                         "--metaplasmid",
                         "--corona"
-                    ]
+                    ],
+                    "default": "--isolate"
                 },
                 "spades_kmer_sizes": {
                     "type": "string",
@@ -194,7 +182,6 @@
                 },
                 "skesa_allow_snps": {
                     "type": "boolean",
-                    "default": false,
                     "hidden": true,
                     "description": "SKESA: Allow additional step for snp discovery."
                 },
@@ -326,7 +313,7 @@
                 },
                 "filter_blast_bitscore": {
                     "type": "string",
-                    "default": "0.0",
+                    "default": "0",
                     "hidden": true,
                     "description": "Minimum BLASTn alignment bit score."
                 },
@@ -397,14 +384,11 @@
                 },
                 "filter_contigs_discard_file": {
                     "type": "string",
-                    "default": "None",
                     "hidden": true,
-                    "description": "Output FastA file of discarded sequences which includes failed filters in the deflines when filtering contigs.",
-                    "enum": ["None", "<path/to/file>"]
+                    "description": "Output FastA file of discarded sequences which includes failed filters in the deflines when filtering contigs."
                 },
                 "filter_contigs_gcskew": {
                     "type": "boolean",
-                    "default": false,
                     "hidden": true,
                     "description": "Keep >88 and <12% GC contigs when filtering contigs."
                 },
@@ -416,7 +400,6 @@
                 },
                 "filter_contigs_keep_low_complexity": {
                     "type": "boolean",
-                    "default": false,
                     "hidden": true,
                     "description": "Keep low-complexity contigs with only 1 or 2 nucleotides represented when filtering contigs."
                 },
@@ -429,7 +412,6 @@
                 },
                 "filter_contigs_no_sort": {
                     "type": "boolean",
-                    "default": false,
                     "hidden": true,
                     "description": "Skip sorting contigs by descending length when filtering contigs."
                 },
@@ -452,9 +434,14 @@
                     "description": "Database for contig taxonomic classification with GTDB-Tk.",
                     "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contains GTDB-Tk database."
                 },
+                "mash_db": {
+                    "type": "string",
+                    "description": "Database using within GTDB-Tk for ANI screening.",
+                    "default": "https://gembox.cbcb.umd.edu/mash/refseq.genomes.k21s1000.msh",
+                    "help_text": "Path to a local file or a URL a file that contains the Mash database that ends in `.msh`."
+                },
                 "skip_gtdbtk": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Skip GTDB-Tk classification of contigs."
                 },
                 "gtdbtk_pplacer_scratch": {
@@ -487,7 +474,6 @@
                 },
                 "skip_busco": {
                     "type": "boolean",
-                    "default": false,
                     "description": "Skip BUSCO classification of each contig."
                 },
                 "busco_config": {
@@ -498,7 +484,6 @@
                 },
                 "split_multifasta_remove_gaps": {
                     "type": "boolean",
-                    "default": false,
                     "hidden": true,
                     "description": "Remove gaps from contigs when splitting contigs for BUSCO analysis."
                 },
@@ -517,12 +502,11 @@
             "properties": {
                 "prokka_curated_proteins": {
                     "type": "string",
-                    "default": "",
                     "description": "Additional protein encoding genes to use with Prokka."
                 },
                 "prokka_evalue": {
                     "type": "string",
-                    "default": "1e-08",
+                    "default": "1e-8",
                     "description": "Similarity e-value cut-off."
                 },
                 "min_filesize_annotated_genbank": {
@@ -540,7 +524,6 @@
             "properties": {
                 "merge_lanes": {
                     "type": "boolean",
-                    "default": false,
                     "description": "SAMPLESHEET ONLY: Merges multiple lane files into one."
                 },
                 "excel_sheet_name": {
@@ -556,19 +539,6 @@
             "type": "object",
             "description": "Parameters to select which profile to use.",
             "properties": {
-                "singularity": {
-                    "type": "string",
-                    "description": "Use Singularity images to run the workflow. Will pull and convert Docker images from Dockerhub if not locally available."
-                },
-                "docker": {
-                    "type": "string",
-                    "description": "Use Docker images to run the workflow. Will pull images from Dockerhub if not locally available."
-                },
-                "conda": {
-                    "type": "string",
-                    "hidden": true,
-                    "description": "TODO: this is not implemented yet."
-                },
                 "profile_cache_dir": {
                     "type": "string",
                     "format": "directory-path",
@@ -730,6 +700,21 @@
                     "fa_icon": "fas fa-cogs",
                     "hidden": true
                 },
+                "process_log_dir": {
+                    "type": "string",
+                    "description": "Directory to keep output and error logs from each process.",
+                    "hidden": true
+                },
+                "qc_filecheck_log_dir": {
+                    "type": "string",
+                    "description": "Directory to keep QC file checks from processes.",
+                    "hidden": true
+                },
+                "validationShowHiddenParams": {
+                    "type": "boolean",
+                    "description": "Boolean whether to show hidden parameters at runtime",
+                    "hidden": true
+                },
                 "validate_params": {
                     "type": "boolean",
                     "description": "Boolean whether to validate parameters against the schema at runtime",
@@ -743,6 +728,11 @@
                     "description": "Show all params when using `--help`",
                     "hidden": true,
                     "help_text": "By default, parameters set as _hidden_ in the schema are not shown on the command line when a user runs with `--help`. Specifying this option will tell the pipeline to show all parameters."
+                },
+                "schema_ignore_params": {
+                    "type": "string",
+                    "description": "Ignore warning of parameters",
+                    "default": "filter_blast_bitscore,filter_blast_column,min_filesize_filtered_blastn,min_filesize_blastn_output,min_filesize_blastn_db,min_filesize_extracted_ssu_file,min_filesize_renamed_ssu_file,genbank_search_type,genbank_query_qualifier,genbank_query_feature,genbank_query,min_filesize_annotated_genbank,min_filesize_binary_se_alignment,min_filesize_final_assembly,min_filesize_polished_assembly,min_filesize_binary_pe_alignment,min_filesize_filtered_assembly,filter_contigs_no_sort,filter_contigs_deflines,filter_contigs_keep_low_complexity,filter_contigs_length,filter_contigs_gcskew,filter_contigs_discard_file,filter_contigs_coverage,min_filesize_raw_assembly,min_filesize_non_overlapping_fastq,min_filesize_fastq_adapters_removed,min_filesize_adapters,min_filesize_fastq_phix_removed,min_filesize_phix_genome,min_filesize_fastq_input,workflows,available_workflows,max_retry,bigdata,logpath,qc_filecheck_log_dir,process_log_dir,kraken1_db,kraken2_db,blast_db,polish_corrections,skesa_allow_snps,skesa_min_contig_length,skesa_max_snp_length,skesa_fraction,skesa_steps,skesa_vector_percent,skesa_kmer_length,excel_sheet_name,merge_lanes,sge_high_memory,sge_options,sge_queue_size,sge_queue,sge_penv,singularity_cache,sge_process_time,gtdbtk_pplacer_scratch,gtdbtk_min_perc_aa,gtdbtk_pplacer_cpus,gtdbtk_min_af,depth,genome_size,busco_config,adapter_reference,phix_reference,spades_mode,spades_kmer_sizes,validationSchemaIgnoreParams,validationShowHiddenParams,validation-schema-ignore-params,validation-show-hidden-params"
                 }
             }
         }

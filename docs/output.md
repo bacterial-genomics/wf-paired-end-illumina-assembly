@@ -66,9 +66,9 @@ _Note: \<Assembler\> is the name of the assembler (SPAdes, SKESA) given to `--as
 |                                                          | Summary.Assemblies.tab                                 | Contig summary information                                                             |
 |                                                          | Summary.BUSCO.tab                                      | Intra-contig gene information using BUSCO                                              |
 |                                                          | Summary.GTDB-Tk.tab                                    | Contig taxonomic classification using GTDB-Tk                                          |
-|                                                          | Summary.Illumina.CleanedReads-AlnStats.tab             | Basepairs of Paired Reads and Singnleton Reads mapped                                  |
-|                                                          | Summary.Illumina.CleanedReads-Bases.tab                | Number of cleaned bases                                                                |
-|                                                          | Summary.Illumina.GenomeCoverage.tab                    | Genome Coverage                                                                        |
+|                                                          | Summary.CleanedReads-AlnStats.tab                      | Basepairs of Paired Reads and Singnleton Reads mapped                                  |
+|                                                          | Summary.CleanedReads-Bases.tab                         | Number of cleaned bases                                                                |
+|                                                          | Summary.GenomeCoverage.tab                             | Genome Coverage                                                                        |
 |                                                          | Summary.MLST.tab                                       | MLST result                                                                            |
 |                                                          | Summary.PhiX.tsv                                       | Information on the removal of PhiX reads                                               |
 |                                                          | Summary.QC_File_Checks.tab                             | QC file checks                                                                         |
