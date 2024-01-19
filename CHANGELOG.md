@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- [#23](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Added a miscellanous issue template (@taylorpaisie).
 - Added ability to run `hostile` in remove_host_hostile channel
 - Added ability to run NCBI's SRA Human Scrubber (`scrub.sh`) in remove_host_sra_human_scrubber channel
   - Added ability to remove the broken sister reads from scrub.sh in the remove_broken_pairs_bbtools_repair channel
@@ -19,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated usage to include the new `--host_remove {both,hostile,skip,sra_human_scrubber}`. Default uses "both" SRA Human Scrubber first and then hostile, but options also exist to "skip" host removal entirely, or invoke just one as "hostile" or "sra_human_scrubber"
 - Updated `workflows/assembly.nf` to run the host removal subworkflow after infile handling and prior to downsampling
+## v2.0.5
+
 
 ## v2.0.4 - December 8, 2023
 
