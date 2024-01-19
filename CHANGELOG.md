@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
+- [#25](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/25) Fix broken repository links (@gregorysprenger).
 - [#31](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/31) Removed the possibility of scientific notation in `Summary.CleanedReads-Bases.tab` file (@gregorysprenger).
 - [#30](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Fixed the the parsing of PhiX removal information from BBDuk to be added to the summary files (@gregorysprenger).
 
@@ -28,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `workflows/assembly.nf` to run the host removal subworkflow after infile handling and prior to downsampling
 
 ### `Deprecated`
+
 
 ## v2.0.4 - December 8, 2023
 
