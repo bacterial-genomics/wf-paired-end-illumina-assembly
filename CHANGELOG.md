@@ -16,12 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added 2 new test config files to locally run the miniburk test data with and without host removal
 - Added a new subworkflow for human host removal `subworkflows/host_removal.nf`
 
+### `Fixed`
+
+- [#31](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/31) Removed the possibility of scientific notation in `Summary.CleanedReads-Bases.tab` file (@gregorysprenger).
+
 ### `Updated`
 
 - Updated usage to include the new `--host_remove {both,hostile,skip,sra_human_scrubber}`. Default uses "both" SRA Human Scrubber first and then hostile, but options also exist to "skip" host removal entirely, or invoke just one as "hostile" or "sra_human_scrubber"
 - Updated `workflows/assembly.nf` to run the host removal subworkflow after infile handling and prior to downsampling
-## v2.0.5
 
+### `Deprecated`
 
 ## v2.0.4 - December 8, 2023
 
