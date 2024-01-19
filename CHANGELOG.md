@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Fixed`
 
 - [#31](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/31) Removed the possibility of scientific notation in `Summary.CleanedReads-Bases.tab` file (@gregorysprenger).
+- [#30](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Fixed the the parsing of PhiX removal information from BBDuk to be added to the summary files (@gregorysprenger).
 
 ### `Updated`
 
