@@ -4,7 +4,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-
 ### `Added`
 
 - [#23](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Added a miscellanous issue template (@taylorpaisie).
@@ -33,14 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Deprecated`
 
-
-### `Fixed`
-
-### `Updated`
-
-- [#29](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/29) Updated nf-core GTDB-Tk and BUSCO modules to latest release and added `mash_db` parameter for GTDB-Tk (@gregorysprenger).
-
-### `Deprecated`
 
 ## v2.0.4 - December 8, 2023
 
@@ -189,3 +180,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## v1.0.0 - January 20, 2023
 
 Initial release of wf-paired-end-illumina-assembly.
+
