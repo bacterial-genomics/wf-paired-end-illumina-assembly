@@ -323,7 +323,7 @@ workflow ASSEMBLY {
     // Prepare kraken1 database for use
     if ( ch_kraken1_db_file ) {
         if ( ch_kraken1_db_file.extension in ['gz', 'tgz'] ) {
-            // Add meta information
+// Add meta information
             ch_kraken1_db = Channel.of(ch_kraken1_db_file)
                                 .map{
                                     db ->
@@ -379,7 +379,7 @@ workflow ASSEMBLY {
     // Prepare kraken2 database for use
     if ( ch_kraken2_db_file ) {
         if ( ch_kraken2_db_file.extension in ['gz', 'tgz'] ) {
-            // Add meta information
+// Add meta information
             ch_kraken2_db = Channel.of(ch_kraken1_db_file)
                                 .map{
                                     db ->
@@ -511,7 +511,7 @@ workflow ASSEMBLY {
     // Prepare BLAST database for use
     if ( ch_blast_db_file ) {
         if ( ch_blast_db_file.extension in ['gz', 'tgz'] ) {
-            // Add meta information
+// Add meta information
             ch_blast_db = Channel.of(ch_blast_db_file)
                             .map{
                                 db ->
@@ -520,9 +520,9 @@ workflow ASSEMBLY {
                                     [ meta, db ]
                             }
             // Expects to be .tar.gz!
-            BLAST_DB_PREPARATION_UNIX (
-                ch_blast_db
-            )
+                BLAST_DB_PREPARATION_UNIX (
+                    ch_blast_db
+                )
             ch_versions = ch_versions.mix(BLAST_DB_PREPARATION_UNIX.out.versions)
             ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db
 
@@ -651,7 +651,7 @@ workflow ASSEMBLY {
     // PROCESS: Classify assembly FastA file using GTDB-Tk
     if (!params.skip_gtdbtk && params.gtdb_db) {
         if ( ch_gtdbtk_db_file.extension in ['gz', 'tgz'] ) {
-            // Add meta information
+// Add meta information
             ch_gtdb_db = Channel.of(ch_gtdbtk_db_file)
                             .map{
                                 db ->
@@ -673,7 +673,7 @@ workflow ASSEMBLY {
                                 .map{
                                     [ it[0].getSimpleName(), it ]
                                 }
-
+                                
         } else {
             error("Unsupported object given to --gtdb_db, database must be supplied as either a directory or a .tar.gz file!")
         }
@@ -694,7 +694,7 @@ workflow ASSEMBLY {
     // PROCESS: Classify contigs with BUSCO
     if (!params.skip_busco && params.busco_db) {
         if ( ch_busco_db_file.extension in ['gz', 'tgz'] ) {
-            // Add meta information
+        // Add meta information
             ch_busco_db = Channel.of(ch_busco_db_file)
                             .map{
                                 db ->
