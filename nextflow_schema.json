@@ -742,9 +742,6 @@
             "$ref": "#/definitions/input_output_options"
         },
         {
-            "$ref": "#/definitions/remove_host_options"
-        },
-        {
             "$ref": "#/definitions/downsampling_options"
         },
         {

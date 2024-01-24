@@ -1,11 +1,9 @@
 .nextflow*
 work/
 data/
-results*
+results/
 .DS_Store
 testing/
 testing*
 *.pyc
-assets/.cache/
 singularity.cache/
-null/

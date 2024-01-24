@@ -3,11 +3,13 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v2.0.5
 
 ### `Added`
 
 - [#23](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Added a miscellanous issue template (@taylorpaisie).
+- [#25](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/25) Fix broken repository links (@gregorysprenger).
+- [#24](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/24) Update .nfcore.yml file to ignore specific nf-core file checks that do not apply to this workflow (@gregorysprenger)
 - Added ability to run `hostile` in remove_host_hostile channel
 - Added ability to run NCBI's SRA Human Scrubber (`scrub.sh`) in remove_host_sra_human_scrubber channel
   - Added ability to remove the broken sister reads from scrub.sh in the remove_broken_pairs_bbtools_repair channel
