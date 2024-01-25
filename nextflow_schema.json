@@ -37,6 +37,55 @@
                 }
             }
         },
+        "remove_host_options": {
+            "title": "Remove host options",
+            "type": "object",
+            "description": "Remove host options",
+            "default": "",
+            "properties": {
+                "host_remove": {
+                    "type": "string",
+                    "default": "both",
+                    "hidden": true,
+                    "description": "Remove host reads from FastQ files",
+                    "enum": ["skip", "both", "hostile", "sra-human-scrubber"]
+                },
+                "min_filesize_fastq_sra_human_scrubber_removed": {
+                    "type": "string",
+                    "default": "25M",
+                    "hidden": true,
+                    "description": "Minimum output filesize for each FastQ file after sra-human-scrubber"
+                },
+                "min_filesize_fastq_hostile_removed": {
+                    "type": "string",
+                    "default": "25M",
+                    "hidden": true,
+                    "description": "Minimum output filesize for each FastQ file after hostile"
+                },
+                "hostile_host_reference_path_prefix": {
+                    "type": "string",
+                    "default": "",
+                    "hidden": true,
+                    "description": "Prefix path to hostile bowtie2 index files to use for removal"
+                },
+                "sra_scrubber_db": {
+                    "type": "string",
+                    "default": "https://ftp.ncbi.nlm.nih.gov/sra/dbs/human_filter/human_filter.db.20230410v2",
+                    "description": "Database for NCBI's SRA Human Scrubber .db file",
+                    "help_text": "Path to a local file, or a URL to .DB file format that contains NCBI's STAT k-mers to remove from reads."
+                },
+                "update_sra_human_scrubber_db": {
+                    "type": "boolean",
+                    "description": "Automatically update SRA-Human-Scrubber database file."
+                },
+                "min_filesize_broken_pairs_bbtools_repair_removed": {
+                    "type": "string",
+                    "default": "25M",
+                    "hidden": true,
+                    "description": "Minimum output filesize for each FastQ file after BBTools Repair on SRA-Human-Scrubber reads"
+                }
+            }
+        },
         "downsampling_options": {
             "title": "Downsampling options",
             "type": "object",
@@ -707,6 +756,9 @@
     "allOf": [
         {
             "$ref": "#/definitions/input_output_options"
+        },
+        {
+            "$ref": "#/definitions/remove_host_options"
         },
         {
             "$ref": "#/definitions/downsampling_options"

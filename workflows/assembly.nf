@@ -87,6 +87,7 @@ include { QA_ASSEMBLY_QUAST                       } from "../modules/local/qa_as
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK                             } from "../subworkflows/local/input_check"
+include { HOST_REMOVAL                            } from "../subworkflows/local/host_removal"
 include { DOWNSAMPLE                              } from "../subworkflows/local/downsampling"
 include { ASSEMBLE_CONTIGS                        } from "../subworkflows/local/assemble_contigs"
 
@@ -101,6 +102,13 @@ if ( toLower(params.assembler) == "skesa" ) {
     var_assembler_name = "SKESA"
 } else {
     var_assembler_name = "SPAdes"
+}
+
+// NCBI's SRA Human Scrubber
+if (params.sra_scrubber_db) {
+    ch_sra_scrubber_db_file = file(params.sra_scrubber_db, checkIfExists: true)
+} else {
+    ch_sra_scrubber_db_file = []
 }
 
 // PhiX Reference
@@ -248,9 +256,16 @@ workflow ASSEMBLY {
                                     [ meta, file]
                             }
 
+    // SUBWORKFLOW: Remove host from FastQ files
+    HOST_REMOVAL (
+        ch_infile_handling,
+        ch_sra_scrubber_db_file
+    )
+    ch_versions = ch_versions.mix(HOST_REMOVAL.out.versions)
+
     // SUBWORKFLOW: Downsample FastQ files
     DOWNSAMPLE (
-        ch_infile_handling
+        HOST_REMOVAL.out.host_removed_reads
     )
     ch_versions = ch_versions.mix(DOWNSAMPLE.out.versions)
 
