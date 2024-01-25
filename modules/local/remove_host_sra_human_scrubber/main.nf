@@ -54,7 +54,7 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
 
     # Parse R1 counts input/output/removed
     R1_COUNT_READS_INPUT=$(grep 'total read count:' scrub_R1.stderr.txt \
-     | awk 'BEGIN{FS=OFS="\t"}; {print $2}' | cut -d ':' -f 2 | sed 's/ //g')
+      | awk 'BEGIN{FS=OFS="\t"}; {print $2}' | cut -d ':' -f 2 | sed 's/ //g')
     R1_COUNT_READS_REMOVED=$(grep 'spot(s) masked or removed.' scrub_R1.stderr.txt | awk '{print $1}')
     R1_COUNT_READS_OUTPUT=$(("${R1_COUNT_READS_INPUT}"-"${R1_COUNT_READS_REMOVED}"))
 
@@ -83,7 +83,7 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
 
     # Parse R2 counts input/output/removed
     R2_COUNT_READS_INPUT=$(grep 'total read count:' scrub_R2.stderr.txt \
-     | awk 'BEGIN{FS=OFS="\t"}; {print $2}' | cut -d ':' -f 2 | sed 's/ //g')
+      | awk 'BEGIN{FS=OFS="\t"}; {print $2}' | cut -d ':' -f 2 | sed 's/ //g')
     R2_COUNT_READS_REMOVED=$(grep 'spot(s) masked or removed.' scrub_R2.stderr.txt | awk '{print $1}')
     R2_COUNT_READS_OUTPUT=$(("${R2_COUNT_READS_INPUT}"-"${R2_COUNT_READS_REMOVED}"))
 
@@ -103,9 +103,9 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
     COUNT_READS_REMOVED=$(("${R1_COUNT_READS_REMOVED}"+"${R2_COUNT_READS_REMOVED}"))
     COUNT_READS_OUTPUT=$(("${R1_COUNT_READS_OUTPUT}"+"${R2_COUNT_READS_OUTPUT}"))
     PERCENT_REMOVED=$(echo "${COUNT_READS_REMOVED}" "${COUNT_READS_INPUT}" \
-     | awk '{proportion=$1/$2} END{printf("%.6f", proportion*100)}')
+      | awk '{proportion=$1/$2} END{printf("%.6f", proportion*100)}')
     PERCENT_OUTPUT=$(echo "${COUNT_READS_REMOVED}" "${COUNT_READS_INPUT}" \
-     | awk '{proportion=$1/$2} END{printf("%.6f", 100-(proportion*100))}')
+      | awk '{proportion=$1/$2} END{printf("%.6f", 100-(proportion*100))}')
 
     # Ensure all values parsed properly from stderr output
     for val in $COUNT_READS_INPUT $COUNT_READS_OUTPUT $COUNT_READS_REMOVED; do

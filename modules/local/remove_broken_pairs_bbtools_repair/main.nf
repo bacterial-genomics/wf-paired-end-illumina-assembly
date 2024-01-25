@@ -21,7 +21,7 @@ process REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR {
     # Remove broken sister read sequences
     msg "INFO: Removing broken sister reads using BBTools' Repair..."
 
-    # NOTE: https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/repair-guide/ 
+    # NOTE: https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/repair-guide/
     # "Repairing (repair flag) arbitrarily disordered files will take a lot of memory"
     # NOTE: "repair.sh requests all available memory by default"
     # NOTE: no CPU flag
