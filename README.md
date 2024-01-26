@@ -42,7 +42,7 @@ Example command on FastQs in "new-fastq-dir" data using **SPAdes** with singular
 
 ```
 nextflow run \
-  bacterial-genomics/wf-paired-end-illumina-assembly/ \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
   -r main \
   -profile singularity \
   --input new-fastq-dir \
@@ -54,7 +54,7 @@ Example command on FastQs in "new-fastq-dir" data using **Skesa** with singulari
 
 ```
 nextflow run \
-  bacterial-genomics/wf-paired-end-illumina-assembly/ \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
   -r main \
   -profile singularity \
   --input new-fastq-dir \
