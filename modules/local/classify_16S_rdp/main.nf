@@ -28,11 +28,5 @@ process CLASSIFY_16S_RDP {
         "!{meta.id}-!{meta.assembler}.16S_RDP.tsv"
     fi
 
-
-    # Get process version information
-    cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        rdp: $(classifier --version | awk '{print $2}')
-    END_VERSIONS
     '''
 }

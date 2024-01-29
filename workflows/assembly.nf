@@ -558,6 +558,12 @@ workflow ASSEMBLY {
                         ALIGN_16S_BLAST.out.blast_output
                     )
 
+    // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes
+    CLASSIFY_16S_RDP (
+        
+    )
+
+
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
         ch_blast_output
