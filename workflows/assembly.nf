@@ -559,9 +559,9 @@ workflow ASSEMBLY {
                     )
 
     // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes
-    CLASSIFY_16S_RDP (
+    // CLASSIFY_16S_RDP (
         
-    )
+    // )
 
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
