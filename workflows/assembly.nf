@@ -73,6 +73,7 @@ include { EXTRACT_16S_BARRNAP                     } from "../modules/local/extra
 include { BLAST_DB_PREPARATION_UNIX               } from "../modules/local/blast_db_preparation_unix/main"
 include { ALIGN_16S_BLAST                         } from "../modules/local/align_16S_blast/main"
 include { BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON   } from "../modules/local/best_16S_blastn_bitscore_taxon_python/main"
+include { CLASSIFY_16S_RDP                        } from "../modules/local/classify_16S_rdp/main" 
 include { SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON     } from "../modules/local/split_multifasta_assembly_biopython/main"
 
 include { GTDBTK_DB_PREPARATION_UNIX              } from "../modules/local/gtdbtk_db_preparation_unix/main"
