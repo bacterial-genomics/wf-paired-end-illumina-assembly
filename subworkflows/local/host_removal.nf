@@ -40,7 +40,8 @@ workflow HOST_REMOVAL {
     ch_sra_scrubber_db_file  // channel: [ sra-human-scrubber database file ]
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions      = Channel.empty()
+    ch_qc_filechecks = Channel.empty()
 
     // Database handling
     if ( !ch_sra_scrubber_db_file.isEmpty() ) {
@@ -75,7 +76,8 @@ workflow HOST_REMOVAL {
             ch_infile_handling,
             ch_db_for_sra_human_scrubber
         )
-        ch_versions = ch_versions.mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.versions)
+        ch_versions      = ch_versions.mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.versions)
+        ch_qc_filechecks = ch_qc_filechecks.mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.qc_filecheck)
 
         // sra-human-scrubber non-default "-x" removes reads instead of masks
         //   with N, so it's essential to discard broken pairs or else the
@@ -88,8 +90,8 @@ workflow HOST_REMOVAL {
         REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR (
             REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.sra_human_scrubber_removed
         )
-        ch_versions = ch_versions.mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.versions)
-
+        ch_versions           = ch_versions.mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.versions)
+        ch_qc_filechecks      = ch_qc_filechecks.mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.qc_filecheck)
         ch_host_removed_reads = REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.fastq_removed_broken_pairs
 
     } else if ( toLower(params.host_remove) == "hostile" ) {
@@ -98,8 +100,8 @@ workflow HOST_REMOVAL {
         REMOVE_HOST_HOSTILE (
             ch_infile_handling
         )
-        ch_versions = ch_versions.mix(REMOVE_HOST_HOSTILE.out.versions)
-
+        ch_versions           = ch_versions.mix(REMOVE_HOST_HOSTILE.out.versions)
+        ch_qc_filechecks      = ch_qc_filechecks.mix(REMOVE_HOST_HOSTILE.out.qc_filecheck)
         ch_host_removed_reads = REMOVE_HOST_HOSTILE.out.hostile_removed
 
     } else if ( toLower(params.host_remove) == "both" && ch_db_for_sra_human_scrubber ) {
@@ -109,7 +111,8 @@ workflow HOST_REMOVAL {
             ch_infile_handling,
             ch_db_for_sra_human_scrubber
         )
-        ch_versions = ch_versions.mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.versions)
+        ch_versions      = ch_versions.mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.versions)
+        ch_qc_filechecks = ch_qc_filechecks.mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.qc_filecheck)
 
         // sra-human-scrubber non-default "-x" removes reads instead of masks
         //   with N, so it's essential to discard broken pairs or else the
@@ -122,15 +125,16 @@ workflow HOST_REMOVAL {
         REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR (
             REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.sra_human_scrubber_removed
         )
-        ch_versions = ch_versions.mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.versions)
+        ch_versions      = ch_versions.mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.versions)
+        ch_qc_filechecks = ch_qc_filechecks.mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.qc_filecheck)
 
         // hostile removal tool
         // PROCESS: Run hostile to remove background host DNA read sequences
         REMOVE_HOST_HOSTILE (
             REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.fastq_removed_broken_pairs
         )
-        ch_versions = ch_versions.mix(REMOVE_HOST_HOSTILE.out.versions)
-
+        ch_versions           = ch_versions.mix(REMOVE_HOST_HOSTILE.out.versions)
+        ch_qc_filechecks      = ch_qc_filechecks.mix(REMOVE_HOST_HOSTILE.out.qc_filecheck)
         ch_host_removed_reads = REMOVE_HOST_HOSTILE.out.hostile_removed
 
     } else if ( toLower(params.host_remove) == "skip" ) {
@@ -146,5 +150,6 @@ workflow HOST_REMOVAL {
 
     emit:
     host_removed_reads = ch_host_removed_reads // channel: [ val(meta), [host_removed_fastq_files (R1, R2)] ]
+    qc_filecheck       = ch_qc_filechecks
     versions           = ch_versions
 }

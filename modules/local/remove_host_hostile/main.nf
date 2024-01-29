@@ -8,10 +8,11 @@ process REMOVE_HOST_HOSTILE {
     tuple val(meta), path(reads)
 
     output:
+    tuple val(meta), path("${meta.id}.Hostile-removed_FastQ_Files.tsv"), emit: qc_filecheck
+    tuple val(meta), path("hostile/${meta.id}*.clean_*")               , emit: hostile_removed
+    path("${meta.id}.Summary.Hostile-Removal.tsv")                     , emit: hostile_summary
     path(".command.{out,err}")
-    path "versions.yml"                                 , emit: versions
-    path "${meta.id}.Summary.Hostile-Removal.tsv"       , emit: hostile_summary
-    tuple val(meta), path("hostile/${meta.id}*.clean_*"), emit: hostile_removed
+    path("versions.yml")                                               , emit: versions
 
     shell:
     '''

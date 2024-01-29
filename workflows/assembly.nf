@@ -773,6 +773,7 @@ workflow ASSEMBLY {
     ch_qc_filecheck = ch_qc_filecheck
         .concat(
             INFILE_HANDLING_UNIX.out.qc_filecheck,
+            HOST_REMOVAL.out.qc_filecheck,
             REMOVE_PHIX_BBDUK.out.qc_filecheck,
             TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
             OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,
