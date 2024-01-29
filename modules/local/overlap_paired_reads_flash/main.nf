@@ -8,7 +8,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     tuple val(meta), path(fastq_pairs)
 
     output:
-    tuple val(meta), path("${meta.id}.Non-overlapping_FastQ_Files.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}.Non-overlapping_FastQ_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}*{paired,single}.fq.gz")          , emit: cleaned_fastq_files
     path("${meta.id}.{clean-reads,overlap}.tsv")
     path(".command.{out,err}")
@@ -37,14 +37,14 @@ process OVERLAP_PAIRED_READS_FLASH {
         -m ${OVERLAP_LEN} \
         !{fastq_pairs[0]} !{fastq_pairs[1]}
 
-      echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.Non-overlapping_FastQ_Files.tsv"
+      echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.Non-overlapping_FastQ_File.tsv"
       for suff in notCombined_1.fastq notCombined_2.fastq; do
         if verify_minimum_file_size "flash.${suff}" 'Non-overlapping FastQ Files' "!{params.min_filesize_non_overlapping_fastq}"; then
           echo -e "!{meta.id}\tNon-overlapping FastQ File (${suff})\tPASS" \
-            >> "!{meta.id}.Non-overlapping_FastQ_Files.tsv"
+            >> "!{meta.id}.Non-overlapping_FastQ_File.tsv"
         else
           echo -e "!{meta.id}\tNon-overlapping FastQ File (${suff})\tFAIL" \
-            >> "!{meta.id}.Non-overlapping_FastQ_Files.tsv"
+            >> "!{meta.id}.Non-overlapping_FastQ_File.tsv"
         fi
       done
 

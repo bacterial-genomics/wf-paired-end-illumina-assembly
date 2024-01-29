@@ -8,11 +8,11 @@ process REMOVE_HOST_HOSTILE {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("${meta.id}.Hostile-removed_FastQ_Files.tsv"), emit: qc_filecheck
-    tuple val(meta), path("hostile/${meta.id}*.clean_*")               , emit: hostile_removed
-    path("${meta.id}.Summary.Hostile-Removal.tsv")                     , emit: hostile_summary
+    tuple val(meta), path("${meta.id}.Hostile-removed_FastQ_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("hostile/${meta.id}*.clean_*")              , emit: hostile_removed
+    path("${meta.id}.Summary.Hostile-Removal.tsv")                    , emit: hostile_summary
     path(".command.{out,err}")
-    path("versions.yml")                                               , emit: versions
+    path("versions.yml")                                              , emit: versions
 
     shell:
     '''
@@ -68,13 +68,15 @@ process REMOVE_HOST_HOSTILE {
     RELATIVE_OUTPATH_R2=$(grep '"fastq2_out_path":' .command.out | awk '{print $2}' | sed 's/[",]//g')
 
     # Validate output files are sufficient size to continue
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.Hostile-removed_FastQ_File.tsv"
+
     for file in ${RELATIVE_OUTPATH_R1} ${RELATIVE_OUTPATH_R2}; do
       if verify_minimum_file_size "${file}" 'Hostile-removed FastQ Files' "!{params.min_filesize_fastq_hostile_removed}"; then
         echo -e "!{meta.id}\tHostile-removed FastQ ($file) File\tPASS" \
-          >> !{meta.id}.Hostile-removed_FastQ_Files.tsv
+          >> !{meta.id}.Hostile-removed_FastQ_File.tsv
       else
         echo -e "!{meta.id}\tHostile-removed FastQ ($file) File\tFAIL" \
-          >> !{meta.id}.Hostile-removed_FastQ_Files.tsv
+          >> !{meta.id}.Hostile-removed_FastQ_File.tsv
       fi
     done
 
