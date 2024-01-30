@@ -24,7 +24,7 @@ The first step is to fork the  [wf-paired-end-illumina-workflow](https://github.
 4. Unselect "Copy the `main` branch only. The new module should be added to the `dev` branch of the workflow.
 5. Click **Create fork**. 
 6. Then clone your forked repository:
-    `git clone git@github.com:YOURUSERNAME/wf-paired-end-illumina-assembly.git`
+    `git clone https://github.com/YOURUSERNAME/wf-paired-end-illumina-assembly.git`
 7. Then create a new branch on your forked repository:
     `git checkout -b NEWBRANCHNAME`
 
