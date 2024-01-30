@@ -23,9 +23,9 @@ process CLASSIFY_16S_RDP {
         -o "!{meta.id}-!{meta.assembler}.16S_RDP.tsv" \
         16S.${meta.id}-${meta.assembler}.fa
 
-      sed -i \
-        '1i GenBank Accession\tRank\tRank.1\tDomain\tTaxonomic Rank Level\tDomain Confidence Value\tPhylum\tTaxonomic Rank Level\tPhylum Confidence Value\tClass\tTaxonomic Rank Level\tClass Confidence Value\tFamily\tTaxonomic Rank Level\tFamily Confidence Value\tGenus\tTaxonomic Rank Level\tGenus Confidence Value' \
-        "!{meta.id}-!{meta.assembler}.16S_RDP.tsv"
+      #sed -i \
+        #'1i GenBank Accession\tRank\tRank.1\tDomain\tTaxonomic Rank Level\tDomain Confidence Value\tPhylum\tTaxonomic Rank Level\tPhylum Confidence Value\tClass\tTaxonomic Rank Level\tClass Confidence Value\tFamily\tTaxonomic Rank Level\tFamily Confidence Value\tGenus\tTaxonomic Rank Level\tGenus Confidence Value' \
+        #"!{meta.id}-!{meta.assembler}.16S_RDP.tsv"
     fi
 
     '''

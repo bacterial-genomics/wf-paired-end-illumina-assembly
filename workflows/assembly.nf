@@ -593,9 +593,11 @@ workflow ASSEMBLY {
                 )
 
     // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes
-    // CLASSIFY_16S_RDP (
-        
-    // )
+    CLASSIFY_16S_RDP (
+    ch_extracted_rna.join(ASSEMBLE_CONTIGS.out.assembly_file)
+    ch_versions = ch_versions.mix(CLASSIFY_16S_RDP.out.versions)
+    ch_   
+    )
 
     /*
     ================================================================================
