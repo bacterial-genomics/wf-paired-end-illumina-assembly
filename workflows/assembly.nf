@@ -559,6 +559,18 @@ workflow ASSEMBLY {
                     )
 
 
+    // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes
+    CLASSIFY_16S_RDP (
+        ch_16S_rna.join(ASSEMBLE_CONTIGS.out.assembly_file)
+    )
+    ch_versions = ch_versions.mix(CLASSIFY_16S_RDP.out.versions)
+    ch_rdp_summary = qc_filecheck(
+        "CLASSIFY_16S_RDP",
+        CLASSIFY_16S_RDP.out.qc_filecheck,
+        CLASSIFY_16S_RDP.out.rdp_summary
+    )  
+
+
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
         ch_blast_output
@@ -591,13 +603,7 @@ workflow ASSEMBLY {
                     keepHeader: true,
                     storeDir:   "${params.outdir}/SSU"
                 )
-
-    // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes
-    CLASSIFY_16S_RDP (
-    ch_extracted_rna.join(ASSEMBLE_CONTIGS.out.assembly_file)
-    ch_versions = ch_versions.mix(CLASSIFY_16S_RDP.out.versions)
-    ch_   
-    )
+ 
 
     /*
     ================================================================================

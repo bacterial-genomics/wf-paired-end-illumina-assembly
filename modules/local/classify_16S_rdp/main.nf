@@ -21,7 +21,7 @@ process CLASSIFY_16S_RDP {
     if [[ -s !{assembly} ]]; then
       classifier classify \
         -o "!{meta.id}-!{meta.assembler}.16S_RDP.tsv" \
-        16S.${meta.id}-${meta.assembler}.fa
+        !{barnapp_extracted_rna}
 
       #sed -i \
         #'1i GenBank Accession\tRank\tRank.1\tDomain\tTaxonomic Rank Level\tDomain Confidence Value\tPhylum\tTaxonomic Rank Level\tPhylum Confidence Value\tClass\tTaxonomic Rank Level\tClass Confidence Value\tFamily\tTaxonomic Rank Level\tFamily Confidence Value\tGenus\tTaxonomic Rank Level\tGenus Confidence Value' \
