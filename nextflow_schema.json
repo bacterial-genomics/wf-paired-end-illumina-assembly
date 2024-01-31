@@ -239,7 +239,7 @@
                     "type": "string",
                     "default": "PhiX_NC_001422.1.fasta",
                     "description": "File containing PhiX sequences in FastA format.",
-                    "help_text": "Path to PhiX reference file in FastA format. Recognized extensions are: {.fasta, .fas, .fa, .fna}."
+                    "help_text": "Path to PhiX reference file in FastA format. A PhiX reference file is required to run this pipeline. Recognized extensions are: {.fasta, .fas, .fa, .fna}."
                 },
                 "min_filesize_phix_genome": {
                     "type": "string",
@@ -256,8 +256,8 @@
                 "adapter_reference": {
                     "type": "string",
                     "default": "adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas",
-                    "description": "File containing Illumina adapters in FastA format.",
-                    "help_text": "Path to adapter reference file in FastA format. Recognized extensions are: {.fasta, .fas, .fa, .fna}."
+                    "description": "File containing adapters in FastA format that need to be removed from input FastQ files.",
+                    "help_text": "Path to adapter reference file in FastA format. Standard Illumina adapter sequences are strongly recommended. Recognized extensions are: {.fasta, .fas, .fa, .fna}."
                 },
                 "min_filesize_adapters": {
                     "type": "string",
