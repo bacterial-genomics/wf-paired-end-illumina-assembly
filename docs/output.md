@@ -13,6 +13,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [Annotated genbank file](#annot) - Genbank annotated file
 - [Final assembly file](#asm) - Final, corrected assembly file
 - [SPAdes output](#spades-output) - Contigs and SPAdes log files
+- [SKESA output](#skesa-output) - Contigs
 - [QA](#qa) - QA information on assembly files
 - [Small subunit (16S) files](#ssu) - BLAST output files
 - [Cleaned reads](#trim-reads) - Cleaned reads
@@ -42,7 +43,8 @@ _Note: \<Assembler\> is the name of the assembler (SPAdes, SKESA) given to `--as
 |                                                          | assembly_graph_with_scaffolds.gfa                      | Contains SPAdes assembly graph and scaffolds paths                                     |
 |                                                          | \<SampleName\>-\<Assembler\>.InDels-corrected.cnt.txt  | Each line represents number of corrected InDels (per correction round)                 |
 |                                                          | \<SampleName\>-\<Assembler\>.SNPs-corrected.cnt.txt    | Each line represents number of corrected SNPs (per correction round)                   |
-|                                                          | \<Num\>of3-asm-attempt-failed.spades.log               | Output log of SPAdes for each attempt tried (up to 3)                                  |
+| <a id="skesa-output">Assembly/SKESA/\<SampleName\></a>   |                                                        | **SKESA Assembly files**                                                               |
+|                                                          | contigs.fasta                                          | Assembled contigs from SKESA                                                           |
 | <a id="qa">Assembly/QA</a>                               |                                                        | **Quality Assurance files**                                                            |
 | Assembly/QA/\<SampleName\>                               |                                                        | **Output directory for each \<SampleName\>**                                           |
 |                                                          | \<SampleName\>-\<Assembler\>.CleanedReads-Bases.tsv    | Number of cleaned bases                                                                |
@@ -74,7 +76,7 @@ _Note: \<Assembler\> is the name of the assembler (SPAdes, SKESA) given to `--as
 |                                                          | Summary.CleanedReads-Bases.tab                         | Number of cleaned bases                                                                |
 |                                                          | Summary.GenomeCoverage.tab                             | Genome Coverage                                                                        |
 |                                                          | Summary.MLST.tab                                       | MLST result                                                                            |
-|                                                          | Summary.PhiX.tsv                                       | Information on the removal of PhiX reads                                               |
+|                                                          | Summary.PhiX.tab                                       | Information on the removal of PhiX reads                                               |
 |                                                          | Summary.QC_File_Checks.tab                             | QC file checks                                                                         |
 | <a id="taxonomy">Taxonomy</a>                            |                                                        | **Taxonomic Classification**                                                           |
 | Taxonomy/kraken/\<SampleName\>                           |                                                        | **Kraken Output for each \<SampleName\>**                                              |

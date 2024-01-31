@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/bacterial-genomics/wf-paired-end-illumina-assembly/master/assets/schema_input.json",
+    "$id": "https://raw.githubusercontent.com/bacterial-genomics/wf-paired-end-illumina-assembly/main/assets/schema_input.json",
     "title": "wf-paired-end-illumina-assembly pipeline - params.input schema",
     "description": "Schema for the file provided with params.input",
     "type": "array",
