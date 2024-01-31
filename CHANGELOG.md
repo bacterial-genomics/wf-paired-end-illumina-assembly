@@ -3,6 +3,18 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### `Added`
+
+### `Fixed`
+
+### `Updated`
+
+- [#45](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/45) Updated output documentation to allow for better readability and interpretation (@gregorysprenger).
+
+### `Deprecated`
+
 ## v2.1.0 - January 25, 2024
 
 ### `Added`
