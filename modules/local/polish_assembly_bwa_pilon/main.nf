@@ -16,6 +16,7 @@ process POLISH_ASSEMBLY_BWA_PILON {
     path("versions.yml")                                                                            , emit: versions
 
     shell:
+    polish_corrections = (params.spades_polish_corrections >= 1) ? params.spades_polish_corrections : 3
     '''
     source bash_functions.sh
 
@@ -29,19 +30,16 @@ process POLISH_ASSEMBLY_BWA_PILON {
         >> "!{meta.id}-!{meta.assembler}.Filtered_Assembly_File.tsv"
     fi
 
-    echo -n '' > "!{meta.id}-!{meta.assembler}.InDels-corrected.cnt.txt"
-    echo -n '' > "!{meta.id}-!{meta.assembler}.SNPs-corrected.cnt.txt"
-
-    # Make sure polish_corrections is at least 1, if not set to 1
-    polish_corrections=!{params.spades_polish_corrections}
-    if [[ ${polish_corrections} -lt 1 ]]; then
-      polish_corrections=1
-    fi
+    # Set up files to retain InDel and SNP correction information
+    echo -e "Correction round\tNumber of InDels corrected" \
+      > "!{meta.id}-!{meta.assembler}.InDels-corrected.cnt.txt"
+    echo -e "Correction round\tNumber of SNPs corrected" \
+      > "!{meta.id}-!{meta.assembler}.SNPs-corrected.cnt.txt"
 
     msg "INFO: Polishing contigs with paired end reads.."
 
-    for ((i=1;i<=polish_corrections;i++)); do
-      msg "INFO: Performing polishing step ${i} of !{params.spades_polish_corrections}"
+    for (( i=1; i<=!{polish_corrections}; i++ )); do
+      msg "INFO: Performing polishing step ${i} of !{polish_corrections}"
 
       bwa index !{uncorrected_contigs}
 
@@ -60,10 +58,10 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
       echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
       if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.paired.bam" 'Binary PE Alignment Map File' "!{params.min_filesize_binary_pe_alignment}"; then
-        echo -e "!{meta.id}-!{meta.assembler}\tBinary PE Alignment Map File (${i} of 3)\tPASS" \
+        echo -e "!{meta.id}-!{meta.assembler}\tBinary PE Alignment Map File (${i} of !{polish_corrections})\tPASS" \
           >> "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
       else
-        echo -e "!{meta.id}-!{meta.assembler}\tBinary PE Alignment Map File (${i} of 3)\tFAIL" \
+        echo -e "!{meta.id}-!{meta.assembler}\tBinary PE Alignment Map File (${i} of !{polish_corrections})\tFAIL" \
           >> "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
       fi
 
@@ -80,15 +78,18 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
       echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Polished_Assembly_File.tsv"
       if verify_minimum_file_size "!{uncorrected_contigs}" 'Polished Assembly File' "!{params.min_filesize_polished_assembly}"; then
-        echo -e "!{meta.id}-!{meta.assembler}\tPolished Assembly File (${i} of 3)\tPASS" \
+        echo -e "!{meta.id}-!{meta.assembler}\tPolished Assembly File (${i} of !{polish_corrections})\tPASS" \
           >> "!{meta.id}-!{meta.assembler}.Polished_Assembly_File.tsv"
       else
-        echo -e "!{meta.id}-!{meta.assembler}\tPolished Assembly File (${i} of 3)\tFAIL" \
+        echo -e "!{meta.id}-!{meta.assembler}\tPolished Assembly File (${i} of !{polish_corrections})\tFAIL" \
           >> "!{meta.id}-!{meta.assembler}.Polished_Assembly_File.tsv"
       fi
 
-      echo $(grep -c '-' "!{meta.id}-!{meta.assembler}.changes" >> "!{meta.id}-!{meta.assembler}.InDels-corrected.cnt.txt")
-      echo $(grep -vc '-' "!{meta.id}-!{meta.assembler}.changes" >> "!{meta.id}-!{meta.assembler}.SNPs-corrected.cnt.txt")
+      # Place round number and number of InDels/SNPs corrected into respective files
+      echo -e "${i}\t$(grep -c '-' !{meta.id}-!{meta.assembler}.changes)" \
+        >> "!{meta.id}-!{meta.assembler}.InDels-corrected.cnt.txt"
+      echo -e "${i}\t$(grep -vc '-' !{meta.id}-!{meta.assembler}.changes)" \
+        >> "!{meta.id}-!{meta.assembler}.SNPs-corrected.cnt.txt"
 
       rm -f "!{meta.id}-!{meta.assembler}.{changes,uncorrected.fna}"
       rm -f "!{meta.id}-!{meta.assembler}Pilon.bed"
