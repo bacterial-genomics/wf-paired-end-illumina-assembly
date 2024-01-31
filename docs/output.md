@@ -28,7 +28,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and is used to 
   - [Genome annotation](#genome-annotation)
   - [16S ribosomal RNA (rRNA) classification](#16s-ribosomal-rna-rrna-classification)
   - [Assembly taxonomic classification](#assembly-taxonomic-classification) using GTDB-Tk
-- [Summaries](#summaries) of the output files generated during hte pipeline process
+- [Summaries](#summaries) of the output files generated during the pipeline process
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
 > [!NOTE]
@@ -36,10 +36,9 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and is used to 
 >
 > `[assembler]` is the name of the assembler used to assemble contigs. [Default: SPAdes].
 
-
 ## Input quality control
 
-Input files must meet a minimum file size to be processed within this pipeline. If this check passes, the input files go through host removal, downsampling, PhiX read removal, and adapter trimming.
+Input files must meet a minimum file size to be processed within this pipeline. If this check passes, the input files go through host removal, down sampling, PhiX read removal, and adapter trimming.
 
 ### Initial FastQ file check
 
@@ -52,12 +51,12 @@ Input files must meet a minimum file size to be processed within this pipeline. 
 
 ### Host read removal
 
-Host read removal can be skipped or performed by Hostile and/or NCBI SRA-Human-Scrubber by specifying `--host_remove {both,hostile,sra-human-scrubber,skip}`. For SRA-Human-Scrubber, reads are repaired using BBTools to discard broken sister reads. Information about the number of reads discarded and retained are saved in the output directory.
+Host read removal can be skipped or performed by Hostile and/or NCBI SRA-Human-Scrubber by specifying `--host_remove {both,hostile,sra-human-scrubber,skip}`. For SRA-Human-Scrubber, reads are repaired using BBTools to discard broken sister reads. Information about the number of reads discarded and retained are saved in the output directory. Please see the [host removal using Hostile documentation](../modules/local/remove_host_hostile/README.md) and [host removal using SRA-Human-Scrubber documentation](../modules/local/remove_host_sra_human_scrubber/README.md) for more information.
 
 <details markdown="1">
 <summary><strong>QC Steps</strong></summary>
 
-- FastQ files after host removal are checked to ensure that they meet a minimum file size before continuing on to downstream processes `[Default: 25M]`.
+- FastQ files after host removal are checked to ensure that they meet a minimum file size before continuing to downstream processes `[Default: 25M]`.
 
 </details>
 
@@ -77,14 +76,14 @@ Host read removal can be skipped or performed by Hostile and/or NCBI SRA-Human-S
 
 ### PhiX read removal
 
-PhiX reads are commonly used as a positive control for Illumina sequencing. During assembly, PhiX reads are considered contaminants and if retained, a misassembled genome will be formed. Therefore, a PhiX reference file is required and a default [PhiX reference file](../bin/PhiX_NC_001422.1.fasta) is included with this pipeline. More information on PhiX removal using BBDuk can be found [here](../modules/local/remove_phix_bbduk/README.md).
+PhiX reads are commonly used as a positive control for Illumina sequencing. During assembly, PhiX reads are considered contaminants and if retained, a misassembled genome will be formed. Therefore, a PhiX reference file is required and a default [PhiX reference file](../bin/PhiX_NC_001422.1.fasta) is included with this pipeline. Please see the [PhiX removal using  BBDuk documentation](../modules/local/remove_phix_bbduk/README.md) for more information.
 
 <details markdown="1">
 <summary><strong>QC Steps</strong></summary>
 
 - The PhiX reference genome that is used with BBDuk to remove sequence reads must be accessible and meet a minimum file size `[Default: 5k]`.
 
-- FastQ files after PhiX removal are checked to ensure that they meet a minimum file size before continuing on to downstream processes `[Default: 25M]`. This is to halt analysis of a sample mostly containing PhiX reads rather than the sample DNA itself.
+- FastQ files after PhiX removal are checked to ensure that they meet a minimum file size before continuing to downstream processes `[Default: 25M]`. This is to halt analysis of a sample mostly containing PhiX reads rather than the sample DNA itself.
 
 </details>
 
@@ -100,14 +99,14 @@ PhiX reads are commonly used as a positive control for Illumina sequencing. Duri
 
 ### Adapter clipping and quality trimming
 
-Illumina instruments are able to detect and remove adapter sequences, but sometimes adapters can end up in the FastQ output due to sequencing errors. A default [adapters reference file](../bin/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas) is used within this pipeline. Trimmomatic also performs quality trimming, where broken sister reads are retained for downstream processes.
+Illumina instruments can detect and remove adapter sequences, but sometimes adapters can end up in the FastQ output due to sequencing errors. A default [adapters reference file](../bin/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas) is used within this pipeline. Trimmomatic also performs quality trimming, where broken sister reads are retained for downstream processes. Please see the [adapter clipping and quality trimming using Trimmomatic documentation](../modules/local/trim_reads_trimmomatic/README.md) for more information.
 
 <details markdown="1">
 <summary><strong>QC Steps</strong></summary>
 
 - The adapters reference file that is used with Trimmomatic to remove sequence reads must be accessible and meet a minimum file size `[Default: 10k]`.
 
-- FastQ files after removing adapter sequences are checked to ensure that they meet a minimum file size before continuing on to downstream processes `[Default: 25M]`. This is to halt analysis of a sample that is primarily contaminated with artificial Illumina sequences.
+- FastQ files after removing adapter sequences are checked to ensure that they meet a minimum file size before continuing to downstream processes `[Default: 25M]`. This is to halt analysis of a sample that is primarily contaminated with artificial Illumina sequences.
 
 </details>
 
@@ -123,7 +122,7 @@ Illumina instruments are able to detect and remove adapter sequences, but someti
 
 ### Merge overlapping sister reads
 
-Overlapping content between sister reads that are at least 80% similar are collapsed into a singleton read.
+Overlapping content between sister reads that are at least 80% similar are collapsed into a singleton read. Please see the [overlapping of paired-end reads documentation](../modules/local/overlap_paired_reads_flash/README.md) for more information.
 
 <details markdown="1">
 <summary><strong>QC Steps</strong></summary>
@@ -182,13 +181,13 @@ Kraken2 is a k-mer based classification tool that assigns taxonomic labels using
 
 ## Assembly
 
-The cleaned and trimmed reads are used to assemble contigs using SPAdes or SKESA `[Default: SPAdes]`. Contigs that have low compositional complexity are discarded. Contigs from SPAdes require polishing to create the final genome assembly, which is done by using BWA, Pilon, and Samtools. Contigs from SKESA do not require this step.
+The cleaned and trimmed reads are used to assemble contigs using SPAdes or SKESA `[Default: SPAdes]`. Contigs that have low compositional complexity are discarded. Please see the [contig filtering documentation](../modules/local/filter_contigs_biopython/README.md) for more information. Contigs from SPAdes require polishing to create the final genome assembly, which is done by using BWA, Pilon, and Samtools. Contigs from SKESA do not require this step.
 
 > [!IMPORTANT]
 > Outputs generated by SPAdes and SKESA cannot be compared even when using the same FastQ inputs.
 
 > [!TIP]
-> For a large number of input FastQ files, SKESA will decrease runtime. For input FastQ files that may be heavily contaminated, SPAdes may help maintain contiguity.
+> For many input FastQ files, SKESA may be useful in decreasing runtime. For input FastQ files that may be heavily contaminated, SPAdes may help maintain contiguity.
 
 <details markdown="1">
 <summary><strong>QC Steps</strong></summary>
@@ -197,7 +196,7 @@ The cleaned and trimmed reads are used to assemble contigs using SPAdes or SKESA
 
 - The resulting contig file after low compositional complexity contigs are discarded must meet a minimum file size `[Default: 1M]`. This is to prevent the analysis of a highly incomplete bacterial genome.
 
-- The cleaned paired-end reads are mapped onto the filtered assembly file in sequential steps (`[Default: 3]`), and the resulting binary paired-end alignment file must meet a minimum file size criteria `[Default: 25M]`. This is to prevent the analysis of an assembly file that has an unusally low read sequence amount.
+- The cleaned paired-end reads are mapped onto the filtered assembly file in sequential steps (`[Default: 3]`), and the resulting binary paired-end alignment file must meet a minimum file size criteria `[Default: 25M]`. This is to prevent the analysis of an assembly file that has an unusually low read sequence amount.
 
 - The assembly file goes through SNP and InDel corrections in sequential steps (`[Default: 3]`), and the resulting assembly file must meet a minimum file size criteria `[Default: 1M]`. This is to prevent further analysis of an unusually incomplete genome.
 
@@ -219,7 +218,7 @@ The cleaned and trimmed reads are used to assemble contigs using SPAdes or SKESA
 
 ### SPAdes
 
-SPAdes is a k-mer based software that forms a genome assembly from read sequences.
+SPAdes is a k-mer based software that forms a genome assembly from read sequences. Contigs from SPAdes require polishing to create the final genome assembly, which is done by using BWA, Pilon, and Samtools.
 
 <details markdown="1">
 <summary>Output files</summary>
@@ -229,7 +228,7 @@ SPAdes is a k-mer based software that forms a genome assembly from read sequence
   - `[sample]-SPAdes_graph.gfa`: Assembly graph in gfa format.
   - `[sample]-SPAdes_warnings.log`: Log file that lists warnings when forming a genome assembly.
   - `[sample]-SPAdes_params.txt.gz`: Command used to perform the SPAdes analysis.
-  - `[sample]-SPAdes_contigs.fasta`: Assembled contigs in fasta format.
+  - `[sample]-SPAdes_contigs.fasta`: Assembled contigs in FastA format.
   - `[sample]-SPAdes.SNPs-corrected.cnt.txt`: Number of SNPs corrected in each round of corrections.
   - `[sample]-SPAdes.InDels-corrected.cnt.txt`: Number of InDels corrected in each round of corrections.
 
@@ -243,7 +242,7 @@ Strategic K-mer Extension for Scrupulous Assemblies (SKESA) is a software that i
 <summary>Output files</summary>
 
 - `Assembly/SKESA/[sample]/`
-  - `[sample]-SKESA_contigs.fasta`: Assembled contigs in fasta format.
+  - `[sample]-SKESA_contigs.fasta`: Assembled contigs in FastA format.
 
 </details>
 
@@ -292,7 +291,7 @@ Symbol | Meaning                               | Length          | Identity
 
 ### Genome annotation
 
-The final assembly file is annotated to identify and label features using Prokka.
+The final assembly file is annotated to identify and label features using Prokka. Please see [genome annotation using Prokka documentation](../modules/local/annotate_prokka/README.md) for more information.
 
 > [!IMPORTANT]
 > Gene symbols may not be as update as the product description when using Prokka. It is recommended to use NCBI's [Prokaryotic Genome Annotation Pipeline (PGAP)](https://github.com/ncbi/pgap) to further investigate putatively present genes.
@@ -300,7 +299,7 @@ The final assembly file is annotated to identify and label features using Prokka
 <details markdown="1">
 <summary><strong>QC Steps</strong></summary>
 
-- The resulting annotated genbank file must meet a minimum file size criteria `[Default: 3M]`. This is to prevent further analysis of a highly incomplete annotation set.
+- The resulting annotated GenBank file must meet a minimum file size criteria `[Default: 3M]`. This is to prevent further analysis of a highly incomplete annotation set.
 
 </details>
 
@@ -310,13 +309,13 @@ The final assembly file is annotated to identify and label features using Prokka
 <summary>Output files</summary>
 
 - `Annotation/Prokka/`
-  - `[sample]-[assembler].gbk`: Annotated genome in genbank file format.
+  - `[sample]-[assembler].gbk`: Annotated genome in GenBank file format.
 
 </details>
 
 ### 16S ribosomal RNA (rRNA) classification
 
-The genbank file is parsed for 16S rRNA gene records. If there are no 16S rRNA gene records, Barrnap is used to predict 16S rRNA genes using the assembly file. BLAST is then used to align these gene records to it's database, where the best alignment is filtered out based on bitscore.
+The GenBank file is parsed for 16S rRNA gene records. If there are no 16S rRNA gene records, Barrnap is used to predict 16S rRNA genes using the assembly file. BLAST is then used to align these gene records to its database, where the best alignment is filtered out based on bit score.
 
 > [!NOTE]
 > Some assembled genomes do not contain identifiable 16S rRNA sequences and therefore 16S is not able to be classified. If the classification of 16S rRNA sequences is required, the sample must be re-sequenced.
@@ -331,11 +330,11 @@ The genbank file is parsed for 16S rRNA gene records. If there are no 16S rRNA g
 
 - The extracted 16S rRNA gene sequence file from the genome assembly must meet a minimum file size criteria `[Default: 500b]`. This is to prevent the classification of a highly incomplete 16S rRNA gene sequence.
 
-- The sample identifiers in the 16S rRNA gene sequence file get renamed and this resulting file must meet a minimum file size critiera `[Default: 500b]`. This is to prevent the classification of a highly incomplete 16S rRNA gene sequence.
+- The sample identifiers in the 16S rRNA gene sequence file gets renamed and this resulting file must meet a minimum file size criteria `[Default: 500b]`. This is to prevent the classification of a highly incomplete 16S rRNA gene sequence.
 
-- The 16S rRNA gene sequnce file is classified using BLASTn and the resulting output file must meet a minimum file size criteria `[Default: 10b]`. This is to ensure that the BLASTn output file contains at least one alignment with taxonomic information to be filtered and reported.
+- The 16S rRNA gene sequence file is classified using BLASTn and the resulting output file must meet a minimum file size criteria `[Default: 10b]`. This is to ensure that the BLASTn output file contains at least one alignment with taxonomic information to be filtered and reported.
 
-- The best 16S BLASTn alignment sequence filtered by bitscore is saved to a file in FastA format and must meet a minimum file size criteria `[Default: 10b]`. This is to ensure that the resulting file contains alignment information that can be parsed and reported.
+- The best 16S BLASTn alignment sequence filtered by bit score is saved to a file in FastA format and must meet a minimum file size criteria `[Default: 10b]`. This is to ensure that the resulting file contains alignment information that can be parsed and reported.
 
 </details>
 
@@ -352,7 +351,6 @@ The genbank file is parsed for 16S rRNA gene records. If there are no 16S rRNA g
   - `[sample]-[assembler].blast.tsv.gz`: BLAST output 16S rRNA gene records in tab-separated value (TSV) format.
 
 </details>
-
 
 ### Assembly taxonomic classification
 
@@ -385,7 +383,6 @@ Concatenation of output metrics for all samples.
 
 </details>
 
-
 ## Pipeline information
 
 Information about the pipeline execution, output logs, error logs, and QC file checks for each sample are stored here.
@@ -398,7 +395,7 @@ Information about the pipeline execution, output logs, error logs, and QC file c
 
 - `pipeline_info/`
   - `software_versions.yml`: Summary of the software packages used in each process and their version information.
-  - `nextflow_log.[job_id].txt`: Execution log file produced by nextflow.
+  - `nextflow_log.[job_id].txt`: Execution log file produced by Nextflow.
   - `ASM_[num_of_samples].o[job_id]`: Output log file produced by the job scheduler.
   - `ASM_[num_of_samples].e[job_id]`: Error log file produced by the job scheduler.
   - `pipeline_dag_yyyy-MM-dd_HH-mm-ss.html`: Direct acrylic graph (DAG) image of the workflow that gives a visual representation of how each process connects to each other.
@@ -413,8 +410,8 @@ Information about the pipeline execution, output logs, error logs, and QC file c
 <summary>Process log information</summary>
 
 - `pipeline_info/process_logs/`
-  - `[sample].[process].command.out`: Output log file for each sample in a given process.
-  - `[sample].[process].command.err`: Error log file for each sample in a given process.
+  - `[sample].[process].command.out`: Output log file for each sample in each process.
+  - `[sample].[process].command.err`: Error log file for each sample in each process.
 
 </details>
 
@@ -437,8 +434,8 @@ Information about the pipeline execution, output logs, error logs, and QC file c
   - `[sample].Polished_Assembly_File.tsv`: Details if the genome assembly file meets the minimum file size criteria after SNP and InDel corrections are performed `[Default: 1M]`.
   - `[sample].Final_Corrected_Assembly_FastA_File.tsv`: Details if the final error-corrected genome assembly file meets the minimum file size criteria `[Default: 1M]`.
   - `[sample].Binary_SE_Alignment_Map_File.tsv`: Details if the single-end (SE) alignment file meets the minimum file size criteria after the cleaned singleton reads are mapped onto the final genome assembly file `[Default: 1k]`.
-  - `[sample].Annotated_GenBank_File.tsv`: Details if the annotated genbank file meets the minimum file size criteria `[Default: 3M]`.
-  - `[sample].SSU_Extracted_File.tsv`: Details if the extracted 16S rRNA gene sequence file meets the minimum file size critieria `[Default: 500b]`.
+  - `[sample].Annotated_GenBank_File.tsv`: Details if the annotated GenBank file meets the minimum file size criteria `[Default: 3M]`.
+  - `[sample].SSU_Extracted_File.tsv`: Details if the extracted 16S rRNA gene sequence file meets the minimum file size criteria `[Default: 500b]`.
   - `[sample]-[assembler].SSU_Renamed_File.tsv`: Details if the 16S rRNA gene sequence file meets the minimum file size criteria after sample identifiers are added to each sequence `[Default: 500b]`.
   - `[sample].16S_BLASTn_Output_File.tsv`: Details if the BLASTn output file meets the minimum file size criteria `[Default: 10b]`.
   - `[sample].Filtered_16S_BLASTn_File.tsv`: Details if the best BLASTn alignment sequence meets the minimum file size criteria `[Default: 10b]`.

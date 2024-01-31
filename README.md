@@ -18,7 +18,7 @@ _General schematic of the steps in the workflow_
 - [Parameters](#parameters)
   - [Required parameters](#required-parameters)
   - [Optional parameters](#optional-parameters)
-  - [Additonal parameters](#additional-parameters)
+  - [Additional parameters](#additional-parameters)
 - [Resource Managers](#resource-Managers)
 - [Output](#output)
 - [Troubleshooting](#troubleshooting)
@@ -50,7 +50,7 @@ nextflow run \
   --assembler spades
 ```
 
-Example command on FastQs in "new-fastq-dir" data using **Skesa** with singularity:
+Example command on FastQs in "new-fastq-dir" data using **SKESA** with singularity:
 
 ```
 nextflow run \
@@ -101,7 +101,6 @@ These are the most pertinent options for this workflow:
 
   --outdir                The output directory where the results will be saved.
 
-
   ============================================
         Container platforms
   ============================================
@@ -109,12 +108,10 @@ These are the most pertinent options for this workflow:
 
   -profile docker         Use Docker images to run the workflow. Will pull images from Dockerhub if not locally available.
 
-
   ============================================
         Optional assemblers
   ============================================
   --assembler             Specify which assembler to execute (spades, skesa). [Default: spades]
-
 
   ============================================
         Reference files
@@ -139,7 +136,7 @@ PhiX reference [NC_001422.1](https://www.ncbi.nlm.nih.gov/nuccore/NC_001422.1) c
 
   --blast_db           Path to a local directory, archive file, or a URL to compressed tar archive that contains BLAST 16S ribosomal RNA files. [Default: NCBI's 16S ribosomal RNA database]
 
-  --gtdb_db            Path to a local directory, archive file, or a URL to compressed tar archive that contains GTDBTk database. [Default: NaN]
+  --gtdb_db            Path to a local directory, archive file, or a URL to compressed tar archive that contains the GTDB database. [Default: NaN]
 
   --busco_db           Path to a local directory, archive file, or a URL to compressed tar archive that contains BUSCO lineages. Can either be a lineage dataset or entire BUSCO database. [Default: NaN]
 ```
@@ -173,7 +170,7 @@ Please see the [output documentation](docs/output.md) for a table of all outputs
 
 ## Troubleshooting
 
-Q: It failed, how do I find out what went wrong?
+Q: It failed; how do I find out what went wrong?
 
 A: View file contents in the `<outdir>/pipeline_info` directory.
 
