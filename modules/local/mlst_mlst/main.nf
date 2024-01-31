@@ -12,11 +12,11 @@ process MLST_MLST {
     path("versions.yml")                                 , emit: versions
 
     shell:
-    scheme       = params.mlst_scheme        ? "${params.mlst_scheme}"                : ''
-    exclude      = params.mlst_ignore_scheme ? "${params.mlst_ignore_scheme}"         : ''
-    min_score    = params.mlst_min_score     ? "--minscore ${params.mlst_min_score}"  : "--minscore '50'"
-    min_identity = params.mlst_min_identity  ? "--minid ${params.mlst_min_identity}"  : "--minid '95'"
-    min_coverage = params.mlst_min_coverage  ? "--mincov ${params.mlst_min_coverage}" : "--mincov '10'"
+    scheme       = params.mlst_scheme        ? "${params.mlst_scheme.toLowerCase()}"       : ''
+    exclude      = params.mlst_ignore_scheme ? "${params.mlst_ignore_scheme.toLowerCase()}": ''
+    min_score    = params.mlst_min_score     ? "--minscore ${params.mlst_min_score}"       : "--minscore '50'"
+    min_identity = params.mlst_min_identity  ? "--minid ${params.mlst_min_identity}"       : "--minid '95'"
+    min_coverage = params.mlst_min_coverage  ? "--mincov ${params.mlst_min_coverage}"      : "--mincov '10'"
     '''
     source bash_functions.sh
 
