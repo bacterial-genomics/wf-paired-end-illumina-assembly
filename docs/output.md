@@ -75,7 +75,7 @@ Host read removal can be skipped or performed by Hostile and/or NCBI SRA-Human-S
 
 </details>
 
-### Remove PhiX reads
+### PhiX read removal
 
 PhiX reads are commonly used as a positive control for Illumina sequencing. During assembly, PhiX reads are considered contaminants and if retained, a misassembled genome will be formed. Therefore, a PhiX reference file is required and a default [PhiX reference file](../bin/PhiX_NC_001422.1.fasta) is included with this pipeline. More information on PhiX removal using BBDuk can be found [here](../modules/local/remove_phix_bbduk/README.md).
 
