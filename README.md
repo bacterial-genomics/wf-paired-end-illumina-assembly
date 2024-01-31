@@ -68,6 +68,9 @@ This workflow assembles bacterial isolate genomes from paired-end Illumina FastQ
 
 This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed cultures) sequenced with whole genome (WGS) or selective whole genome (SWGA) library preparation strategies. It is inappropriate for metagenomics analysis. The data files must be paired read sets (not single ended) and can come from any Illumina sequencing instrument which generates a FastQ file format (e.g., iSeq, HiSeq, MiSeq, NextSeq, NovaSeq). The read set files can be obtained from an external source, local storage device, or sequencing instrument. Other sequencing manufacturers such as Ion Torrent, PacBio, Roche 454, and Nanopore generate data files that cannot be directly used with this procedure.
 
+> [!CAUTION]
+> Due to the shorter DNA fragments of Illumina instruments, reads may be processed as singletons. It is recommended to check the DNA fragment length distribution using TapeStation or BioAnalyzer before sequencing.
+
 ## Installation
 
 - [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html#installation) `>=21.10.3`
