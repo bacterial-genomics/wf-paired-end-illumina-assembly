@@ -9,12 +9,11 @@ process TRIM_READS_TRIMMOMATIC {
     path adapter_reference_file
 
     output:
-    tuple val(meta), path("${meta.id}.Adapter*_File.tsv"), emit: qc_filecheck
-    tuple val(meta), path("${meta.id}_R{1,2}.paired.fq") , emit: fastq_adapters_removed
+    tuple val(meta), path("${meta.id}.Adapter*_File.tsv") , emit: qc_filecheck
+    tuple val(meta), path("${meta.id}*{paired,single}.fq"), emit: fastq_adapters_removed
     path("${meta.id}.trimmomatic.tsv")
-    path("${meta.id}_single.fq")
     path(".command.{out,err}")
-    path("versions.yml")                                 , emit: versions
+    path("versions.yml")                                  , emit: versions
 
     shell:
     '''
