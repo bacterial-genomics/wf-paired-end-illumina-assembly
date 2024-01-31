@@ -31,7 +31,9 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and is used to 
 - [Summaries](#summaries) of the output files generated during the pipeline process
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
-> [!NOTE] > `[sample]` is a unique identifier that is parsed from input FastQ filenames and excludes everything after [R1/R2].
+> [!NOTE]
+>
+> `[sample]` is a unique identifier that is parsed from input FastQ filenames and excludes everything after [R1/R2].
 >
 > `[assembler]` is the name of the assembler used to assemble contigs. [Default: SPAdes].
 
