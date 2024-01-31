@@ -566,11 +566,11 @@ workflow ASSEMBLY {
     )
     
     ch_versions = ch_versions.mix(CLASSIFY_16S_RDP.out.versions)
-    ch_rdp_summary = qc_filecheck(
+    ch_rdp_summary = qcfilecheck(
         "CLASSIFY_16S_RDP",
-        CLASSIFY_16S_RDP.out.qc_filecheck,
-        CLASSIFY_16S_RDP.out.rdp_summary
-    )  
+        CLASSIFY_16S_RDP.out.qc_rdp_filecheck,
+        CLASSIFY_16S_RDP.out.rdp_tsv
+)  
 
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
