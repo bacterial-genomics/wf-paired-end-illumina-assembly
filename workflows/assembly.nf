@@ -568,19 +568,6 @@ workflow ASSEMBLY {
                         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
                         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.top_blast_species
                     )
-    ch_blast_summary = qcfilecheck(
-                            "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
-                            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
-                            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary
-                        )
-
-    // Collect BLASTn Summaries and concatenate into one file
-    ch_blast_summary.map{ meta, file -> file }
-                    .collectFile(
-                        name:       "Summary.16S.tab",
-                        keepHeader: true,
-                        storeDir:   "${params.outdir}/Summaries"
-                    )
 
     // Collect top BLASTn species and concatenate into one file
     ch_top_blast.map{ meta, file -> file }
@@ -589,7 +576,11 @@ workflow ASSEMBLY {
                     keepHeader: true,
                     storeDir:   "${params.outdir}/SSU"
                 )
-
+                .collectFile(
+                    name:       "Summary.16S.tab",
+                    keepHeader: true,
+                    storeDir:   "${params.outdir}/Summaries"
+                )
     /*
     ================================================================================
                             Evaluate contigs
