@@ -8,7 +8,7 @@ The directories listed below will be created in the results directory after the 
 
 ## Pipeline overview
 
-The pipeline is built using [Nextflow](https://www.nextflow.io/) and is used to perform *de novo* assembly on raw Illumina paired-end reads from bacterial isolates.
+The pipeline is built using [Nextflow](https://www.nextflow.io/) and is used to perform _de novo_ assembly on raw Illumina paired-end reads from bacterial isolates.
 
 - [Input quality control](#input-quality-control) that includes trimming and contaminant removal
   - [Initial FastQ file check](#initial-fastq-file-check) ensures input FastQ files meet a minimum file size
@@ -31,8 +31,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and is used to 
 - [Summaries](#summaries) of the output files generated during the pipeline process
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
-> [!NOTE]
-> `[sample]` is a unique identifier that is parsed from input FastQ filenames and excludes everything after [R1/R2].
+> [!NOTE] > `[sample]` is a unique identifier that is parsed from input FastQ filenames and excludes everything after [R1/R2].
 >
 > `[assembler]` is the name of the assembler used to assemble contigs. [Default: SPAdes].
 
@@ -66,6 +65,7 @@ Host read removal can be skipped or performed by Hostile and/or NCBI SRA-Human-S
 <summary>Output files</summary>
 
 - `CleanedReads/Hostile/`
+
   - `[sample].Summary.Hostile-Removal.tsv`: Summary of the number of reads discarded and retained from Hostile.
 
 - `CleanedReads/SRA-Human-Scrubber/`
@@ -76,7 +76,7 @@ Host read removal can be skipped or performed by Hostile and/or NCBI SRA-Human-S
 
 ### PhiX read removal
 
-PhiX reads are commonly used as a positive control for Illumina sequencing. During assembly, PhiX reads are considered contaminants and if retained, a misassembled genome will be formed. Therefore, a PhiX reference file is required and a default [PhiX reference file](../bin/PhiX_NC_001422.1.fasta) is included with this pipeline. Please see the [PhiX removal using  BBDuk documentation](../modules/local/remove_phix_bbduk/README.md) for more information.
+PhiX reads are commonly used as a positive control for Illumina sequencing. During assembly, PhiX reads are considered contaminants and if retained, a misassembled genome will be formed. Therefore, a PhiX reference file is required and a default [PhiX reference file](../bin/PhiX_NC_001422.1.fasta) is included with this pipeline. Please see the [PhiX removal using BBDuk documentation](../modules/local/remove_phix_bbduk/README.md) for more information.
 
 <details markdown="1">
 <summary><strong>QC Steps</strong></summary>
@@ -137,6 +137,7 @@ Overlapping content between sister reads that are at least 80% similar are colla
 <summary>Output files</summary>
 
 - `CleanedReads/`
+
   - `[sample]_single.fq.gz`: Final cleaned singleton reads.
   - `[sample]_R[1/2].paired.fq.gz`: Final cleaned paired reads.
 
@@ -279,13 +280,13 @@ The final assembly file is scanned against PubMLST typing schemes to determine t
 <details markdown="1">
 <summary>MLST output interpretation</summary>
 
-Symbol | Meaning                               | Length          | Identity
--------|---------------------------------------|-----------------|---------------
-`n`    | exact intact allele                   | 100%            | 100%
-`~n`   | novel full length allele similar to n | 100%            | &ge; `--minid`
-`n?`   | partial match to known allele         | &ge; `--mincov` | &ge; `--minid`
-`-`    | allele missing                        | &lt; `--mincov` | &lt; `--minid`
-`n,m`  | multiple alleles                      |                 |
+| Symbol | Meaning                               | Length          | Identity       |
+| ------ | ------------------------------------- | --------------- | -------------- |
+| `n`    | exact intact allele                   | 100%            | 100%           |
+| `~n`   | novel full length allele similar to n | 100%            | &ge; `--minid` |
+| `n?`   | partial match to known allele         | &ge; `--mincov` | &ge; `--minid` |
+| `-`    | allele missing                        | &lt; `--mincov` | &lt; `--minid` |
+| `n,m`  | multiple alleles                      |                 |
 
 </details>
 
@@ -344,6 +345,7 @@ The GenBank file is parsed for 16S rRNA gene records. If there are no 16S rRNA g
 <summary>Output files</summary>
 
 - `SSU/`
+
   - `16S-top-species.tsv`: Summary of the best BLAST alignment for each sample.
   - `16S.[sample]-[assembler].fa`: 16S rRNA gene sequence of the best BLAST alignment in FastA format.
 
