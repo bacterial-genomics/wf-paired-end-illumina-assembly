@@ -79,7 +79,7 @@ workflow ASSEMBLE_CONTIGS {
         )
         ch_versions = ch_versions.mix(FILTER_CONTIGS_BIOPYTHON.out.versions)
 
-        // PROCESS: Use BWA/Samtools/Pilon to correct contigs with cleaned PE reads
+        // PROCESS: Create BAM file
         MAP_CONTIGS_BWA (
             ch_cleaned_reads.join(FILTER_CONTIGS_BIOPYTHON.out.uncorrected_contigs)
         )
