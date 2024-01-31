@@ -9,10 +9,10 @@ process REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR {
 
     output:
     tuple val(meta), path("${meta.id}.BBTools-Repair-removed_FastQ_File.tsv"), emit: qc_filecheck
-    tuple val(meta), path("${meta.id}_repaired-R{1,2}.fastq.gz")              , emit: fastq_removed_broken_pairs
-    path("${meta.id}.Summary.BBTools-Repair-Removal.tsv")                     , emit: repair_summary
+    tuple val(meta), path("${meta.id}_repaired-R{1,2}.fastq.gz")             , emit: fastq_removed_broken_pairs
+    path("${meta.id}.Summary.BBTools-Repair-Removal.tsv")                    , emit: repair_summary
     path(".command.{out,err}")
-    path("versions.yml")                                                      , emit: versions
+    path("versions.yml")                                                     , emit: versions
 
     shell:
     '''
