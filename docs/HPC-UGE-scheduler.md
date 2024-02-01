@@ -45,7 +45,7 @@ cd $LAB_HOME/workflows/wf-paired-end-illumina-assembly
 
 module load nextflow
 
-nextflow run main.nf -profile singularity,test
+nextflow run main.nf -profile singularity,test --outdir results
 ```
 
 ## Usage

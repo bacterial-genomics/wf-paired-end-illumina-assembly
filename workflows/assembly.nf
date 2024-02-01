@@ -380,7 +380,7 @@ workflow ASSEMBLY {
     if ( ch_kraken2_db_file ) {
         if ( ch_kraken2_db_file.extension in ['gz', 'tgz'] ) {
             // Add meta information
-            ch_kraken2_db = Channel.of(ch_kraken1_db_file)
+            ch_kraken2_db = Channel.of(ch_kraken2_db_file)
                                 .map{
                                     db ->
                                         def meta = [:]
