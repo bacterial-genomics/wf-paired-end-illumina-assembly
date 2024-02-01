@@ -16,17 +16,6 @@ process CLASSIFY_16S_RDP {
     '''
     source bash_functions.sh
 
-    # Exit if previous process fails qc filecheck
-    for filecheck in !{qc_extracted_filecheck}; do
-      if [[ $(grep "FAIL" ${filecheck}) ]]; then
-        error_message=$(awk -F '\t' 'END {print $2}' ${filecheck} | sed 's/[(].*[)] //g')
-        msg "${error_message} Check failed" >&2
-        exit 1
-      else
-        rm ${filecheck}
-      fi
-    done
-
     msg "INFO: Performing RDP 16S Classification"
 
 ###         ##############################################################
