@@ -19,7 +19,7 @@ _General schematic of the steps in the workflow_
   - [Required parameters](#required-parameters)
   - [Optional parameters](#optional-parameters)
   - [Additonal parameters](#additional-parameters)
-- [Resource Managers](#resource-Managers)
+- [Resource Managers](#resource-managers)
 - [Output](#output)
 - [Troubleshooting](#troubleshooting)
 - [Contributions and Support](#contributions-and-support)
@@ -31,9 +31,9 @@ Run the built-in test set to confirm all parts are working as-expected. It will 
 
 ```
 nextflow run \
-  wf-paired-end-illumina-assembly \
-  -r v1.1.0 \
-  -profile ,test
+  bacterial-genomics/wf-paired-end-illumina-assembly \
+  -r main \
+  -profile singularity,test
 ```
 
 ## Quick Start: Run
@@ -42,8 +42,8 @@ Example command on FastQs in "new-fastq-dir" data using **SPAdes** with singular
 
 ```
 nextflow run \
-  wf-paired-end-illumina-assembly/ \
-  -r v1.1.0 \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
+  -r main \
   -profile singularity \
   --input new-fastq-dir \
   --outdir my-results \
@@ -54,8 +54,8 @@ Example command on FastQs in "new-fastq-dir" data using **Skesa** with singulari
 
 ```
 nextflow run \
-  wf-paired-end-illumina-assembly/ \
-  -r v1.1.0 \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
+  -r main \
   -profile singularity \
   --input new-fastq-dir \
   --outdir my-results \
@@ -77,7 +77,7 @@ This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed c
 ## Usage
 
 ```
-nextflow run wf-paired-end-illumina-assembly -profile <docker|singularity> --input <input directory|samplesheet> --outdir <directory for results>
+nextflow run bacterial-genomics/wf-paired-end-illumina-assembly -r main -profile <docker|singularity> --input <input directory|samplesheet> --outdir <directory for results> --assembler <spades|skesa>
 ```
 
 Please see the [usage documentation](docs/usage.md) for further information on using this workflow.
@@ -149,8 +149,8 @@ View help menu of all workflow options:
 
 ```
 nextflow run \
-  wf-paired-end-illumina-assembly \
-  -r v1.1.0 \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
+  -r main \
   --help \
   --show_hidden_params
 ```
