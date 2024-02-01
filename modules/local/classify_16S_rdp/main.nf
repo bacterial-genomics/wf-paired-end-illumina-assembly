@@ -1,7 +1,7 @@
 process CLASSIFY_16S_RDP {
 
     tag { "${meta.id}" }
-    container "tpaisie/rdp@sha256:e4906df57ced2dab65a257174e9ef4706f6627979001a39d3145880f002347e6"
+    container "tpaisie/rdp@sha256:ee388dff2e17c567946b7f2bf326765586d30f4ea0a203800616c44f599d53cc"
 
     input:
     tuple val(meta), path(barnapp_extracted_rna), path(qc_extracted_filecheck)
