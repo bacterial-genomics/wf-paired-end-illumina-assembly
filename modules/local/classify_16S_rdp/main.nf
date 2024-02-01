@@ -37,8 +37,7 @@ process CLASSIFY_16S_RDP {
 
     classifier \
       classify \
-      --format !{params.rdp_output_format} \
-      --gene !{params.rdp_phylomarker} \
+      --format fixrank \
       --outputFile "!{meta.id}.rdp.tsv" \
       "!{barnapp_extracted_rna}"
 
