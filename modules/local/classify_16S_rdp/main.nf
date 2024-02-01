@@ -4,7 +4,7 @@ process CLASSIFY_16S_RDP {
     container "tpaisie/rdp@sha256:ee388dff2e17c567946b7f2bf326765586d30f4ea0a203800616c44f599d53cc"
 
     input:
-    tuple val(meta), path(barnapp_extracted_rna), path(qc_extracted_filecheck)
+    tuple val(meta), path(barnapp_extracted_rna)
 
     output:
     path(".command.{out,err}")
