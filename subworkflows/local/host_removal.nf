@@ -27,6 +27,23 @@ def toLower(it) {
     it.toString().toLowerCase()
 }
 
+// Check QC filechecks for a failure
+def qcfilecheck(process, qcfile, inputfile) {
+    qcfile.map{ meta, file -> [ meta, [file] ] }
+            .join(inputfile)
+            .map{ meta, qc, input ->
+                data = []
+                qc.flatten().each{ data += it.readLines() }
+
+                if ( data.any{ it.contains('FAIL') } ) {
+                    line = data.last().split('\t')
+                    log.warn("${line[1]} QC check failed during process ${process} for sample ${line.first()}")
+                } else {
+                    [ meta, input ]
+                }
+            }
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN HOST_REMOVAL WORKFLOW
@@ -51,10 +68,10 @@ workflow HOST_REMOVAL {
                 ch_sra_scrubber_db_file
             )
             ch_versions = ch_versions.mix(PREPARE_DB_SRA_HUMAN_SCRUBBER.out.versions)
-            ch_db_for_sra_human_scrubber = PREPARE_DB_SRA_HUMAN_SCRUBBER.out.db
+            ch_db_for_sra_human_scrubber = PREPARE_DB_SRA_HUMAN_SCRUBBER.out.db.collect()
 
         } else {
-            ch_db_for_sra_human_scrubber = Channel.fromPath(ch_sra_scrubber_db_file)
+            ch_db_for_sra_human_scrubber = Channel.fromPath(ch_sra_scrubber_db_file).collect()
         }
     } else {
         ch_db_for_sra_human_scrubber = []
@@ -65,7 +82,7 @@ workflow HOST_REMOVAL {
             Channel.of("Update_SRA_Human_Scrubber_DB")
         )
         ch_versions = ch_versions.mix(UPDATE_DB_SRA_HUMAN_SCRUBBER.out.versions)
-        ch_db_for_sra_human_scrubber = UPDATE_DB_SRA_HUMAN_SCRUBBER.out.db
+        ch_db_for_sra_human_scrubber = UPDATE_DB_SRA_HUMAN_SCRUBBER.out.db.collect()
     }
 
     // Perform host removal
@@ -77,7 +94,13 @@ workflow HOST_REMOVAL {
             ch_db_for_sra_human_scrubber
         )
         ch_versions      = ch_versions.mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.versions)
-        ch_qc_filechecks = ch_qc_filechecks.mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.qc_filecheck)
+
+        // Collect output files
+        ch_cleaned_fastq = qcfilecheck(
+                                "REMOVE_HOST_SRA_HUMAN_SCRUBBER",
+                                REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.qc_filecheck,
+                                REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.sra_human_scrubber_removed
+                            )
 
         // sra-human-scrubber non-default "-x" removes reads instead of masks
         //   with N, so it's essential to discard broken pairs or else the
@@ -88,11 +111,21 @@ workflow HOST_REMOVAL {
         // PROCESS: run BBTools' repair.sh to discard broken sister reads
         //   (singletons) to aggressively remove host sequence reads
         REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR (
-            REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.sra_human_scrubber_removed
+            ch_cleaned_fastq
         )
         ch_versions           = ch_versions.mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.versions)
-        ch_qc_filechecks      = ch_qc_filechecks.mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.qc_filecheck)
-        ch_host_removed_reads = REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.fastq_removed_broken_pairs
+
+        // Collect output files
+        ch_host_removed_reads = qcfilecheck(
+                                    "REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR",
+                                    REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.qc_filecheck,
+                                    REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.fastq_removed_broken_pairs
+                                )
+
+        // Collect QC File Checks
+        ch_qc_filechecks      = ch_qc_filechecks
+                                    .mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.qc_filecheck)
+                                    .mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.qc_filecheck)
 
     } else if ( toLower(params.host_remove) == "hostile" ) {
         // hostile removal tool
@@ -101,8 +134,16 @@ workflow HOST_REMOVAL {
             ch_infile_handling
         )
         ch_versions           = ch_versions.mix(REMOVE_HOST_HOSTILE.out.versions)
+
+        // Collect output files
+        ch_host_removed_reads = qcfilecheck(
+                                    "REMOVE_HOST_HOSTILE",
+                                    REMOVE_HOST_HOSTILE.out.qc_filecheck,
+                                    REMOVE_HOST_HOSTILE.out.hostile_removed
+                                )
+
+        // Collect QC File Checks
         ch_qc_filechecks      = ch_qc_filechecks.mix(REMOVE_HOST_HOSTILE.out.qc_filecheck)
-        ch_host_removed_reads = REMOVE_HOST_HOSTILE.out.hostile_removed
 
     } else if ( toLower(params.host_remove) == "both" && ch_db_for_sra_human_scrubber ) {
         // sra-human-scrubber removal tool then hostile removal tool
@@ -111,8 +152,14 @@ workflow HOST_REMOVAL {
             ch_infile_handling,
             ch_db_for_sra_human_scrubber
         )
-        ch_versions      = ch_versions.mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.versions)
-        ch_qc_filechecks = ch_qc_filechecks.mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.qc_filecheck)
+        ch_versions = ch_versions.mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.versions)
+
+        // Collect output files
+        ch_sra_host_removal = qcfilecheck(
+                                "REMOVE_HOST_SRA_HUMAN_SCRUBBER",
+                                REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.qc_filecheck,
+                                REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.sra_human_scrubber_removed
+                            )
 
         // sra-human-scrubber non-default "-x" removes reads instead of masks
         //   with N, so it's essential to discard broken pairs or else the
@@ -123,23 +170,41 @@ workflow HOST_REMOVAL {
         // PROCESS: run BBTools' repair.sh to discard broken sister reads
         //   (singletons) to aggressively remove host sequence reads
         REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR (
-            REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.sra_human_scrubber_removed
+            ch_sra_host_removal
         )
         ch_versions      = ch_versions.mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.versions)
-        ch_qc_filechecks = ch_qc_filechecks.mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.qc_filecheck)
+
+        // Collect output files
+        ch_repair_sra    = qcfilecheck(
+                                "REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR",
+                                REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.qc_filecheck,
+                                REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.fastq_removed_broken_pairs
+                            )
 
         // hostile removal tool
         // PROCESS: Run hostile to remove background host DNA read sequences
         REMOVE_HOST_HOSTILE (
-            REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.fastq_removed_broken_pairs
+            ch_repair_sra
         )
         ch_versions           = ch_versions.mix(REMOVE_HOST_HOSTILE.out.versions)
-        ch_qc_filechecks      = ch_qc_filechecks.mix(REMOVE_HOST_HOSTILE.out.qc_filecheck)
-        ch_host_removed_reads = REMOVE_HOST_HOSTILE.out.hostile_removed
+
+        // Collect output files
+        ch_host_removed_reads = qcfilecheck(
+                                    "REMOVE_HOST_HOSTILE",
+                                    REMOVE_HOST_HOSTILE.out.qc_filecheck,
+                                    REMOVE_HOST_HOSTILE.out.hostile_removed
+                                )
+
+        // Collect QC File Checks
+        ch_qc_filechecks      = ch_qc_filechecks
+                                    .mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.qc_filecheck)
+                                    .mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.qc_filecheck)
+                                    .mix(REMOVE_HOST_HOSTILE.out.qc_filecheck)
+
 
     } else if ( toLower(params.host_remove) == "skip" ) {
         // User-specified skip host removal
-        log.warn("Host removal user-specified to skip.")
+        log.warn("User specified to skip host removal!")
         ch_host_removed_reads = ch_infile_handling
 
     } else {
