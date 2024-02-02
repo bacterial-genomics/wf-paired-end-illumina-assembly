@@ -17,7 +17,7 @@ process REMOVE_HOST_HOSTILE {
     shell:
     // TODO: Use container built on Ubuntu
     minFilesize = params.min_filesize_fastq_hostile_removed
-    min_filesize_output_fastq = ( ['k','c'].contains(minFilesize[-1])) ? "${minFilesize}" : "25000k"
+    min_filesize_output_fastq = ( ['c','b','k'].contains(minFilesize[-1])) ? "${minFilesize}" : "25000k"
     '''
     source bash_functions.sh
 
