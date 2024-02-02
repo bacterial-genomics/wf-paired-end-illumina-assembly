@@ -83,7 +83,7 @@ With `input_directory`:
 
 ```bash
 nextflow run \
-  wf-paired-end-illumina-assembly \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
   --input input_directory \
   --outdir <outdir> \
   -profile docker
@@ -93,7 +93,7 @@ With `samplesheet.csv`:
 
 ```bash
 nextflow run \
-  wf-paired-end-illumina-assembly \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
   --input samplesheet.csv \
   --outdir <outdir> \
   -profile docker
@@ -115,7 +115,7 @@ work                # Directory containing the nextflow working files
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
 
 ```bash
-nextflow pull wf-paired-end-illumina-assembly
+nextflow pull bacterial-genomics/wf-paired-end-illumina-assembly
 ```
 
 ### Reproducibility
