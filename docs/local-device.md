@@ -22,7 +22,7 @@ Before running workflow on new data, the workflow should be ran on the built-in 
 ```
 cd wf-paired-end-illumina-assembly/
 
-nextflow run main.nf -profile singularity,test
+nextflow run main.nf -profile singularity,test --outdir results
 ```
 
 ## Usage

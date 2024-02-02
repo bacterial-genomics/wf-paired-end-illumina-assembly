@@ -511,6 +511,37 @@
                 }
             }
         },
+        "mlst_options": {
+            "title": "MLST options",
+            "type": "object",
+            "description": "MLST options",
+            "properties": {
+                "mlst_scheme": {
+                    "type": "string",
+                    "description": "Use specified mlst scheme on all inputs (no autodection)."
+                },
+                "mlst_ignore_scheme": {
+                    "type": "string",
+                    "default": "ecoli,abaumannii,vcholerae_2",
+                    "description": "Comma separated list of mlst schemes to ignore."
+                },
+                "mlst_min_score": {
+                    "type": "string",
+                    "default": "50",
+                    "description": "Minumum score out of 100 to match a scheme when using autodection."
+                },
+                "mlst_min_identity": {
+                    "type": "string",
+                    "default": "95",
+                    "description": "Percent identity of an allele to consider them 'similar'."
+                },
+                "mlst_min_coverage": {
+                    "type": "string",
+                    "default": "10",
+                    "description": "Percent coverage to report a partial allele."
+                }
+            }
+        },
         "genbank_annotation_options": {
             "title": "Genbank annotation options",
             "type": "object",
@@ -787,6 +818,9 @@
         },
         {
             "$ref": "#/definitions/contig_classification_options"
+        },
+        {
+            "$ref": "#/definitions/mlst_options"
         },
         {
             "$ref": "#/definitions/genbank_annotation_options"
