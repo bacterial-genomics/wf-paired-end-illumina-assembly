@@ -15,6 +15,9 @@ process REMOVE_HOST_HOSTILE {
     path("versions.yml")                                              , emit: versions
 
     shell:
+    // TODO: Use container built on Ubuntu
+    minFilesize = params.min_filesize_fastq_hostile_removed
+    min_filesize_output_fastq = ( ['k','c'].contains(minFilesize[-1])) ? "${minFilesize}" : "25000k"
     '''
     source bash_functions.sh
 
@@ -71,7 +74,7 @@ process REMOVE_HOST_HOSTILE {
     echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.Hostile-removed_FastQ_File.tsv"
 
     for file in ${RELATIVE_OUTPATH_R1} ${RELATIVE_OUTPATH_R2}; do
-      if verify_minimum_file_size "${file}" 'Hostile-removed FastQ Files' "!{params.min_filesize_fastq_hostile_removed}"; then
+      if verify_minimum_file_size "${file}" 'Hostile-removed FastQ Files' "!{min_filesize_output_fastq}"; then
         echo -e "!{meta.id}\tHostile-removed FastQ ($file) File\tPASS" \
           >> !{meta.id}.Hostile-removed_FastQ_File.tsv
       else
