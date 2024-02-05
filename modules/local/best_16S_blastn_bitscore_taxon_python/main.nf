@@ -4,7 +4,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-    tuple val(meta), path(blast_output), path(assembly)
+    tuple val(meta), path(blast_output)
 
     output:
     tuple val(meta), path("${meta.id}-${meta.assembler}.Filtered_16S_BLASTn_File.tsv"), emit: qc_filecheck

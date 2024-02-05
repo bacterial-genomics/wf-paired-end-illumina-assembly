@@ -548,7 +548,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Run Blast on predicted 16S ribosomal RNA genes
     ALIGN_16S_BLAST (
-        ch_extracted_rna.join(ASSEMBLE_CONTIGS.out.assembly_file),
+        ch_extracted_rna,
         ch_db_for_blast
     )
     ch_versions = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
@@ -561,7 +561,6 @@ workflow ASSEMBLY {
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
         ch_blast_output
-            .join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
     ch_top_blast = qcfilecheck(
