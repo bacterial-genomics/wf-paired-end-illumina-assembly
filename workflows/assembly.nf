@@ -279,7 +279,7 @@ workflow ASSEMBLY {
                         "REMOVE_PHIX_BBDUK",
                         REMOVE_PHIX_BBDUK.out.qc_filecheck,
                         REMOVE_PHIX_BBDUK.out.fastq_phix_removed
-                    )
+                      )
 
     // Collect PhiX removal summaries and concatenate into one file
     ch_phix_removal_summary = Channel.empty()
@@ -481,7 +481,7 @@ workflow ASSEMBLY {
                     "ANNOTATE_PROKKA",
                     ANNOTATE_PROKKA.out.qc_filecheck,
                     ANNOTATE_PROKKA.out.prokka_genbank_file
-                )
+                  )
 
     /*
     ================================================================================
@@ -555,7 +555,7 @@ workflow ASSEMBLY {
                         "ALIGN_16S_BLAST",
                         ALIGN_16S_BLAST.out.qc_filecheck,
                         ALIGN_16S_BLAST.out.blast_output
-                    )
+                      )
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
