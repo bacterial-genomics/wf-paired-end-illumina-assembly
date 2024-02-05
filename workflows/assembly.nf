@@ -574,6 +574,13 @@ workflow ASSEMBLY {
         CLASSIFY_16S_RDP.out.qc_filecheck,
         CLASSIFY_16S_RDP.out.rdp_tsv
         )  
+    // specify output of RDP summary
+    ch_rdp_summary.map{meta, file -> file}
+                  .collectFile(
+                    name: "*.RDP_Classification_File.tsv",
+                    keepHeader: true,
+                    storeDir:   "${params.outdir}/SSU"
+                  )
 
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
