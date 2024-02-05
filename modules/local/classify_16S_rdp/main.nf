@@ -12,7 +12,7 @@ process CLASSIFY_16S_RDP {
     tuple val(meta), path("${meta.id}.rdp.tsv"),     emit: rdp_tsv
     path "versions.yml",                             emit: versions
 
-    params.min_filesize_rdp_output = '10c'
+    // params.min_filesize_rdp_output = '10c'
 
     shell:
     '''
