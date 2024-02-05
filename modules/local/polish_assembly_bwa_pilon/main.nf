@@ -10,7 +10,7 @@ process POLISH_ASSEMBLY_BWA_PILON {
     output:
     tuple val(meta), path("${meta.id}-${meta.assembler}.{Filtered,Polished,Binary,Final}*_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}-${meta.assembler}.{paired,single}.bam")                       , emit: bam
-    path("${meta.id}-${meta.assembler}.{SNPs,InDels}-corrected.cnt.txt")
+    path("${meta.id}-${meta.assembler}.{SNPs,InDels}-corrected.cnt.tsv")
     tuple val(meta), path("${meta.id}-${meta.assembler}.fna")                                       , emit: assembly
     path(".command.{out,err}")
     path("versions.yml")                                                                            , emit: versions
@@ -32,9 +32,9 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
     # Set up files to retain InDel and SNP correction information
     echo -e "Correction round\tNumber of InDels corrected" \
-      > "!{meta.id}-!{meta.assembler}.InDels-corrected.cnt.txt"
+      > "!{meta.id}-!{meta.assembler}.InDels-corrected.cnt.tsv"
     echo -e "Correction round\tNumber of SNPs corrected" \
-      > "!{meta.id}-!{meta.assembler}.SNPs-corrected.cnt.txt"
+      > "!{meta.id}-!{meta.assembler}.SNPs-corrected.cnt.tsv"
 
     msg "INFO: Polishing contigs with paired end reads.."
 
@@ -87,9 +87,9 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
       # Place round number and number of InDels/SNPs corrected into respective files
       echo -e "${i}\t$(grep -c '-' !{meta.id}-!{meta.assembler}.changes)" \
-        >> "!{meta.id}-!{meta.assembler}.InDels-corrected.cnt.txt"
+        >> "!{meta.id}-!{meta.assembler}.InDels-corrected.cnt.tsv"
       echo -e "${i}\t$(grep -vc '-' !{meta.id}-!{meta.assembler}.changes)" \
-        >> "!{meta.id}-!{meta.assembler}.SNPs-corrected.cnt.txt"
+        >> "!{meta.id}-!{meta.assembler}.SNPs-corrected.cnt.tsv"
 
       rm -f "!{meta.id}-!{meta.assembler}.{changes,uncorrected.fna}"
       rm -f "!{meta.id}-!{meta.assembler}Pilon.bed"
