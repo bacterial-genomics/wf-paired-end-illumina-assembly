@@ -32,9 +32,9 @@ process CLASSIFY_16S_RDP {
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    #"!{task.process}":
-        #rdp: $(rdp_classifier version')
-    #END_VERSIONS
+    "!{task.process}":
+        rdp: $(rdp_classifier version)
+    END_VERSIONS
 
     '''
 }
