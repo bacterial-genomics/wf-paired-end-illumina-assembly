@@ -491,8 +491,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Attempt to extract 16S rRNA gene records from prokka_genbank_file file
     EXTRACT_16S_BIOPYTHON (
-        ch_genbank
-            .join(ASSEMBLE_CONTIGS.out.assembly_file)
+        ch_genbank.join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(EXTRACT_16S_BIOPYTHON.out.versions)
 
