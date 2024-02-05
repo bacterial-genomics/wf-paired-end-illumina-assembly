@@ -8,9 +8,11 @@ process CLASSIFY_16S_RDP {
 
     output:
     path(".command.{out,err}")
-    path "versions.yml",                             emit: versions
     path "${meta.id}.rdp.tsv",                       emit: qc_rdp_filecheck
     tuple val(meta), path("${meta.id}.rdp.tsv"),     emit: rdp_tsv
+    path "versions.yml",                             emit: versions
+
+    params.min_filesize_rdp_output = '10c'
 
     shell:
     '''
@@ -22,13 +24,13 @@ process CLASSIFY_16S_RDP {
       classify \
       --format fixrank \
       --outputFile "!{meta.id}.rdp.tsv" \
-      "!{barnapp_extracted_rna}"
+      "16S.!{barnapp_extracted_rna}"
 
-    #if verify_minimum_file_size "!{meta.id}.rdp.tsv" '16S Classification Output File' "!{params.min_filesize_rdp_output}"; then
-      #echo -e "!{meta.id}\t16S RDP Output File\tPASS" > !{meta.id}.rdp.tsv
-    #else
-      #echo -e "!{meta.id}\t16S RDP Output File\tFAIL" > !{meta.id}.rdp.tsv
-    #fi
+    if verify_minimum_file_size "!{meta.id}.rdp.tsv" '16S Classification Output File' "!{params.min_filesize_rdp_output}"; then
+      echo -e "!{meta.id}\t16S RDP Output File\tPASS" > !{meta.id}.rdp.tsv
+    else
+      echo -e "!{meta.id}\t16S RDP Output File\tFAIL" > !{meta.id}.rdp.tsv
+    fi
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

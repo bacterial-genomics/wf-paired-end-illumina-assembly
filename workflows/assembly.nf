@@ -570,7 +570,7 @@ workflow ASSEMBLY {
         "CLASSIFY_16S_RDP",
         CLASSIFY_16S_RDP.out.qc_rdp_filecheck,
         CLASSIFY_16S_RDP.out.rdp_tsv
-)  
+        )  
 
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
