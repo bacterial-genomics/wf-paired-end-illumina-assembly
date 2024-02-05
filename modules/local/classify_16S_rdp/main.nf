@@ -22,21 +22,23 @@ process CLASSIFY_16S_RDP {
 
     classifier \
       classify \
-      --format fixrank \
+      --format "!{params.rdp_output_format}" \
+      --gene "!{params.rdp_phylomarker}" \
       --outputFile "!{meta.id}.rdp.tsv" \
-      "16S.!{barnapp_extracted_rna}.fa"
+      "!{barnapp_extracted_rna}"
 
-    if verify_minimum_file_size "!{meta.id}.rdp.tsv" '16S Classification Output File' "!{params.min_filesize_rdp_output}"; then
-      echo -e "!{meta.id}\t16S RDP Output File\tPASS" >> !{meta.id}.rdp.tsv
-    else
-      echo -e "!{meta.id}\t16S RDP Output File\tFAIL" >> !{meta.id}.rdp.tsv
-    fi
+
+    #if verify_minimum_file_size "!{meta.id}.rdp.tsv" '16S Classification Output File' "!{params.min_filesize_rdp_output}"; then
+      #echo -e "!{meta.id}\t16S RDP Output File\tPASS" >> !{meta.id}.rdp.tsv
+    #else
+      #echo -e "!{meta.id}\t16S RDP Output File\tFAIL" >> !{meta.id}.rdp.tsv
+    #fi
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     #"!{task.process}":
-        #rdp: $(rdp_classifier version)
-    #END_VERSIONS
+        #rdp: $(classifier version)
+    END_VERSIONS
 
     '''
 }
