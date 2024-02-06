@@ -12,23 +12,22 @@ If you'd like to write some code for wf-paired-end-illumina-assembly, the standa
 
 If you're not used to this workflow with git, you can start with some [docs from GitHub](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests) or even their [excellent `git` resources](https://try.github.io/).
 
-
 ## Fork the GitHub [wf-paired-end-illumina-workflow](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly) repository to your GitHub account
 
-The first step is to fork the  [wf-paired-end-illumina-workflow](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly) repository:
+The first step is to fork the [wf-paired-end-illumina-workflow](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly) repository:
 
 1. On the [GitHub repository](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly) in the top right corner, click **Fork**.
-![GitHub fork](docs/images/github_fork.PNG)
+   ![GitHub fork](docs/images/github_fork.PNG)
 2. Under "Owner", select the dropdown menu and click and owner for the forked repository.
 3. By default, forks are named the same as their upstream repositories. Optionally, to further distinguish your fork, in the "Repository name" field, type a name.
 4. Unselect "Copy the `main` branch only. The new module should be added to the `dev` branch of the workflow.
-5. Click **Create fork**. 
+5. Click **Create fork**.
 6. Then clone your forked repository:
-    `git clone https://github.com/YOURUSERNAME/wf-paired-end-illumina-assembly.git`
+   `git clone https://github.com/YOURUSERNAME/wf-paired-end-illumina-assembly.git`
 7. Then create a new branch on your forked repository:
-    `git checkout -b NEWBRANCHNAME`
+   `git checkout -b NEWBRANCHNAME`
 
-Please create a new branch with the appropriate branch name for the module you are trying to add.  This will make things easier when reviewing and ultimately merging the branches on the repository.
+Please create a new branch with the appropriate branch name for the module you are trying to add. This will make things easier when reviewing and ultimately merging the branches on the repository.
 
 # Adding a module to the workflow
 
@@ -45,19 +44,20 @@ subworkflows/local/NEWMODULE.nf
 workflows/assembly.nf
 ```
 
-
 For adding a new module to the workflow, it is important to keep up the current naming scheme for the modules, which is function of the module, followed by the name of the program/software being used:
+
 - initial process channel: `ch_output_from_<process>`
 - intermediate and terminal channels: `ch_<previousprocess>_for_<nextprocess>`
 
-For example, the program Kraken is used to classify reads and it's module name in the workflow is:  
+For example, the program Kraken is used to classify reads and it's module name in the workflow is:
+
 - `modules/local/read_classify_kraken`
-- `modules/local/read_classify_kraken2`  
+- `modules/local/read_classify_kraken2`
 
 Some other examples include:
+
 - `modules/local/map_contigs_bwa`
 - `modules/local/mlst_mlst` (looks strange but keeping up with the same naming scheme, this is ok)
-
 
 ### Adding a new step
 
@@ -73,11 +73,7 @@ If you wish to contribute a new step, please use the following coding standards:
 8. If applicable, add a new test command in `.github/workflow/ci.yml`.
 9. Add a description of the output files and if relevant any appropriate images from the MultiQC report to `docs/output.md`.
 
-
-#### Add parameters to 
-
-
-
+#### Add parameters to
 
 ### Default values
 
@@ -91,11 +87,9 @@ Sensible defaults for process resource requirements (CPUs / memory / time) for a
 
 The process resources can be passed on to the tool dynamically within the process with the `${task.cpu}` and `${task.memory}` variables in the `script:` block.
 
-
 ### Submitting a pull request
 
 When you are done adding and editing all the required files to incorporate your new module into the workflow, you can submit a pull request on the [wf-paired-end-illumina-workflow](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly) GitHub page.
-
 
 ### Nextflow version bumping
 
@@ -138,7 +132,6 @@ For further information/help, please consult the [bacterial-genomics/wf-paired-e
 
 To make the bacterial-genomics/wf-paired-end-illumina-assembly code and processing logic more understandable for new contributors and to ensure quality, we semi-standardise the way the code and other contributions are written.
 
-
 ### Images and figures
 
 For overview images and other documents we follow the nf-core [style guidelines and examples](https://nf-co.re/developers/design_guidelines).
@@ -157,6 +150,3 @@ To get started:
 Devcontainer specs:
 
 - [DevContainer config](.devcontainer/devcontainer.json)
-
-
-
