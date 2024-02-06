@@ -33,9 +33,12 @@ process CLASSIFY_16S_RDP {
     fi
 
     # Get process version information
+    # RDP does not have a command for displaying the version
+    # The version being used currently is RDPv2.14
     cat <<-END_VERSIONS > versions.yml
     #"!{task.process}":
         #rdp: $(classifier version)
+        echo -e "INFO:  RDP version 2.14"
     END_VERSIONS
 
     '''
