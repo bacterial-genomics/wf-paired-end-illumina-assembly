@@ -9,7 +9,7 @@ process CLASSIFY_16S_RDP {
     output:
     path(".command.{out,err}")
     tuple val(meta), path("${meta.id}.RDP_Classification_File.tsv"),     emit: qc_filecheck
-    tuple val(meta), path("${meta.id}.RDP_Classification_File.tsv"),     emit: rdp_tsv
+    tuple val(meta), path("${meta.id}.rdp.tsv"),     emit: rdp_tsv
     path "versions.yml",                                                 emit: versions
 
     shell:
@@ -22,14 +22,14 @@ process CLASSIFY_16S_RDP {
       classify \
       --format "!{params.rdp_output_format}" \
       --gene "!{params.rdp_phylomarker}" \
-      --outputFile "!{meta.id}.RDP_Classification_File.tsv" \
+      --outputFile "!{meta.id}.rdp.tsv" \
       "!{barnapp_extracted_rna}"
 
 
     if verify_minimum_file_size "!{meta.id}.RDP_Classification_File.tsv" '16S Classification Output File' "!{params.min_filesize_rdp_output}"; then
-      echo -e "!{meta.id}\t16S RDP Output File\tPASS" >> !{meta.id}.rdp.tsv
+      echo -e "!{meta.id}\t16S RDP Output File\tPASS" >> !{meta.id}.RDP_Classification_File.tsv
     else
-      echo -e "!{meta.id}\t16S RDP Output File\tFAIL" >> !{meta.id}.rdp.tsv
+      echo -e "!{meta.id}\t16S RDP Output File\tFAIL" >> !{meta.id}.RDP_Classification_File.tsv
     fi
 
     # Get process version information
