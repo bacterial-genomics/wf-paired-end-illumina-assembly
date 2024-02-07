@@ -7,7 +7,7 @@
 
 ![workflow](images/wf-paired-end-illumina-assembly_workflow.png)
 
-_A schematic of the steps in the workflow._
+_General schematic of the steps in the workflow_
 
 ## Requirements
 
