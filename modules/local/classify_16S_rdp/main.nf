@@ -7,10 +7,10 @@ process CLASSIFY_16S_RDP {
     tuple val(meta), path(barnapp_extracted_rna)
 
     output:
+    tuple val(meta), path("${meta.id}.RDP_Classification_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}.rdp.tsv")                    , emit: rdp_tsv
     path(".command.{out,err}")
-    tuple val(meta), path("${meta.id}.RDP_Classification_File.tsv"),     emit: qc_filecheck
-    tuple val(meta), path("${meta.id}.rdp.tsv"),     emit: rdp_tsv
-    path "versions.yml",                                                 emit: versions
+    path("versions.yml")                                           , emit: versions
 
     shell:
     '''
