@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 - [#37](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/37) Allow customization of the MLST module, such as specifying schemes to include/exclude and minimum thresholds (@gregorysprenger).
+- [#47](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/47) Added RDP Classifier as another tool to classify 16S ribosomal RNA (@taylorpaisie).
 
 ### `Fixed`
 
