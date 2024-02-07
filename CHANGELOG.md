@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Updated`
 
+- [#55](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/55) Replace linting GitHub workflows with MegaLinter to allow for more linters to be used, autofix issues and commit, etc. (@gregorysprenger).
+
 ### `Deprecated`
 
 ## v2.1.0 - January 25, 2024
