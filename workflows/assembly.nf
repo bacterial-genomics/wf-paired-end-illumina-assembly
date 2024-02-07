@@ -559,27 +559,24 @@ workflow ASSEMBLY {
                     )
 
 
-    // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes
-    // CLASSIFY_16S_RDP (
-    //         ASSEMBLE_CONTIGS.out.assembly_file
-    //             .join(EXTRACT_16S_BARRNAP.out.extracted_rna)
-    // )
-    
+    // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes    
     CLASSIFY_16S_RDP (
         EXTRACT_16S_BARRNAP.out.extracted_rna
-        )    
+    )    
     ch_versions = ch_versions.mix(CLASSIFY_16S_RDP.out.versions)
+
     ch_rdp_summary = qcfilecheck(
-        "CLASSIFY_16S_RDP",
-        CLASSIFY_16S_RDP.out.qc_filecheck,
-        CLASSIFY_16S_RDP.out.rdp_tsv
-        )  
-    // specify output of RDP summary
+                        "CLASSIFY_16S_RDP",
+                        CLASSIFY_16S_RDP.out.qc_filecheck,
+                        CLASSIFY_16S_RDP.out.rdp_tsv
+                      )
+
+    // Concatenate RDP summaries
     ch_rdp_summary.map{meta, file -> file}
                   .collectFile(
-                    name: "*.RDP_Classification_File.tsv",
+                    name: "Summary.RDP.tab",
                     keepHeader: true,
-                    storeDir:   "${params.outdir}/SSU"
+                    storeDir:   "${params.outdir}/Summaries"
                   )
 
 
