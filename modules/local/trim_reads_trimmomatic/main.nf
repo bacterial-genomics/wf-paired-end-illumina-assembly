@@ -11,7 +11,7 @@ process TRIM_READS_TRIMMOMATIC {
     output:
     tuple val(meta), path("${meta.id}.Adapter*_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}_R{1,2}.paired.fq") , emit: fastq_adapters_removed
-    path("${meta.id}.trimmomatic.tsv")
+    path("${meta.id}.Trimmomatic.tsv")
     path("${meta.id}_single.fq")
     path(".command.{out,err}")
     path("versions.yml")                                 , emit: versions
@@ -63,9 +63,9 @@ process TRIM_READS_TRIMMOMATIC {
     msg "INFO: $CNT_BROKEN total broken read pairs were saved as singletons" >&2
 
     echo -e "!{meta.id}\t${TRIMMO_DISCARD}\t${CNT_BROKEN}" \
-    > "!{meta.id}.trimmomatic.tsv"
+    > "!{meta.id}.Trimmomatic.tsv"
 
-    sed -i '1i Sample name\t# discarded reads\t# singleton reads' !{meta.id}.trimmomatic.tsv
+    sed -i '1i Sample name\t# discarded reads\t# singleton reads' !{meta.id}.Trimmomatic.tsv
 
     cat !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq > "!{meta.id}_single.fq"
 
