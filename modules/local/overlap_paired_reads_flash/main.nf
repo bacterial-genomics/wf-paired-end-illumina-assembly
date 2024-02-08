@@ -48,9 +48,8 @@ process OVERLAP_PAIRED_READS_FLASH {
         fi
       done
 
-      rm !{fastq_pairs[0]} !{fastq_pairs[1]}
-      mv flash.notCombined_1.fastq !{meta.id}_R1.paired.fq
-      mv flash.notCombined_2.fastq !{meta.id}_R2.paired.fq
+      mv -f flash.notCombined_1.fastq !{meta.id}_R1.paired.fq
+      mv -f flash.notCombined_2.fastq !{meta.id}_R2.paired.fq
 
       CNT_READS_OVERLAPPED=0
 
@@ -60,7 +59,6 @@ process OVERLAP_PAIRED_READS_FLASH {
         flash.extendedFrags.fastq)
 
         cat flash.extendedFrags.fastq >> "!{meta.id}_single.fq"
-        rm flash.extendedFrags.fastq
       else
         echo "$(cat !{meta.id}_R2.paired.fq | tail -n 4)" >> "!{meta.id}_single.fq"
       fi
