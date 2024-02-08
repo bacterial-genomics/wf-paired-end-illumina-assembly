@@ -286,7 +286,7 @@ workflow ASSEMBLY {
     ch_phix_removal_summary = ch_phix_removal_summary
                                 .mix(REMOVE_PHIX_BBDUK.out.summary)
                                 .collectFile(
-                                    name:       "Summary.PhiX.tab",
+                                    name:       "Summary.PhiX_Removal.tab",
                                     keepHeader: true,
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
@@ -303,6 +303,16 @@ workflow ASSEMBLY {
                                     TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed
                                 )
 
+    // Collect read trimming summaries and concatenate into one file
+    ch_trimmomatic_summary = Channel.empty()
+    ch_trimmomatic_summary = ch_trimmomatic_summary
+                                .mix(TRIM_READS_TRIMMOMATIC.out.summary)
+                                .collectFile(
+                                    name:       "Summary.Adapter_Removal_and_Quality_Trimming.tab",
+                                    keepHeader: true,
+                                    storeDir:   "${params.outdir}/Summaries"
+                                )
+
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
     OVERLAP_PAIRED_READS_FLASH (
         ch_trim_reads_trimmomatic
@@ -313,6 +323,16 @@ workflow ASSEMBLY {
                             OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,
                             OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files
                         )
+
+    // Collect singleton read summaries and concatenate into one file
+    ch_overlap_summary = Channel.empty()
+    ch_overlap_summary = ch_overlap_summary
+                                .mix(OVERLAP_PAIRED_READS_FLASH.out.summary)
+                                .collectFile(
+                                    name:       "Summary.Final_Cleaned_and_Overlapping_Reads.tab",
+                                    keepHeader: true,
+                                    storeDir:   "${params.outdir}/Summaries"
+                                )
 
     /*
     ================================================================================
