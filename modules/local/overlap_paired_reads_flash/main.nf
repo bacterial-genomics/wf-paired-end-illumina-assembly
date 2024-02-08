@@ -10,7 +10,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     output:
     tuple val(meta), path("${meta.id}.Non-overlapping_FastQ_Files.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}*{paired,single}.fq.gz")          , emit: cleaned_fastq_files
-    path("${meta.id}.{clean-reads,overlap}.tsv")
+    path("${meta.id}.FLASH.tsv")                                       , emit: summary
     path(".command.{out,err}")
     path("versions.yml")                                               , emit: versions
 
@@ -52,6 +52,8 @@ process OVERLAP_PAIRED_READS_FLASH {
       mv flash.notCombined_1.fastq !{meta.id}_R1.paired.fq
       mv flash.notCombined_2.fastq !{meta.id}_R2.paired.fq
 
+      CNT_READS_OVERLAPPED=0
+
       if [ -f flash.extendedFrags.fastq ] && \
       [ -s flash.extendedFrags.fastq ]; then
         CNT_READS_OVERLAPPED=$(awk '{lines++} END{print lines/4}' \
@@ -64,10 +66,6 @@ process OVERLAP_PAIRED_READS_FLASH {
       fi
 
       msg "INFO: ${CNT_READS_OVERLAPPED:-0} pairs overlapped into singleton reads" >&2
-
-      echo -e "Sample name\t# overlapped reads" > "!{meta.id}.overlap.tsv"
-      echo -e "!{meta.id}\t${CNT_READS_OVERLAPPED:-0}" \
-        >> "!{meta.id}.overlap.tsv"
     fi
 
     # Summarize final read set and compress
@@ -79,10 +77,10 @@ process OVERLAP_PAIRED_READS_FLASH {
     CNT_CLEANED_SINGLETON=$(echo $((${count_single}/4)))
     msg "INFO: Number of singletons cleaned: ${CNT_CLEANED_SINGLETON}"
 
-    echo -e "Sample name\t# cleaned reads (paired FastQ)\t# cleaned reads (singletons)" \
-      > "!{meta.id}.clean-reads.tsv"
-    echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS}\t${CNT_CLEANED_SINGLETON}" \
-      >> "!{meta.id}.clean-reads.tsv"
+    echo -e "Sample name\t# cleaned reads (paired FastQ)\t# cleaned reads (singletons)\t# overlapped reads" \
+      > "!{meta.id}.FLASH.tsv"
+    echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS}\t${CNT_CLEANED_SINGLETON}\t${CNT_READS_OVERLAPPED:-0}" \
+      >> "!{meta.id}.FLASH.tsv"
 
     gzip -9f "!{meta.id}_single.fq" \
       "!{meta.id}_R1.paired.fq" \
