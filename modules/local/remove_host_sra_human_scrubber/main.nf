@@ -9,10 +9,10 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
     path(database)
 
     output:
+    tuple val(meta), path("${meta.id}_R*_scrubbed.fastq.gz"), emit: host_removed_reads
+    path("${meta.id}.SRA-Human-Scrubber-Removal.tsv")       , emit: summary
     path(".command.{out,err}")
-    path "versions.yml"                                     , emit: versions
-    path "${meta.id}.SRA-Human-Scrubber-Removal.tsv", emit: sra_human_scrubber_summary
-    tuple val(meta), path("${meta.id}_R*_scrubbed.fastq.gz"), emit: sra_human_scrubber_removed
+    path("versions.yml")                                    , emit: versions
 
     shell:
     '''

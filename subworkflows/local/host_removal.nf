@@ -86,11 +86,11 @@ workflow HOST_REMOVAL {
         // PROCESS: run BBTools' repair.sh to discard broken sister reads
         //   (singletons) to aggressively remove host sequence reads
         REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR (
-            REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.sra_human_scrubber_removed
+            REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.host_removed_reads
         )
         ch_versions = ch_versions.mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.versions)
 
-        ch_host_removed_reads = REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.fastq_removed_broken_pairs
+        ch_host_removed_reads = REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.repaired_reads
 
     } else if ( toLower(params.host_remove) == "hostile" ) {
         // hostile removal tool
@@ -100,7 +100,7 @@ workflow HOST_REMOVAL {
         )
         ch_versions = ch_versions.mix(REMOVE_HOST_HOSTILE.out.versions)
 
-        ch_host_removed_reads = REMOVE_HOST_HOSTILE.out.hostile_removed
+        ch_host_removed_reads = REMOVE_HOST_HOSTILE.out.host_removed_reads
 
     } else if ( toLower(params.host_remove) == "both" && ch_db_for_sra_human_scrubber ) {
         // sra-human-scrubber removal tool then hostile removal tool
@@ -120,18 +120,18 @@ workflow HOST_REMOVAL {
         // PROCESS: run BBTools' repair.sh to discard broken sister reads
         //   (singletons) to aggressively remove host sequence reads
         REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR (
-            REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.sra_human_scrubber_removed
+            REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.host_removed_reads
         )
         ch_versions = ch_versions.mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.versions)
 
         // hostile removal tool
         // PROCESS: Run hostile to remove background host DNA read sequences
         REMOVE_HOST_HOSTILE (
-            REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.fastq_removed_broken_pairs
+            REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.repaired_reads
         )
         ch_versions = ch_versions.mix(REMOVE_HOST_HOSTILE.out.versions)
 
-        ch_host_removed_reads = REMOVE_HOST_HOSTILE.out.hostile_removed
+        ch_host_removed_reads = REMOVE_HOST_HOSTILE.out.host_removed_reads
 
     } else if ( toLower(params.host_remove) == "skip" ) {
         // User-specified skip host removal
