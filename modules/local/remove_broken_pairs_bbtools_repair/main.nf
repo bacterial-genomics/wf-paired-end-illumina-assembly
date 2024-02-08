@@ -10,7 +10,7 @@ process REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR {
     output:
     tuple val(meta), path("${meta.id}_repaired-R{1,2}.fastq.gz")              , emit: fastq_removed_broken_pairs
     tuple val(meta), path("${meta.id}.BBTools-Repair-removed_FastQ_Files.tsv"), emit: qc_filecheck
-    path("${meta.id}.Summary.BBTools-Repair-Removal.tsv")                     , emit: repair_summary
+    path("${meta.id}.BBTools-Repair-Removal.tsv")                             , emit: summary
     path(".command.{out,err}")
     path("versions.yml")                                                      , emit: versions
 
@@ -113,8 +113,8 @@ process REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR {
     SUMMARY_OUTPUT="${SUMMARY_OUTPUT%${DELIM}}"
 
     # Store input/output counts
-    echo -e "${SUMMARY_HEADER}" > !{meta.id}.Summary.BBTools-Repair-Removal.tsv
-    echo -e "${SUMMARY_OUTPUT}" >> !{meta.id}.Summary.BBTools-Repair-Removal.tsv
+    echo -e "${SUMMARY_HEADER}" > !{meta.id}.BBTools-Repair-Removal.tsv
+    echo -e "${SUMMARY_OUTPUT}" >> !{meta.id}.BBTools-Repair-Removal.tsv
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

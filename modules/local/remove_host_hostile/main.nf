@@ -10,7 +10,7 @@ process REMOVE_HOST_HOSTILE {
     output:
     path(".command.{out,err}")
     path "versions.yml"                                 , emit: versions
-    path "${meta.id}.Summary.Hostile-Removal.tsv"       , emit: hostile_summary
+    path "${meta.id}.Hostile-Removal.tsv"               , emit: summary
     tuple val(meta), path("hostile/${meta.id}*.clean_*"), emit: hostile_removed
 
     shell:
@@ -127,8 +127,8 @@ process REMOVE_HOST_HOSTILE {
     SUMMARY_OUTPUT="${SUMMARY_OUTPUT%${DELIM}}"
 
     # Store input/output counts
-    echo -e "${SUMMARY_HEADER}" > !{meta.id}.Summary.Hostile-Removal.tsv
-    echo -e "${SUMMARY_OUTPUT}" >> !{meta.id}.Summary.Hostile-Removal.tsv
+    echo -e "${SUMMARY_HEADER}" > !{meta.id}.Hostile-Removal.tsv
+    echo -e "${SUMMARY_OUTPUT}" >> !{meta.id}.Hostile-Removal.tsv
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

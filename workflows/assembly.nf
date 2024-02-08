@@ -284,7 +284,7 @@ workflow ASSEMBLY {
     // Collect PhiX removal summaries and concatenate into one file
     ch_phix_removal_summary = Channel.empty()
     ch_phix_removal_summary = ch_phix_removal_summary
-                                .mix(REMOVE_PHIX_BBDUK.out.phix_summary)
+                                .mix(REMOVE_PHIX_BBDUK.out.summary)
                                 .collectFile(
                                     name:       "Summary.PhiX.tab",
                                     keepHeader: true,
@@ -448,7 +448,7 @@ workflow ASSEMBLY {
     // Collect alignment summary stats and concatenate into one file
     ch_alignment_stats_summary = Channel.empty()
     ch_alignment_stats_summary = ch_alignment_stats_summary
-                            .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_alignment_stats)
+                            .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary)
                             .map{ meta, file -> file }
                             .collectFile(
                                 name:     "Summary.CleanedReads-AlignmentStats.tab",
@@ -465,7 +465,7 @@ workflow ASSEMBLY {
     // Collect MLST Summaries and concatenate into one file
     ch_mlst_summary = Channel.empty()
     ch_mlst_summary = ch_mlst_summary
-                        .mix(MLST_MLST.out.summary_mlst)
+                        .mix(MLST_MLST.out.summary)
                         .collectFile(
                             name:     "Summary.MLST.tab",
                             keepHeader: true,
@@ -571,7 +571,7 @@ workflow ASSEMBLY {
     ch_blast_summary = qcfilecheck(
                             "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
                             BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
-                            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary
+                            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
                         )
 
     // Collect BLASTn Summaries and concatenate into one file
@@ -630,7 +630,7 @@ workflow ASSEMBLY {
     // PROCESS: Calculate genome assembly depth of coverage
     CALCULATE_COVERAGE_UNIX (
         QA_ASSEMBLY_QUAST.out.qa_summaries
-            .join(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary_alignment_stats)
+            .join(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary)
     )
     ch_versions = ch_versions.mix(CALCULATE_COVERAGE_UNIX.out.versions)
 

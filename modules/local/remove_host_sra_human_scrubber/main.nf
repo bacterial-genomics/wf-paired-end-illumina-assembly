@@ -11,7 +11,7 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
     output:
     path(".command.{out,err}")
     path "versions.yml"                                     , emit: versions
-    path "${meta.id}.Summary.SRA-Human-Scrubber-Removal.tsv", emit: sra_human_scrubber_summary
+    path "${meta.id}.SRA-Human-Scrubber-Removal.tsv", emit: sra_human_scrubber_summary
     tuple val(meta), path("${meta.id}_R*_scrubbed.fastq.gz"), emit: sra_human_scrubber_removed
 
     shell:
@@ -150,8 +150,8 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
     SUMMARY_OUTPUT="${SUMMARY_OUTPUT%${DELIM}}"
 
     # Store input/output counts
-    echo -e "${SUMMARY_HEADER}" > !{meta.id}.Summary.SRA-Human-Scrubber-Removal.tsv
-    echo -e "${SUMMARY_OUTPUT}" >> !{meta.id}.Summary.SRA-Human-Scrubber-Removal.tsv
+    echo -e "${SUMMARY_HEADER}" > !{meta.id}.SRA-Human-Scrubber-Removal.tsv
+    echo -e "${SUMMARY_OUTPUT}" >> !{meta.id}.SRA-Human-Scrubber-Removal.tsv
 
     # Get process version information
     # NOTE: currently no option to print the software version number, but

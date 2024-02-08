@@ -7,9 +7,9 @@ process MLST_MLST {
     tuple val(meta), path(assembly)
 
     output:
-    path("${meta.id}-${meta.assembler}.Summary.MLST.tab"), emit: summary_mlst
+    path("${meta.id}-${meta.assembler}.MLST.tab"), emit: summary
     path(".command.{out,err}")
-    path("versions.yml")                                 , emit: versions
+    path("versions.yml")                         , emit: versions
 
     shell:
     scheme       = params.mlst_scheme        ? "${params.mlst_scheme.toLowerCase()}"       : ''
@@ -56,11 +56,11 @@ process MLST_MLST {
         --threads !{task.cpus} \
         --scheme "${mlst_scheme}" \
         --exclude "${exclude_list}" \
-        >> "!{meta.id}-!{meta.assembler}.Summary.MLST.tab"
+        >> "!{meta.id}-!{meta.assembler}.MLST.tab"
 
       sed -i \
         '1i Filename\tPubMLST scheme name\tSequence type\tAllele IDs' \
-        "!{meta.id}-!{meta.assembler}.Summary.MLST.tab"
+        "!{meta.id}-!{meta.assembler}.MLST.tab"
     fi
 
     # Get process version information
