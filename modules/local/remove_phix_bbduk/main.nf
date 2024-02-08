@@ -98,7 +98,7 @@ process REMOVE_PHIX_BBDUK {
       "# PhiX Bp",
       "% PhiX bp",
       "# Raw reads",
-      "# Raw bp"
+      "# Raw bp\n"
     )
 
     SUMMARY_OUTPUT=(
@@ -112,10 +112,10 @@ process REMOVE_PHIX_BBDUK {
       "${NUM_PHIX_BASES}",
       "${PERCENT_PHIX_BASES}",
       "${TOT_READS}",
-      "${TOT_BASES}",
-      )
+      "${TOT_BASES}\n"
+    )
 
-    printf "%s\n" "${SUMMARY_HEADER[@]}" | tr ',' '\t' > "!{meta.id}.BBDuk.tsv"
+    printf "%s" "${SUMMARY_HEADER[@]}" | tr ',' '\t' > "!{meta.id}.BBDuk.tsv"
     printf "%s" "${SUMMARY_OUTPUT[@]}" | tr ',' '\t' >> "!{meta.id}.BBDuk.tsv"
 
     # Get process version information
