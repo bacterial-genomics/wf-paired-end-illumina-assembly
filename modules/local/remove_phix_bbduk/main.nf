@@ -11,7 +11,7 @@ process REMOVE_PHIX_BBDUK {
     output:
     tuple val(meta), path("${meta.id}_noPhiX-R{1,2}.fsq"), emit: fastq_phix_removed
     tuple val(meta), path("${meta.id}.PhiX*_File.tsv")   , emit: qc_filecheck
-    path("${meta.id}.Summary.PhiX.tsv")                  , emit: phix_summary
+    path("${meta.id}.BBDuk.tsv")                         , emit: summary
     path(".command.{out,err}")
     path("versions.yml")                                 , emit: versions
 
@@ -115,8 +115,8 @@ process REMOVE_PHIX_BBDUK {
       "${TOT_BASES}",
       )
 
-    printf "%s\n" "${SUMMARY_HEADER[@]}" | tr ',' '\t' > "!{meta.id}.Summary.PhiX.tsv"
-    printf "%s" "${SUMMARY_OUTPUT[@]}" | tr ',' '\t' >> "!{meta.id}.Summary.PhiX.tsv"
+    printf "%s\n" "${SUMMARY_HEADER[@]}" | tr ',' '\t' > "!{meta.id}.BBDuk.tsv"
+    printf "%s" "${SUMMARY_OUTPUT[@]}" | tr ',' '\t' >> "!{meta.id}.BBDuk.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
