@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Updated`
 
+- [#56](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/56) Change how images are displayed based on light and dark themes due to GitHub changes (@gregorysprenger).
+
 ### `Deprecated`
 
 ## v2.1.0 - January 25, 2024
