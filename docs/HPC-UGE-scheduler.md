@@ -1,8 +1,13 @@
-# ![wf-paired-end-illumina-assembly](images/wf-paired-end-illumina-assembly_logo_light.png#gh-light-mode-only) ![wf-paired-end-illumina-assembly](images/wf-paired-end-illumina-assembly_logo_dark.png#gh-dark-mode-only)
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/wf-paired-end-illumina-assembly_logo_dark.png">
+    <img alt="bacterial-genomics/wf-paired-end-illumina-assembly" src="images/wf-paired-end-illumina-assembly_logo_light.png">
+  </picture>
+</h1>
 
 ![workflow](images/wf-paired-end-illumina-assembly_workflow.png)
 
-_A schematic of the steps in the workflow._
+_General schematic of the steps in the workflow_
 
 ## Requirements
 

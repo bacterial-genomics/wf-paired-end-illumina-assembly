@@ -7,10 +7,10 @@ process CLASSIFY_16S_RDP {
     tuple val(meta), path(barnapp_extracted_rna)
 
     output:
+    tuple val(meta), path("${meta.id}.RDP_Classification_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}.rdp.tsv")                    , emit: rdp_tsv
     path(".command.{out,err}")
-    path "versions.yml",                             emit: versions
-    path "${meta.id}.rdp.tsv",                       emit: qc_rdp_filecheck
-    tuple val(meta), path("${meta.id}.rdp.tsv"),     emit: rdp_tsv
+    path("versions.yml")                                           , emit: versions
 
     shell:
     '''
@@ -18,28 +18,27 @@ process CLASSIFY_16S_RDP {
 
     msg "INFO: Performing RDP 16S Classification"
 
-###         ##############################################################
-###         ##############################################################
-###  NOTE: pin this to just 1 CPU, low RAM, < 1 min runtime
-###         ##############################################################
-###         ##############################################################
-
     classifier \
       classify \
-      --format fixrank \
+      --format "!{params.rdp_output_format}" \
+      --gene "!{params.rdp_phylomarker}" \
       --outputFile "!{meta.id}.rdp.tsv" \
       "!{barnapp_extracted_rna}"
 
-    if verify_minimum_file_size "!{meta.id}.rdp.tsv" '16S Classification Output File' "!{params.min_filesize_rdp_output}"; then
-      echo -e "!{meta.id}\t16S RDP Output File\tPASS" > !{meta.id}.rdp.tsv
+
+    if verify_minimum_file_size "!{meta.id}.RDP_Classification_File.tsv" '16S Classification Output File' "!{params.min_filesize_rdp_output}"; then
+      echo -e "!{meta.id}\t16S RDP Output File\tPASS" >> !{meta.id}.RDP_Classification_File.tsv
     else
-      echo -e "!{meta.id}\t16S RDP Output File\tFAIL" > !{meta.id}.rdp.tsv
+      echo -e "!{meta.id}\t16S RDP Output File\tFAIL" >> !{meta.id}.RDP_Classification_File.tsv
     fi
 
     # Get process version information
+    # RDP does not have a command for displaying the version
+    # The version being used currently is RDPv2.14
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        rdp: $(rdp_classifier version')
+    #"!{task.process}":
+        #rdp: $(classifier version)
+        echo -e "INFO:  RDP version 2.14"
     END_VERSIONS
 
     '''
