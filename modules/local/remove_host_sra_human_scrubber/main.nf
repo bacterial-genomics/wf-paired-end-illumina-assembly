@@ -1,6 +1,6 @@
 process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
 
-    label "process_low"
+    label "process_medium"
     tag { "${meta.id}" }
     container "quay.io/biocontainers/sra-human-scrubber@sha256:2f6b6635af9ba3190fc2f96640b21f0285483bd1f50d6be229228c52fb747055"
 
@@ -9,12 +9,16 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
     path(database)
 
     output:
-    tuple val(meta), path("${meta.id}_R*_scrubbed.fastq.gz"), emit: host_removed_reads
-    path("${meta.id}.SRA-Human-Scrubber-Removal.tsv")       , emit: summary
+    tuple val(meta), path("${meta.id}.SRA_Human_Scrubber_FastQ_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}_R*_scrubbed.fastq.gz")             , emit: host_removed_reads
+    path("${meta.id}.SRA-Human-Scrubber-Removal.tsv")                    , emit: summary
     path(".command.{out,err}")
-    path("versions.yml")                                    , emit: versions
+    path("versions.yml")                                                 , emit: versions
 
     shell:
+    // TODO: Use container built on Ubuntu
+    minFilesize = params.min_filesize_fastq_sra_human_scrubber_removed
+    min_filesize_output_fastq = ( ['c','b','k'].contains(minFilesize[-1])) ? "${minFilesize}" : "25000k"
     '''
     source bash_functions.sh
 
@@ -89,7 +93,7 @@ process REMOVE_HOST_SRA_HUMAN_SCRUBBER {
 
     # Validate output files are sufficient size to continue
     for file in "!{meta.id}_R1_scrubbed.fastq.gz" "!{meta.id}_R2_scrubbed.fastq.gz"; do
-      if verify_minimum_file_size "${file}" 'SRA-Human-Scrubber-removed FastQ Files' "!{params.min_filesize_fastq_sra_human_scrubber_removed}"; then
+      if verify_minimum_file_size "${file}" 'SRA-Human-Scrubber-removed FastQ Files' "!{min_filesize_output_fastq}"; then
         echo -e "!{meta.id}\tSRA-Human-Scrubber-removed FastQ ($file) File\tPASS" \
           >> !{meta.id}.SRA_Human_Scrubber_FastQ_File.tsv
       else

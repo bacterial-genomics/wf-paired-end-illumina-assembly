@@ -81,7 +81,7 @@ while read -r line; do
     fi
 
     # If process for sample retried and succeeded, ignore
-    if [[ -f "$(ls ${OUT}/pipeline_info/process_logs/${sample_name}.*${process}*.command.out)" ]] \
+    if [[ $(find "${OUT}/pipeline_info/process_logs/" -type f -name "${sample_name}.*${process}*.command.out") ]] \
       && [[ $(cat ${line}/.exitcode) = @(0|71|104|134|137|139|140|143|245|250|255) ]]; then
       continue
     else

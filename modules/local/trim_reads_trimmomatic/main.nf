@@ -9,14 +9,26 @@ process TRIM_READS_TRIMMOMATIC {
     path adapter_reference_file
 
     output:
-    tuple val(meta), path("${meta.id}.Adapter*_File.tsv"), emit: qc_filecheck
-    tuple val(meta), path("${meta.id}_R{1,2}.paired.fq") , emit: fastq_adapters_removed
-    path("${meta.id}.Trimmomatic.tsv")                   , emit: summary
-    path("${meta.id}_single.fq")
+    tuple val(meta), path("${meta.id}.Adapter*_File.tsv") , emit: qc_filecheck
+    tuple val(meta), path("${meta.id}*{paired,single}.fq"), emit: fastq_adapters_removed
+    path("${meta.id}.Trimmomatic.tsv")
     path(".command.{out,err}")
-    path("versions.yml")                                 , emit: versions
+    path("versions.yml")                                  , emit: versions
 
     shell:
+    keep_both_reads           = params.trimmomatic_keep_both_reads                                                      ? 'TRUE'                                       : 'FALSE'
+    phred                     = (params.trimmomatic_phred == 64)                                                        ? '-phred64'                                   : '-phred33'
+    min_length                = (params.trimmomatic_min_length >= 1)                                                    ? params.trimmomatic_min_length                : 50
+    window_size               = (params.trimmomatic_window_size >= 1)                                                   ? params.trimmomatic_window_size               : 6
+    seed_mismatches           = (params.trimmomatic_seed_mismatches >= 1)                                               ? params.trimmomatic_seed_mismatches           : 2
+    leading_quality           = (params.trimmomatic_leading_quality >= 1 && params.trimmomatic_leading_quality <= 50)   ? params.trimmomatic_leading_quality           : 10
+    req_quality               = (params.trimmomatic_required_quality >= 0 && params.trimmomatic_required_quality <= 50) ? params.trimmomatic_required_quality          : 30
+    trailing_quality          = (params.trimmomatic_trailing_quality >= 1 && params.trimmomatic_trailing_quality <= 50) ? params.trimmomatic_trailing_quality          : 10
+    min_adapter_length        = (params.trimmomatic_min_adapter_length >= 1)                                            ? params.trimmomatic_min_adapter_length        : 8
+    simple_clip_threshold     = (params.trimmomatic_simple_clip_threshold >= 1)                                         ? params.trimmomatic_simple_clip_threshold     : 10
+    palindrome_clip_threshold = (params.trimmomatic_palindrome_clip_threshold >= 1)                                     ? params.trimmomatic_palindrome_clip_threshold : 20
+
+    illumina_clip_params      = "${seed_mismatches}:${palindrome_clip_threshold}:${simple_clip_threshold}:${min_adapter_length}:${keep_both_reads}"
     '''
     source bash_functions.sh
 
@@ -32,16 +44,16 @@ process TRIM_READS_TRIMMOMATIC {
     msg "INFO: Performing read trimming with Trimmomatic"
 
     trimmomatic PE \
-      -phred33 \
+      !{phred} \
       -threads !{task.cpus} \
       !{noPhiX[0]} !{noPhiX[1]} \
       !{meta.id}_R1.paired.fq !{meta.id}_R1.unpaired.fq \
       !{meta.id}_R2.paired.fq !{meta.id}_R2.unpaired.fq \
-      MINLEN:50 \
-      LEADING:10 \
-      TRAILING:10 \
-      SLIDINGWINDOW:6:30 \
-      ILLUMINACLIP:!{adapter_reference_file}:2:20:10:8:TRUE
+      MINLEN:!{min_length} \
+      LEADING:!{leading_quality} \
+      TRAILING:!{trailing_quality} \
+      SLIDINGWINDOW:!{window_size}:!{req_quality} \
+      ILLUMINACLIP:!{adapter_reference_file}:!{illumina_clip_params}
 
     TRIMMO_DISCARD=$(grep '^Input Read Pairs: ' .command.err \
     | grep ' Dropped: ' | awk '{print $20}')

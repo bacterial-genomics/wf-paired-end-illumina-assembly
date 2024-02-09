@@ -12,7 +12,7 @@ process REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR {
     tuple val(meta), path("${meta.id}_repaired-R{1,2}.fastq.gz")              , emit: repaired_reads
     path("${meta.id}.BBTools-Repair-Removal.tsv")                             , emit: summary
     path(".command.{out,err}")
-    path("versions.yml")                                                      , emit: versions
+    path("versions.yml")                                                     , emit: versions
 
     shell:
     '''
@@ -34,14 +34,14 @@ process REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR {
       outs=!{meta.id}_discarded_singletons.fastq \
       repair=t
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.BBTools-Repair-removed_FastQ_Files.tsv"
+    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.BBTools-Repair-removed_FastQ_File.tsv"
     for suff in R1.fastq.gz R2.fastq.gz; do
       if verify_minimum_file_size "!{meta.id}_repaired-${suff}" 'Repaired FastQ Files' "!{params.min_filesize_broken_pairs_bbtools_repair_removed}"; then
         echo -e "!{meta.id}\tBBTools-repair-removed FastQ ($suff) File\tPASS" \
-          >> "!{meta.id}.BBTools-Repair-removed_FastQ_Files.tsv"
+          >> "!{meta.id}.BBTools-Repair-removed_FastQ_File.tsv"
       else
         echo -e "!{meta.id}\tBBTools-repair-removed FastQ ($suff) File\tFAIL" \
-          >> "!{meta.id}.BBTools-Repair-removed_FastQ_Files.tsv"
+          >> "!{meta.id}.BBTools-Repair-removed_FastQ_File.tsv"
       fi
     done
 

@@ -1,9 +1,15 @@
-# ![wf-paired-end-illumina-assembly](docs/images/wf-paired-end-illumina-assembly_logo_light.png#gh-light-mode-only) ![wf-paired-end-illumina-assembly](docs/images/wf-paired-end-illumina-assembly_logo_dark.png#gh-dark-mode-only)
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/wf-paired-end-illumina-assembly_logo_dark.png">
+    <img alt="bacterial-genomics/wf-paired-end-illumina-assembly" src="docs/images/wf-paired-end-illumina-assembly_logo_light.png">
+  </picture>
+</h1>
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/bacterial-genomics/wf-paired-end-illumina-assembly)
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A522.04.3-23aa62.svg)](https://www.nextflow.io/)
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
-[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
+[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/) [![MegaLinter](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/workflows/MegaLinter/badge.svg?branch=main)](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/actions?query=workflow%3AMegaLinter+branch%3Amain)
+
 
 ![workflow](docs/images/wf-paired-end-illumina-assembly_workflow.png)
 
@@ -18,8 +24,8 @@ _General schematic of the steps in the workflow_
 - [Parameters](#parameters)
   - [Required parameters](#required-parameters)
   - [Optional parameters](#optional-parameters)
-  - [Additonal parameters](#additional-parameters)
-- [Resource Managers](#resource-managers)
+  - [Additional parameters](#additional-parameters)
+- [Resource Managers](#resource-Managers)
 - [Output](#output)
 - [Troubleshooting](#troubleshooting)
 - [Contributions and Support](#contributions-and-support)
@@ -50,7 +56,7 @@ nextflow run \
   --assembler spades
 ```
 
-Example command on FastQs in "new-fastq-dir" data using **Skesa** with singularity:
+Example command on FastQs in "new-fastq-dir" data using **SKESA** with singularity:
 
 ```
 nextflow run \
@@ -67,6 +73,9 @@ nextflow run \
 This workflow assembles bacterial isolate genomes from paired-end Illumina FastQ files. Post-assembly contig correction is performed, and a variety of quality assessment processes are recorded throughout the workflow.
 
 This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed cultures) sequenced with whole genome (WGS) or selective whole genome (SWGA) library preparation strategies. It is inappropriate for metagenomics analysis. The data files must be paired read sets (not single ended) and can come from any Illumina sequencing instrument which generates a FastQ file format (e.g., iSeq, HiSeq, MiSeq, NextSeq, NovaSeq). The read set files can be obtained from an external source, local storage device, or sequencing instrument. Other sequencing manufacturers such as Ion Torrent, PacBio, Roche 454, and Nanopore generate data files that cannot be directly used with this procedure.
+
+> [!CAUTION]
+> Due to the shorter DNA fragments of Illumina instruments, reads may be processed as singletons. It is recommended to check the DNA fragment length distribution using TapeStation or BioAnalyzer before sequencing.
 
 ## Installation
 
@@ -98,7 +107,6 @@ These are the most pertinent options for this workflow:
 
   --outdir                The output directory where the results will be saved.
 
-
   ============================================
         Container platforms
   ============================================
@@ -106,12 +114,10 @@ These are the most pertinent options for this workflow:
 
   -profile docker         Use Docker images to run the workflow. Will pull images from Dockerhub if not locally available.
 
-
   ============================================
         Optional assemblers
   ============================================
   --assembler             Specify which assembler to execute (spades, skesa). [Default: spades]
-
 
   ============================================
         Reference files
@@ -136,7 +142,7 @@ PhiX reference [NC_001422.1](https://www.ncbi.nlm.nih.gov/nuccore/NC_001422.1) c
 
   --blast_db           Path to a local directory, archive file, or a URL to compressed tar archive that contains BLAST 16S ribosomal RNA files. [Default: NCBI's 16S ribosomal RNA database]
 
-  --gtdb_db            Path to a local directory, archive file, or a URL to compressed tar archive that contains GTDBTk database. [Default: NaN]
+  --gtdb_db            Path to a local directory, archive file, or a URL to compressed tar archive that contains the GTDB database. [Default: NaN]
 
   --busco_db           Path to a local directory, archive file, or a URL to compressed tar archive that contains BUSCO lineages. Can either be a lineage dataset or entire BUSCO database. [Default: NaN]
 ```
@@ -170,7 +176,7 @@ Please see the [output documentation](docs/output.md) for a table of all outputs
 
 ## Troubleshooting
 
-Q: It failed, how do I find out what went wrong?
+Q: It failed; how do I find out what went wrong?
 
 A: View file contents in the `<outdir>/pipeline_info` directory.
 

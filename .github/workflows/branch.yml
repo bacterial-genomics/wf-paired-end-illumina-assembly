@@ -1,6 +1,6 @@
 name: Branch protection
 # This workflow is triggered on PRs to main branch on the repository
-# It fails when someone tries to make a PR against the nf-core `main` branch instead of `dev`
+# It fails when someone tries to make a PR against the `main` branch instead of `dev`
 on:
   pull_request_target:
     branches: [main]
@@ -11,9 +11,9 @@ jobs:
     steps:
       # PRs to the nf-core repo main branch are only ok if coming from the nf-core repo `dev` or any `patch` branches
       - name: Check PRs
-        if: github.repository == 'wf-paired-end-illumina-assembly'
+        if: github.repository == 'bacterial-genomics/wf-paired-end-illumina-assembly'
         run: |
-          { [[ ${{github.event.pull_request.head.repo.full_name }} == wf-paired-end-illumina-assembly ]] && [[ $GITHUB_HEAD_REF = "dev" ]]; } || [[ $GITHUB_HEAD_REF == "patch" ]]
+          { [[ ${{github.event.pull_request.head.repo.full_name }} == bacterial-genomics/wf-paired-end-illumina-assembly ]] && [[ $GITHUB_HEAD_REF = "dev" ]]; } || [[ $GITHUB_HEAD_REF == "patch" ]]
 
       # If the above check failed, post a comment on the PR explaining the failure
       # NOTE - this doesn't currently work if the PR is coming from a fork, due to limitations in GitHub actions secrets
