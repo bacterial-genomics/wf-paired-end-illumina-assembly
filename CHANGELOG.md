@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Updated`
 
+- [#55](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/55) Replace linting GitHub workflows with MegaLinter to allow for more linters to be used, autofix issues and commit, etc. (@gregorysprenger).
 - [#45](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/45) Updated output documentation to allow for better readability and interpretation (@gregorysprenger).
 - [#56](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/56) Change how images are displayed based on light and dark themes due to GitHub changes (@gregorysprenger).
 

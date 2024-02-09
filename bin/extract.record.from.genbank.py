@@ -106,7 +106,7 @@ def main():
 
     if opt.outfile:
         outfile = os.path.abspath(os.path.expanduser(opt.outfile))
-        with open(opt.outfile, "w") as ofh:
+        with open(outfile, "w") as ofh:
             for rec in query_match:
                 ofh.write("{}\n".format(rec))
     else:
