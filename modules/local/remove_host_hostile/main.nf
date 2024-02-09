@@ -9,9 +9,9 @@ process REMOVE_HOST_HOSTILE {
 
     output:
     tuple val(meta), path("hostile/${meta.id}*.clean_*"), emit: host_removed_reads
-    path "${meta.id}.Hostile-Removal.tsv"               , emit: summary
+    path("${meta.id}.Hostile-Removal.tsv")              , emit: summary
     path(".command.{out,err}")
-    path "versions.yml"                                 , emit: versions
+    path("versions.yml")                                , emit: versions
 
     shell:
     '''
