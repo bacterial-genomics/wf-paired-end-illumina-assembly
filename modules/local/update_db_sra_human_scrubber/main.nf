@@ -10,7 +10,7 @@ process UPDATE_DB_SRA_HUMAN_SCRUBBER {
     output:
     path("data/human_filter.db"), emit: db
     path(".command.{out,err}")
-    path("versions.yml"),         emit: versions
+    path("versions.yml")        , emit: versions
 
     shell:
     '''
@@ -34,7 +34,7 @@ process UPDATE_DB_SRA_HUMAN_SCRUBBER {
     init_db.sh
 
     # Make sure we fetched the *.db file
-    if verify_minimum_file_size "data/human_filter.db" 'SRA Human Scrubber DB file' "!{params.min_filesize_sra_human_scrubber_db_file}"; then
+    if ! verify_minimum_file_size "data/human_filter.db" 'SRA Human Scrubber DB file' "!{params.min_filesize_sra_human_scrubber_db_file}"; then
         msg "ERROR: Missing human_filter.db file for SRA Human Scrubber" >&2
         exit 1
     fi
