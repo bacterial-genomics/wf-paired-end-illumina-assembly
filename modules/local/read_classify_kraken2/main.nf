@@ -10,7 +10,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
 
     output:
     path("${meta.id}.kraken2_output.tab.gz")
-    path("${meta.id}.kraken2_summary.tsv")
+    path("${meta.id}.kraken2_summary.tsv")  , emit: summary
     path(".command.{out,err}")
     path("versions.yml")                    , emit: versions
 
