@@ -373,6 +373,16 @@ workflow ASSEMBLY {
         )
         ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
 
+        // Collect kraken summaries and concatenate into one file
+        ch_kraken_one_summary = Channel.empty()
+        ch_kraken_one_summary = ch_kraken_one_summary
+                                    .mix(READ_CLASSIFY_KRAKEN_ONE.out.summary)
+                                    .collectFile(
+                                        name:       "Summary.Kraken.tsv",
+                                        keepHeader: true,
+                                        storeDir:   "${params.outdir}/Summaries"
+                                    )
+
     } else {
         log.warn("Kraken could not be performed - database not specified using --kraken1_db!")
     }
@@ -417,6 +427,16 @@ workflow ASSEMBLY {
             ch_db_for_kraken2
         )
         ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
+
+        // Collect kraken2 summaries and concatenate into one file
+        ch_kraken_two_summary = Channel.empty()
+        ch_kraken_two_summary = ch_kraken_two_summary
+                                    .mix(READ_CLASSIFY_KRAKEN_TWO.out.summary)
+                                    .collectFile(
+                                        name:       "Summary.Kraken2.tsv",
+                                        keepHeader: true,
+                                        storeDir:   "${params.outdir}/Summaries"
+                                    )
 
     } else {
         log.warn("Kraken2 could not be performed - database not specified using --kraken2_db!")
