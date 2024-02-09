@@ -444,8 +444,8 @@ Information about the pipeline execution, output logs, error logs, and QC file c
   - `[sample].16S_BLASTn_Output_File.tsv`: Details if the BLASTn output file meets the minimum file size criteria `[Default: 10b]`.
   - `[sample].Filtered_16S_BLASTn_File.tsv`: Details if the best BLASTn alignment sequence meets the minimum file size criteria `[Default: 10b]`.
 
-</details>
-=======
+# </details>
+
 The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
 - [Annotated genbank file](#annot) - Genbank annotated file
