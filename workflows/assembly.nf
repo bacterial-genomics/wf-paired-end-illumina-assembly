@@ -377,7 +377,7 @@ workflow ASSEMBLY {
         ch_kraken_one_summary = ch_kraken_one_summary
                                     .mix(READ_CLASSIFY_KRAKEN_ONE.out.summary)
                                     .collectFile(
-                                        name:       "Summary.Kraken.tab",
+                                        name:       "Summary.Kraken.tsv",
                                         keepHeader: true,
                                         storeDir:   "${params.outdir}/Summaries"
                                     )
@@ -432,7 +432,7 @@ workflow ASSEMBLY {
         ch_kraken_two_summary = ch_kraken_two_summary
                                     .mix(READ_CLASSIFY_KRAKEN_TWO.out.summary)
                                     .collectFile(
-                                        name:       "Summary.Kraken2.tab",
+                                        name:       "Summary.Kraken2.tsv",
                                         keepHeader: true,
                                         storeDir:   "${params.outdir}/Summaries"
                                     )
