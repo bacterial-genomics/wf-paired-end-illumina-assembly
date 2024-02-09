@@ -283,7 +283,7 @@ workflow ASSEMBLY {
     ch_removed_phix = qcfilecheck(
                         "REMOVE_PHIX_BBDUK",
                         REMOVE_PHIX_BBDUK.out.qc_filecheck,
-                        REMOVE_PHIX_BBDUK.out.fastq_phix_removed
+                        REMOVE_PHIX_BBDUK.out.phix_removed_reads
                       )
 
     // Collect PhiX removal summaries and concatenate into one file
