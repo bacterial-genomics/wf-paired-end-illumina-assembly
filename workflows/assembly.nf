@@ -280,7 +280,7 @@ workflow ASSEMBLY {
                         "REMOVE_PHIX_BBDUK",
                         REMOVE_PHIX_BBDUK.out.qc_filecheck,
                         REMOVE_PHIX_BBDUK.out.fastq_phix_removed
-                    )
+                      )
 
     // Collect PhiX removal summaries and concatenate into one file
     ch_phix_removal_summary = Channel.empty()
@@ -502,7 +502,7 @@ workflow ASSEMBLY {
                     "ANNOTATE_PROKKA",
                     ANNOTATE_PROKKA.out.qc_filecheck,
                     ANNOTATE_PROKKA.out.prokka_genbank_file
-                )
+                  )
 
     /*
     ================================================================================
@@ -512,8 +512,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Attempt to extract 16S rRNA gene records from prokka_genbank_file file
     EXTRACT_16S_BIOPYTHON (
-        ch_genbank
-            .join(ASSEMBLE_CONTIGS.out.assembly_file)
+        ch_genbank.join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(EXTRACT_16S_BIOPYTHON.out.versions)
 
@@ -545,7 +544,7 @@ workflow ASSEMBLY {
                 ch_blast_db
             )
             ch_versions = ch_versions.mix(BLAST_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db
+            ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_blast_db_file.isDirectory() ) {
             ch_db_for_blast = Channel
@@ -559,6 +558,7 @@ workflow ASSEMBLY {
                                                 error("16S_ribosomal_RNA BLAST database requires at least '16S_ribosomal_RNA.{nin,nsq,nhr}' files.")
                                             }
                                     }
+                                    .collect()
         } else {
             error("Unsupported object given to --blast_db, database must be supplied as either a directory or a .tar.gz file!")
         }
@@ -568,7 +568,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Run Blast on predicted 16S ribosomal RNA genes
     ALIGN_16S_BLAST (
-        ch_extracted_rna.join(ASSEMBLE_CONTIGS.out.assembly_file),
+        ch_extracted_rna,
         ch_db_for_blast
     )
     ch_versions = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
@@ -576,7 +576,7 @@ workflow ASSEMBLY {
                         "ALIGN_16S_BLAST",
                         ALIGN_16S_BLAST.out.qc_filecheck,
                         ALIGN_16S_BLAST.out.blast_output
-                    )
+                      )
 
 
     // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes    
@@ -603,26 +603,12 @@ workflow ASSEMBLY {
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
         ch_blast_output
-            .join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
     ch_top_blast = qcfilecheck(
                         "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
                         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
                         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.top_blast_species
-                    )
-    ch_blast_summary = qcfilecheck(
-                            "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
-                            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
-                            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary
-                        )
-
-    // Collect BLASTn Summaries and concatenate into one file
-    ch_blast_summary.map{ meta, file -> file }
-                    .collectFile(
-                        name:       "Summary.16S.tab",
-                        keepHeader: true,
-                        storeDir:   "${params.outdir}/Summaries"
                     )
 
     // Collect top BLASTn species and concatenate into one file
@@ -632,8 +618,11 @@ workflow ASSEMBLY {
                     keepHeader: true,
                     storeDir:   "${params.outdir}/SSU"
                 )
- 
-
+                .collectFile(
+                    name:       "Summary.16S.tab",
+                    keepHeader: true,
+                    storeDir:   "${params.outdir}/Summaries"
+                )
     /*
     ================================================================================
                             Evaluate contigs
@@ -817,6 +806,7 @@ workflow ASSEMBLY {
     ch_qc_filecheck = ch_qc_filecheck
         .concat(
             INFILE_HANDLING_UNIX.out.qc_filecheck,
+            HOST_REMOVAL.out.qc_filecheck,
             REMOVE_PHIX_BBDUK.out.qc_filecheck,
             TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
             OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,

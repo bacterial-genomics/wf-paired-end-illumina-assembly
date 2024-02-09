@@ -9,7 +9,7 @@ process ASSEMBLE_CONTIGS_SKESA {
 
     output:
     tuple val(meta), path("${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"), emit: qc_filecheck
-    tuple val(meta), path("contigs.fasta")                                     , emit: contigs
+    tuple val(meta), path("${meta.id}-SKESA_contigs.fasta")                    , emit: contigs
     path(".command.{out,err}")
     path("versions.yml")                                                       , emit: versions
 
@@ -20,14 +20,14 @@ process ASSEMBLE_CONTIGS_SKESA {
 
     msg "INFO: Assembling contigs using SKESA"
 
-    if [[ ! -f contigs.fasta ]]; then
+    if [[ ! -f "!{meta.id}-SKESA_contigs.fasta" ]]; then
       skesa \
         --reads !{cleaned_fastq_files[0]},!{cleaned_fastq_files[1]} \
         --reads !{cleaned_fastq_files[2]} \
         !{allow_snps} \
         --cores !{task.cpus} \
         --memory !{task.memory} \
-        --contigs_out contigs.fasta \
+        --contigs_out "!{meta.id}-SKESA_contigs.fasta" \
         --steps !{params.skesa_steps} \
         --kmer !{params.skesa_kmer_length} \
         --fraction !{params.skesa_fraction} \
@@ -37,7 +37,7 @@ process ASSEMBLE_CONTIGS_SKESA {
     fi
 
     echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
-    if verify_minimum_file_size "contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then
+    if verify_minimum_file_size "!{meta.id}-SKESA_contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then
       echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     else

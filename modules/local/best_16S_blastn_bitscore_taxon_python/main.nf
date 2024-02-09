@@ -4,12 +4,11 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     container "gregorysprenger/biopython@sha256:77a50d5d901709923936af92a0b141d22867e3556ef4a99c7009a5e7e0101cc1"
 
     input:
-    tuple val(meta), path(blast_output), path(assembly)
+    tuple val(meta), path(blast_output)
 
     output:
     tuple val(meta), path("${meta.id}-${meta.assembler}.Filtered_16S_BLASTn_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}-${meta.assembler}.16S-top-species.tsv")         , emit: top_blast_species
-    tuple val(meta), path("${meta.id}-${meta.assembler}.Summary.16S.tab")             , emit: blast_summary
     path("${meta.id}-${meta.assembler}.blast.tsv.gz")
     path(".command.{out,err}")
     path("versions.yml")                                                              , emit: versions
@@ -40,15 +39,12 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
         '1i Sample name\tPercent identity\tPercent alignment\tSpecies match' \
         "!{meta.id}-!{meta.assembler}.16S-top-species.tsv"
 
-      cat "!{meta.id}-!{meta.assembler}.16S-top-species.tsv" >> "!{meta.id}-!{meta.assembler}.Summary.16S.tab"
-
     else
       echo -e "!{meta.id}-!{meta.assembler}\tFiltered 16S BLASTn File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
 
-      # Empty files to avoid errors
-      touch "!{meta.id}-!{meta.assembler}.16S-top-species.tsv" \
-        "!{meta.id}-!{meta.assembler}.Summary.16S.tab"
+      # Empty files to avoid errors - use qcfilecheck function to end workflow
+      touch "!{meta.id}-!{meta.assembler}.16S-top-species.tsv"
     fi
 
     # Add header to BLAST output

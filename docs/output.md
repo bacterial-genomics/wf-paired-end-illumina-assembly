@@ -479,8 +479,8 @@ _Note: \<Assembler\> is the name of the assembler (SPAdes, SKESA) given to `--as
 |                                                          | params.txt.gz                                          | Parameters used with SPAdes                                                            |
 |                                                          | spades.log.gz                                          | Log information from SPAdes                                                            |
 |                                                          | assembly_graph_with_scaffolds.gfa                      | Contains SPAdes assembly graph and scaffolds paths                                     |
-|                                                          | \<SampleName\>-\<Assembler\>.InDels-corrected.cnt.txt  | Each line represents number of corrected InDels (per correction round)                 |
-|                                                          | \<SampleName\>-\<Assembler\>.SNPs-corrected.cnt.txt    | Each line represents number of corrected SNPs (per correction round)                   |
+|                                                          | \<SampleName\>-\<Assembler\>.InDels-corrected.cnt.tsv  | Each line represents number of corrected InDels (per correction round)                 |
+|                                                          | \<SampleName\>-\<Assembler\>.SNPs-corrected.cnt.tsv    | Each line represents number of corrected SNPs (per correction round)                   |
 | <a id="skesa-output">Assembly/SKESA/\<SampleName\></a>   |                                                        | **SKESA Assembly files**                                                               |
 |                                                          | contigs.fasta                                          | Assembled contigs from SKESA                                                           |
 | <a id="qa">Assembly/QA</a>                               |                                                        | **Quality Assurance files**                                                            |
