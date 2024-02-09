@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [#37](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/37) Allow customization of the MLST module, such as specifying schemes to include/exclude and minimum thresholds (@gregorysprenger).
 - [#52](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/52) Concatenate kraken (1 and 2) output summaries and place into the output Summaries directory (@gregorysprenger).
 - [#47](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/47) Added RDP Classifier as another tool to classify 16S ribosomal RNA (@taylorpaisie).
+- [#51](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/51) Added header to BLAST output file before it is compressed (@gregorysprenger).
 
 ### `Fixed`
 

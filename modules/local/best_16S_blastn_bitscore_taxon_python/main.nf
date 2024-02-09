@@ -51,6 +51,26 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
         "!{meta.id}-!{meta.assembler}.Summary.16S.tab"
     fi
 
+    # Add header to BLAST output
+    SUMMARY_HEADER=(
+      "Query ID"
+      "Reference ID"
+      "Identity (%)"
+      "Alignment length"
+      "Number of mismatches"
+      "Number of gap openings"
+      "Query start position"
+      "Query end position"
+      "Reference start position"
+      "Reference end position"
+      "Expect value"
+      "Bit score"
+      "Query coverage per HSP"
+      "Reference scientific name"
+    )
+    SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}")
+    sed -i "1i ${SUMMARY_HEADER}" "!{blast_output}"
+
     gzip -f !{blast_output}
 
     # Get process version information
