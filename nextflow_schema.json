@@ -696,6 +696,11 @@
                     "fa_icon": "fas fa-question-circle",
                     "hidden": true
                 },
+                "create_excel_outputs": {
+                    "type": "boolean",
+                    "description": "Convert TSV files to Excel files while retaining TSV files. Also creates a summary workbook where each summary output is placed into a separate sheet within the workbook.",
+                    "hidden": true
+                },
                 "publish_dir_mode": {
                     "type": "string",
                     "default": "copy",
