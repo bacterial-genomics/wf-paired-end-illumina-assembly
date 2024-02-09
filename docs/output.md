@@ -64,9 +64,9 @@ _Note: \<Assembler\> is the name of the assembler (SPAdes, SKESA) given to `--as
 | CleanedReads/Trimmomatic                                 |                                                        | **Trimmomatic Output**                                                                 |
 |                                                          | \<SampleName\>.trimmomatic.tsv                         | Discarded reads and singletons                                                         |
 | CleanedReads/Hostile                                     |                                                        | **Hostile host removal output**                                                        |
-|                                                          | \<SampleName\>.Hostile-Removal.tsv             | Summary of discarded reads and number of reads for downstream processes                |
+|                                                          | \<SampleName\>.Hostile-Removal.tsv                     | Summary of discarded reads and number of reads for downstream processes                |
 | CleanedReads/SRA-Human-Scrubber                          |                                                        | **SRA Human Scrubber host removal output**                                             |
-|                                                          | \<SampleName\>.SRA-Human-Scrubber-Removal.tsv  | Summary of discarded reads and number of reads for downstream processes                |
+|                                                          | \<SampleName\>.SRA-Human-Scrubber-Removal.tsv          | Summary of discarded reads and number of reads for downstream processes                |
 | <a id="summaries">Summaries</a>                          |                                                        | **Output Summaries**                                                                   |
 |                                                          | Summary.16S.tsv                                        | Top BLAST hit results                                                                  |
 |                                                          | Summary.Assemblies.tsv                                 | Contig summary information                                                             |
