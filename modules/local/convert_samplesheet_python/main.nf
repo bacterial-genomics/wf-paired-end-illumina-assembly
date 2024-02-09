@@ -12,8 +12,8 @@ process CONVERT_SAMPLESHEET_PYTHON {
 
     shell:
     '''
-    samplesheet=!{excel_samplesheet}
-    sheet_name=!{params.excel_sheet_name}
+    samplesheet="!{excel_samplesheet}"
+    sheet_name="!{params.excel_sheet_name}"
 
     export samplesheet sheet_name
 
