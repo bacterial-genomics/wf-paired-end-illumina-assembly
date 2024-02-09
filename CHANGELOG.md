@@ -3,24 +3,55 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v2.0.5
+## Unreleased
+
+### `Added`
+
+- [#37](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/37) Allow customization of the MLST module, such as specifying schemes to include/exclude and minimum thresholds (@gregorysprenger).
+- [#52](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/52) Concatenate kraken (1 and 2) output summaries and place into the output Summaries directory (@gregorysprenger).
+- [#47](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/47) Added RDP Classifier as another tool to classify 16S ribosomal RNA (@taylorpaisie).
+- [#51](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/51) Added header to BLAST output file before it is compressed (@gregorysprenger).
+- [#35](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/35) Added parameters to customize Trimmomatic parameters (@gregorysprenger).
+- 
+### `Fixed`
+
+- [#50](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/50) Host removal now runs all samples, QC file checks are implemented for host removal, fixed minimum file size param for host removal, and fixed kraken2 database issue (@gregorysprenger).
+
+### `Updated`
+
+- [#45](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/45) Updated output documentation to allow for better readability and interpretation (@gregorysprenger).
+- [#56](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/56) Change how images are displayed based on light and dark themes due to GitHub changes (@gregorysprenger).
+
+### `Deprecated`
+
+## v2.1.0 - January 25, 2024
 
 ### `Added`
 
 - [#23](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Added a miscellanous issue template (@taylorpaisie).
 - [#25](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/25) Fix broken repository links (@gregorysprenger).
 - [#24](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/24) Update .nfcore.yml file to ignore specific nf-core file checks that do not apply to this workflow (@gregorysprenger)
-- [#35](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/35) Added parameters to customize Trimmomatic parameters (@gregorysprenger).
+- [#41](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/41) Added ability to run `hostile` in remove_host_hostile channel (@chrisgulvik)
+- [#41](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/41) Added ability to run NCBI's SRA Human Scrubber (`scrub.sh`) in remove_host_sra_human_scrubber channel (@chrisgulvik)
+  - Added ability to remove the broken sister reads from scrub.sh in the remove_broken_pairs_bbtools_repair channel
+  - Added new prepare_db_sra_human_scrubber channel for future proofing in case a DB file retreived eventually gets gunzip compressed
+  - Added new update_db_sra_human_scrubber channel to fetch the human_filter.db file and avoid requiring it inside the container environment
+- [#41](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/41) Added 2 new test config files to locally run the miniburk test data with and without host removal (@chrisgulvik)
+- [#41](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/41) Added a new subworkflow for human host removal `subworkflows/host_removal.nf` (@chrisgulvik)
 
 ### `Fixed`
 
 - [#26](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/26) Updated database preparation modules to use `meta.id` to correctly rename `.command.{out,err}` files in the log directory (@gregorysprenger).
 - [#30](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Fixed the the parsing of PhiX removal information from BBDuk to be added to the summary files (@gregorysprenger).
 - [#31](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/31) Removed the possibility of scientific notation in `Summary.CleanedReads-Bases.tab` file (@gregorysprenger).
+- [#30](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/23) Fixed the the parsing of PhiX removal information from BBDuk to be added to the summary files (@gregorysprenger).
 
 ### `Updated`
 
 - [#29](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/29) Updated nf-core GTDB-Tk and BUSCO modules to latest release and added `mash_db` parameter for GTDB-Tk (@gregorysprenger).
+- [#36](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/36) Updated readme and markdown files in `docs/`, as well as separate skea and spades options in nextflow schema file (@gregorysprenger).
+- [#41](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/41) Updated usage to include the new `--host_remove {both,hostile,skip,sra_human_scrubber}`. Default uses "both" SRA Human Scrubber first and then hostile, but options also exist to "skip" host removal entirely, or invoke just one as "hostile" or "sra_human_scrubber" (@chrisgulvik)
+- [#41](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/41) Updated `workflows/assembly.nf` to run the host removal subworkflow after infile handling and prior to downsampling (@chrisgulvik)
 
 ### `Deprecated`
 

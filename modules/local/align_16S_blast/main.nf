@@ -4,7 +4,7 @@ process ALIGN_16S_BLAST {
     container "gregorysprenger/ncbi-blast-plus@sha256:f187706adb753c44f50e5be82d85c518e9cd0ae090bc30ce5e14bb35565a380a"
 
     input:
-    tuple val(meta), path(barnapp_extracted_rna), path(assembly)
+    tuple val(meta), path(barnapp_extracted_rna)
     tuple val(db_name), path("database/*")
 
     output:

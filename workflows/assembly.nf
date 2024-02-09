@@ -73,6 +73,7 @@ include { EXTRACT_16S_BARRNAP                     } from "../modules/local/extra
 include { BLAST_DB_PREPARATION_UNIX               } from "../modules/local/blast_db_preparation_unix/main"
 include { ALIGN_16S_BLAST                         } from "../modules/local/align_16S_blast/main"
 include { BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON   } from "../modules/local/best_16S_blastn_bitscore_taxon_python/main"
+include { CLASSIFY_16S_RDP                        } from "../modules/local/classify_16S_rdp/main" 
 include { SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON     } from "../modules/local/split_multifasta_assembly_biopython/main"
 
 include { GTDBTK_DB_PREPARATION_UNIX              } from "../modules/local/gtdbtk_db_preparation_unix/main"
@@ -87,6 +88,7 @@ include { QA_ASSEMBLY_QUAST                       } from "../modules/local/qa_as
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK                             } from "../subworkflows/local/input_check"
+include { HOST_REMOVAL                            } from "../subworkflows/local/host_removal"
 include { DOWNSAMPLE                              } from "../subworkflows/local/downsampling"
 include { ASSEMBLE_CONTIGS                        } from "../subworkflows/local/assemble_contigs"
 
@@ -101,6 +103,13 @@ if ( toLower(params.assembler) == "skesa" ) {
     var_assembler_name = "SKESA"
 } else {
     var_assembler_name = "SPAdes"
+}
+
+// NCBI's SRA Human Scrubber
+if (params.sra_scrubber_db) {
+    ch_sra_scrubber_db_file = file(params.sra_scrubber_db, checkIfExists: true)
+} else {
+    ch_sra_scrubber_db_file = []
 }
 
 // PhiX Reference
@@ -248,9 +257,16 @@ workflow ASSEMBLY {
                                     [ meta, file]
                             }
 
+    // SUBWORKFLOW: Remove host from FastQ files
+    HOST_REMOVAL (
+        ch_infile_handling,
+        ch_sra_scrubber_db_file
+    )
+    ch_versions = ch_versions.mix(HOST_REMOVAL.out.versions)
+
     // SUBWORKFLOW: Downsample FastQ files
     DOWNSAMPLE (
-        ch_infile_handling
+        HOST_REMOVAL.out.host_removed_reads
     )
     ch_versions = ch_versions.mix(DOWNSAMPLE.out.versions)
 
@@ -264,7 +280,7 @@ workflow ASSEMBLY {
                         "REMOVE_PHIX_BBDUK",
                         REMOVE_PHIX_BBDUK.out.qc_filecheck,
                         REMOVE_PHIX_BBDUK.out.fastq_phix_removed
-                    )
+                      )
 
     // Collect PhiX removal summaries and concatenate into one file
     ch_phix_removal_summary = Channel.empty()
@@ -357,6 +373,16 @@ workflow ASSEMBLY {
         )
         ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
 
+        // Collect kraken summaries and concatenate into one file
+        ch_kraken_one_summary = Channel.empty()
+        ch_kraken_one_summary = ch_kraken_one_summary
+                                    .mix(READ_CLASSIFY_KRAKEN_ONE.out.summary)
+                                    .collectFile(
+                                        name:       "Summary.Kraken.tsv",
+                                        keepHeader: true,
+                                        storeDir:   "${params.outdir}/Summaries"
+                                    )
+
     } else {
         log.warn("Kraken could not be performed - database not specified using --kraken1_db!")
     }
@@ -365,7 +391,7 @@ workflow ASSEMBLY {
     if ( ch_kraken2_db_file ) {
         if ( ch_kraken2_db_file.extension in ['gz', 'tgz'] ) {
             // Add meta information
-            ch_kraken2_db = Channel.of(ch_kraken1_db_file)
+            ch_kraken2_db = Channel.of(ch_kraken2_db_file)
                                 .map{
                                     db ->
                                         def meta = [:]
@@ -401,6 +427,16 @@ workflow ASSEMBLY {
             ch_db_for_kraken2
         )
         ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
+
+        // Collect kraken2 summaries and concatenate into one file
+        ch_kraken_two_summary = Channel.empty()
+        ch_kraken_two_summary = ch_kraken_two_summary
+                                    .mix(READ_CLASSIFY_KRAKEN_TWO.out.summary)
+                                    .collectFile(
+                                        name:       "Summary.Kraken2.tsv",
+                                        keepHeader: true,
+                                        storeDir:   "${params.outdir}/Summaries"
+                                    )
 
     } else {
         log.warn("Kraken2 could not be performed - database not specified using --kraken2_db!")
@@ -466,7 +502,7 @@ workflow ASSEMBLY {
                     "ANNOTATE_PROKKA",
                     ANNOTATE_PROKKA.out.qc_filecheck,
                     ANNOTATE_PROKKA.out.prokka_genbank_file
-                )
+                  )
 
     /*
     ================================================================================
@@ -476,8 +512,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Attempt to extract 16S rRNA gene records from prokka_genbank_file file
     EXTRACT_16S_BIOPYTHON (
-        ch_genbank
-            .join(ASSEMBLE_CONTIGS.out.assembly_file)
+        ch_genbank.join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(EXTRACT_16S_BIOPYTHON.out.versions)
 
@@ -509,7 +544,7 @@ workflow ASSEMBLY {
                 ch_blast_db
             )
             ch_versions = ch_versions.mix(BLAST_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db
+            ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_blast_db_file.isDirectory() ) {
             ch_db_for_blast = Channel
@@ -523,6 +558,7 @@ workflow ASSEMBLY {
                                                 error("16S_ribosomal_RNA BLAST database requires at least '16S_ribosomal_RNA.{nin,nsq,nhr}' files.")
                                             }
                                     }
+                                    .collect()
         } else {
             error("Unsupported object given to --blast_db, database must be supplied as either a directory or a .tar.gz file!")
         }
@@ -532,7 +568,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Run Blast on predicted 16S ribosomal RNA genes
     ALIGN_16S_BLAST (
-        ch_extracted_rna.join(ASSEMBLE_CONTIGS.out.assembly_file),
+        ch_extracted_rna,
         ch_db_for_blast
     )
     ch_versions = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
@@ -540,31 +576,39 @@ workflow ASSEMBLY {
                         "ALIGN_16S_BLAST",
                         ALIGN_16S_BLAST.out.qc_filecheck,
                         ALIGN_16S_BLAST.out.blast_output
-                    )
+                      )
+
+
+    // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes    
+    CLASSIFY_16S_RDP (
+        EXTRACT_16S_BARRNAP.out.extracted_rna
+    )    
+    ch_versions = ch_versions.mix(CLASSIFY_16S_RDP.out.versions)
+
+    ch_rdp_summary = qcfilecheck(
+                        "CLASSIFY_16S_RDP",
+                        CLASSIFY_16S_RDP.out.qc_filecheck,
+                        CLASSIFY_16S_RDP.out.rdp_tsv
+                      )
+
+    // Concatenate RDP summaries
+    ch_rdp_summary.map{meta, file -> file}
+                  .collectFile(
+                    name: "Summary.RDP.tab",
+                    keepHeader: true,
+                    storeDir:   "${params.outdir}/Summaries"
+                  )
+
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
         ch_blast_output
-            .join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     ch_versions = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
     ch_top_blast = qcfilecheck(
                         "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
                         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
                         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.top_blast_species
-                    )
-    ch_blast_summary = qcfilecheck(
-                            "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
-                            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
-                            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.blast_summary
-                        )
-
-    // Collect BLASTn Summaries and concatenate into one file
-    ch_blast_summary.map{ meta, file -> file }
-                    .collectFile(
-                        name:       "Summary.16S.tab",
-                        keepHeader: true,
-                        storeDir:   "${params.outdir}/Summaries"
                     )
 
     // Collect top BLASTn species and concatenate into one file
@@ -574,7 +618,11 @@ workflow ASSEMBLY {
                     keepHeader: true,
                     storeDir:   "${params.outdir}/SSU"
                 )
-
+                .collectFile(
+                    name:       "Summary.16S.tab",
+                    keepHeader: true,
+                    storeDir:   "${params.outdir}/Summaries"
+                )
     /*
     ================================================================================
                             Evaluate contigs
@@ -758,6 +806,7 @@ workflow ASSEMBLY {
     ch_qc_filecheck = ch_qc_filecheck
         .concat(
             INFILE_HANDLING_UNIX.out.qc_filecheck,
+            HOST_REMOVAL.out.qc_filecheck,
             REMOVE_PHIX_BBDUK.out.qc_filecheck,
             TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
             OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,
