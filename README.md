@@ -1,4 +1,9 @@
-# ![wf-paired-end-illumina-assembly](docs/images/wf-paired-end-illumina-assembly_logo_light.png#gh-light-mode-only) ![wf-paired-end-illumina-assembly](docs/images/wf-paired-end-illumina-assembly_logo_dark.png#gh-dark-mode-only)
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/wf-paired-end-illumina-assembly_logo_dark.png">
+    <img alt="bacterial-genomics/wf-paired-end-illumina-assembly" src="docs/images/wf-paired-end-illumina-assembly_logo_light.png">
+  </picture>
+</h1>
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/bacterial-genomics/wf-paired-end-illumina-assembly)
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A522.04.3-23aa62.svg)](https://www.nextflow.io/)

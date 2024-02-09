@@ -73,6 +73,7 @@ include { EXTRACT_16S_BARRNAP                     } from "../modules/local/extra
 include { BLAST_DB_PREPARATION_UNIX               } from "../modules/local/blast_db_preparation_unix/main"
 include { ALIGN_16S_BLAST                         } from "../modules/local/align_16S_blast/main"
 include { BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON   } from "../modules/local/best_16S_blastn_bitscore_taxon_python/main"
+include { CLASSIFY_16S_RDP                        } from "../modules/local/classify_16S_rdp/main" 
 include { SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON     } from "../modules/local/split_multifasta_assembly_biopython/main"
 
 include { GTDBTK_DB_PREPARATION_UNIX              } from "../modules/local/gtdbtk_db_preparation_unix/main"
@@ -577,6 +578,28 @@ workflow ASSEMBLY {
                         ALIGN_16S_BLAST.out.blast_output
                     )
 
+
+    // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes    
+    CLASSIFY_16S_RDP (
+        EXTRACT_16S_BARRNAP.out.extracted_rna
+    )    
+    ch_versions = ch_versions.mix(CLASSIFY_16S_RDP.out.versions)
+
+    ch_rdp_summary = qcfilecheck(
+                        "CLASSIFY_16S_RDP",
+                        CLASSIFY_16S_RDP.out.qc_filecheck,
+                        CLASSIFY_16S_RDP.out.rdp_tsv
+                      )
+
+    // Concatenate RDP summaries
+    ch_rdp_summary.map{meta, file -> file}
+                  .collectFile(
+                    name: "Summary.RDP.tab",
+                    keepHeader: true,
+                    storeDir:   "${params.outdir}/Summaries"
+                  )
+
+
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
         ch_blast_output
@@ -609,6 +632,7 @@ workflow ASSEMBLY {
                     keepHeader: true,
                     storeDir:   "${params.outdir}/SSU"
                 )
+ 
 
     /*
     ================================================================================
