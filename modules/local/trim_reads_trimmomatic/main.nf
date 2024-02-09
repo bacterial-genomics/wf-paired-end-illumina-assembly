@@ -11,7 +11,7 @@ process TRIM_READS_TRIMMOMATIC {
     output:
     tuple val(meta), path("${meta.id}.Adapter*_File.tsv") , emit: qc_filecheck
     tuple val(meta), path("${meta.id}*{paired,single}.fq"), emit: fastq_adapters_removed
-    path("${meta.id}.Trimmomatic.tsv")
+    path("${meta.id}.Trimmomatic.tsv")                    , emit: summary
     path(".command.{out,err}")
     path("versions.yml")                                  , emit: versions
 
