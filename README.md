@@ -1,4 +1,9 @@
-# ![wf-paired-end-illumina-assembly](docs/images/wf-paired-end-illumina-assembly_logo_light.png#gh-light-mode-only) ![wf-paired-end-illumina-assembly](docs/images/wf-paired-end-illumina-assembly_logo_dark.png#gh-dark-mode-only)
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/wf-paired-end-illumina-assembly_logo_dark.png">
+    <img alt="bacterial-genomics/wf-paired-end-illumina-assembly" src="docs/images/wf-paired-end-illumina-assembly_logo_light.png">
+  </picture>
+</h1>
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/bacterial-genomics/wf-paired-end-illumina-assembly)
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A522.04.3-23aa62.svg)](https://www.nextflow.io/)
@@ -31,9 +36,9 @@ Run the built-in test set to confirm all parts are working as-expected. It will 
 
 ```
 nextflow run \
-  wf-paired-end-illumina-assembly \
-  -r v1.1.0 \
-  -profile ,test
+  bacterial-genomics/wf-paired-end-illumina-assembly \
+  -r main \
+  -profile singularity,test
 ```
 
 ## Quick Start: Run
@@ -42,8 +47,8 @@ Example command on FastQs in "new-fastq-dir" data using **SPAdes** with singular
 
 ```
 nextflow run \
-  wf-paired-end-illumina-assembly/ \
-  -r v1.1.0 \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
+  -r main \
   -profile singularity \
   --input new-fastq-dir \
   --outdir my-results \
@@ -54,8 +59,8 @@ Example command on FastQs in "new-fastq-dir" data using **SKESA** with singulari
 
 ```
 nextflow run \
-  wf-paired-end-illumina-assembly/ \
-  -r v1.1.0 \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
+  -r main \
   -profile singularity \
   --input new-fastq-dir \
   --outdir my-results \
@@ -80,7 +85,7 @@ This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed c
 ## Usage
 
 ```
-nextflow run wf-paired-end-illumina-assembly -profile <docker|singularity> --input <input directory|samplesheet> --outdir <directory for results>
+nextflow run bacterial-genomics/wf-paired-end-illumina-assembly -r main -profile <docker|singularity> --input <input directory|samplesheet> --outdir <directory for results> --assembler <spades|skesa>
 ```
 
 Please see the [usage documentation](docs/usage.md) for further information on using this workflow.
@@ -149,8 +154,8 @@ View help menu of all workflow options:
 
 ```
 nextflow run \
-  wf-paired-end-illumina-assembly \
-  -r v1.1.0 \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
+  -r main \
   --help \
   --show_hidden_params
 ```

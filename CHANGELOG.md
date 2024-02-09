@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- [#37](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/37) Allow customization of the MLST module, such as specifying schemes to include/exclude and minimum thresholds (@gregorysprenger).
+- [#52](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/52) Concatenate kraken (1 and 2) output summaries and place into the output Summaries directory (@gregorysprenger).
+- [#47](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/47) Added RDP Classifier as another tool to classify 16S ribosomal RNA (@taylorpaisie).
+- [#51](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/51) Added header to BLAST output file before it is compressed (@gregorysprenger).
+
 ### `Fixed`
 
 ### `Updated`
 
 - [#45](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/45) Updated output documentation to allow for better readability and interpretation (@gregorysprenger).
+- [#56](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/56) Change how images are displayed based on light and dark themes due to GitHub changes (@gregorysprenger).
 
 ### `Deprecated`
 
@@ -40,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Updated`
 
 - [#29](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/29) Updated nf-core GTDB-Tk and BUSCO modules to latest release and added `mash_db` parameter for GTDB-Tk (@gregorysprenger).
+- [#36](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/36) Updated readme and markdown files in `docs/`, as well as separate skea and spades options in nextflow schema file (@gregorysprenger).
 - [#41](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/41) Updated usage to include the new `--host_remove {both,hostile,skip,sra_human_scrubber}`. Default uses "both" SRA Human Scrubber first and then hostile, but options also exist to "skip" host removal entirely, or invoke just one as "hostile" or "sra_human_scrubber" (@chrisgulvik)
 - [#41](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/41) Updated `workflows/assembly.nf` to run the host removal subworkflow after infile handling and prior to downsampling (@chrisgulvik)
 

@@ -1,13 +1,18 @@
-# ![wf-paired-end-illumina-assembly](images/wf-paired-end-illumina-assembly_logo_light.png#gh-light-mode-only) ![wf-paired-end-illumina-assembly](images/wf-paired-end-illumina-assembly_logo_dark.png#gh-dark-mode-only)
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="images/wf-paired-end-illumina-assembly_logo_dark.png">
+    <img alt="bacterial-genomics/wf-paired-end-illumina-assembly" src="images/wf-paired-end-illumina-assembly_logo_light.png">
+  </picture>
+</h1>
 
 ![workflow](images/wf-paired-end-illumina-assembly_workflow.png)
 
-_A schematic of the steps in the workflow._
+_General schematic of the steps in the workflow_
 
 ## Requirements
 
 - [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=22.04.3`)
-- [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity >=3.8.0`](https://www.sylabs.io/guides/3.0/user-guide/)
+- [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) (`>=3.8.0`)
 
 ## Install workflow locally
 
@@ -22,17 +27,17 @@ Before running workflow on new data, the workflow should be run on the built-in 
 ```
 cd wf-paired-end-illumina-assembly/
 
-nextflow run main.nf \
-  -profile singularity,test
+nextflow run main.nf -profile singularity,test --outdir results
 ```
 
-Example analysis using Nextflow command:
+## Usage
 
 ```
 nextflow run main.nf \
   -profile singularity \
   --input INPUT_DIRECTORY \
-  --outdir OUTPUT_DIRECTORY
+  --outdir OUTPUT_DIRECTORY \
+  --assembler <spades|skesa>
 ```
 
 When running locally, `--max_cpus` and `--max_memory` may need to be specified. Below, max CPUs is set to 4 and max memory is set to 16 (for 16GB).
@@ -46,7 +51,7 @@ nextflow run main.nf \
   --max_memory 16
 ```
 
-Help menu of all options:
+### Help menu of all options:
 
 ```
 nextflow run main.nf --help
