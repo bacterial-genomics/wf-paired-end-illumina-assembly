@@ -293,7 +293,7 @@ The final assembly file is scanned against PubMLST typing schemes to determine t
 | `~n`   | novel full length allele similar to n | 100%            | &ge; `--minid` |
 | `n?`   | partial match to known allele         | &ge; `--mincov` | &ge; `--minid` |
 | `-`    | allele missing                        | &lt; `--mincov` | &lt; `--minid` |
-| `n,m`  | multiple alleles                      |                 |
+| `n,m`  | multiple alleles                      |                 |                |
 
 </details>
 

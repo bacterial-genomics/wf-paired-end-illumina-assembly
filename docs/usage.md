@@ -9,9 +9,6 @@
 - [Running the pipeline](#running-the-pipeline)
 - [Reproducibility](#reproducibility)
 - [Core Nextflow arguments](#core-nextflow-arguments)
-  - [profile](#profile)
-  - [resume](#resume)
-  - [config](#c)
 - [Custom configuration](#custom-configuration)
   - [Resource requests](#resource-requests)
   - [Updating containers (advanced users)](#updating-containers)
@@ -24,7 +21,7 @@
 
 You will need the path to a directory containing paired-end FastQ files. This will import and attempt to assemble all FastQ files in the specified directory, as well as subdirectories.
 
-```bash
+```console
 --input '/path/to/fastq/directory'
 ```
 
@@ -39,7 +36,7 @@ Please note the following requirements:
 
 You will need to create a samplesheet with information about the samples you would like to analyze before running the pipeline. Use this parameter to specify its location. Samplesheet can be a comma-separated (CSV), tab-separated (TSV), or Microsoft Excel file (XLSX) file with 3 columns, and a header row as shown in the examples below.
 
-```bash
+```console
 --input '[path to samplesheet file]'
 ```
 
@@ -103,7 +100,7 @@ This will launch the pipeline with the `docker` configuration profile. See below
 
 Note that the pipeline will create the following files in your working directory:
 
-```bash
+```console
 work                # Directory containing the nextflow working files
 <outdir>            # Finished results in specified location (defined with --outdir)
 .nextflow_log       # Log file from Nextflow

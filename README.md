@@ -10,10 +10,9 @@
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/) [![MegaLinter](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/workflows/MegaLinter/badge.svg?branch=main)](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/actions?query=workflow%3AMegaLinter+branch%3Amain)
 
-
 ![workflow](docs/images/wf-paired-end-illumina-assembly_workflow.png)
 
-_General schematic of the steps in the workflow_
+> _General schematic of the steps in the workflow_
 
 ## Contents
 
@@ -25,7 +24,7 @@ _General schematic of the steps in the workflow_
   - [Required parameters](#required-parameters)
   - [Optional parameters](#optional-parameters)
   - [Additional parameters](#additional-parameters)
-- [Resource Managers](#resource-Managers)
+- [Resource Managers](#resource-managers)
 - [Output](#output)
 - [Troubleshooting](#troubleshooting)
 - [Contributions and Support](#contributions-and-support)
@@ -35,7 +34,7 @@ _General schematic of the steps in the workflow_
 
 Run the built-in test set to confirm all parts are working as-expected. It will also download all dependencies to make subsequent runs much faster.
 
-```
+```bash
 nextflow run \
   bacterial-genomics/wf-paired-end-illumina-assembly \
   -r main \
@@ -46,7 +45,7 @@ nextflow run \
 
 Example command on FastQs in "new-fastq-dir" data using **SPAdes** with singularity:
 
-```
+```bash
 nextflow run \
   bacterial-genomics/wf-paired-end-illumina-assembly \
   -r main \
@@ -58,7 +57,7 @@ nextflow run \
 
 Example command on FastQs in "new-fastq-dir" data using **SKESA** with singularity:
 
-```
+```bash
 nextflow run \
   bacterial-genomics/wf-paired-end-illumina-assembly \
   -r main \
@@ -85,7 +84,7 @@ This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed c
 
 ## Usage
 
-```
+```bash
 nextflow run bacterial-genomics/wf-paired-end-illumina-assembly -r main -profile <docker|singularity> --input <input directory|samplesheet> --outdir <directory for results> --assembler <spades|skesa>
 ```
 
@@ -97,9 +96,9 @@ Note the "`--`" long name arguments (e.g., `--help`, `--input`, `--outdir`) are 
 
 These are the most pertinent options for this workflow:
 
-#### Required parameters
+### Required parameters
 
-```
+```console
   ============================================
         Input/Output
   ============================================
@@ -130,9 +129,9 @@ These are the most pertinent options for this workflow:
 
 PhiX reference [NC_001422.1](https://www.ncbi.nlm.nih.gov/nuccore/NC_001422.1) can be obtained from NCBI.
 
-#### Optional parameters
+### Optional parameters
 
-```
+```console
   ============================================
         Optional databases
   ============================================
@@ -149,11 +148,11 @@ PhiX reference [NC_001422.1](https://www.ncbi.nlm.nih.gov/nuccore/NC_001422.1) c
 
 _If user does not specify inputs for parameters with a default set to `NaN`, these options will not be performed during workflow analysis._
 
-#### Additional parameters
+### Additional parameters
 
 View help menu of all workflow options:
 
-```
+```bash
 nextflow run \
   bacterial-genomics/wf-paired-end-illumina-assembly \
   -r main \

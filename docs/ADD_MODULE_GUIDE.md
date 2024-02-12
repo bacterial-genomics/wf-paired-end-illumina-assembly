@@ -12,7 +12,7 @@ If you'd like to write some code for wf-paired-end-illumina-assembly, the standa
 
 If you're not used to this workflow with git, you can start with some [docs from GitHub](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests) or even their [excellent `git` resources](https://try.github.io/).
 
-## Fork the GitHub [wf-paired-end-illumina-workflow](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly) repository to your GitHub account
+## Fork the GitHub repository to your GitHub account
 
 The first step is to fork the [wf-paired-end-illumina-workflow](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly) repository:
 
@@ -29,11 +29,11 @@ The first step is to fork the [wf-paired-end-illumina-workflow](https://github.c
 
 Please create a new branch with the appropriate branch name for the module you are trying to add. This will make things easier when reviewing and ultimately merging the branches on the repository.
 
-# Adding a module to the workflow
+## Adding a module to the workflow
 
 To add a new module to the workflow, these are all the files necessary to edit to incorporate a new module:
 
-```
+```console
 conf/modules.config
 conf/params.config
 conf/workflow.config
@@ -83,7 +83,8 @@ Once there, use `nf-core schema build` to add to `nextflow_schema.json`.
 
 ### Default processes resource requirements
 
-Sensible defaults for process resource requirements (CPUs / memory / time) for a process should be defined in `conf/base.config`. These should generally be specified generic with `withLabel:` selectors so they can be shared across multiple processes/steps of the pipeline. A nf-core standard set of labels that should be followed where possible can be seen in the [nf-core pipeline template](https://github.com/nf-core/tools/blob/master/nf_core/pipeline-template/conf/base.config), which has the default process as a single core-process, and then different levels of multi-core configurations for increasingly large memory requirements defined with standardised labels.
+Sensible defaults for process resource requirements (CPUs / memory / time) for a process should be defined in `conf/base.config`. These should generally be specified generic with `withLabel:` selectors so they can be shared across multiple processes/steps of the pipeline.
+A nf-core standard set of labels that should be followed where possible can be seen in the [nf-core pipeline template](https://github.com/nf-core/tools/blob/master/nf_core/pipeline-template/conf/base.config), which has the default process as a single core-process, and then different levels of multi-core configurations for increasingly large memory requirements defined with standardised labels.
 
 The process resources can be passed on to the tool dynamically within the process with the `${task.cpu}` and `${task.memory}` variables in the `script:` block.
 
