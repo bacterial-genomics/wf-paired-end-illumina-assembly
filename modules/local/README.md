@@ -1,9 +1,5 @@
-### Structure
+# General module information
 
-Directories are named according to their `<General Purpose>_<Tool Name>`
+## Directory and filename structure
 
-### TO-DO:
-
-- setup `markdown-link-check` to verify all links in README.md files are alive not dead
-
->
+Directory and filenames are named according to their `<General Purpose>_<Tool Name>`
