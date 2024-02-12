@@ -25,7 +25,7 @@
                 },
                 "min_filesize_fastq_input": {
                     "type": "string",
-                    "default": "10M",
+                    "default": "25M",
                     "hidden": true,
                     "description": "Minimum file size of input FastQ files."
                 },
@@ -41,7 +41,6 @@
             "title": "Remove host options",
             "type": "object",
             "description": "Remove host options",
-            "default": "",
             "properties": {
                 "host_remove": {
                     "type": "string",
@@ -52,25 +51,23 @@
                 },
                 "min_filesize_fastq_sra_human_scrubber_removed": {
                     "type": "string",
-                    "default": "25M",
+                    "default": "25000k",
                     "hidden": true,
                     "description": "Minimum output filesize for each FastQ file after sra-human-scrubber"
                 },
                 "min_filesize_fastq_hostile_removed": {
                     "type": "string",
-                    "default": "25M",
+                    "default": "25000k",
                     "hidden": true,
                     "description": "Minimum output filesize for each FastQ file after hostile"
                 },
                 "hostile_host_reference_path_prefix": {
                     "type": "string",
-                    "default": "",
                     "hidden": true,
                     "description": "Prefix path to hostile bowtie2 index files to use for removal"
                 },
                 "sra_scrubber_db": {
                     "type": "string",
-                    "default": "https://ftp.ncbi.nlm.nih.gov/sra/dbs/human_filter/human_filter.db.20230410v2",
                     "description": "Database for NCBI's SRA Human Scrubber .db file",
                     "help_text": "Path to a local file, or a URL to .DB file format that contains NCBI's STAT k-mers to remove from reads."
                 },
@@ -90,7 +87,6 @@
             "title": "Downsampling options",
             "type": "object",
             "description": "Downsampling options",
-            "default": "",
             "properties": {
                 "depth": {
                     "type": "integer",
@@ -109,7 +105,6 @@
             "title": "Assembly options",
             "type": "object",
             "description": "Assembly options",
-            "default": "",
             "properties": {
                 "assembler": {
                     "type": "string",
@@ -165,7 +160,6 @@
             "title": "SPAdes assembler options",
             "type": "object",
             "description": "SPAdes assembler options",
-            "default": "",
             "properties": {
                 "spades_mode": {
                     "type": "string",
@@ -200,7 +194,6 @@
             "title": "SKESA assembler options",
             "type": "object",
             "description": "SKESA assembler options",
-            "default": "",
             "properties": {
                 "skesa_kmer_length": {
                     "type": "integer",
@@ -249,11 +242,9 @@
             "title": "Reference file options",
             "type": "object",
             "description": "Reference file options",
-            "default": "",
             "properties": {
                 "phix_reference": {
                     "type": "string",
-                    "default": "PhiX_NC_001422.1.fasta",
                     "description": "File containing PhiX sequences in FastA format.",
                     "help_text": "Path to PhiX reference file in FastA format. A PhiX reference file is required to run this pipeline. Recognized extensions are: {.fasta, .fas, .fa, .fna}."
                 },
@@ -271,7 +262,6 @@
                 },
                 "adapter_reference": {
                     "type": "string",
-                    "default": "adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas",
                     "description": "File containing adapters in FastA format that need to be removed from input FastQ files.",
                     "help_text": "Path to adapter reference file in FastA format. Standard Illumina adapter sequences are strongly recommended. Recognized extensions are: {.fasta, .fas, .fa, .fna}."
                 },
@@ -287,7 +277,6 @@
             "title": "Taxonomic profiling options",
             "type": "object",
             "description": "Taxonomic profiling options",
-            "default": "",
             "properties": {
                 "kraken1_db": {
                     "type": "string",
@@ -307,7 +296,6 @@
             "title": "Read trimming options",
             "type": "object",
             "description": "Read trimming options",
-            "default": "",
             "properties": {
                 "min_filesize_fastq_adapters_removed": {
                     "type": "string",
@@ -388,7 +376,6 @@
             "title": "16S ribosomal RNA analysis options",
             "type": "object",
             "description": "16S ribosomal RNA analysis options",
-            "default": "",
             "properties": {
                 "genbank_query": {
                     "type": "string",
@@ -435,7 +422,6 @@
             "title": "BLAST 16S ribosomal RNA classification options",
             "type": "object",
             "description": "BLAST 16S ribosomal RNA classification options",
-            "default": "",
             "properties": {
                 "blast_db": {
                     "type": "string",
@@ -451,7 +437,7 @@
                 },
                 "filter_blast_bitscore": {
                     "type": "string",
-                    "default": "0",
+                    "default": "0.0",
                     "hidden": true,
                     "description": "Minimum BLASTn alignment bit score."
                 },
@@ -473,7 +459,6 @@
             "title": "RDP 16S ribosomal RNA classification options",
             "type": "object",
             "description": "RDP 16S ribosomal RNA classification options",
-            "default": "",
             "properties": {
                 "rdp_phylomarker": {
                     "type": "string",
@@ -501,7 +486,6 @@
             "title": "Contig filtering options",
             "type": "object",
             "description": "Contig filtering options",
-            "default": "",
             "properties": {
                 "filter_contigs_coverage": {
                     "type": "string",
@@ -554,7 +538,6 @@
             "title": "Contig classification options",
             "type": "object",
             "description": "Contig classification options",
-            "default": "",
             "properties": {
                 "gtdb_db": {
                     "type": "string",
@@ -664,7 +647,7 @@
                 },
                 "prokka_evalue": {
                     "type": "string",
-                    "default": "1e-8",
+                    "default": "1e-08",
                     "description": "Similarity e-value cut-off."
                 },
                 "min_filesize_annotated_genbank": {
@@ -859,7 +842,6 @@
                 "tracedir": {
                     "type": "string",
                     "description": "Directory to keep pipeline Nextflow logs and reports.",
-                    "default": "${params.outdir}/log",
                     "fa_icon": "fas fa-cogs",
                     "hidden": true
                 },
