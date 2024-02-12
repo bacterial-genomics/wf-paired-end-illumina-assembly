@@ -9,7 +9,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
     path database
 
     output:
-    path("${meta.id}.kraken2_output.tab.gz")
+    path("${meta.id}.kraken2_output.tsv.gz")
     path("${meta.id}.kraken2_summary.tsv")  , emit: summary
     path(".command.{out,err}")
     path("versions.yml")                    , emit: versions
@@ -27,7 +27,7 @@ process READ_CLASSIFY_KRAKEN_TWO {
         --gzip-compressed \
         --db !{database} \
         --output /dev/null \
-        --report kraken2.tab \
+        --report kraken2.tsv \
         --threads !{task.cpus} \
         !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} !{cleaned_fastq_files[2]}
 
@@ -35,10 +35,10 @@ process READ_CLASSIFY_KRAKEN_TWO {
       echo -e "% Reads\t# Reads\tUnclassified\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads" \
         > "!{meta.id}.kraken2_summary.tsv"
 
-      summarize_kraken 'kraken2.tab' >> "!{meta.id}.kraken2_summary.tsv"
+      summarize_kraken 'kraken2.tsv' >> "!{meta.id}.kraken2_summary.tsv"
 
-      mv kraken2.tab !{meta.id}.kraken2_output.tab
-      gzip !{meta.id}.kraken2_output.tab
+      mv kraken2.tsv !{meta.id}.kraken2_output.tsv
+      gzip !{meta.id}.kraken2_output.tsv
     fi
 
     # Get process version information

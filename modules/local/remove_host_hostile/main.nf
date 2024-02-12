@@ -9,8 +9,8 @@ process REMOVE_HOST_HOSTILE {
 
     output:
     tuple val(meta), path("${meta.id}.Hostile-removed_FastQ_File.tsv"), emit: qc_filecheck
-    tuple val(meta), path("hostile/${meta.id}*.clean_*")              , emit: hostile_removed
-    path("${meta.id}.Summary.Hostile-Removal.tsv")                    , emit: hostile_summary
+    tuple val(meta), path("hostile/${meta.id}*.clean_*")              , emit: host_removed_reads
+    path("${meta.id}.Hostile-Removal.tsv")                            , emit: summary
     path(".command.{out,err}")
     path("versions.yml")                                              , emit: versions
 
@@ -133,8 +133,8 @@ process REMOVE_HOST_HOSTILE {
     SUMMARY_OUTPUT="${SUMMARY_OUTPUT%${DELIM}}"
 
     # Store input/output counts
-    echo -e "${SUMMARY_HEADER}" > !{meta.id}.Summary.Hostile-Removal.tsv
-    echo -e "${SUMMARY_OUTPUT}" >> !{meta.id}.Summary.Hostile-Removal.tsv
+    echo -e "${SUMMARY_HEADER}" > !{meta.id}.Hostile-Removal.tsv
+    echo -e "${SUMMARY_OUTPUT}" >> !{meta.id}.Hostile-Removal.tsv
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

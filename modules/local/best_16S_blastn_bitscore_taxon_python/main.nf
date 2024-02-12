@@ -20,19 +20,19 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     # Get the top match by bitscore
     filter.blast.py \
       -i "!{blast_output}" \
-      -o "!{meta.id}-!{meta.assembler}.blast.tab" \
+      -o "!{meta.id}-!{meta.assembler}.blast.tsv" \
       -c !{params.filter_blast_column} \
       -s !{params.filter_blast_bitscore}
 
     echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
 
-    if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.blast.tab" 'Filtered 16S BLASTn File' "!{params.min_filesize_filtered_blastn}"; then
+    if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.blast.tsv" 'Filtered 16S BLASTn File' "!{params.min_filesize_filtered_blastn}"; then
       echo -e "!{meta.id}-!{meta.assembler}\tFiltered 16S BLASTn File\tPASS" \
         >> "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
 
       # Report the top alignment match data: %nucl iden, %query cov aln, taxon
       awk -F $'\t' 'BEGIN{OFS=FS}; {print $1, $3 "% identity", $13 "% alignment", $14}' \
-      "!{meta.id}-!{meta.assembler}.blast.tab" \
+      "!{meta.id}-!{meta.assembler}.blast.tsv" \
       > "!{meta.id}-!{meta.assembler}.16S-top-species.tsv"
 
       sed -i \
