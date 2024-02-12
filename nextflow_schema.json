@@ -933,6 +933,12 @@
             "$ref": "#/definitions/ribosomal_rna_analysis_options"
         },
         {
+            "$ref": "#/definitions/blast_ribosomal_rna_classification_options"
+        },
+        {
+            "$ref": "#/definitions/rdp_ribosomal_rna_classification_options"
+        },
+        {
             "$ref": "#/definitions/contig_filtering_options"
         },
         {
