@@ -25,7 +25,7 @@ EXCLUDED_DIRECTORIES:
   - ".devcontainer"
 
 # Files to ignore when linting
-FILTER_REGEX_EXCLUDE: (.*\.fasta|.*\.fas|.*\.fa)
+FILTER_REGEX_EXCLUDE: (bin/.*\.fasta|bin/.*\.fas)
 
 # Make errors for these linters show as warnings
 DISABLE_ERRORS_LINTERS:
