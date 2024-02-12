@@ -37,6 +37,11 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and is used to 
 >
 > `[assembler]` is the name of the assembler used to assemble contigs. [Default: SPAdes].
 
+> [!TIP]
+> All tab-separated value (TSV) files can be converted to Excel spreadsheets (XLSX) by using the parameter `--create_excel_outputs` when running the pipeline.
+>
+> When using this parameter, a summary workbook is created to allow for all summary files to be added to separate worksheets within the workbook.
+
 ## Input quality control
 
 Input files must meet a minimum file size to be processed within this pipeline. If this check passes, the input files go through host removal, down sampling, PhiX read removal, and adapter trimming.
@@ -68,11 +73,11 @@ Host read removal can be skipped or performed by Hostile and/or NCBI SRA-Human-S
 
 - `CleanedReads/Hostile/`
 
-  - `[sample].Summary.Hostile-Removal.tsv`: Summary of the number of reads discarded and retained from Hostile.
+  - `[sample].Summary.Hostile-Removal.[tsv,xlsx]`: Summary of the number of reads discarded and retained from Hostile.
 
 - `CleanedReads/SRA-Human-Scrubber/`
-  - `[sample].Summary.BBTools-Repair-Removal.tsv`: Summary of the number of reads discarded and retained after repairing broken sister reads produced from SRA-Human-Scrubber.
-  - `[sample].Summary.SRA-Human-Scrubber-Removal.tsv`: Summary of the number of reads discarded and retained from SRA-Human-Scrubber.
+  - `[sample].Summary.BBTools-Repair-Removal.[tsv,xlsx]`: Summary of the number of reads discarded and retained after repairing broken sister reads produced from SRA-Human-Scrubber.
+  - `[sample].Summary.SRA-Human-Scrubber-Removal.[tsv,xlsx]`: Summary of the number of reads discarded and retained from SRA-Human-Scrubber.
 
 </details>
 
@@ -95,7 +100,7 @@ PhiX reads are commonly used as a positive control for Illumina sequencing. Duri
 <summary>Output files</summary>
 
 - `CleanedReads/BBDUK/`
-  - `[sample].Summary.PhiX.tsv`: Number of reads discarded and retained from BBDuk.
+  - `[sample].Summary.PhiX.[tsv,xlsx]`: Number of reads discarded and retained from BBDuk.
 
 </details>
 
@@ -118,7 +123,7 @@ Illumina instruments can detect and remove adapter sequences, but sometimes adap
 <summary>Output files</summary>
 
 - `CleanedReads/Trimmomatic/`
-  - `[sample].trimmomatic.tsv`: Summary of the number of reads discarded and retained from Trimmomatic.
+  - `[sample].trimmomatic.[tsv,xlsx]`: Summary of the number of reads discarded and retained from Trimmomatic.
 
 </details>
 
@@ -144,8 +149,8 @@ Overlapping content between sister reads that are at least 80% similar are colla
   - `[sample]_R[1/2].paired.fq.gz`: Final cleaned paired reads.
 
 - `CleanedReads/FLASH/`
-  - `[sample].overlap.tsv`: Number of reads that were overlapped into singleton reads.
-  - `[sample].clean-reads.tsv`: Number of non-overlapping reads.
+  - `[sample].overlap.[tsv,xlsx]`: Number of reads that were overlapped into singleton reads.
+  - `[sample].clean-reads.[tsv,xlsx]`: Number of non-overlapping reads.
 
 </details>
 
@@ -164,8 +169,8 @@ Kraken is a k-mer based classification tool that assigns taxonomic labels using 
 <summary>Output files</summary>
 
 - `Taxonomy/kraken/[sample]/`
-  - `[sample].kraken_summary.tsv`: Summary of the unclassified, top 3 genus and top 3 species classifications from the Kraken report.
-  - `[sample].kraken_output.tsv.gz`: Taxonomic classification in the Kraken report format.
+  - `[sample].kraken_summary.[tsv,xlsx]`: Summary of the unclassified, top 3 genus and top 3 species classifications from the Kraken report.
+  - `[sample].kraken_output.[tsv,xlsx].gz`: Taxonomic classification in the Kraken report format.
 
 </details>
 
@@ -177,8 +182,8 @@ Kraken2 is a k-mer based classification tool that assigns taxonomic labels using
 <summary>Output files</summary>
 
 - `Taxonomy/kraken2/[sample]/`
-  - `[sample].kraken2_summary.tsv`: Summary of the unclassified, top 3 genus and top 3 species classifications from the Kraken report.
-  - `[sample].kraken2_output.tsv.gz`: Taxonomic classification in the Kraken report format.
+  - `[sample].kraken2_summary.[tsv,xlsx]`: Summary of the unclassified, top 3 genus and top 3 species classifications from the Kraken report.
+  - `[sample].kraken2_output.[tsv,xlsx].gz`: Taxonomic classification in the Kraken report format.
 
 </details>
 
@@ -259,9 +264,9 @@ QUAST is used to perform quality assessment on the assembly file to report metri
 <summary>Output files</summary>
 
 - `Assembly/QA/[sample]/`
-  - `[sample]-[assembler].QuastSummary.tsv`: Assembly metrics such as N50, cumulative length, longest contig length, and GC composition.
-  - `[sample]-[assembler].GenomeCoverage.tsv`: Genome coverage information.
-  - `[sample]-[assembler].CleanedReads-Bases.tsv`: Number of cleaned bases.
+  - `[sample]-[assembler].QuastSummary.[tsv,xlsx]`: Assembly metrics such as N50, cumulative length, longest contig length, and GC composition.
+  - `[sample]-[assembler].GenomeCoverage.[tsv,xlsx]`: Genome coverage information.
+  - `[sample]-[assembler].CleanedReads-Bases.[tsv,xlsx]`: Number of cleaned bases.
 
 </details>
 
@@ -273,7 +278,7 @@ The final assembly file is scanned against PubMLST typing schemes to determine t
 <summary>Output files</summary>
 
 - `Summaries/`
-  - `Summary.MLST.tsv`: Summary of the MLST results for all samples.
+  - `Summary.MLST.[tsv,xlsx]`: Summary of the MLST results for all samples.
 
 </details>
 
@@ -348,11 +353,11 @@ The GenBank file is parsed for 16S rRNA gene records. If there are no 16S rRNA g
 
 - `SSU/`
 
-  - `16S-top-species.tsv`: Summary of the best BLAST alignment for each sample.
+  - `16S-top-species.[tsv,xlsx]`: Summary of the best BLAST alignment for each sample.
   - `16S.[sample]-[assembler].fa`: 16S rRNA gene sequence of the best BLAST alignment in FastA format.
 
 - `SSU/BLAST/`
-  - `[sample]-[assembler].blast.tsv.gz`: BLAST output 16S rRNA gene records in tab-separated value (TSV) format.
+  - `[sample]-[assembler].blast.[tsv,xlsx].gz`: BLAST output 16S rRNA gene records in tab-separated value (TSV) format.
 
 </details>
 
@@ -364,7 +369,7 @@ GTDB-Tk is a taxonomic classification tool that uses the Genome Database Taxonom
 <summary>Output files</summary>
 
 - `Summaries/`
-  - `Summary.GTDB-Tk.tsv`: Summary of the GTDB-Tk taxonomic classification for each sample.
+  - `Summary.GTDB-Tk.[tsv,xlsx]`: Summary of the GTDB-Tk taxonomic classification for each sample.
 
 </details>
 
@@ -372,18 +377,24 @@ GTDB-Tk is a taxonomic classification tool that uses the Genome Database Taxonom
 
 Concatenation of output metrics for all samples.
 
+> [!NOTE]
+> The Summary-Report excel file is only created when the parameter `--create_excel_outputs` is used.
+>
+> The Summary-Report excel file has the date and time appended to the filename using the following shorthand notation: year (yyyy), month (MM), day (dd), hour (HH), minute (mm), second (ss).
+
 <details markdown="1">
 <summary>Output files</summary>
 
 - `Summaries/`
-  - `Summary.16S.tsv`: Summary of the best BLAST alignment for each sample.
-  - `Summary.MLST.tsv`: Summary of the MLST results for all samples.
-  - `Summary.PhiX.tsv`: Number of reads discarded and retained for each sample.
-  - `Summary.Assemblies.tsv`: Assembly metrics such as N50, cumulative length, longest contig length, and GC composition for each sample.
-  - `Summary.GenomeCoverage.tsv`: Summary of the overall genome coverage for each sample.
-  - `Summary.QC_File_Checks.tsv`: Summary of all QC file checks detailing if a sample passes or fails each process.
-  - `Summary.CleanedReads-Bases.tsv`: Summary of the number of cleaned bases for each sample.
-  - `Summary.CleanedReads-AlignmentStats.tsv`: Summary of the genome size and coverages of the paired-end and single-end reads for each sample.
+  - `Summary.16S.[tsv,xlsx]`: Summary of the best BLAST alignment for each sample.
+  - `Summary.MLST.[tsv,xlsx]`: Summary of the MLST results for all samples.
+  - `Summary.PhiX.[tsv,xlsx]`: Number of reads discarded and retained for each sample.
+  - `Summary.Assemblies.[tsv,xlsx]`: Assembly metrics such as N50, cumulative length, longest contig length, and GC composition for each sample.
+  - `Summary.GenomeCoverage.[tsv,xlsx]`: Summary of the overall genome coverage for each sample.
+  - `Summary.QC_File_Checks.[tsv,xlsx]`: Summary of all QC file checks detailing if a sample passes or fails each process.
+  - `Summary.CleanedReads-Bases.[tsv,xlsx]`: Summary of the number of cleaned bases for each sample.
+  - `Summary.CleanedReads-AlignmentStats.[tsv,xlsx]`: Summary of the genome size and coverages of the paired-end and single-end reads for each sample.
+  - `Summary-Report_yyyy-MM-dd_HH-mm-ss.xlsx`: Excel workbook where each file in the Summaries directory is added to a separate worksheet within the workbook.
 
 </details>
 
@@ -423,132 +434,25 @@ Information about the pipeline execution, output logs, error logs, and QC file c
 <summary>QC file checks</summary>
 
 - `pipeline_info/qc_file_checks/`
-  - `[sample].Raw_Initial_FastQ_Files.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria for the pipeline `[Default: 25M]`.
-  - `[sample].Summary.Hostile-Removal.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria for after host removal using Hostile `[Default: 25M]`.
-  - `[sample].SRA_Human_Scrubber_FastQ_File.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria for after host removal using SRA-Human-Scrubber `[Default: 25M]`.
-  - `[sample].BBTools-Repair-removed_FastQ_Files.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria after repairing broken sister reads from SRA-Human-Scrubber `[Default: 25M]`.
-  - `[sample].PhiX_Genome.tsv`: Details if the input PhiX reference genome meets the minimum file size criteria `[Default: 5k]`.
-  - `[sample].PhiX-removed_FastQ_Files.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria after PhiX reads have been removed `[Default: 25M]`.
-  - `[sample].Adapters_FastA.tsv`: Details if the input adapters reference file meets the minimum file size criteria `[Default: 10k]`.
-  - `[sample].Adapter-removed_FastQ_Files.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria after adapter sequences have been removed `[Default: 25M]`.
-  - `[sample].Non-overlapping_FastQ_Files.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria after removing overlapping reads `[Default: 20M]`.
-  - `[sample].Raw_Assembly_File.tsv`: Details if the genome assembly file produced by an assembler software package meets the minimum file size criteria `[Default: 1M]`.
-  - `[sample].Filtered_Assembly_File.tsv`: Details if the genome assembly file meets the minimum file size criteria after low compositional complexity contigs are discarded `[Default: 1M]`.
-  - `[sample].Binary_PE_Alignment_Map_File.tsv`: Details if the binary paired-end (PE) alignment file meets the minimum file size criteria after the cleaned paired-end reads are mapped onto the filtered genome assembly `[Default: 25M]`.
-  - `[sample].Polished_Assembly_File.tsv`: Details if the genome assembly file meets the minimum file size criteria after SNP and InDel corrections are performed `[Default: 1M]`.
-  - `[sample].Final_Corrected_Assembly_FastA_File.tsv`: Details if the final error-corrected genome assembly file meets the minimum file size criteria `[Default: 1M]`.
-  - `[sample].Binary_SE_Alignment_Map_File.tsv`: Details if the single-end (SE) alignment file meets the minimum file size criteria after the cleaned singleton reads are mapped onto the final genome assembly file `[Default: 1k]`.
-  - `[sample].Annotated_GenBank_File.tsv`: Details if the annotated GenBank file meets the minimum file size criteria `[Default: 3M]`.
-  - `[sample].SSU_Extracted_File.tsv`: Details if the extracted 16S rRNA gene sequence file meets the minimum file size criteria `[Default: 500b]`.
-  - `[sample]-[assembler].SSU_Renamed_File.tsv`: Details if the 16S rRNA gene sequence file meets the minimum file size criteria after sample identifiers are added to each sequence `[Default: 500b]`.
-  - `[sample].16S_BLASTn_Output_File.tsv`: Details if the BLASTn output file meets the minimum file size criteria `[Default: 10b]`.
-  - `[sample].Filtered_16S_BLASTn_File.tsv`: Details if the best BLASTn alignment sequence meets the minimum file size criteria `[Default: 10b]`.
+  - `[sample].Raw_Initial_FastQ_Files.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria for the pipeline `[Default: 25M]`.
+  - `[sample].Summary.Hostile-Removal.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria for after host removal using Hostile `[Default: 25M]`.
+  - `[sample].SRA_Human_Scrubber_FastQ_File.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria for after host removal using SRA-Human-Scrubber `[Default: 25M]`.
+  - `[sample].BBTools-Repair-removed_FastQ_Files.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria after repairing broken sister reads from SRA-Human-Scrubber `[Default: 25M]`.
+  - `[sample].PhiX_Genome.[tsv,xlsx]`: Details if the input PhiX reference genome meets the minimum file size criteria `[Default: 5k]`.
+  - `[sample].PhiX-removed_FastQ_Files.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria after PhiX reads have been removed `[Default: 25M]`.
+  - `[sample].Adapters_FastA.[tsv,xlsx]`: Details if the input adapters reference file meets the minimum file size criteria `[Default: 10k]`.
+  - `[sample].Adapter-removed_FastQ_Files.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria after adapter sequences have been removed `[Default: 25M]`.
+  - `[sample].Non-overlapping_FastQ_Files.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria after removing overlapping reads `[Default: 20M]`.
+  - `[sample].Raw_Assembly_File.[tsv,xlsx]`: Details if the genome assembly file produced by an assembler software package meets the minimum file size criteria `[Default: 1M]`.
+  - `[sample].Filtered_Assembly_File.[tsv,xlsx]`: Details if the genome assembly file meets the minimum file size criteria after low compositional complexity contigs are discarded `[Default: 1M]`.
+  - `[sample].Binary_PE_Alignment_Map_File.[tsv,xlsx]`: Details if the binary paired-end (PE) alignment file meets the minimum file size criteria after the cleaned paired-end reads are mapped onto the filtered genome assembly `[Default: 25M]`.
+  - `[sample].Polished_Assembly_File.[tsv,xlsx]`: Details if the genome assembly file meets the minimum file size criteria after SNP and InDel corrections are performed `[Default: 1M]`.
+  - `[sample].Final_Corrected_Assembly_FastA_File.[tsv,xlsx]`: Details if the final error-corrected genome assembly file meets the minimum file size criteria `[Default: 1M]`.
+  - `[sample].Binary_SE_Alignment_Map_File.[tsv,xlsx]`: Details if the single-end (SE) alignment file meets the minimum file size criteria after the cleaned singleton reads are mapped onto the final genome assembly file `[Default: 1k]`.
+  - `[sample].Annotated_GenBank_File.[tsv,xlsx]`: Details if the annotated GenBank file meets the minimum file size criteria `[Default: 3M]`.
+  - `[sample].SSU_Extracted_File.[tsv,xlsx]`: Details if the extracted 16S rRNA gene sequence file meets the minimum file size criteria `[Default: 500b]`.
+  - `[sample]-[assembler].SSU_Renamed_File.[tsv,xlsx]`: Details if the 16S rRNA gene sequence file meets the minimum file size criteria after sample identifiers are added to each sequence `[Default: 500b]`.
+  - `[sample].16S_BLASTn_Output_File.[tsv,xlsx]`: Details if the BLASTn output file meets the minimum file size criteria `[Default: 10b]`.
+  - `[sample].Filtered_16S_BLASTn_File.[tsv,xlsx]`: Details if the best BLASTn alignment sequence meets the minimum file size criteria `[Default: 10b]`.
 
-# </details>
-
-The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
-
-- [Annotated genbank file](#annot) - Genbank annotated file
-- [Final assembly file](#asm) - Final, corrected assembly file
-- [SPAdes output](#spades-output) - Contigs and SPAdes log files
-- [SKESA output](#skesa-output) - Contigs
-- [QA](#qa) - QA information on assembly files
-- [Small subunit (16S) files](#ssu) - BLAST output files
-- [Cleaned reads](#trim-reads) - Cleaned reads
-- [Summaries](#summaries) - Output summaries
-- [Log files](#log) - Nextflow and HPC logs, software information, and error list if applicable
-- [Process logs](#process-logs) - Output and error logs for each process
-- [QC file checks](#qc-file-checks) - Process output quality checks to determine pipline continuation
-
-# Output File Structure
-
-_Note: Output file structure is based on the output path given to `--outdir`._
-
-_Note: \<SampleName\> is parsed from input FastQ filenames and excludes everything after \_{R1,R2}._
-
-_Note: \<Assembler\> is the name of the assembler (SPAdes, SKESA) given to `--assembler`. \[Default: SPAdes\]_
-
-| Output Directory                                         | Filename                                               | Explanation                                                                            |
-| -------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| <a id="annot">Annotation</a>                             |                                                        | **Annotation files**                                                                   |
-| Annotation/Prokka                                        | \<SampleName\>-\<Assembler\>.gbk                       | Genbank file created by Prokka                                                         |
-| <a id="asm">Assembly</a>                                 |                                                        | **Assembly files**                                                                     |
-|                                                          | \<SampleName\>-\<Assembler\>.fna                       | Corrected assembly                                                                     |
-| <a id="spades-output">Assembly/SPAdes/\<SampleName\></a> |                                                        | **SPAdes Assembly files**                                                              |
-|                                                          | contigs.fasta                                          | Assembled contigs from SPAdes                                                          |
-|                                                          | params.txt.gz                                          | Parameters used with SPAdes                                                            |
-|                                                          | spades.log.gz                                          | Log information from SPAdes                                                            |
-|                                                          | assembly_graph_with_scaffolds.gfa                      | Contains SPAdes assembly graph and scaffolds paths                                     |
-|                                                          | \<SampleName\>-\<Assembler\>.InDels-corrected.cnt.tsv  | Each line represents number of corrected InDels (per correction round)                 |
-|                                                          | \<SampleName\>-\<Assembler\>.SNPs-corrected.cnt.tsv    | Each line represents number of corrected SNPs (per correction round)                   |
-| <a id="skesa-output">Assembly/SKESA/\<SampleName\></a>   |                                                        | **SKESA Assembly files**                                                               |
-|                                                          | contigs.fasta                                          | Assembled contigs from SKESA                                                           |
-| <a id="qa">Assembly/QA</a>                               |                                                        | **Quality Assurance files**                                                            |
-| Assembly/QA/\<SampleName\>                               |                                                        | **Output directory for each \<SampleName\>**                                           |
-|                                                          | \<SampleName\>-\<Assembler\>.CleanedReads-Bases.tsv    | Number of cleaned bases                                                                |
-|                                                          | \<SampleName\>-\<Assembler\>.GenomeCoverage.tsv        | Genome Coverage                                                                        |
-|                                                          | \<SampleName\>-\<Assembler\>.QuastSummary.tsv          | Quast Summary                                                                          |
-| <a id="ssu">SSU</a>                                      |                                                        | **Small Subunit (16S) files**                                                          |
-|                                                          | 16S-top-species.tsv                                    | Top BlAST hit results                                                                  |
-|                                                          | 16S.\<SampleName\>-\<Assembler\>.fa                    | Top BLAST hit in FastA format                                                          |
-| SSU/BLAST                                                |                                                        | **BLAST output files**                                                                 |
-|                                                          | \<SampleName\>-\<Assembler\>.blast.tsv.gz              | BLAST output                                                                           |
-| <a id="trim-reads">CleanedReads</a>                      |                                                        | **Trimmed Reads**                                                                      |
-|                                                          | \<SampleName\>\_{R1,R2}.paired.fq.gz                   | Cleaned paired reads                                                                   |
-|                                                          | \<SampleName\>.single.fq.gz                            | Cleaned single read                                                                    |
-| CleanedReads/FLASH                                       |                                                        | **FLASH Output**                                                                       |
-|                                                          | \<SampleName\>.clean-reads.tsv                         | Number of cleaned reads                                                                |
-|                                                          | \<SampleName\>.overlap.tsv                             | Number of overlapping reads                                                            |
-| CleanedReads/Trimmomatic                                 |                                                        | **Trimmomatic Output**                                                                 |
-|                                                          | \<SampleName\>.trimmomatic.tsv                         | Discarded reads and singletons                                                         |
-| CleanedReads/Hostile                                     |                                                        | **Hostile host removal output**                                                        |
-|                                                          | \<SampleName\>.Hostile-Removal.tsv                     | Summary of discarded reads and number of reads for downstream processes                |
-| CleanedReads/SRA-Human-Scrubber                          |                                                        | **SRA Human Scrubber host removal output**                                             |
-|                                                          | \<SampleName\>.SRA-Human-Scrubber-Removal.tsv          | Summary of discarded reads and number of reads for downstream processes                |
-| <a id="summaries">Summaries</a>                          |                                                        | **Output Summaries**                                                                   |
-|                                                          | Summary.16S.tsv                                        | Top BLAST hit results                                                                  |
-|                                                          | Summary.Assemblies.tsv                                 | Contig summary information                                                             |
-|                                                          | Summary.BUSCO.tsv                                      | Intra-contig gene information using BUSCO                                              |
-|                                                          | Summary.GTDB-Tk.tsv                                    | Contig taxonomic classification using GTDB-Tk                                          |
-|                                                          | Summary.CleanedReads-AlnStats.tsv                      | Basepairs of Paired Reads and Singnleton Reads mapped                                  |
-|                                                          | Summary.CleanedReads-Bases.tsv                         | Number of cleaned bases                                                                |
-|                                                          | Summary.GenomeCoverage.tsv                             | Genome Coverage                                                                        |
-|                                                          | Summary.MLST.tsv                                       | MLST result                                                                            |
-|                                                          | Summary.PhiX.tsv                                       | Information on the removal of PhiX reads                                               |
-|                                                          | Summary.QC_File_Checks.tsv                             | QC file checks                                                                         |
-| <a id="taxonomy">Taxonomy</a>                            |                                                        | **Taxonomic Classification**                                                           |
-| Taxonomy/kraken/\<SampleName\>                           |                                                        | **Kraken Output for each \<SampleName\>**                                              |
-|                                                          | \<SampleName\>.kraken_output.tsv.gz                    | Full Kraken output                                                                     |
-|                                                          | \<SampleName\>.kraken_summary.tsv                      | Summarized unclassified, top 2 genus and top 2 species information                     |
-| Taxonomy/kraken2/\<SampleName\>                          |                                                        | **Kraken2 Output for each \<SampleName\>**                                             |
-|                                                          | \<SampleName\>.kraken_output.tsv.gz                    | Full Kraken2 output                                                                    |
-|                                                          | \<SampleName\>.kraken2_summary.tsv                     | Summarized unclassified, top 2 genus and top 2 species information                     |
-| <a id="log">pipeline_info</a>                            |                                                        | **Log files**                                                                          |
-|                                                          | ASM\_\<Number of Samples\>.o\<Submission Number\>      | HPC output report                                                                      |
-|                                                          | ASM\_\<Number of Samples\>.e\<Submission Number\>      | HPC error report                                                                       |
-|                                                          | pipeline_dag.\<YYYY-MM-DD_HH-MM-SS\>.html              | Direct acrylic graph of workflow                                                       |
-|                                                          | report.\<YYYY-MM-DD_HH-MM-SS\>.html                    | Nextflow summary report of workflow                                                    |
-|                                                          | timeline.\<YYYY-MM-DD_HH-MM-SS\>.html                  | Nextflow execution timeline of each process in workflow                                |
-|                                                          | trace.\<YYYY-MM-DD_HH-MM-SS\>.txt                      | Nextflow execution tracing of workflow, which includes percent of CPU and memory usage |
-|                                                          | software_versions.yml                                  | Versions of software used in each process                                              |
-|                                                          | errors.tsv                                             | Errors file if errors exist and summarizes the errors                                  |
-| <a id="process-logs">pipeline_info/process_logs</a>      |                                                        | **Process log files**                                                                  |
-|                                                          | \<SampleName\>.\<ProcessName\>.command.out             | Standard output for \<SampleName\> during process \<ProcessName\>                      |
-|                                                          | \<SampleName\>.\<ProcessName\>.command.err             | Standard error for \<SampleName\> during process \<ProcessName\>                       |
-| <a id="qc-file-checks">pipeline_info/qc_file_checks</a>  |                                                        | **QC file check log files**                                                            |
-|                                                          | \<SampleName\>.Raw_Initial_FastQ_Files.tsv             | Raw Initial FastQ File Check                                                           |
-|                                                          | \<SampleName\>.PhiX_Genome.tsv                         | PhiX Genome Check                                                                      |
-|                                                          | \<SampleName\>.PhiX-removed_FastQ_Files.tsv            | PhiX-removed FastQ File Check                                                          |
-|                                                          | \<SampleName\>.Adapters_FastA.tsv                      | Adapters FastA File Check                                                              |
-|                                                          | \<SampleName\>.Adapter-removed_FastQ_Files.tsv         | Adapter-removed FastQ File Check                                                       |
-|                                                          | \<SampleName\>.Non-overlapping_FastQ_Files.tsv         | Non-overlapping FastQ File Check                                                       |
-|                                                          | \<SampleName\>.Raw_Assembly_File.tsv                   | Raw Assembly File Check                                                                |
-|                                                          | \<SampleName\>.Filtered_Assembly_File.tsv              | Filtered Assembly File Check                                                           |
-|                                                          | \<SampleName\>.Binary_PE_Alignment_Map_File.tsv        | Binary Paired-End Alignment Map File Check                                             |
-|                                                          | \<SampleName\>.Polished_Assembly_File.tsv              | Polished Assembly File Check                                                           |
-|                                                          | \<SampleName\>.Final_Corrected_Assembly_FastA_File.tsv | Final Corrected Assembly FastA File Check                                              |
-|                                                          | \<SampleName\>.Binary_SE_Alignment_Map_File.tsv        | Binary Singletons Alignment Map File Check                                             |
-|                                                          | \<SampleName\>.Annotated_GenBank_File.tsv              | Annotated GenBank File Check                                                           |
-|                                                          | \<SampleName\>.SSU_Extracted_File.tsv                  | SSU Extracted File Check                                                               |
-|                                                          | \<SampleName\>.16S_BLASTn_Output_File.tsv              | 16S BLASTn Output File Check                                                           |
-|                                                          | \<SampleName\>.Filtered_16S_BLASTn_File.tsv            | Filtered 16S BLASTn File Check                                                         |
+</details>
