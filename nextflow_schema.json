@@ -809,7 +809,7 @@
                 },
                 "create_excel_outputs": {
                     "type": "boolean",
-                    "description": "Convert TSV files to Excel files while retaining TSV files. Also creates a summary workbook where each summary output is placed into a separate sheet within the workbook.",
+                    "description": "Convert tab-separated value (TSV) files to Excel spreadsheet files (XLSX) while retaining TSV files. Also creates a summary workbook where each summary output is placed into a separate sheet within the workbook.",
                     "hidden": true
                 },
                 "publish_dir_mode": {
