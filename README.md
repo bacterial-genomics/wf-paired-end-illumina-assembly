@@ -166,9 +166,9 @@ nextflow run \
 The most well-tested and supported is a Univa Grid Engine (UGE) job scheduler with Singularity for dependency handling.
 
 1. UGE/SGE
-   - Additional tips for UGE processing are [here](docs/HPC-UGE-scheduler.md).
+    - Additional tips for UGE processing are [here](docs/HPC-UGE-scheduler.md).
 2. No Scheduler
-   - It has also been confirmed to work on desktop and laptop environments without a job scheduler using Docker with more tips [here](docs/local-device.md).
+    - It has also been confirmed to work on desktop and laptop environments without a job scheduler using Docker with more tips [here](docs/local-device.md).
 
 ## Output
 
