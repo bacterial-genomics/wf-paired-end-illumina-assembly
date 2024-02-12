@@ -11,11 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [#52](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/52) Concatenate kraken (1 and 2) output summaries and place into the output Summaries directory (@gregorysprenger).
 - [#47](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/47) Added RDP Classifier as another tool to classify 16S ribosomal RNA (@taylorpaisie).
 - [#51](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/51) Added header to BLAST output file before it is compressed (@gregorysprenger).
+- [#35](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/35) Added parameters to customize Trimmomatic parameters (@gregorysprenger).
+-
 
 ### `Fixed`
 
+- [#50](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/50) Host removal now runs all samples, QC file checks are implemented for host removal, fixed minimum file size param for host removal, and fixed kraken2 database issue (@gregorysprenger).
+
 ### `Updated`
 
+- [#55](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/55) Replace linting GitHub workflows with MegaLinter to allow for more linters to be used, autofix issues and commit, etc. (@gregorysprenger).
+- [#45](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/45) Updated output documentation to allow for better readability and interpretation (@gregorysprenger).
 - [#56](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/56) Change how images are displayed based on light and dark themes due to GitHub changes (@gregorysprenger).
 
 ### `Deprecated`

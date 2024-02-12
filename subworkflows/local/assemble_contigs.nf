@@ -67,11 +67,11 @@ workflow ASSEMBLE_CONTIGS {
             ch_cleaned_reads
         )
         ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS_SKESA.out.versions)
-        ch_contigs = qcfilecheck(
+        ch_contigs  = qcfilecheck(
                         "ASSEMBLE_CONTIGS_SKESA",
                         ASSEMBLE_CONTIGS_SKESA.out.qc_filecheck,
                         ASSEMBLE_CONTIGS_SKESA.out.contigs
-                    )
+                      )
 
         // PROCESS: Filter contigs based on length, coverage, GC skew, and compositional complexity
         FILTER_CONTIGS_BIOPYTHON (
@@ -79,7 +79,7 @@ workflow ASSEMBLE_CONTIGS {
         )
         ch_versions = ch_versions.mix(FILTER_CONTIGS_BIOPYTHON.out.versions)
 
-        // PROCESS: Use BWA/Samtools/Pilon to correct contigs with cleaned PE reads
+        // PROCESS: Create BAM file
         MAP_CONTIGS_BWA (
             ch_cleaned_reads.join(FILTER_CONTIGS_BIOPYTHON.out.uncorrected_contigs)
         )
@@ -129,11 +129,11 @@ workflow ASSEMBLE_CONTIGS {
         ch_versions = ch_versions.mix(POLISH_ASSEMBLY_BWA_PILON.out.versions)
 
         // Collect output files
-        ch_bam_files = qcfilecheck(
-                            "POLISH_ASSEMBLY_BWA_PILON",
-                            POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck,
-                            POLISH_ASSEMBLY_BWA_PILON.out.bam
-                        )
+        ch_bam_files      = qcfilecheck(
+                                "POLISH_ASSEMBLY_BWA_PILON",
+                                POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck,
+                                POLISH_ASSEMBLY_BWA_PILON.out.bam
+                            )
         ch_assembly_file  = qcfilecheck(
                                 "POLISH_ASSEMBLY_BWA_PILON",
                                 POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck,

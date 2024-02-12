@@ -1,13 +1,15 @@
 root = true
 
+# Settings for all files
 [*]
 charset = utf-8
+indent_size = 4
 end_of_line = lf
+indent_style = space
 insert_final_newline = true
 trim_trailing_whitespace = true
-indent_size = 4
-indent_style = space
 
+# Set indent size to 2 for these files
 [*.{md,yml,yaml,html,css,scss,js,cff,nf,sh,uge-nextflow}]
 indent_size = 2
 
@@ -15,22 +17,20 @@ indent_size = 2
 [/modules/nf-core/**]
 charset = unset
 end_of_line = unset
+indent_size = unset
+indent_style = unset
 insert_final_newline = unset
 trim_trailing_whitespace = unset
-indent_style = unset
-indent_size = unset
 
-# Ignore all singularity.cache
-[/assets/singularity.cache/**]
+# Ignore files in assets directory
+[/assets/**]
 charset = unset
 end_of_line = unset
+indent_size = unset
+indent_style = unset
 insert_final_newline = unset
 trim_trailing_whitespace = unset
-indent_style = unset
-indent_size = unset
 
-[/assets/email*]
-indent_size = unset
-
+# Ignore LICENSE
 [LICENSE]
 indent_size = unset
