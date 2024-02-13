@@ -2,19 +2,27 @@ lint:
   actions_awsfulltest: False
   actions_awstest: False
   files_exist:
+    - .gitignore
     - aws.config
+    - pyproject.toml
+    - .prettierignore
     - conf/igenomes.config
     - assets/multiqc_config.yml
+    - .github/workflows/linting.yml
     - .github/workflows/awstest.yml
     - .github/workflows/awsfulltest.yml
+    - .github/workflows/linting_comment.yml
     - lib/WorkflowWf-paired-end-illumina-assembly.groovy
     - assets/nf-core-wf-paired-end-illumina-assembly_logo_light.png
-    - docs/images/nf-core-wf-paired-end-illumina-assembly_logo_light.png
     - docs/images/nf-core-wf-paired-end-illumina-assembly_logo_dark.png
+    - docs/images/nf-core-wf-paired-end-illumina-assembly_logo_light.png
   files_unchanged:
     - LICENSE
+    - .gitignore
+    - pyproject.toml
     - docs/README.md
     - pyproject.toml
+    - .prettierignore
     - .github/CONTRIBUTING.md
     - assets/email_template.txt
     - lib/NfcoreTemplate.groovy
