@@ -19,6 +19,7 @@
     "no-emphasis-as-heading": {
         "punctuation": ".,;:!。，；:"
     },
+    "no-blanks-blockquote": false,
     "no-inline-html": false,
     "no-trailing-punctuation": {
         "punctuation": ".,;:!。，；:"
