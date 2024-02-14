@@ -71,7 +71,9 @@ nextflow run \
 
 This workflow assembles bacterial isolate genomes from paired-end Illumina FastQ files. Post-assembly contig correction is performed, and a variety of quality assessment processes are recorded throughout the workflow.
 
-This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed cultures) sequenced with whole genome (WGS) or selective whole genome (SWGA) library preparation strategies. It is inappropriate for metagenomics analysis. The data files must be paired read sets (not single ended) and can come from any Illumina sequencing instrument which generates a FastQ file format (e.g., iSeq, HiSeq, MiSeq, NextSeq, NovaSeq). The read set files can be obtained from an external source, local storage device, or sequencing instrument. Other sequencing manufacturers such as Ion Torrent, PacBio, Roche 454, and Nanopore generate data files that cannot be directly used with this procedure.
+This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed cultures) sequenced with whole genome (WGS) or selective whole genome (SWGA) library preparation strategies. It is inappropriate for metagenomics analysis. The data files must be paired read sets (not single ended) and can come from any Illumina sequencing instrument which generates a FastQ file format (e.g., iSeq, HiSeq, MiSeq, NextSeq, NovaSeq).
+
+The read set files can be obtained from an external source, local storage device, or sequencing instrument. Other sequencing manufacturers such as Ion Torrent, PacBio, Roche 454, and Nanopore generate data files that cannot be directly used with this procedure.
 
 > [!CAUTION]
 > Due to the shorter DNA fragments of Illumina instruments, reads may be processed as singletons. It is recommended to check the DNA fragment length distribution using TapeStation or BioAnalyzer before sequencing.
@@ -85,7 +87,13 @@ This procedure can be used for all bacterial isolates (i.e., axenic, non-mixed c
 ## Usage
 
 ```bash
-nextflow run bacterial-genomics/wf-paired-end-illumina-assembly -r main -profile <docker|singularity> --input <input directory|samplesheet> --outdir <directory for results> --assembler <spades|skesa>
+nextflow run \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
+  -r main \
+  -profile <docker|singularity> \
+  --input <input directory|samplesheet> \
+  --outdir <directory for results> \
+  --assembler <spades|skesa>
 ```
 
 Please see the [usage documentation](docs/usage.md) for further information on using this workflow.
@@ -102,16 +110,17 @@ These are the most pertinent options for this workflow:
   ============================================
         Input/Output
   ============================================
-  --input                 Path to input data directory containing FastQ assemblies or samplesheet. Recognized extensions are: .fastq and .fq with optional gzip compression (.gz)
+  --input                 Path to input data directory containing FastQ assemblies or samplesheet.
+                          Recognized extensions are: .fastq and .fq with optional gzip compression (.gz)
 
   --outdir                The output directory where the results will be saved.
 
   ============================================
         Container platforms
   ============================================
-  -profile singularity    Use Singularity images to run the workflow. Will pull and convert Docker images from Dockerhub if not locally available.
+  -profile singularity    Use Singularity images or auto-convert Docker images to run the workflow.
 
-  -profile docker         Use Docker images to run the workflow. Will pull images from Dockerhub if not locally available.
+  -profile docker         Use Docker images to run the workflow.
 
   ============================================
         Optional assemblers
@@ -121,9 +130,11 @@ These are the most pertinent options for this workflow:
   ============================================
         Reference files
   ============================================
-  --phix_reference        Path to PhiX reference file in FastA format. Recognized extensions are: {.fasta, .fas, .fa, .fna}. [Default: PhiX_NC_001422.1.fasta]
+  --phix_reference        Path to PhiX reference file in FastA format.
+                          Recognized extensions are: (fasta|fas|fa|fna). [Default: PhiX_NC_001422.1.fasta]
 
-  --adapters_reference    Path to adapter reference file in FastA format. Recognized extensions are: {.fasta, .fas, .fa, .fna}. [Default: adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas]
+  --adapters_reference    Path to adapter reference file in FastA format. Recognized extensions are: (fasta|fas|fa|fna).
+                          [Default: dapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas]
 
 ```
 
@@ -135,18 +146,29 @@ PhiX reference [NC_001422.1](https://www.ncbi.nlm.nih.gov/nuccore/NC_001422.1) c
   ============================================
         Optional databases
   ============================================
-  --kraken1_db         Path to a local directory, archive file, or a URL to compressed tar archive that contain files `database.{idx,kdb}` and `taxonomy/{names,nodes}.dmp`. [Default: MiniKraken 8GB]
+  --kraken1_db         Path to a local directory, archive file, or a URL to a compressed tar archive
+                       that contain files `database.{idx,kdb}` and `taxonomy/{names,nodes}.dmp`.
+                       [Default: MiniKraken 8GB]
 
-  --kraken2_db         Path to a local directory, archive file, or a URL to compressed tar archive that contain `{hash,opts,taxo}.k2d` files. [Default: Kraken2 Standard 8GB]
+  --kraken2_db         Path to a local directory, archive file, or a URL to a compressed tar archive
+                       that contain `{hash,opts,taxo}.k2d` files.
+                       [Default: Kraken2 Standard 8GB]
 
-  --blast_db           Path to a local directory, archive file, or a URL to compressed tar archive that contains BLAST 16S ribosomal RNA files. [Default: NCBI's 16S ribosomal RNA database]
+  --blast_db           Path to a local directory, archive file, or a URL to a compressed tar archive
+                       that contains BLAST 16S ribosomal RNA files.
+                       [Default: NCBI's 16S ribosomal RNA database]
 
-  --gtdb_db            Path to a local directory, archive file, or a URL to compressed tar archive that contains the GTDB database. [Default: NaN]
+  --gtdb_db            Path to a local directory, archive file, or a URL to a compressed tar archive
+                       that contains the GTDB database.
+                       [Default: NaN]
 
-  --busco_db           Path to a local directory, archive file, or a URL to compressed tar archive that contains BUSCO lineages. Can either be a lineage dataset or entire BUSCO database. [Default: NaN]
+  --busco_db           Path to a local directory, archive file, or a URL to a compressed tar archive
+                       that contains BUSCO lineages. Can either be a lineage dataset or entire BUSCO database.
+                       [Default: NaN]
 ```
 
-_If user does not specify inputs for parameters with a default set to `NaN`, these options will not be performed during workflow analysis._
+> [!NOTE]
+> _If user does not specify inputs for parameters with a default set to `NaN`, these options will not be performed during workflow analysis._
 
 ### Additional parameters
 

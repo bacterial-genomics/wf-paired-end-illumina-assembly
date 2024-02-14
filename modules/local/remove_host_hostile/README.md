@@ -11,7 +11,9 @@ This process uses the [Hostile](https://github.com/bede/hostile) package to alig
 
 - If a user has a different background genome to remove, for example, perhaps the bacterial pathogen was collected from a brown common sewer rat from New York City (_Rattus norvegicus_) or a Holstein dairy cow in the USA (_Bos taurus_), a non-default reference genome can be supplied. For Illumina read removal with a non-default reference genome, a user must specify a path prefix of all 6 of the bowtie2 index files-- not a FastA file.
 
-- To avoid removing reads that match to both the target pathogen and the host and maximize retention of the target pathogen, `hostile` supplies the utilities to compare both at the same time and form a custom reference file [here](https://github.com/bede/hostile#masking-reference-genomes). A clever approach in Bede Constantinides preprint paper was to gather [all 985](https://github.com/bede/hostile/blob/main/paper/supplementary-table-2.tsv) reference grade bacterial genomes from [the FDA ARGOS database](https://www.ncbi.nlm.nih.gov/bioproject/231221) into a large FastA for masking the combined T2T-CHM and IPD-IMGT/HLA human genome reference, which is available [here](https://objectstorage.uk-london-1.oraclecloud.com/n/lrbvkel2wjot/b/human-genome-bucket/o/human-t2t-hla-argos985.tar).
+- To avoid removing reads that match to both the target pathogen and the host and maximize retention of the target pathogen, `hostile` supplies the utilities to compare both at the same time and form a custom reference file [here](https://github.com/bede/hostile#masking-reference-genomes).
+
+A clever approach in Bede Constantinides preprint paper was to gather [985](https://github.com/bede/hostile/blob/main/paper/supplementary-table-2.tsv) reference grade bacterial genomes from [the FDA ARGOS database](https://www.ncbi.nlm.nih.gov/bioproject/231221) into a large FastA for masking the combined T2T-CHM and IPD-IMGT/HLA human genome reference, which is available [here](https://objectstorage.uk-london-1.oraclecloud.com/n/lrbvkel2wjot/b/human-genome-bucket/o/human-t2t-hla-argos985.tar).
 
 ## Software Citation
 

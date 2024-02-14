@@ -6,7 +6,11 @@ This process uses Trimmomatic to perform some of the read cleaning steps to remo
 
 ## Adapter clipping
 
-- Trimmomatic supplies a multi-record FastA sequence of known Illumina adapter sequences [here](https://github.com/usadellab/Trimmomatic/tree/main/adapters) and some have concatenated all of those into a single adapter FastA file to identify and remove sequence reads containing any known adapters. The sequences they provide are just the adapter without barcodes. However, they do not supply sequences for some other kits that I have dealt with (e.g., Rubicon Genomics ThruPLEX, NEBNext). I used NCBI's UniVec database [here](https://www.ncbi.nlm.nih.gov/tools/vecscreen/univec/) which contains Illumina adapter sequences and a bunch of other unrelated sequences to form a more comprehensive multi-FastA adapter file, which includes the exact barcode names as well in their deflines for identifying which specific adapter(s) were removed, and we use [this file](https://github.com/chrisgulvik/genomics_scripts/blob/master/examples/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas.gz) for adapter removal. The Illumina instruments should be detecting and removing perfect matches, but when there is a sequencing error or two, it can end up in the FastQ output. So, this Illumina adapter identification and removal process allows for up to 2 mismatches from each (roughly 50-70 bp lengths) sequence.
+Trimmomatic supplies a multi-record FastA sequence of known Illumina adapter sequences [here](https://github.com/usadellab/Trimmomatic/tree/main/adapters) and some have concatenated all of those into a single adapter FastA file to identify and remove sequence reads containing any known adapters. The sequences they provide are just the adapter without barcodes. However, they do not supply sequences for some other kits that I have dealt with (e.g., Rubicon Genomics ThruPLEX, NEBNext).
+
+I used NCBI's UniVec database [here](https://www.ncbi.nlm.nih.gov/tools/vecscreen/univec/) which contains Illumina adapter sequences and other unrelated sequences to form a more comprehensive multi-FastA adapter file, which includes the exact barcode names as well in their deflines for identifying which specific adapter(s) were removed. [This file](https://github.com/chrisgulvik/genomics_scripts/blob/master/examples/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas.gz) is used for adapter removal.
+
+The Illumina instruments should be detecting and removing perfect matches, but when there is a sequencing error or two, it can end up in the FastQ output. So, this Illumina adapter identification and removal process allows for up to 2 mismatches from each (roughly 50-70 bp lengths) sequence.
 
 ## Quality trimming
 
@@ -26,9 +30,10 @@ This process uses Trimmomatic to perform some of the read cleaning steps to remo
 
 Each of these trimming effects/outcomes are tallied and logged:
 
-1. total discarded read count
-1. number of forward reads that lack a high quality R2 sister read
-1. number of reverse reads that lack a high quality R1 sister read
-1. total number of broken read pairs saved as singletons
+- Total discarded read count
+- Number of forward reads that lack a high quality R2 sister read
+- Number of reverse reads that lack a high quality R1 sister read
+- Total number of broken read pairs saved as singletons
 
-- it does not yet list which specific adapters (by name) were removed but perhaps in the future it will [here](https://github.com/usadellab/Trimmomatic/issues/9)
+> [!NOTE]
+> Trimmomatic does not list which specific adapters (by name) were removed but there is a [feature request](https://github.com/usadellab/Trimmomatic/issues/9) for this to be implemented within Trimmomatic.
