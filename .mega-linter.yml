@@ -16,6 +16,8 @@ GITHUB_COMMENT_REPORTER: true
 JSON_PRETTIER_ARGUMENTS: "--print-width 120"
 YAML_PRETTIER_ARGUMENTS: "--print-width 120"
 MARKDOWN_MARKDOWN_LINK_CHECK_ARGUMENTS: "--quiet"
+REPOSITORY_GITLEAKS_CONFIG_FILE: ".github/linters/gitleaks.toml"
+MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE: (usage.md)
 
 # Directories to ignore when linting
 EXCLUDED_DIRECTORIES:
@@ -23,9 +25,6 @@ EXCLUDED_DIRECTORIES:
   - "assets"
   - ".github"
   - ".devcontainer"
-
-# Files to ignore when linting
-FILTER_REGEX_EXCLUDE: (bin/.*\.fasta|bin/.*\.fas)
 
 # Make errors for these linters show as warnings
 DISABLE_ERRORS_LINTERS:

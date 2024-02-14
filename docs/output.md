@@ -57,7 +57,8 @@ Input files must meet a minimum file size to be processed within this pipeline. 
 
 ### Host read removal
 
-Host read removal can be skipped or performed by Hostile and/or NCBI SRA-Human-Scrubber by specifying `--host_remove {both,hostile,sra-human-scrubber,skip}`. For SRA-Human-Scrubber, reads are repaired using BBTools to discard broken sister reads. Information about the number of reads discarded and retained are saved in the output directory. Please see the [host removal using Hostile documentation](../modules/local/remove_host_hostile/README.md) and [host removal using SRA-Human-Scrubber documentation](../modules/local/remove_host_sra_human_scrubber/README.md) for more information.
+Host read removal can be skipped or performed by Hostile and/or NCBI SRA-Human-Scrubber by specifying `--host_remove {both,hostile,sra-human-scrubber,skip}`. For SRA-Human-Scrubber, reads are repaired using BBTools to discard broken sister reads. Information about the number of reads discarded and retained are saved in the output directory.
+Please see the [host removal using Hostile documentation](../modules/local/remove_host_hostile/README.md) and [host removal using SRA-Human-Scrubber documentation](../modules/local/remove_host_sra_human_scrubber/README.md) for more information.
 
 <details markdown="1">
 <summary><strong>QC Steps</strong></summary>
@@ -106,7 +107,8 @@ PhiX reads are commonly used as a positive control for Illumina sequencing. Duri
 
 ### Adapter clipping and quality trimming
 
-Illumina instruments can detect and remove adapter sequences, but sometimes adapters can end up in the FastQ output due to sequencing errors. A default [adapters reference file](../bin/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas) is used within this pipeline. Trimmomatic also performs quality trimming, where broken sister reads are retained for downstream processes. Please see the [adapter clipping and quality trimming using Trimmomatic documentation](../modules/local/trim_reads_trimmomatic/README.md) for more information.
+Illumina instruments can detect and remove adapter sequences, but sometimes adapters can end up in the FastQ output due to sequencing errors. A default [adapters reference file](../bin/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas) is used within this pipeline. Trimmomatic also performs quality trimming, where broken sister reads are retained for downstream processes.
+Please see the [adapter clipping and quality trimming using Trimmomatic documentation](../modules/local/trim_reads_trimmomatic/README.md) for more information.
 
 <details markdown="1">
 <summary><strong>QC Steps</strong></summary>

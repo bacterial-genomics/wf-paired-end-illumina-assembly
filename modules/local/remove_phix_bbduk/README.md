@@ -2,7 +2,9 @@
 
 ## Introduction
 
-The bacteriophage PhiX174 is a commonly added spike-in sequence for Illumina sequencing. When added, it serves as a positive control for the whole sequencing run. Many Illumina instruments align reads against this well-known short sequence (thanks to [Fred Sanger](https://pubmed.ncbi.nlm.nih.gov/731693/))to identify SNPs as a proxy for how reliable the unknown samples sequences are. At one point, reported [here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4511556/), the forgetful removal of this resulted in >1,000 genomes contaminated with it on NCBI and 10% of the genomes published in the literature. This artificially added sequence, when retained, will form overlaps of reads during assembly and join biological sample DNA that are not contiguous but would otherwise seem to be from the raw data. These PhiX fragments therefore must be removed to form a higher quality assembly.
+The bacteriophage PhiX174 is a commonly added spike-in sequence for Illumina sequencing. When added, it serves as a positive control for the whole sequencing run. Many Illumina instruments align reads against this well-known short sequence (thanks to [Fred Sanger](https://pubmed.ncbi.nlm.nih.gov/731693/))to identify SNPs as a proxy for how reliable the unknown samples sequences are.
+
+At one point, reported [here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4511556/), the forgetful removal of this resulted in >1,000 genomes contaminated with it on NCBI and 10% of the genomes published in the literature. This artificially added sequence, when retained, will form overlaps of reads during assembly and join biological sample DNA that are not contiguous but would otherwise seem to be from the raw data. Therefore PhiX fragments must be removed to form a higher quality assembly.
 
 ## PhiX removal
 

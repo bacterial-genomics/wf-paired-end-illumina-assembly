@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Fixed`
 
 - [#50](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/50) Host removal now runs all samples, QC file checks are implemented for host removal, fixed minimum file size param for host removal, and fixed kraken2 database issue (@gregorysprenger).
+- [#67](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/67) Added configuration file for gitleaks so that FastA files are ignored when checking for security tokens with MegaLinter (@gregorysprenger).
 
 ### `Updated`
 
