@@ -1,0 +1,28 @@
+{
+    "emphasis-style": {
+        "style": "consistent"
+    },
+    "heading-style": {
+        "style": "consistent"
+    },
+    "line-length": {
+        "code_block_line_length": 120,
+        "code_blocks": true,
+        "heading_line_length": 80,
+        "headings": true,
+        "line_length": 500,
+        "tables": false
+    },
+    "no-duplicate-heading": {
+        "siblings_only": true
+    },
+    "no-emphasis-as-heading": {
+        "punctuation": ".,;:!。，；:"
+    },
+    "no-blanks-blockquote": false,
+    "no-inline-html": false,
+    "no-trailing-punctuation": {
+        "punctuation": ".,;:!。，；:"
+    },
+    "single-trailing-newline": true
+}

@@ -9,9 +9,10 @@ process READ_CLASSIFY_KRAKEN_ONE {
     path database
 
     output:
-    path("*.kraken_{output.tab,summary}*")
+    path("*.kraken_output.tsv.gz")
+    path("*.kraken_summary.tsv")  , emit: summary
     path(".command.{out,err}")
-    path("versions.yml")                   , emit: versions
+    path("versions.yml")          , emit: versions
 
     shell:
     '''
@@ -33,16 +34,16 @@ process READ_CLASSIFY_KRAKEN_ONE {
       kraken-report \
         --db !{database} \
         !{meta.id}_kraken.output \
-        > kraken.tab 2>&1 | tr '^M' '\\n' 1>&2
+        > kraken.tsv 2>&1 | tr '^M' '\\n' 1>&2
 
       msg "INFO: Summarizing Kraken1"
       echo -e "% Reads\t# Reads\tUnclassified\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads" \
         > "!{meta.id}.kraken_summary.tsv"
 
-      summarize_kraken 'kraken.tab' >> "!{meta.id}.kraken_summary.tsv"
+      summarize_kraken 'kraken.tsv' >> "!{meta.id}.kraken_summary.tsv"
 
-      mv kraken.tab "!{meta.id}.kraken_output.tab"
-      gzip "!{meta.id}.kraken_output.tab"
+      mv kraken.tsv "!{meta.id}.kraken_output.tsv"
+      gzip "!{meta.id}.kraken_output.tsv"
     fi
 
     # Get process version information

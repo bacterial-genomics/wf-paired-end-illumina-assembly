@@ -2,7 +2,7 @@
 
 summarize_kraken()
 {
-  #BASE=$(basename $1 _kraken.tab)
+  #BASE=$(basename $1 _kraken.tsv)
   #echo -en "$BASE\t"
 
   # report unclassified

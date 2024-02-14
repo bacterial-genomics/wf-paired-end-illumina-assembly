@@ -9,9 +9,8 @@ Please use the pre-filled template to save time.
 However, don't be put off by this template - other more general issues and suggestions are welcome!
 Contributions to the code are even more welcome ;)
 
-:::info
-If you need help using or modifying bacterial-genomics/wf-paired-end-illumina-assembly then the best place to ask is by creating a GitHub issue.
-:::
+> [!TIP]
+> If you need help using or modifying bacterial-genomics/wf-paired-end-illumina-assembly then the best place to ask is by creating a GitHub issue.
 
 ## Contribution workflow
 
