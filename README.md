@@ -146,25 +146,25 @@ PhiX reference [NC_001422.1](https://www.ncbi.nlm.nih.gov/nuccore/NC_001422.1) c
   ============================================
         Optional databases
   ============================================
-  --kraken1_db         Path to a local directory, archive file, or a URL to a compressed tar archive
-                       that contain files `database.{idx,kdb}` and `taxonomy/{names,nodes}.dmp`.
-                       [Default: MiniKraken 8GB]
+  --kraken1_db          Path to a local directory, archive file, or a URL to a compressed tar archive
+                        that contain files `database.{idx,kdb}` and `taxonomy/{names,nodes}.dmp`.
+                        [Default: MiniKraken 8GB]
 
-  --kraken2_db         Path to a local directory, archive file, or a URL to a compressed tar archive
-                       that contain `{hash,opts,taxo}.k2d` files.
-                       [Default: Kraken2 Standard 8GB]
+  --kraken2_db          Path to a local directory, archive file, or a URL to a compressed tar archive
+                        that contain `{hash,opts,taxo}.k2d` files.
+                        [Default: Kraken2 Standard 8GB]
 
-  --blast_db           Path to a local directory, archive file, or a URL to a compressed tar archive
-                       that contains BLAST 16S ribosomal RNA files.
-                       [Default: NCBI's 16S ribosomal RNA database]
+  --blast_db            Path to a local directory, archive file, or a URL to a compressed tar archive
+                        that contains BLAST 16S ribosomal RNA files.
+                        [Default: NCBI's 16S ribosomal RNA database]
 
-  --gtdb_db            Path to a local directory, archive file, or a URL to a compressed tar archive
-                       that contains the GTDB database.
-                       [Default: NaN]
+  --gtdb_db             Path to a local directory, archive file, or a URL to a compressed tar archive
+                        that contains the GTDB database.
+                        [Default: NaN]
 
-  --busco_db           Path to a local directory, archive file, or a URL to a compressed tar archive
-                       that contains BUSCO lineages. Can either be a lineage dataset or entire BUSCO database.
-                       [Default: NaN]
+  --busco_db            Path to a local directory, archive file, or a URL to a compressed tar archive
+                        that contains BUSCO lineages. Can either be a lineage dataset or entire BUSCO database.
+                        [Default: NaN]
 ```
 
 > [!NOTE]
