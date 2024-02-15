@@ -625,6 +625,7 @@ workflow ASSEMBLY {
                     storeDir:   "${params.outdir}/Summaries"
                   )
 
+    ch_output_summary_files = ch_output_summary_files.mix(ch_rdp_summary)
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
