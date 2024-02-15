@@ -30,9 +30,12 @@ process INFILE_HANDLING_UNIX {
             msg "ERROR: Input file ${fastq} is corrupted and assembly cannot be performed!" >&2 \
             && exit 1
           )
-      elif [[ ${fastq} =~ .fastq ]] && [[ ! $(cat ${fastq} > /dev/null 2>&1) ]]; then
-        msg "ERROR: Input file ${fastq} is corrupted and assembly cannot be performed!" >&2
-        exit 1
+      elif [[ ${fastq} =~ .fastq ]]; then
+        cat ${fastq} > /dev/null 2>&1 || \
+        $(
+          msg "ERROR: Input file ${fastq} is corrupted and assembly cannot be performed!" >&2 \
+          && exit 1
+        )
       fi
 
       # Check if input FastQ file meets minimum file size requirement
