@@ -1,4 +1,4 @@
-process ASSEMBLY_CLASSIFY_CHECKM2 {
+process CLASSIFY_ASSEMBLY_CHECKM2 {
 
     label "process_high"
     tag { "${meta.id}" }
@@ -6,13 +6,14 @@ process ASSEMBLY_CLASSIFY_CHECKM2 {
 
     input:
     tuple val(meta), path(assembly)
-    path database
+    path(database)
 
     output:
+    tuple val(meta), path("${meta.id}.CheckM2_Report_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path("${meta.id}.CheckM2.report.tsv")     , emit: summary
+    path("${meta.id}.CheckM2.log.gz")
     path(".command.{out,err}")
-    path "checkm2.${meta.id}.log.gz"
-    path "versions.yml"                                   , emit: versions
-    tuple val(meta), path("checkm2.${meta.id}.report.tsv"), emit: checkm2_report_file
+    path("versions.yml")                                       , emit: versions
 
     shell:
     '''
@@ -31,17 +32,19 @@ process ASSEMBLY_CLASSIFY_CHECKM2 {
       !{params.checkm2_model} \
       --threads !{task.cpus}
 
+    # Move and rename report and log
+    mv -f checkm2/quality_report.tsv "!{meta.id}.CheckM2.report.tsv"
+    mv -f checkm2/checkm2.log "!{meta.id}.CheckM2.log"
+
     # Verify output file
-    file=checkm2/quality_report.tsv
-    if verify_minimum_file_size "${file}" 'CheckM2 Report File' '1c'; then
-      mv -f "${file}" checkm2.!{meta.id}.report.tsv
+    if verify_minimum_file_size "!{meta.id}.CheckM2.report.tsv" 'CheckM2 Report File' "!{params.min_filesize_checkm2_report}"; then
+      echo -e "!{meta.id}\tCheckM2 Report File\tPASS" > !{meta.id}.CheckM2_Report_File.tsv
     else
-      msg "ERROR: ${file} CheckM2 output report file missing" >&2
-      exit 1
+      echo -e "!{meta.id}\tCheckM2 Report File\tFAIL" > !{meta.id}.CheckM2_Report_File.tsv
     fi
 
     # Compress the logfile for compact storage
-    gzip -9f checkm2/checkm2.log
+    gzip -9f "!{meta.id}.CheckM2.log"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
