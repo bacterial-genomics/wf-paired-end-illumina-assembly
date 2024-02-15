@@ -76,14 +76,6 @@ include { BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON   } from "../modules/local/best_
 include { CLASSIFY_16S_RDP                        } from "../modules/local/classify_16S_rdp/main"
 include { SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON     } from "../modules/local/split_multifasta_assembly_biopython/main"
 
-include { GTDBTK_DB_PREPARATION_UNIX              } from "../modules/local/gtdbtk_db_preparation_unix/main"
-include { GTDBTK_CLASSIFYWF as QA_ASSEMBLY_GTDBTK } from "../modules/nf-core/gtdbtk/classifywf/main"
-include { BUSCO_DB_PREPARATION_UNIX               } from "../modules/local/busco_db_preparation_unix/main"
-include { BUSCO as QA_ASSEMBLY_BUSCO              } from "../modules/nf-core/busco/main"
-include { QA_ASSEMBLY_QUAST                       } from "../modules/local/qa_assembly_quast/main"
-//include { QA_ASSEMBLY_CAT                       } from "../modules/local/qa_assembly_cat/main"
-//include { QA_ASSEMBLY_CHECKM2                   } from "../modules/local/qa_assembly_checkm2/main"
-
 include { CONVERT_TSV_TO_EXCEL_PYTHON             } from "../modules/local/convert_tsv_to_excel_python/main"
 include { CREATE_EXCEL_RUN_SUMMARY_PYTHON         } from "../modules/local/create_excel_run_summary_python/main"
 
@@ -94,6 +86,7 @@ include { INPUT_CHECK                             } from "../subworkflows/local/
 include { HOST_REMOVAL                            } from "../subworkflows/local/host_removal"
 include { DOWNSAMPLE                              } from "../subworkflows/local/downsampling"
 include { ASSEMBLE_CONTIGS                        } from "../subworkflows/local/assemble_contigs"
+// include { ASSEMBLY_ASSESSMENT                     } from "../subworkflows/local/assembly_assessment"
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -627,7 +620,7 @@ workflow ASSEMBLY {
     // Concatenate RDP summaries
     ch_rdp_summary.map{meta, file -> file}
                   .collectFile(
-                    name: "Summary.RDP.tab",
+                    name: "Summary.RDP.tsv",
                     keepHeader: true,
                     storeDir:   "${params.outdir}/Summaries"
                   )
@@ -654,181 +647,27 @@ workflow ASSEMBLY {
                     storeDir:   "${params.outdir}/SSU"
                 )
                 .collectFile(
-                    name:       "Summary.16S.tab",
+                    name:       "Summary.16S.tsv",
                     keepHeader: true,
                     storeDir:   "${params.outdir}/Summaries"
                 )
     /*
     ================================================================================
-                            Evaluate contigs
+                          Perform assessment on final assembly file
     ================================================================================
     */
 
-    /*
-     * QUAST: Genome assembly evaluation tool
-     */
-
-    // PROCESS: Run QUAST on the polished assembly for quality assessment and
-    //  report the number of cleaned basepairs used to form the assembly
-    QA_ASSEMBLY_QUAST (
-        ch_overlap_flash.join(ASSEMBLE_CONTIGS.out.assembly_file)
-    )
-    ch_versions = ch_versions.mix(QA_ASSEMBLY_QUAST.out.versions)
-
-    // Collect assembly summaries and concatenate into one file
-    ch_assembly_summary = Channel.empty()
-    ch_assembly_summary = ch_assembly_summary
-                            .mix(QA_ASSEMBLY_QUAST.out.summary_assemblies)
-                            .collectFile(
-                                name:       "Summary.Assemblies.tsv",
-                                keepHeader: true,
-                                storeDir:   "${params.outdir}/Summaries"
-                            )
-
-    ch_output_summary_files = ch_output_summary_files.mix(ch_assembly_summary)
-
-    // Collect cleaned read/base summaries and concatenate into one file
-    ch_cleaned_summary = Channel.empty()
-    ch_cleaned_summary = ch_cleaned_summary
-                            .mix(QA_ASSEMBLY_QUAST.out.summary_reads)
-                            .collectFile(
-                                name:     "Summary.CleanedReads-Bases.tsv",
-                                keepHeader: true,
-                                storeDir: "${params.outdir}/Summaries"
-                            )
-
-    ch_output_summary_files = ch_output_summary_files.mix(ch_cleaned_summary)
-
-    // PROCESS: Calculate genome assembly depth of coverage
-    CALCULATE_COVERAGE_UNIX (
-        QA_ASSEMBLY_QUAST.out.qa_summaries
-            .join(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary)
-    )
-    ch_versions = ch_versions.mix(CALCULATE_COVERAGE_UNIX.out.versions)
-
-    // Collect genome coverage summaries and concatenate into one file
-    ch_genome_cov_summary = Channel.empty()
-    ch_genome_cov_summary = ch_genome_cov_summary
-                                .mix(CALCULATE_COVERAGE_UNIX.out.summary)
-                                .collectFile(
-                                    name:     "Summary.GenomeCoverage.tsv",
-                                    keepHeader: true,
-                                    storeDir: "${params.outdir}/Summaries"
-                                )
-
-    ch_output_summary_files = ch_output_summary_files.mix(ch_genome_cov_summary)
-
-    /*
-     * GTDB-Tk: taxonomic classification using a GTDB reference
-     */
-
-    // PROCESS: Classify assembly FastA file using GTDB-Tk
-    if (!params.skip_gtdbtk && params.gtdb_db) {
-        if ( ch_gtdbtk_db_file.extension in ['gz', 'tgz'] ) {
-            // Add meta information
-            ch_gtdb_db = Channel.of(ch_gtdbtk_db_file)
-                            .map{
-                                db ->
-                                    def meta = [:]
-                                    meta['id'] = db.getSimpleName()
-                                    [ meta, db ]
-                            }
-            // Expects to be .tar.gz!
-            GTDBTK_DB_PREPARATION_UNIX (
-                ch_gtdb_db
-            )
-            ch_versions      = ch_versions.mix(GTDBTK_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_gtdbtk = GTDBTK_DB_PREPARATION_UNIX.out.db
-
-        } else if ( ch_gtdbtk_db_file.isDirectory() ) {
-            ch_db_for_gtdbtk = Channel
-                                .fromPath( "${ch_gtdbtk_db_file}/*", type: 'dir', maxDepth: 1 )
-                                .collect()
-                                .map{
-                                    [ it[0].getSimpleName(), it ]
-                                }
-
-        } else {
-            error("Unsupported object given to --gtdb_db, database must be supplied as either a directory or a .tar.gz file!")
-        }
-
-        // PROCESS: Perform GTDBTk on assembly FastA file
-        QA_ASSEMBLY_GTDBTK (
-            ASSEMBLE_CONTIGS.out.assembly_file,
-            ch_db_for_gtdbtk,
-            ch_mash_db_file
-        )
-        ch_versions             = ch_versions.mix(QA_ASSEMBLY_GTDBTK.out.versions)
-        ch_output_summary_files = ch_output_summary_files.mix(QA_ASSEMBLY_GTDBTK.out.summary.map{ meta, file -> file })
-    }
-
-    /*
-     * BUSCO: predict genes on contigs
-     */
-
-    // PROCESS: Classify contigs with BUSCO
-    if (!params.skip_busco && params.busco_db) {
-        if ( ch_busco_db_file.extension in ['gz', 'tgz'] ) {
-            // Add meta information
-            ch_busco_db = Channel.of(ch_busco_db_file)
-                            .map{
-                                db ->
-                                    def meta = [:]
-                                    meta['id'] = db.getSimpleName()
-                                    [ meta, db ]
-                            }
-            // Expects to be tar.gz!
-            BUSCO_DB_PREPARATION_UNIX(
-                ch_busco_db
-            )
-            ch_versions     = ch_versions.mix(BUSCO_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_busco = BUSCO_DB_PREPARATION_UNIX.out.db
-
-        } else if ( ch_busco_db_file.isDirectory() ) {
-            // Expects directory in <database>/lineages/<lineage>_odb10 format!
-            ch_db_for_busco = Channel
-                                .fromPath(ch_busco_db_file)
-                                .map{
-                                    db ->
-                                        if ( db.getSimpleName().contains('odb10') ) {
-                                            if ( db.getParent().getSimpleName() == "lineages" ) {
-                                                db.getParent().getParent()
-                                            } else {
-                                                error("Unsupported object given to --busco_db, database directory must be in format `<database>/lineages/<lineage>_odb10`!")
-                                            }
-                                        } else {
-                                            db
-                                        }
-                                }
-                                .collect()
-        } else {
-            error("Unsupported object given to --busco_db, database must be supplied as either a directory or a .tar.gz file!")
-        }
-
-        ch_lineage_for_busco_db = Channel
-                                    .of(ch_busco_db_file)
-                                    .map{
-                                        db ->
-                                            db = db.getSimpleName()
-                                            db.contains('odb10') ? db : 'auto'
-                                    }
-
-        // PROCESS: Split assembly FastA file into individual contig files
-        SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON (
-            ASSEMBLE_CONTIGS.out.assembly_file
-        )
-        ch_versions = ch_versions.mix(SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.versions)
-
-        // PROCESS: Perform BUSCO analysis on contigs
-        QA_ASSEMBLY_BUSCO (
-            SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.split_multifasta_assembly_dir,
-            ch_lineage_for_busco_db,
-            ch_db_for_busco,
-            ch_busco_config_file
-        )
-        ch_versions             = ch_versions.mix(QA_ASSEMBLY_BUSCO.out.versions)
-        ch_output_summary_files = ch_output_summary_files.mix(QA_ASSEMBLY_BUSCO.out.batch_summary.map{ meta, file -> file })
-    }
+    // ASSEMBLY_ASSESSMENT (
+        // ASSEMBLE_CONTIGS.out.assembly_file,
+        // ch_overlap_flash,
+        // EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary,
+        // ch_busco_config_file,
+        // ch_busco_db_file,
+        // ch_gtdbtk_db_file,
+        // ch_checkm2_database,
+        // ch_cat_alignment_database,
+        // ch_cat_taxonomy_database
+    // )
 
     /*
     ================================================================================
@@ -875,7 +714,8 @@ workflow ASSEMBLY {
             ANNOTATE_PROKKA.out.qc_filecheck,
             EXTRACT_16S_BARRNAP.out.qc_filecheck,
             ALIGN_16S_BLAST.out.qc_filecheck,
-            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck
+            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
+            CLASSIFY_16S_RDP.out.qc_filecheck
         )
         .map{ meta, file -> file }
         .collect()
