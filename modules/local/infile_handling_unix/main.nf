@@ -23,6 +23,13 @@ process INFILE_HANDLING_UNIX {
 
     i=1
     for fastq in !{reads}; do
+      # Check if input FastQ file is corrupted
+      if [[ $(gunzip -t ${file} 2>&1) ]]; then
+        msg "ERROR: Input file ${file} is corrupted and assembly cannot be performed!"
+        exit 1
+      fi
+
+      # Check if input FastQ file meets minimum file size requirement
       if verify_minimum_file_size "${fastq}" 'Raw Initial FastQ Files' "!{params.min_filesize_fastq_input}"; then
         echo -e "!{meta.id}\tRaw Initial FastQ (R${i}) File\tPASS" >> "!{meta.id}.Raw_Initial_FastQ_File.tsv"
       else
