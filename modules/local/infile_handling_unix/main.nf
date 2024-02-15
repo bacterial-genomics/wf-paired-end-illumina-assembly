@@ -25,10 +25,10 @@ process INFILE_HANDLING_UNIX {
     for fastq in !{reads}; do
       # Check if input FastQ file is corrupted
       if [[ ${fastq} =~ .gz ]] && [[ $(gunzip -t ${fastq} 2>&1) ]]; then
-        msg "ERROR: Input file ${fastq} is corrupted and assembly cannot be performed!"
+        msg "ERROR: Input file ${fastq} is corrupted and assembly cannot be performed!" >&2
         exit 1
       elif [[ ${fastq} =~ .fastq ]] && [[ ! $(cat ${fastq} > /dev/null 2>&1) ]]; then
-        msg "ERROR: Input file ${fastq} is corrupted and assembly cannot be performed!"
+        msg "ERROR: Input file ${fastq} is corrupted and assembly cannot be performed!" >&2
         exit 1
       fi
 
