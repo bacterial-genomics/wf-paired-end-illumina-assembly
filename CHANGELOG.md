@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Updated`
 
+- [#69](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/69) Replace baseDir with projectDir due to deprecation in latest version of nextflow (@gregorysprenger).
+
 ### `Deprecated`
 
 ## v2.2.0 - February 14, 2024
