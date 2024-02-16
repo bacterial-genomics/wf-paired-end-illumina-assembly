@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- [#73](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/73) Check if input FastQ files are corrupted before proceeding to downstream analyses (@gregorysprenger).
+
 ### `Fixed`
 
 - [#74](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/74) Fix emit statements to catch output files from modules (@gregorysprenger).
