@@ -30,7 +30,7 @@ process INFILE_HANDLING_UNIX {
             msg "ERROR: Input file ${fastq} is corrupted and assembly cannot be performed!" >&2 \
             && exit 1
           )
-      elif [[ ${fastq} =~ .fastq ]]; then
+      elif [[ ${fastq} =~ .fastq ]] || [[ ${fastq} =~ .fq ]]; then
         cat ${fastq} > /dev/null 2>&1 || \
         $(
           msg "ERROR: Input file ${fastq} is corrupted and assembly cannot be performed!" >&2 \
