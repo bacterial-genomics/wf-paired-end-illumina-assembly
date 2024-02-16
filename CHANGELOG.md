@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Updated`
 
+- [#71](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/71) Updated path to Kraken1 database in bash wrapper script (@gregorysprenger).
+
 ### `Deprecated`
 
 ## v2.2.0 - February 14, 2024
