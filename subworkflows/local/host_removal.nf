@@ -99,7 +99,7 @@ workflow HOST_REMOVAL {
         ch_cleaned_fastq = qcfilecheck(
                                 "REMOVE_HOST_SRA_HUMAN_SCRUBBER",
                                 REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.qc_filecheck,
-                                REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.sra_human_scrubber_removed
+                                REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.host_removed_reads
                             )
 
         // sra-human-scrubber non-default "-x" removes reads instead of masks
@@ -119,7 +119,7 @@ workflow HOST_REMOVAL {
         ch_host_removed_reads = qcfilecheck(
                                     "REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR",
                                     REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.qc_filecheck,
-                                    REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.fastq_removed_broken_pairs
+                                    REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.repaired_reads
                                 )
 
         // Collect QC File Checks
@@ -139,7 +139,7 @@ workflow HOST_REMOVAL {
         ch_host_removed_reads = qcfilecheck(
                                     "REMOVE_HOST_HOSTILE",
                                     REMOVE_HOST_HOSTILE.out.qc_filecheck,
-                                    REMOVE_HOST_HOSTILE.out.hostile_removed
+                                    REMOVE_HOST_HOSTILE.out.host_removed_reads
                                 )
 
         // Collect QC File Checks
@@ -158,7 +158,7 @@ workflow HOST_REMOVAL {
         ch_sra_host_removal = qcfilecheck(
                                 "REMOVE_HOST_SRA_HUMAN_SCRUBBER",
                                 REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.qc_filecheck,
-                                REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.sra_human_scrubber_removed
+                                REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.host_removed_reads
                             )
 
         // sra-human-scrubber non-default "-x" removes reads instead of masks
@@ -178,7 +178,7 @@ workflow HOST_REMOVAL {
         ch_repair_sra    = qcfilecheck(
                                 "REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR",
                                 REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.qc_filecheck,
-                                REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.fastq_removed_broken_pairs
+                                REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.repaired_reads
                             )
 
         // hostile removal tool
@@ -192,7 +192,7 @@ workflow HOST_REMOVAL {
         ch_host_removed_reads = qcfilecheck(
                                     "REMOVE_HOST_HOSTILE",
                                     REMOVE_HOST_HOSTILE.out.qc_filecheck,
-                                    REMOVE_HOST_HOSTILE.out.hostile_removed
+                                    REMOVE_HOST_HOSTILE.out.host_removed_reads
                                 )
 
         // Collect QC File Checks

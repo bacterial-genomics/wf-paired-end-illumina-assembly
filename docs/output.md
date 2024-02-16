@@ -44,7 +44,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and is used to 
 
 ## Input quality control
 
-Input files must meet a minimum file size to be processed within this pipeline. If this check passes, the input files go through host removal, down sampling, PhiX read removal, and adapter trimming.
+Input files are checked for corruption and must meet a minimum file size to be processed within this pipeline. If this check passes, the input files will go through several read cleaning steps before other analyses are performed.
 
 ### Initial FastQ file check
 
