@@ -159,7 +159,7 @@ workflow HOST_REMOVAL {
                                 "REMOVE_HOST_SRA_HUMAN_SCRUBBER",
                                 REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.qc_filecheck,
                                 REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.host_removed_reads
-                            )
+                              )
 
         // sra-human-scrubber non-default "-x" removes reads instead of masks
         //   with N, so it's essential to discard broken pairs or else the
