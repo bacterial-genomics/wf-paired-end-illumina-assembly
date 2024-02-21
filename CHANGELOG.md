@@ -3,13 +3,21 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v2.2.1 - February 16, 2024
 
 ### `Added`
 
+- [#73](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/73) Check if input FastQ files are corrupted before proceeding to downstream analyses (@gregorysprenger).
+
 ### `Fixed`
 
+- [#74](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/74) Fix emit statements to catch output files from modules (@gregorysprenger).
+
 ### `Updated`
+
+- [#69](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/69) Replace baseDir with projectDir due to deprecation in latest version of nextflow (@gregorysprenger).
+- [#71](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/71) Updated path to Kraken1 database in bash wrapper script (@gregorysprenger).
+- [#77](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/77) Set max resources for release.yml GitHub action (@gregorysprenger).
 
 ### `Deprecated`
 

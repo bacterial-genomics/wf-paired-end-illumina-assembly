@@ -13,6 +13,8 @@ process CLASSIFY_16S_RDP {
     path("versions.yml")                                           , emit: versions
 
     shell:
+    // WARN: RDP does not report version information. This variable must be updated when container is updated.
+    VERSION = '2.14'
     '''
     source bash_functions.sh
 
@@ -25,22 +27,16 @@ process CLASSIFY_16S_RDP {
       --outputFile "!{meta.id}.RDP.tsv" \
       "!{barnapp_extracted_rna}"
 
-
     if verify_minimum_file_size "!{meta.id}.RDP.tsv" '16S Classification Output File' "!{params.min_filesize_rdp_output}"; then
       echo -e "!{meta.id}\t16S RDP Output File\tPASS" >> !{meta.id}.RDP_Classification_File.tsv
     else
       echo -e "!{meta.id}\t16S RDP Output File\tFAIL" >> !{meta.id}.RDP_Classification_File.tsv
     fi
 
-
     # Get process version information
-    # RDP does not have a command for displaying the version
-    # The version being used currently is RDPv2.14
     cat <<-END_VERSIONS > versions.yml
-    #"!{task.process}":
-        #rdp: $(classifier version)
-        echo -e "INFO:  RDP version 2.14"
+    "!{task.process}":
+        rdp: $(echo !{VERSION})
     END_VERSIONS
-
     '''
 }
