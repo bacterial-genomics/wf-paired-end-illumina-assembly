@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Fixed`
 
 - [#74](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/74) Fix emit statements to catch output files from modules (@gregorysprenger).
+- [#78](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/78) Fixed the format of task.memory for SKESA module as SKESA does not like decimals or strings as memory input. Also fixed MegaLinter status badge in README (@gregorysprenger).
 
 ### `Updated`
 
