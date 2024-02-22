@@ -12,17 +12,21 @@
 //
 // MODULES: Local modules
 //
-include { QA_ASSEMBLY_QUAST                       } from "../modules/local/qa_assembly_quast/main"
-include { CLASSIFY_CONTIGS_CAT                    } from "../modules/local/classify_contigs_cat/main"
-include { CLASSIFY_ASSEMBLY_CHECKM2               } from "../modules/local/qa_assembly_checkm2/main"
-include { BUSCO_DB_PREPARATION_UNIX               } from "../modules/local/busco_db_preparation_unix/main"
-include { GTDBTK_DB_PREPARATION_UNIX              } from "../modules/local/gtdbtk_db_preparation_unix/main"
+include { BUSCO_DB_PREPARATION_UNIX               } from "../../modules/local/busco_db_preparation_unix/main"
+include { GTDBTK_DB_PREPARATION_UNIX              } from "../../modules/local/gtdbtk_db_preparation_unix/main"
+include { CHECKM2_DB_PREPARATION_UNIX             } from "../../modules/local/checkm2_db_preparation_unix/main"
+include { CHECKM2_DB_PREPARATION_CHECKM2          } from "../../modules/local/checkm2_db_preparation_checkm2/main"
+
+include { QA_ASSEMBLY_QUAST                       } from "../../modules/local/qa_assembly_quast/main"
+include { CALCULATE_COVERAGE_UNIX                 } from "../../modules/local/calculate_coverage_unix/main"
+include { CLASSIFY_CONTIGS_CAT                    } from "../../modules/local/classify_contigs_cat/main"
+include { ASSESS_ASSEMBLY_CHECKM2                 } from "../../modules/local/assess_assembly_checkm2/main"
 
 //
 // MODULES: nf-core modules
 //
-include { BUSCO as QA_ASSEMBLY_BUSCO              } from "../modules/nf-core/busco/main"
-include { GTDBTK_CLASSIFYWF as QA_ASSEMBLY_GTDBTK } from "../modules/nf-core/gtdbtk/classifywf/main"
+include { BUSCO as QA_ASSEMBLY_BUSCO              } from "../../modules/nf-core/busco/main"
+include { GTDBTK_CLASSIFYWF as QA_ASSEMBLY_GTDBTK } from "../../modules/nf-core/gtdbtk/classifywf/main"
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,15 +63,17 @@ workflow ASSEMBLY_ASSESSMENT {
     ch_assembly_file           // channel: [ val(meta), [ contigs.fasta ] ]
     ch_cleaned_fastq_files     // channel: [ val(meta), [ cleaned_fastq_files (R1, R2, single) ] ]
     ch_read_alignment_stats    // channel: [ val(meta), [ CleanedReads-AlnStats.tsv ] ]
-    ch_busco_config_file       // channel: [ busco_config.ini ]
-    ch_busco_db_file           // channel: [ database ]
-    ch_gtdbtk_db_file          // channel: [ database ]
-    ch_checkm2_db_file         // channel: [ database ]
-    ch_cat_taxonomy_db_file    // channel: [ database ]
-    ch_cat_alignment_db_file   // channel: [ database ]
+    ch_busco_config_file       // channel: busco_config.ini
+    ch_busco_db_file           // channel: database
+    ch_mash_db_file            // channel: database
+    ch_gtdbtk_db_file          // channel: database
+    ch_checkm2_db_file         // channel: database
+    ch_cat_db_file             // channel: database
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions             = Channel.empty()
+    ch_qc_filecheck         = Channel.empty()
+    ch_output_summary_files = Channel.empty()
 
     /*
     ================================================================================
@@ -106,6 +112,12 @@ workflow ASSEMBLY_ASSESSMENT {
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_cleaned_summary)
 
+    /*
+    ================================================================================
+                        Calculate coverage of assembly
+    ================================================================================
+    */
+
     // PROCESS: Calculate genome assembly depth of coverage
     CALCULATE_COVERAGE_UNIX (
         QA_ASSEMBLY_QUAST.out.qa_summaries
@@ -132,7 +144,7 @@ workflow ASSEMBLY_ASSESSMENT {
     */
 
     // PROCESS: Classify assembly FastA file using GTDB-Tk
-    if (!params.skip_gtdbtk && params.gtdb_db) {
+    if ( !params.skip_gtdbtk && ch_gtdbtk_db_file ) {
         if ( ch_gtdbtk_db_file.extension in ['gz', 'tgz'] ) {
             // Add meta information
             ch_gtdb_db = Channel.of(ch_gtdbtk_db_file)
@@ -156,20 +168,23 @@ workflow ASSEMBLY_ASSESSMENT {
                                 .map{
                                     [ it[0].getSimpleName(), it ]
                                 }
+                                .collect()
 
         } else {
             error("Unsupported object given to --gtdb_db, database must be supplied as either a directory or a .tar.gz file!")
         }
-
-        // PROCESS: Perform GTDBTk on assembly FastA file
-        QA_ASSEMBLY_GTDBTK (
-            ch_assembly_file,
-            ch_db_for_gtdbtk,
-            ch_mash_db_file
-        )
-        ch_versions             = ch_versions.mix(QA_ASSEMBLY_GTDBTK.out.versions)
-        ch_output_summary_files = ch_output_summary_files.mix(QA_ASSEMBLY_GTDBTK.out.summary.map{ meta, file -> file })
+    } else {
+            ch_db_for_gtdbtk = Channel.empty()
     }
+
+    // PROCESS: Perform GTDB-Tk on assembly FastA file
+    QA_ASSEMBLY_GTDBTK (
+        ch_assembly_file,
+        ch_db_for_gtdbtk,
+        ch_mash_db_file
+    )
+    ch_versions             = ch_versions.mix(QA_ASSEMBLY_GTDBTK.out.versions)
+    ch_output_summary_files = ch_output_summary_files.mix(QA_ASSEMBLY_GTDBTK.out.summary.map{ meta, file -> file })
 
     /*
     ================================================================================
@@ -177,13 +192,48 @@ workflow ASSEMBLY_ASSESSMENT {
     ================================================================================
     */
 
-    // TODO: DB prep
+    if ( ch_cat_db_file ) {
+        if ( ch_cat_db_file.extension in ['gz', 'tgz'] ) {
+            // Add meta information
+            ch_cat_db = Channel.of(ch_cat_db_file)
+                            .map{
+                                db ->
+                                    def meta = [:]
+                                    meta['id'] = db.getSimpleName()
+                                    [ meta, db ]
+                            }
+            // Expects to be .tar.gz!
+            CAT_DB_PREPARATION_UNIX (
+                ch_cat_db
+            )
+            ch_versions   = ch_versions.mix(CAT_DB_PREPARATION_UNIX.out.versions)
+            ch_db_for_cat = CAT_DB_PREPARATION_UNIX.out.db
+
+        } else if ( ch_cat_db_file.isDirectory() ) {
+            ch_db_for_cat = Channel
+                                .fromPath( "${ch_cat_db_file}/{db,tax}", type: 'dir', maxDepth: 1 )
+                                .collect()
+
+        } else {
+            error("Unsupported object given to --cat_db, database must be supplied as either a directory or a .tar.gz file!")
+        }
+    } else {
+            ch_db_for_cat = Channel.empty()
+    }
 
     CLASSIFY_CONTIGS_CAT (
         ch_assembly_file,
-        ch_cat_alignment_db_file,
-        ch_cat_taxonomy_db_file
+        ch_db_for_cat
     )
+    ch_versions     = ch_versions.mix(CLASSIFY_CONTIGS_CAT.out.versions)
+    ch_qc_filecheck = ch_qc_filecheck.mix(CLASSIFY_CONTIGS_CAT.out.qc_filecheck)
+    ch_cat_output   = qcfilecheck(
+                        "CLASSIFY_CONTIGS_CAT",
+                        CLASSIFY_CONTIGS_CAT.out.qc_filecheck,
+                        CLASSIFY_CONTIGS_CAT.out.summary
+                    )
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_cat_output.map{ meta, file -> file })
 
     /*
     ================================================================================
@@ -191,12 +241,63 @@ workflow ASSEMBLY_ASSESSMENT {
     ================================================================================
     */
 
-    // TODO: DB prep
+    if ( ch_checkm2_db_file ) {
+        // Add meta information
+        ch_checkm2_db = Channel.of(ch_checkm2_db_file)
+                        .map{
+                            db ->
+                                def meta = [:]
+                                meta['id'] = db.getSimpleName()
+                                [ meta, db ]
+                        }
 
-    CLASSIFY_ASSEMBLY_CHECKM2 (
+        if ( ch_checkm2_db_file.extension in ['gz', 'tgz'] ) {
+            // Expects to be .tar.gz!
+            CHECKM2_DB_PREPARATION_UNIX (
+                ch_checkm2_db
+            )
+            ch_versions       = ch_versions.mix(CHECKM2_DB_PREPARATION_UNIX.out.versions)
+            ch_db_for_checkm2 = CHECKM2_DB_PREPARATION_UNIX.out.db
+
+        } else if ( ch_checkm2_db_file.isDirectory() ) {
+            // Parse directory for `.dmnd` file
+            ch_db_for_checkm2 = Channel
+                                .fromPath( "${ch_checkm2_db_file}/*.dmnd", maxDepth: 1 )
+                                .collect()
+        } else {
+            error("Unsupported object given to --checkm2_db, database must be supplied as either a directory or a .tar.gz file!")
+        }
+
+    } else if ( params.download_checkm2_db ) {
+        // Download database using CheckM2 built in parameter and place in provided directory
+        CHECKM2_DB_PREPARATION_CHECKM2 (
+            ch_checkm2_db = Channel.of("CheckM2_Download")
+                                    .map{
+                                        def meta = [:]
+                                        meta['id'] = "CheckM2_Download"
+                                        meta
+                                    }
+        )
+        ch_versions       = ch_versions.mix(CHECKM2_DB_PREPARATION_CHECKM2.out.versions)
+        ch_db_for_checkm2 = CHECKM2_DB_PREPARATION_CHECKM2.out.db
+
+    } else {
+            ch_db_for_checkm2 = Channel.empty()
+    }
+
+    ASSESS_ASSEMBLY_CHECKM2 (
         ch_assembly_file,
-        ch_checkm2_db_file
+        ch_db_for_checkm2
     )
+    ch_versions        = ch_versions.mix(ASSESS_ASSEMBLY_CHECKM2.out.versions)
+    ch_qc_filecheck    = ch_qc_filecheck.mix(ASSESS_ASSEMBLY_CHECKM2.out.qc_filecheck)
+    ch_checkm2_output  = qcfilecheck(
+                            "ASSESS_ASSEMBLY_CHECKM2",
+                            ASSESS_ASSEMBLY_CHECKM2.out.qc_filecheck,
+                            ASSESS_ASSEMBLY_CHECKM2.out.summary
+                        )
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_checkm2_output.map{ meta, file -> file })
 
     /*
     ================================================================================
@@ -205,7 +306,7 @@ workflow ASSEMBLY_ASSESSMENT {
     */
 
     // PROCESS: Classify contigs with BUSCO
-    if (!params.skip_busco && params.busco_db) {
+    if ( !params.skip_busco && ch_busco_db_file ) {
         if ( ch_busco_db_file.extension in ['gz', 'tgz'] ) {
             // Add meta information
             ch_busco_db = Channel.of(ch_busco_db_file)
@@ -216,7 +317,7 @@ workflow ASSEMBLY_ASSESSMENT {
                                     [ meta, db ]
                             }
             // Expects to be tar.gz!
-            BUSCO_DB_PREPARATION_UNIX(
+            BUSCO_DB_PREPARATION_UNIX (
                 ch_busco_db
             )
             ch_versions     = ch_versions.mix(BUSCO_DB_PREPARATION_UNIX.out.versions)
@@ -270,4 +371,6 @@ workflow ASSEMBLY_ASSESSMENT {
 
     emit:
     versions      = ch_versions
+    qc_filecheck  = ch_qc_filecheck
+    summary_files = ch_output_summary_files
 }

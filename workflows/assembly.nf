@@ -59,7 +59,6 @@ include { READ_CLASSIFY_KRAKEN_TWO                } from "../modules/local/read_
 // include { READ_CLASSIFY_METAPHLAN                 } from "../modules/local/read_classify_metaphlan/main"
 
 include { EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS  } from "../modules/local/extract_read_alignment_depths_bedtools/main"
-include { CALCULATE_COVERAGE_UNIX                 } from "../modules/local/calculate_coverage_unix/main"
 
 include { MLST_MLST                               } from "../modules/local/mlst_mlst/main"
 //include { MLST_SRST2                            } from "../modules/local/mlst_srst2/main"
@@ -86,7 +85,7 @@ include { INPUT_CHECK                             } from "../subworkflows/local/
 include { HOST_REMOVAL                            } from "../subworkflows/local/host_removal"
 include { DOWNSAMPLE                              } from "../subworkflows/local/downsampling"
 include { ASSEMBLE_CONTIGS                        } from "../subworkflows/local/assemble_contigs"
-// include { ASSEMBLY_ASSESSMENT                     } from "../subworkflows/local/assembly_assessment"
+include { ASSEMBLY_ASSESSMENT                     } from "../subworkflows/local/assembly_assessment"
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,11 +141,25 @@ if (params.adapter_reference) {
     error("Path to Adapter reference not specified. Please supply an adapter reference file in FastA format via `--adapter_reference` parameter.")
 }
 
+// CAT
+if (params.cat_db) {
+    ch_cat_db_file = file(params.cat_db, checkIfExists: true)
+} else {
+    ch_cat_db_file = []
+}
+
+// CheckM2
+if (params.checkm2_db) {
+    ch_checkm2_db_file = file(params.checkm2_db, checkIfExists: true)
+} else {
+    ch_checkm2_db_file = []
+}
+
 // GTDB
 if (params.gtdb_db) {
     ch_gtdbtk_db_file = file(params.gtdb_db, checkIfExists: true)
 } else {
-    ch_gtdbtk_db_file = Channel.empty()
+    ch_gtdbtk_db_file = []
 }
 
 // Mash database for GTDB-Tk
@@ -160,7 +173,7 @@ if (params.mash_db) {
 if (params.busco_db) {
     ch_busco_db_file = file(params.busco_db, checkIfExists: true)
 } else {
-    ch_busco_db_file = Channel.empty()
+    ch_busco_db_file = []
 }
 
 // kraken
@@ -524,10 +537,10 @@ workflow ASSEMBLY {
         ASSEMBLE_CONTIGS.out.assembly_file
     )
     ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
-    ch_genbank = qcfilecheck(
-                    "ANNOTATE_PROKKA",
-                    ANNOTATE_PROKKA.out.qc_filecheck,
-                    ANNOTATE_PROKKA.out.prokka_genbank_file
+    ch_genbank  = qcfilecheck(
+                      "ANNOTATE_PROKKA",
+                      ANNOTATE_PROKKA.out.qc_filecheck,
+                      ANNOTATE_PROKKA.out.prokka_genbank_file
                   )
 
     /*
@@ -599,9 +612,9 @@ workflow ASSEMBLY {
     )
     ch_versions     = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
     ch_blast_output = qcfilecheck(
-                        "ALIGN_16S_BLAST",
-                        ALIGN_16S_BLAST.out.qc_filecheck,
-                        ALIGN_16S_BLAST.out.blast_output
+                          "ALIGN_16S_BLAST",
+                          ALIGN_16S_BLAST.out.qc_filecheck,
+                          ALIGN_16S_BLAST.out.blast_output
                       )
 
 
@@ -658,17 +671,19 @@ workflow ASSEMBLY {
     ================================================================================
     */
 
-    // ASSEMBLY_ASSESSMENT (
-        // ASSEMBLE_CONTIGS.out.assembly_file,
-        // ch_overlap_flash,
-        // EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary,
-        // ch_busco_config_file,
-        // ch_busco_db_file,
-        // ch_gtdbtk_db_file,
-        // ch_checkm2_database,
-        // ch_cat_alignment_database,
-        // ch_cat_taxonomy_database
-    // )
+    ASSEMBLY_ASSESSMENT (
+        ASSEMBLE_CONTIGS.out.assembly_file,
+        ch_overlap_flash,
+        EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary,
+        ch_busco_config_file,
+        ch_busco_db_file,
+        ch_mash_db_file,
+        ch_gtdbtk_db_file,
+        ch_checkm2_db_file,
+        ch_cat_db_file
+    )
+    ch_versions             = ch_versions.mix(ASSEMBLY_ASSESSMENT.out.versions)
+    ch_output_summary_files = ch_output_summary_files.mix(ASSEMBLY_ASSESSMENT.out.summary_files)
 
     /*
     ================================================================================
@@ -716,7 +731,8 @@ workflow ASSEMBLY {
             EXTRACT_16S_BARRNAP.out.qc_filecheck,
             ALIGN_16S_BLAST.out.qc_filecheck,
             BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
-            CLASSIFY_16S_RDP.out.qc_filecheck
+            CLASSIFY_16S_RDP.out.qc_filecheck,
+            ASSEMBLY_ASSESSMENT.out.qc_filecheck
         )
         .map{ meta, file -> file }
         .collect()

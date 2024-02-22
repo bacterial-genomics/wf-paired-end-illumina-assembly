@@ -534,14 +534,14 @@
                 }
             }
         },
-        "contig_classification_options": {
-            "title": "Contig classification options",
+        "assembly_classification_gtdbtk_options": {
+            "title": "Assembly classification with GTDB-Tk options",
             "type": "object",
-            "description": "Contig classification options",
+            "description": "Assembly classification with GTDB-Tk options",
             "properties": {
                 "gtdb_db": {
                     "type": "string",
-                    "description": "Database for contig taxonomic classification with GTDB-Tk.",
+                    "description": "Database for taxonomic classification with GTDB-Tk.",
                     "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contains GTDB-Tk database."
                 },
                 "mash_db": {
@@ -552,7 +552,7 @@
                 },
                 "skip_gtdbtk": {
                     "type": "boolean",
-                    "description": "Skip GTDB-Tk classification of contigs."
+                    "description": "Skip GTDB-Tk classification of assembly."
                 },
                 "gtdbtk_pplacer_scratch": {
                     "type": "string",
@@ -602,6 +602,43 @@
                     "default": ".fasta",
                     "hidden": true,
                     "description": "File extension of contig file whens plitting contig file."
+                }
+            }
+        },
+        "assess_assembly_checkm2_options": {
+            "title": "Assembly assessment with CheckM2 options",
+            "type": "object",
+            "description": "Assembly assessment with CheckM2 options",
+            "properties": {
+                "checkm2_model": {
+                    "type": "string",
+                    "default": "--allmodels",
+                    "enum": [
+                        "--allmodels",
+                        "--general",
+                        "--specific"
+                    ],
+                    "description": "quality prediction model to choose",
+                    "help_text": "prediction model for genome completeness estimations"
+                },
+                "min_filesize_checkm2_report": {
+                    "type": "string",
+                    "default": "1c",
+                    "hidden": true,
+                    "description": "Minimum file size of CheckM2 report output file"
+                }
+            }
+        },
+        "contig_classification_cat_options": {
+            "title": "Contig classification with CAT options",
+            "type": "object",
+            "description": "Contig classification with CAT options",
+            "properties": {
+                "min_filesize_cat_output": {
+                    "type": "string",
+                    "default": "1c",
+                    "hidden": true,
+                    "description": "Minimum file size of CAT report output file"
                 }
             }
         },
@@ -924,7 +961,13 @@
             "$ref": "#/definitions/contig_filtering_options"
         },
         {
-            "$ref": "#/definitions/contig_classification_options"
+            "$ref": "#/definitions/assembly_classification_gtdbtk_options"
+        },
+        {
+            "$ref": "#/definitions/assess_assembly_checkm2_options"
+        },
+        {
+            "$ref": "#/definitions/contig_classification_cat_options"
         },
         {
             "$ref": "#/definitions/mlst_options"
