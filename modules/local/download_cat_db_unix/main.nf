@@ -5,7 +5,7 @@ process DOWNLOAD_CAT_DB_UNIX {
     container "denolehov/curl:latest"
 
     input:
-    tuple val(meta), path(database)
+    tuple val(meta)
 
     output:
     path("database/{tax,db}") , emit: db
