@@ -8,14 +8,16 @@ process CAT_DB_PREPARATION_UNIX {
     tuple val(meta), path(database)
 
     output:
-    path("database/{tax,db}") , emit: db
+    path("database/{db,tax}") , emit: db
     path(".command.{out,err}")
     path("versions.yml")      , emit: versions
 
     shell:
     '''
-    mkdir -p database
-    tar -xzf !{database} -C database/
+    mkdir -p tmp_db database
+    tar -xzf !{database} --strip 1 -C tmp_db
+
+    mv `find tmp_db -type d -name "db" -o -name "tax"` database/
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

@@ -14,10 +14,10 @@ process CHECKM2_DB_PREPARATION_UNIX {
 
     shell:
     '''
-    mkdir -p database
-    tar -xzf !{database} --strip 1 -C database/
+    mkdir -p tmp_db database
+    tar -xzf !{database} --strip 1 -C tmp_db
 
-    mv `find . -name "*.dmnd"` database/
+    mv `find tmp_db -name "*.dmnd"` database/
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
