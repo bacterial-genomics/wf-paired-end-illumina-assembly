@@ -1,4 +1,4 @@
-process CAT_DB_PREPARATION_UNIX {
+process DOWNLOAD_CAT_DB_UNIX {
 
     label "process_medium"
     tag { "${meta.id}" }
