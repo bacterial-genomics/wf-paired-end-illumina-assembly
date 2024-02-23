@@ -228,8 +228,15 @@ workflow ASSEMBLY_ASSESSMENT {
                         [ meta ]
                     }
         )
-        ch_versions   = ch_versions.mix(DOWNLOAD_CAT_DB_UNIX.out.versions)
-        ch_db_for_cat = DOWNLOAD_CAT_DB_UNIX.out.db
+        ch_versions    = ch_versions.mix(DOWNLOAD_CAT_DB_UNIX.out.versions)
+        ch_cat_db_file = DOWNLOAD_CAT_DB_UNIX.out.db
+
+        // Expects to be .tar.gz!
+        CAT_DB_PREPARATION_UNIX (
+            ch_cat_db_file
+        )
+        ch_versions   = ch_versions.mix(CAT_DB_PREPARATION_UNIX.out.versions)
+        ch_db_for_cat = CAT_DB_PREPARATION_UNIX.out.db
 
     } else {
             ch_db_for_cat = Channel.empty()
