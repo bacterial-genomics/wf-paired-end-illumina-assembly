@@ -268,19 +268,6 @@ workflow ASSEMBLY_ASSESSMENT {
             error("Unsupported object given to --checkm2_db, database must be supplied as either a directory or a .tar.gz file!")
         }
 
-    } else if ( params.download_checkm2_db ) {
-        // Download database using CheckM2 built in parameter and place in provided directory
-        CHECKM2_DB_PREPARATION_CHECKM2 (
-            ch_checkm2_db = Channel.of("CheckM2_Download")
-                                    .map{
-                                        def meta = [:]
-                                        meta['id'] = "CheckM2_Download"
-                                        meta
-                                    }
-        )
-        ch_versions       = ch_versions.mix(CHECKM2_DB_PREPARATION_CHECKM2.out.versions)
-        ch_db_for_checkm2 = CHECKM2_DB_PREPARATION_CHECKM2.out.db
-
     } else {
             ch_db_for_checkm2 = Channel.empty()
     }
