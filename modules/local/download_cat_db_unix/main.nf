@@ -2,15 +2,15 @@ process DOWNLOAD_CAT_DB_UNIX {
 
     label "process_medium"
     tag { "${meta.id}" }
-    container "quay.io/biocontainers/gnu-wget@sha256:a7253d598eb7aa4a826f56b5da6079f1176d2c8cad584ee1a6c06f9f9b25d8b0"
+    container "quay.io/biocontainers/aria2@sha256:acb0c86334ea0b2ba9454cc1b4d08f30c5a6ec7852159fd28fe34698154798d6"
 
     input:
     tuple val(meta)
 
     output:
-    path("database/{db,tax}") , emit: db
+    tuple val(meta), path("*.tar.gz"), emit: db
     path(".command.{out,err}")
-    path("versions.yml")      , emit: versions
+    path("versions.yml")             , emit: versions
 
     shell:
     '''
@@ -21,7 +21,12 @@ process DOWNLOAD_CAT_DB_UNIX {
       | grep "tar.gz" \
       | grep "nr" \
       | while read fname; do
-          wget -c https://tbb.bio.uu.nl/tina/CAT_prepare/${fname}
+          aria2c \
+            --continue \
+            --max-connection-per-server=16 \
+            --split=16 \
+            --check-integrity \
+            https://tbb.bio.uu.nl/tina/CAT_prepare/${fname}
         done
 
     # Verify filename in md5 file matches downloaded database
@@ -30,7 +35,7 @@ process DOWNLOAD_CAT_DB_UNIX {
       exit 1
     else
       [[ $(md5sum *.tar.gz | awk '{print $1}') = $(awk '{print $1}' *.tar.gz.md5) ]] \
-        && echo "md5sum of files match!"; tar -xzf CAT*.tar.gz \
+        && echo "md5sum of files match!" \
         || echo "md5sum of files DO NOT MATCH!"; exit 1
     fi
 
