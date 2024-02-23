@@ -228,6 +228,8 @@ workflow ASSEMBLY_ASSESSMENT {
                         [ meta ]
                     }
         )
+        ch_versions   = ch_versions.mix(DOWNLOAD_CAT_DB_UNIX.out.versions)
+        ch_db_for_cat = DOWNLOAD_CAT_DB_UNIX.out.db
 
     } else {
             ch_db_for_cat = Channel.empty()
