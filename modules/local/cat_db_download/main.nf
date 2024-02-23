@@ -15,7 +15,6 @@ process CAT_DB_PREPARATION_UNIX {
     shell:
     '''
     # Download webpage and parse HTML
-    ## sort and take newest files (.tar.gz and .tar.gz.md5)
     curl -L https://tbb.bio.uu.nl/tina/CAT_prepare/ \
       | grep -o "<a href=['"'"'"][^'"'"'"]*" \
       | grep "tar.gz" \
@@ -33,7 +32,7 @@ process CAT_DB_PREPARATION_UNIX {
       exit 1
     else
       [[ $(md5sum *.tar.gz | awk '{print $1}') = $(awk '{print $1}' *.tar.gz.md5) ]] \
-        && echo "md5sum of files match!"; tar -xvzf CAT*.tar.gz \
+        && echo "md5sum of files match!"; tar -xzf CAT*.tar.gz \
         || echo "md5sum of files DO NOT MATCH!"; exit 1
     fi
 
