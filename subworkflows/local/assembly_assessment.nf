@@ -12,10 +12,11 @@
 //
 // MODULES: Local modules
 //
+include { CAT_DB_PREPARATION_UNIX                 } from "../../modules/local/cat_db_preparation_unix/main"
+include { DOWNLOAD_CAT_DB_UNIX                    } from "../../modules/local/download_cat_db_unix/main"
 include { BUSCO_DB_PREPARATION_UNIX               } from "../../modules/local/busco_db_preparation_unix/main"
 include { GTDBTK_DB_PREPARATION_UNIX              } from "../../modules/local/gtdbtk_db_preparation_unix/main"
 include { CHECKM2_DB_PREPARATION_UNIX             } from "../../modules/local/checkm2_db_preparation_unix/main"
-include { CHECKM2_DB_PREPARATION_CHECKM2          } from "../../modules/local/checkm2_db_preparation_checkm2/main"
 
 include { QA_ASSEMBLY_QUAST                       } from "../../modules/local/qa_assembly_quast/main"
 include { CALCULATE_COVERAGE_UNIX                 } from "../../modules/local/calculate_coverage_unix/main"
@@ -217,6 +218,17 @@ workflow ASSEMBLY_ASSESSMENT {
         } else {
             error("Unsupported object given to --cat_db, database must be supplied as either a directory or a .tar.gz file!")
         }
+
+    } else if ( !ch_cat_db_file && params.download_cat_db ) {
+        DOWNLOAD_CAT_DB_UNIX (
+            Channel.of("Download CAT DB")
+                    .map {
+                        def meta = [:]
+                        meta['id'] = it
+                        [ meta ]
+                    }
+        )
+
     } else {
             ch_db_for_cat = Channel.empty()
     }
