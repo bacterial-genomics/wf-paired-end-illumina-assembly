@@ -28,8 +28,8 @@ process CLASSIFY_CONTIGS_CAT {
     CAT \
       contigs \
       --contigs_fasta "!{assembly}" \
-      --database_folder !{database[1]} \
-      --taxonomy_folder !{database[0]} \
+      --database_folder !{database[0]} \
+      --taxonomy_folder !{database[1]} \
       --out_prefix "!{meta.id}.CAT-Classification" \
       --nproc !{task.cpus}
 
@@ -45,8 +45,9 @@ process CLASSIFY_CONTIGS_CAT {
       fi
     done
 
-    # Add taxonomic names to the CAT output
-    if [[ "${CREATE_SUMMARY}" ]]; then
+    # Add taxonomic names to the CAT output if the GTDB database is not used
+    if [[ "${CREATE_SUMMARY}" ]] && \
+      [[ ! $(grep "__" *.txt) ]]; then
       msg "INFO: Adding names to CAT ORF2LCA output file"
       CAT \
         add_names \
@@ -70,7 +71,7 @@ process CLASSIFY_CONTIGS_CAT {
         --output_file !{meta.id}.CAT-Classification.names.summary.tsv \
         --contigs_fasta "!{assembly}"
     else
-      # Avoid "not output file found" error if name/summary tsv files are not created
+      # Avoid "no output file found" error if name/summary tsv files are not created
       cp "!{meta.id}.CAT-Classification.ORF2LCA.txt" "!{meta.id}.CAT-Classification.ORF2LCA.tsv"
       cp "!{meta.id}.CAT-Classification.contig2classification.txt" "!{meta.id}.CAT-Classification.contig2classification.tsv"
     fi
