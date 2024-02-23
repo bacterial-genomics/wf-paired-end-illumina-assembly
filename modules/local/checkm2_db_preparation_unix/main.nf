@@ -8,15 +8,16 @@ process CHECKM2_DB_PREPARATION_UNIX {
     tuple val(meta), path(database)
 
     output:
-    path("*.dmnd")            , emit: db
+    path("database/*.dmnd")   , emit: db
     path(".command.{out,err}")
     path("versions.yml")      , emit: versions
 
     shell:
     '''
-    tar -xzf !{database} --strip 1
+    mkdir -p database
+    tar -xzf !{database} --strip 1 -C database/
 
-    mv -fv $(find . -name "*.dmnd") .
+    mv `find . -name "*.dmnd"` database/
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
