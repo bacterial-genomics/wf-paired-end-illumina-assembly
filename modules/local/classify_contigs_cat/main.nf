@@ -2,8 +2,6 @@ process CLASSIFY_CONTIGS_CAT {
 
     label "process_high"
     tag { "${meta.id}" }
-    // container "quay.io/biocontainers/mulled-v2-75e2a26f10cbf3629edf2d1600db3fed5ebe6e04:eae321284604f7dabbdf121e3070bda907b91266-1"
-    // container "biocontainers/cat:5.2.3--hdfd78af_1"
     container "tpaisie/cat:latest"
 
     input:
