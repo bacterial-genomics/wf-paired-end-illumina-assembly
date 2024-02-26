@@ -28,8 +28,8 @@ process CLASSIFY_CONTIGS_CAT {
     CAT \
       contigs \
       --contigs_fasta "!{assembly}" \
-      --database_folder !{database[0]} \
-      --taxonomy_folder !{database[1]} \
+      --database_folder db \
+      --taxonomy_folder tax \
       --out_prefix "!{meta.id}.CAT-Classification" \
       --nproc !{task.cpus}
 
@@ -54,7 +54,7 @@ process CLASSIFY_CONTIGS_CAT {
         --only_official \
         --input_file !{meta.id}.CAT-Classification.ORF2LCA.txt \
         --output_file !{meta.id}.CAT-Classification.ORF2LCA.names.tsv \
-        --taxonomy_folder !{database[0]}
+        --taxonomy_folder tax
 
       msg "INFO: Adding names to CAT contig2classification output file"
       CAT \
@@ -62,7 +62,7 @@ process CLASSIFY_CONTIGS_CAT {
         --only_official \
         --input_file !{meta.id}.CAT-Classification.contig2classification.txt \
         --output_file !{meta.id}.CAT-Classification.names.tsv \
-        --taxonomy_folder !{database[0]}
+        --taxonomy_folder tax
 
       msg "INFO: Creating CAT summary file"
       CAT \
