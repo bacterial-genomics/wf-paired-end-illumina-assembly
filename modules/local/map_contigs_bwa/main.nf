@@ -35,7 +35,7 @@ process MAP_CONTIGS_BWA {
       -x intractg \
       -t !{task.cpus} \
       !{uncorrected_contigs} \
-      !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} \
+      "!{meta.id}_R1.paired.fq" "!{meta.id}_R2.paired.fq" \
       | \
       samtools sort \
       -@ !{task.cpus} \
@@ -66,7 +66,7 @@ process MAP_CONTIGS_BWA {
     fi
 
     # Single read mapping if available for downstream depth of coverage calculations
-    if [[ !{cleaned_fastq_files[2]} ]]; then
+    if [[ !{meta.id}_single.fq.gz ]]; then
       msg "INFO: Single read mapping"
       bwa index "!{meta.id}-!{meta.assembler}.fna"
 
@@ -74,7 +74,7 @@ process MAP_CONTIGS_BWA {
         -v 2 \
         -x intractg \
         "!{meta.id}-!{meta.assembler}.fna" \
-        !{cleaned_fastq_files[2]} \
+        "!{meta.id}_single.fq.gz" \
         -t !{task.cpus} \
         | \
         samtools sort \

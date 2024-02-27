@@ -22,8 +22,8 @@ process ASSEMBLE_CONTIGS_SKESA {
 
     if [[ ! -f "!{meta.id}-SKESA_contigs.fasta" ]]; then
       skesa \
-        --reads !{cleaned_fastq_files[0]},!{cleaned_fastq_files[1]} \
-        --reads !{cleaned_fastq_files[2]} \
+        --reads "!{meta.id}_R1.paired.fq.gz","!{meta.id}_R2.paired.fq.gz" \
+        --reads "!{meta.id}_single.fq.gz" \
         !{allow_snps} \
         --cores !{task.cpus} \
         --memory !{task.memory} \
