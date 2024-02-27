@@ -626,6 +626,12 @@
                     "default": "1c",
                     "hidden": true,
                     "description": "Minimum file size of CheckM2 report output file"
+                },
+                "checkm2_db": {
+                    "type": "string",
+                    "default": "https://zenodo.org/records/5571251/files/checkm2_database.tar.gz",
+                    "hidden": false,
+                    "description": "Path to a local directory, archive file, or a URL to compressed tar archive that contains CheckM2 database."
                 }
             }
         },
@@ -644,6 +650,11 @@
                     "default": "1c",
                     "hidden": true,
                     "description": "Minimum file size of CAT report output file"
+                },
+                "cat_db": {
+                    "type": "string",
+                    "hidden": false,
+                    "description": "Path to a local directory, archive file, or a URL to compressed tar archive that contains CAT database."
                 }
             }
         },
