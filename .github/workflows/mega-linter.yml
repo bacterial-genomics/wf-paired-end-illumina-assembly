@@ -3,7 +3,9 @@
 ---
 name: MegaLinter
 
-on: [pull_request]
+on:
+  pull_request:
+  workflow_dispatch:
 
 env:
   APPLY_FIXES: all
