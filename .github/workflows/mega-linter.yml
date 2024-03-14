@@ -6,6 +6,7 @@ name: MegaLinter
 on:
   pull_request:
   workflow_dispatch:
+  pull_request_target:
 
 env:
   APPLY_FIXES: all
