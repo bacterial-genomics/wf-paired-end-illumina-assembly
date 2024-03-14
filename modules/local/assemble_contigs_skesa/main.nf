@@ -15,6 +15,7 @@ process ASSEMBLE_CONTIGS_SKESA {
 
     shell:
     allow_snps = params.skesa_allow_snps ? "--allow snps" : ""
+    memory = Math.round(Math.floor(task.memory.toString().replaceAll("[GB]", "").toFloat()))
     '''
     source bash_functions.sh
 
@@ -26,7 +27,7 @@ process ASSEMBLE_CONTIGS_SKESA {
         --reads !{cleaned_fastq_files[2]} \
         !{allow_snps} \
         --cores !{task.cpus} \
-        --memory !{task.memory} \
+        --memory !{memory} \
         --contigs_out "!{meta.id}-SKESA_contigs.fasta" \
         --steps !{params.skesa_steps} \
         --kmer !{params.skesa_kmer_length} \
