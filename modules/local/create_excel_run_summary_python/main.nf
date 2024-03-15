@@ -6,9 +6,9 @@ process CREATE_EXCEL_RUN_SUMMARY_PYTHON {
     path(list_of_files)
 
     output:
-    path("Summary-Report_*.xlsx") , emit: summary
+    path("Summary-Report_*.xlsx"), emit: summary
     path(".command.{out,err}")
-    path("versions.yml")      , emit: versions
+    path("versions.yml")         , emit: versions
 
     shell:
     '''
