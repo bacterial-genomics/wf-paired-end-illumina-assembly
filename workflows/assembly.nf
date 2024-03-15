@@ -744,6 +744,8 @@ workflow ASSEMBLY {
             sort:       'index'
         )
 
+    ch_output_summary_files = ch_output_summary_files.mix(ch_qc_filecheck.collect())
+
 }
 
 /*
