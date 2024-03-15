@@ -687,35 +687,9 @@ workflow ASSEMBLY {
 
     /*
     ================================================================================
-                        Convert TSV outputs to Excel XLSX
+                        Collect QC information
     ================================================================================
     */
-
-    if (params.create_excel_outputs) {
-        CREATE_EXCEL_RUN_SUMMARY_PYTHON (
-            ch_output_summary_files.collect()
-        )
-        ch_versions = ch_versions.mix(CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.versions)
-
-        CONVERT_TSV_TO_EXCEL_PYTHON (
-            CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.summary
-        )
-        ch_versions = ch_versions.mix(CONVERT_TSV_TO_EXCEL_PYTHON.out.versions)
-    }
-
-    /*
-    ================================================================================
-                        Collect version and QC information
-    ================================================================================
-    */
-
-    // PATTERN: Collate method for version information
-    ch_versions
-        .unique()
-        .collectFile(
-            name:     "software_versions.yml",
-            storeDir: params.logpath
-        )
 
     // Collect QC file checks and concatenate into one file
     ch_qc_filecheck = Channel.empty()
@@ -746,6 +720,37 @@ workflow ASSEMBLY {
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_qc_filecheck.collect())
 
+    /*
+    ================================================================================
+                        Convert TSV outputs to Excel XLSX
+    ================================================================================
+    */
+
+    if (params.create_excel_outputs) {
+        CREATE_EXCEL_RUN_SUMMARY_PYTHON (
+            ch_output_summary_files.collect()
+        )
+        ch_versions = ch_versions.mix(CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.versions)
+
+        CONVERT_TSV_TO_EXCEL_PYTHON (
+            CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.summary
+        )
+        ch_versions = ch_versions.mix(CONVERT_TSV_TO_EXCEL_PYTHON.out.versions)
+    }
+
+    /*
+    ================================================================================
+                        Collect version information
+    ================================================================================
+    */
+
+    // PATTERN: Collate method for version information
+    ch_versions
+        .unique()
+        .collectFile(
+            name:     "software_versions.yml",
+            storeDir: params.logpath
+        )
 }
 
 /*
