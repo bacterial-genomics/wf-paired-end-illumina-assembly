@@ -638,7 +638,7 @@ workflow ASSEMBLY {
                     storeDir:   "${params.outdir}/Summaries"
                   )
 
-    ch_output_summary_files = ch_output_summary_files.mix(ch_rdp_summary)
+    ch_output_summary_files = ch_output_summary_files.mix(ch_rdp_summary.map{ meta, file -> file })
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
@@ -656,7 +656,7 @@ workflow ASSEMBLY {
     // Collect top BLASTn species and concatenate into one file
     ch_top_blast.map{ meta, file -> file }
                 .collectFile(
-                    name:       "16S-top-species.tsv",
+                    name:       "${var_assembler_name}.16S-top-species.tsv",
                     keepHeader: true,
                     storeDir:   "${params.outdir}/SSU"
                 )
