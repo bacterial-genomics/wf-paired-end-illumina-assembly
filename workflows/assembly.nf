@@ -272,7 +272,7 @@ workflow ASSEMBLY {
         ch_infile_handling,
         ch_sra_scrubber_db_file
     )
-    ch_versions         = ch_versions.mix(HOST_REMOVAL.out.versions)
+    ch_versions = ch_versions.mix(HOST_REMOVAL.out.versions)
 
     // SUBWORKFLOW: Downsample FastQ files
     DOWNSAMPLE (
@@ -530,6 +530,7 @@ workflow ASSEMBLY {
                             keepHeader: true,
                             storeDir: "${params.outdir}/Summaries"
                         )
+
     ch_output_summary_files = ch_output_summary_files.mix(ch_mlst_summary)
 
     // PROCESS: Annotate the polished assembly using Prokka
@@ -538,10 +539,10 @@ workflow ASSEMBLY {
     )
     ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
     ch_genbank  = qcfilecheck(
-                      "ANNOTATE_PROKKA",
-                      ANNOTATE_PROKKA.out.qc_filecheck,
-                      ANNOTATE_PROKKA.out.prokka_genbank_file
-                  )
+                    "ANNOTATE_PROKKA",
+                    ANNOTATE_PROKKA.out.qc_filecheck,
+                    ANNOTATE_PROKKA.out.prokka_genbank_file
+                )
 
     /*
     ================================================================================
@@ -612,10 +613,10 @@ workflow ASSEMBLY {
     )
     ch_versions     = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
     ch_blast_output = qcfilecheck(
-                          "ALIGN_16S_BLAST",
-                          ALIGN_16S_BLAST.out.qc_filecheck,
-                          ALIGN_16S_BLAST.out.blast_output
-                      )
+                        "ALIGN_16S_BLAST",
+                        ALIGN_16S_BLAST.out.qc_filecheck,
+                        ALIGN_16S_BLAST.out.blast_output
+                    )
 
 
     // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes
@@ -628,15 +629,15 @@ workflow ASSEMBLY {
                         "CLASSIFY_16S_RDP",
                         CLASSIFY_16S_RDP.out.qc_filecheck,
                         CLASSIFY_16S_RDP.out.rdp_tsv
-                      )
+                    )
 
     // Concatenate RDP summaries
     ch_rdp_summary.map{meta, file -> file}
-                  .collectFile(
-                    name: "Summary.RDP.tsv",
-                    keepHeader: true,
-                    storeDir:   "${params.outdir}/Summaries"
-                  )
+                    .collectFile(
+                        name: "Summary.RDP.tsv",
+                        keepHeader: true,
+                        storeDir:   "${params.outdir}/Summaries"
+                    )
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_rdp_summary.map{ meta, file -> file })
 
@@ -644,7 +645,7 @@ workflow ASSEMBLY {
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
         ch_blast_output
     )
-    ch_versions = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
+    ch_versions  = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
     ch_top_blast = qcfilecheck(
                         "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
                         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
