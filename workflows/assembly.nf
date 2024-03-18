@@ -634,7 +634,7 @@ workflow ASSEMBLY {
     // Concatenate RDP summaries
     ch_rdp_summary.map{meta, file -> file}
                     .collectFile(
-                        name: "Summary.RDP.tsv",
+                        name:       "Summary.RDP.tsv",
                         keepHeader: true,
                         storeDir:   "${params.outdir}/Summaries"
                     )
