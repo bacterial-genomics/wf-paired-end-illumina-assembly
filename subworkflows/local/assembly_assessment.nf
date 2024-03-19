@@ -91,7 +91,6 @@ workflow ASSEMBLY_ASSESSMENT {
 
     // Collect assembly summaries and concatenate into one file
     ch_assembly_summary = QA_ASSEMBLY_QUAST.out.summary_assemblies
-                            .collect()
                             .collectFile(
                                 name:       "Summary.Assemblies.tsv",
                                 keepHeader: true,
@@ -102,7 +101,6 @@ workflow ASSEMBLY_ASSESSMENT {
 
     // Collect cleaned read/base summaries and concatenate into one file
     ch_cleaned_summary = QA_ASSEMBLY_QUAST.out.summary_reads
-                            .collect()
                             .collectFile(
                                 name:     "Summary.CleanedReads-Bases.tsv",
                                 keepHeader: true,
@@ -126,7 +124,6 @@ workflow ASSEMBLY_ASSESSMENT {
 
     // Collect genome coverage summaries and concatenate into one file
     ch_genome_cov_summary = CALCULATE_COVERAGE_UNIX.out.summary
-                                .collect()
                                 .collectFile(
                                     name:     "Summary.GenomeCoverage.tsv",
                                     keepHeader: true,
