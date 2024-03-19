@@ -416,12 +416,14 @@ Concatenation of output metrics for all samples.
 
 - `Summaries/`
   - `Summary.16S.[tsv,xlsx]`: Summary of the best BLAST alignment for each sample.
+  - `Summary.RDP.[tsv,xlsx]`: Summary of RDP Classifier on predicted 16S ribosomal RNA genes.
   - `Summary.MLST.[tsv,xlsx]`: Summary of the MLST results for all samples.
-  - `Summary.PhiX.[tsv,xlsx]`: Number of reads discarded and retained for each sample.
   - `Summary.Assemblies.[tsv,xlsx]`: Assembly metrics such as N50, cumulative length, longest contig length, and GC composition for each sample.
-  - `Summary.GenomeCoverage.[tsv,xlsx]`: Summary of the overall genome coverage for each sample.
+  - `Summary.PhiX_Removal.[tsv,xlsx]`: Number of reads discarded and retained for each sample.
   - `Summary.QC_File_Checks.[tsv,xlsx]`: Summary of all QC file checks detailing if a sample passes or fails each process.
+  - `Summary.GenomeCoverage.[tsv,xlsx]`: Summary of the overall genome coverage for each sample.
   - `Summary.CleanedReads-Bases.[tsv,xlsx]`: Summary of the number of cleaned bases for each sample.
+  - `Summary.Clean_and_Overlapping_Reads.[tsv,xlsx]`: Summary of the merging of overlapping sister reads.
   - `Summary.CleanedReads-AlignmentStats.[tsv,xlsx]`: Summary of the genome size and coverages of the paired-end and single-end reads for each sample.
   - `Summary-[fastp,trimmomatic].Adapter_and_QC_Trimming.[tsv,xlsx]`:  Summary of adapter clipping and quality trimming for each sample.
   - `Summary-Report_yyyy-MM-dd_HH-mm-ss.xlsx`: Excel workbook where each file in the Summaries directory is added to a separate worksheet within the workbook.
