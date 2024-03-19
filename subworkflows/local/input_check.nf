@@ -139,7 +139,7 @@ workflow INPUT_CHECK {
     } else {
         // Read from FilePairs if no samplesheet is given
         ch_raw_reads = Channel
-            .fromFilePairs(ch_input+'/**_{,R}{1,2}*{fastq,fq}{,.gz}', maxDepth: 2, checkIfExists: true)
+            .fromFilePairs("${ch_input.toString()}/**_{,R}{1,2}*{fastq,fq}{,.gz}", maxDepth: 2, checkIfExists: true)
             .ifEmpty { exit 1, "Cannot find any reads matching: ${ch_input}\nNB: Path needs to be enclosed in quotes!" }
             .map { row ->
                         def meta = [:]
