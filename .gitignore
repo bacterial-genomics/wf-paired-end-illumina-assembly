@@ -9,3 +9,4 @@ testing*
 .nextflow*
 assets/.cache/
 singularity.cache/
+megalinter-reports/

@@ -61,7 +61,7 @@ process REMOVE_HOST_HOSTILE {
     fi
 
     # JSON format stdout reports input/output filenames and read counts
-    if ! verify_minimum_file_size .command.out 'JSON stdout for Hostile' '1k'; then
+    if ! verify_minimum_file_size .command.out 'JSON stdout for Hostile' '300c'; then
       msg "ERROR: JSON stdout missing or empty for reporting Hostile results" >&2
       exit 1
     fi

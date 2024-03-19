@@ -35,7 +35,7 @@ process OVERLAP_PAIRED_READS_FLASH {
         -M ${READ_LEN} \
         -t !{task.cpus} \
         -m ${OVERLAP_LEN} \
-        !{meta.id}_R1.paired.fq !{meta.id}_R2.paired.fq
+        "!{meta.id}_R1.paired.fq" "!{meta.id}_R2.paired.fq"
 
       echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.Non-overlapping_FastQ_File.tsv"
       for suff in notCombined_1.fastq notCombined_2.fastq; do

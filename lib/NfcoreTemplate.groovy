@@ -310,7 +310,7 @@ class NfcoreTemplate {
 
             ${colors.green}Trim, assemble, and annotate paired end illumina reads. ${colors.reset}
 
-            ${colors.purple}     ${workflow.manifest.name} ${workflow_version}${colors.reset}
+            ${colors.purple}${workflow.manifest.name} ${workflow_version}${colors.reset}
             ${dashedLine(monochrome_logs)}
             """.stripIndent()
         )
