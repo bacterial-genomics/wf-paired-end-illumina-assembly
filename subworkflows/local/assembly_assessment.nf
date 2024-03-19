@@ -90,9 +90,8 @@ workflow ASSEMBLY_ASSESSMENT {
     ch_versions = ch_versions.mix(QA_ASSEMBLY_QUAST.out.versions)
 
     // Collect assembly summaries and concatenate into one file
-    ch_assembly_summary = Channel.empty()
-    ch_assembly_summary = ch_assembly_summary
-                            .mix(QA_ASSEMBLY_QUAST.out.summary_assemblies)
+    ch_assembly_summary = QA_ASSEMBLY_QUAST.out.summary_assemblies
+                            .collect()
                             .collectFile(
                                 name:       "Summary.Assemblies.tsv",
                                 keepHeader: true,
@@ -102,9 +101,8 @@ workflow ASSEMBLY_ASSESSMENT {
     ch_output_summary_files = ch_output_summary_files.mix(ch_assembly_summary)
 
     // Collect cleaned read/base summaries and concatenate into one file
-    ch_cleaned_summary = Channel.empty()
-    ch_cleaned_summary = ch_cleaned_summary
-                            .mix(QA_ASSEMBLY_QUAST.out.summary_reads)
+    ch_cleaned_summary = QA_ASSEMBLY_QUAST.out.summary_reads
+                            .collect()
                             .collectFile(
                                 name:     "Summary.CleanedReads-Bases.tsv",
                                 keepHeader: true,
@@ -127,9 +125,8 @@ workflow ASSEMBLY_ASSESSMENT {
     ch_versions = ch_versions.mix(CALCULATE_COVERAGE_UNIX.out.versions)
 
     // Collect genome coverage summaries and concatenate into one file
-    ch_genome_cov_summary = Channel.empty()
-    ch_genome_cov_summary = ch_genome_cov_summary
-                                .mix(CALCULATE_COVERAGE_UNIX.out.summary)
+    ch_genome_cov_summary = CALCULATE_COVERAGE_UNIX.out.summary
+                                .collect()
                                 .collectFile(
                                     name:     "Summary.GenomeCoverage.tsv",
                                     keepHeader: true,
@@ -155,12 +152,13 @@ workflow ASSEMBLY_ASSESSMENT {
                                     meta['id'] = db.getSimpleName()
                                     [ meta, db ]
                             }
+
             // Expects to be .tar.gz!
             GTDBTK_DB_PREPARATION_UNIX (
                 ch_gtdb_db
             )
             ch_versions      = ch_versions.mix(GTDBTK_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_gtdbtk = GTDBTK_DB_PREPARATION_UNIX.out.db
+            ch_db_for_gtdbtk = GTDBTK_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_gtdbtk_db_file.isDirectory() ) {
             ch_db_for_gtdbtk = Channel
@@ -175,7 +173,7 @@ workflow ASSEMBLY_ASSESSMENT {
             error("Unsupported object given to --gtdb_db, database must be supplied as either a directory or a .tar.gz file!")
         }
     } else {
-            ch_db_for_gtdbtk = Channel.empty()
+        ch_db_for_gtdbtk = Channel.empty()
     }
 
     // PROCESS: Perform GTDB-Tk on assembly FastA file
@@ -203,12 +201,13 @@ workflow ASSEMBLY_ASSESSMENT {
                                     meta['id'] = db.getSimpleName()
                                     [ meta, db ]
                             }
+
             // Expects to be .tar.gz!
             CAT_DB_PREPARATION_UNIX (
                 ch_cat_db
             )
             ch_versions   = ch_versions.mix(CAT_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_cat = CAT_DB_PREPARATION_UNIX.out.db
+            ch_db_for_cat = CAT_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_cat_db_file.isDirectory() ) {
             ch_db_for_cat = Channel
@@ -229,7 +228,7 @@ workflow ASSEMBLY_ASSESSMENT {
                     }
         )
         ch_versions    = ch_versions.mix(DOWNLOAD_CAT_DB_UNIX.out.versions)
-        ch_cat_db_file = DOWNLOAD_CAT_DB_UNIX.out.db
+        ch_cat_db_file = DOWNLOAD_CAT_DB_UNIX.out.db.collect()
 
         // Expects to be .tar.gz!
         CAT_DB_PREPARATION_UNIX (
@@ -278,7 +277,7 @@ workflow ASSEMBLY_ASSESSMENT {
                 ch_checkm2_db
             )
             ch_versions       = ch_versions.mix(CHECKM2_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_checkm2 = CHECKM2_DB_PREPARATION_UNIX.out.db
+            ch_db_for_checkm2 = CHECKM2_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_checkm2_db_file.isDirectory() ) {
             // Parse directory for `.dmnd` file
@@ -324,12 +323,13 @@ workflow ASSEMBLY_ASSESSMENT {
                                     meta['id'] = db.getSimpleName()
                                     [ meta, db ]
                             }
+
             // Expects to be tar.gz!
             BUSCO_DB_PREPARATION_UNIX (
                 ch_busco_db
             )
             ch_versions     = ch_versions.mix(BUSCO_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_busco = BUSCO_DB_PREPARATION_UNIX.out.db
+            ch_db_for_busco = BUSCO_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_busco_db_file.isDirectory() ) {
             // Expects directory in <database>/lineages/<lineage>_odb10 format!
@@ -359,6 +359,7 @@ workflow ASSEMBLY_ASSESSMENT {
                                             db = db.getSimpleName()
                                             db.contains('odb10') ? db : 'auto'
                                     }
+                                    .collect()
 
         // PROCESS: Split assembly FastA file into individual contig files
         SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON (

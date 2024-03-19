@@ -293,9 +293,7 @@ workflow ASSEMBLY {
                       )
 
     // Collect PhiX removal summaries and concatenate into one file
-    ch_phix_removal_summary = Channel.empty()
-    ch_phix_removal_summary = ch_phix_removal_summary
-                                .mix(REMOVE_PHIX_BBDUK.out.summary)
+    ch_phix_removal_summary = REMOVE_PHIX_BBDUK.out.summary
                                 .collectFile(
                                     name:       "Summary.PhiX_Removal.tsv",
                                     keepHeader: true,
@@ -317,9 +315,7 @@ workflow ASSEMBLY {
                                 )
 
     // Collect read trimming summaries and concatenate into one file
-    ch_trimmomatic_summary = Channel.empty()
-    ch_trimmomatic_summary = ch_trimmomatic_summary
-                                .mix(TRIM_READS_TRIMMOMATIC.out.summary)
+    ch_trimmomatic_summary = TRIM_READS_TRIMMOMATIC.out.summary
                                 .collectFile(
                                     name:       "Summary.Adapter_and_QC_Trimming.tsv",
                                     keepHeader: true,
@@ -341,9 +337,7 @@ workflow ASSEMBLY {
                         )
 
     // Collect singleton read summaries and concatenate into one file
-    ch_overlap_summary = Channel.empty()
-    ch_overlap_summary = ch_overlap_summary
-                                .mix(OVERLAP_PAIRED_READS_FLASH.out.summary)
+    ch_overlap_summary = OVERLAP_PAIRED_READS_FLASH.out.summary
                                 .collectFile(
                                     name:       "Summary.Clean_and_Overlapping_Reads.tsv",
                                     keepHeader: true,
@@ -374,7 +368,7 @@ workflow ASSEMBLY {
                 ch_kraken1_db
             )
             ch_versions       = ch_versions.mix(KRAKEN1_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_kraken1 = KRAKEN1_DB_PREPARATION_UNIX.out.db
+            ch_db_for_kraken1 = KRAKEN1_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_kraken1_db_file.isDirectory() ) {
             ch_db_for_kraken1 = Channel
@@ -400,29 +394,28 @@ workflow ASSEMBLY {
                                     }
                                     .collect()
         } else {
-            error("Unsupported object given to --kraken1_db, database must be supplied as either a directory or a .tar.gz file!")
+            log.error("Unsupported object given to --kraken1_db, database must be supplied as either a directory or a .tar.gz file!")
+            ch_db_for_kraken1 = Channel.empty()
         }
-
-        // PROCESS: Run kraken1 on paired cleaned reads
-        READ_CLASSIFY_KRAKEN_ONE (
-            ch_overlap_flash,
-            ch_db_for_kraken1
-        )
-        ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
-
-        // Collect kraken summaries and concatenate into one file
-        ch_kraken_one_summary = Channel.empty()
-        ch_kraken_one_summary = ch_kraken_one_summary
-                                    .mix(READ_CLASSIFY_KRAKEN_ONE.out.summary)
-                                    .collectFile(
-                                        name:       "Summary.Kraken.tsv",
-                                        keepHeader: true,
-                                        storeDir:   "${params.outdir}/Summaries"
-                                    )
-
     } else {
         log.warn("Kraken could not be performed - database not specified using --kraken1_db!")
+        ch_db_for_kraken1 = Channel.empty()
     }
+
+    // PROCESS: Run kraken1 on paired cleaned reads
+    READ_CLASSIFY_KRAKEN_ONE (
+        ch_overlap_flash,
+        ch_db_for_kraken1
+    )
+    ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
+
+    // Collect kraken summaries and concatenate into one file
+    ch_kraken_one_summary = READ_CLASSIFY_KRAKEN_ONE.out.summary
+                                .collectFile(
+                                    name:       "Summary.Kraken.tsv",
+                                    keepHeader: true,
+                                    storeDir:   "${params.outdir}/Summaries"
+                                )
 
     // Prepare kraken2 database for use
     if ( ch_kraken2_db_file ) {
@@ -440,7 +433,7 @@ workflow ASSEMBLY {
                 ch_kraken2_db
             )
             ch_versions       = ch_versions.mix(KRAKEN2_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_kraken2 = KRAKEN2_DB_PREPARATION_UNIX.out.db
+            ch_db_for_kraken2 = KRAKEN2_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_kraken2_db_file.isDirectory() ) {
             ch_db_for_kraken2 = Channel
@@ -456,28 +449,28 @@ workflow ASSEMBLY {
                                     }
                                     .collect()
         } else {
-            error("Unsupported object given to --kraken2_db, database must be supplied as either a directory or a .tar.gz file!")
+            log.error("Unsupported object given to --kraken2_db, database must be supplied as either a directory or a .tar.gz file!")
+            ch_db_for_kraken2 = Channel.empty()
         }
-        // PROCESS: Run kraken2 on paired cleaned reads
-        READ_CLASSIFY_KRAKEN_TWO (
-            ch_overlap_flash,
-            ch_db_for_kraken2
-        )
-        ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
-
-        // Collect kraken2 summaries and concatenate into one file
-        ch_kraken_two_summary = Channel.empty()
-        ch_kraken_two_summary = ch_kraken_two_summary
-                                    .mix(READ_CLASSIFY_KRAKEN_TWO.out.summary)
-                                    .collectFile(
-                                        name:       "Summary.Kraken2.tsv",
-                                        keepHeader: true,
-                                        storeDir:   "${params.outdir}/Summaries"
-                                    )
-
     } else {
         log.warn("Kraken2 could not be performed - database not specified using --kraken2_db!")
+        ch_db_for_kraken2 = Channel.empty()
     }
+
+    // PROCESS: Run kraken2 on paired cleaned reads
+    READ_CLASSIFY_KRAKEN_TWO (
+        ch_overlap_flash,
+        ch_db_for_kraken2
+    )
+    ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
+
+    // Collect kraken2 summaries and concatenate into one file
+    ch_kraken_two_summary = READ_CLASSIFY_KRAKEN_TWO.out.summary
+                                .collectFile(
+                                    name:       "Summary.Kraken2.tsv",
+                                    keepHeader: true,
+                                    storeDir:   "${params.outdir}/Summaries"
+                                )
 
     /*
     ================================================================================
@@ -504,9 +497,7 @@ workflow ASSEMBLY {
     ch_versions = ch_versions.mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.versions)
 
     // Collect alignment summary stats and concatenate into one file
-    ch_alignment_stats_summary = Channel.empty()
-    ch_alignment_stats_summary = ch_alignment_stats_summary
-                                    .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary)
+    ch_alignment_stats_summary = EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary
                                     .map{ meta, file -> file }
                                     .collectFile(
                                         name:     "Summary.CleanedReads-AlignmentStats.tsv",
@@ -522,9 +513,7 @@ workflow ASSEMBLY {
     ch_versions = ch_versions.mix(MLST_MLST.out.versions)
 
     // Collect MLST Summaries and concatenate into one file
-    ch_mlst_summary = Channel.empty()
-    ch_mlst_summary = ch_mlst_summary
-                        .mix(MLST_MLST.out.summary)
+    ch_mlst_summary = MLST_MLST.out.summary
                         .collectFile(
                             name:     "Summary.MLST.tsv",
                             keepHeader: true,
@@ -579,12 +568,13 @@ workflow ASSEMBLY {
                                     meta['id'] = db.getSimpleName()
                                     [ meta, db ]
                             }
+
             // Expects to be .tar.gz!
             BLAST_DB_PREPARATION_UNIX (
                 ch_blast_db
             )
             ch_versions     = ch_versions.mix(BLAST_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db
+            ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_blast_db_file.isDirectory() ) {
             ch_db_for_blast = Channel
@@ -632,12 +622,15 @@ workflow ASSEMBLY {
                     )
 
     // Concatenate RDP summaries
-    ch_rdp_summary.map{meta, file -> file}
-                    .collectFile(
-                        name:       "Summary.RDP.tsv",
-                        keepHeader: true,
-                        storeDir:   "${params.outdir}/Summaries"
-                    )
+    ch_rdp_summary
+        .map{meta, file -> file}
+        .collect()
+        .flatten()
+        .collectFile(
+            name:       "Summary.RDP.tsv",
+            keepHeader: true,
+            storeDir:   "${params.outdir}/Summaries"
+        )
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_rdp_summary.map{ meta, file -> file })
 
@@ -652,20 +645,22 @@ workflow ASSEMBLY {
                         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.top_blast_species
                     )
 
-    ch_output_summary_files = ch_output_summary_files.mix(ch_top_blast.map{ meta, file -> file })
-
     // Collect top BLASTn species and concatenate into one file
-    ch_top_blast.map{ meta, file -> file }
-                .collectFile(
-                    name:       "${var_assembler_name}.16S-top-species.tsv",
-                    keepHeader: true,
-                    storeDir:   "${params.outdir}/SSU"
-                )
-                .collectFile(
-                    name:       "Summary.16S.tsv",
-                    keepHeader: true,
-                    storeDir:   "${params.outdir}/Summaries"
-                )
+    ch_top_blast = ch_top_blast
+                        .map{ meta, file -> file }
+                        .collectFile(
+                            name:       "${var_assembler_name}.16S-top-species.tsv",
+                            keepHeader: true,
+                            storeDir:   "${params.outdir}/SSU"
+                        )
+                        .collectFile(
+                            name:       "Summary.16S.tsv",
+                            keepHeader: true,
+                            storeDir:   "${params.outdir}/Summaries"
+                        )
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_top_blast)
+
     /*
     ================================================================================
                           Perform assessment on final assembly file
