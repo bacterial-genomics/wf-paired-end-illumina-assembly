@@ -39,7 +39,8 @@ Run the built-in test set to confirm all parts are working as-expected. It will 
 nextflow run \
   bacterial-genomics/wf-paired-end-illumina-assembly \
   -r main \
-  -profile singularity,test
+  -profile singularity,test \
+  --outdir my-results
 ```
 
 ## Quick Start: Run
