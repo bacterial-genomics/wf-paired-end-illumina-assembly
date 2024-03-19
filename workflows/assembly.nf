@@ -723,18 +723,18 @@ workflow ASSEMBLY {
     */
 
     // Collect QC file checks and concatenate into one file
-    ch_qc_filecheck
-        .map{ meta, file -> file }
-        .collect()
-        .flatten()
-        .collectFile(
-            name:       "Summary.QC_File_Checks.tsv",
-            keepHeader: true,
-            storeDir:   "${params.outdir}/Summaries",
-            sort:       'index'
-        )
+    ch_qc_filecheck = ch_qc_filecheck
+                        .map{ meta, file -> file }
+                        .collect()
+                        .flatten()
+                        .collectFile(
+                            name:       "Summary.QC_File_Checks.tsv",
+                            keepHeader: true,
+                            storeDir:   "${params.outdir}/Summaries",
+                            sort:       'index'
+                        )
 
-    ch_output_summary_files = ch_output_summary_files.mix(ch_qc_filecheck.collect())
+    ch_output_summary_files = ch_output_summary_files.mix(ch_qc_filecheck)
 
     /*
     ================================================================================
@@ -744,7 +744,7 @@ workflow ASSEMBLY {
 
     if (params.create_excel_outputs) {
         CREATE_EXCEL_RUN_SUMMARY_PYTHON (
-            ch_output_summary_files.collect()
+            ch_output_summary_files.collect().view()
         )
         ch_versions = ch_versions.mix(CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.versions)
 
