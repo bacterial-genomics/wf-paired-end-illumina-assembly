@@ -140,7 +140,7 @@ fastp is able to clip adapters, perform quality trimming, and retain broken sist
 <details markdown="1">
 <summary><strong>QC Steps</strong></summary>
 
-- If used, the adapters reference file that is used remove sequence reads must be accessible and meet a minimum file size `[Default: 10k]`.
+- If used, the adapters reference file that is used to remove sequence reads must be accessible and meet a minimum file size `[Default: 10k]`.
 
 - FastQ files after removing adapters and performing quality trimming are checked to ensure that they meet a minimum file size before continuing to downstream processes `[Default: 25M]`. This is to halt analysis of a sample that is primarily contaminated with artificial Illumina sequences.
 
