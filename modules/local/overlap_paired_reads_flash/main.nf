@@ -19,7 +19,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     source bash_functions.sh
 
     # Determine read length based on the first 100 reads
-    echo "$(cat !{fastq_pairs[0]} | head -n 400)" > read_R1_len.txt
+    echo "$(cat !{meta.id}_R1.paired.fq | head -n 400)" > read_R1_len.txt
     READ_LEN=$(awk 'NR%4==2 {if(length > x) {x=length; y=$0}} END{print length(y)}' read_R1_len.txt)
 
     OVERLAP_LEN=$(echo | awk -v n=${READ_LEN} '{print int(n*0.8)}')
@@ -35,7 +35,7 @@ process OVERLAP_PAIRED_READS_FLASH {
         -M ${READ_LEN} \
         -t !{task.cpus} \
         -m ${OVERLAP_LEN} \
-        !{fastq_pairs[0]} !{fastq_pairs[1]}
+        "!{meta.id}_R1.paired.fq" "!{meta.id}_R2.paired.fq"
 
       echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.Non-overlapping_FastQ_File.tsv"
       for suff in notCombined_1.fastq notCombined_2.fastq; do
