@@ -348,9 +348,9 @@ workflow ASSEMBLY {
 
         ch_fastp_summary = TRIM_READS_FASTP.out.summary
                                 .collectFile(
-                                        name:       "Summary-fastp.Adapter_and_QC_Trimming.tsv",
-                                        keepHeader: true,
-                                        storeDir:   "${params.outdir}/Summaries"
+                                    name:       "Summary-fastp.Adapter_and_QC_Trimming.tsv",
+                                    keepHeader: true,
+                                    storeDir:   "${params.outdir}/Summaries"
                                 )
 
         ch_output_summary_files = ch_output_summary_files.mix(ch_fastp_summary)
