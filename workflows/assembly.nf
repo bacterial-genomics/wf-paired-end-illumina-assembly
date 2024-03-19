@@ -744,7 +744,7 @@ workflow ASSEMBLY {
 
     if (params.create_excel_outputs) {
         CREATE_EXCEL_RUN_SUMMARY_PYTHON (
-            ch_output_summary_files.collect().view()
+            ch_output_summary_files.collect()
         )
         ch_versions = ch_versions.mix(CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.versions)
 
