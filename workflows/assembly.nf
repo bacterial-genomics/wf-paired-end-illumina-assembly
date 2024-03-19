@@ -322,7 +322,7 @@ workflow ASSEMBLY {
         // Collect read trimming summaries and concatenate into one file
         ch_trimmomatic_summary = TRIM_READS_TRIMMOMATIC.out.summary
                                     .collectFile(
-                                        name:       "Summary.Adapter_and_QC_Trimming.tsv",
+                                        name:       "Summary-Trimmomatic.Adapter_and_QC_Trimming.tsv",
                                         keepHeader: true,
                                         storeDir:   "${params.outdir}/Summaries"
                                     )
@@ -346,9 +346,12 @@ workflow ASSEMBLY {
                             TRIM_READS_FASTP.out.fastq_adapters_removed
                         )
 
-        ch_fastp_summary = Channel.empty()
-        ch_fastp_summary = ch_fastp_summary
-                                .mix(TRIM_READS_FASTP.out.summary)
+        ch_fastp_summary = TRIM_READS_FASTP.out.summary
+                                .collectFile(
+                                        name:       "Summary-fastp.Adapter_and_QC_Trimming.tsv",
+                                        keepHeader: true,
+                                        storeDir:   "${params.outdir}/Summaries"
+                                )
 
         ch_output_summary_files = ch_output_summary_files.mix(ch_fastp_summary)
     }
