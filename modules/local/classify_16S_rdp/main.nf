@@ -29,7 +29,7 @@ process CLASSIFY_16S_RDP {
 
     if [[ "!{params.rdp_output_format}" == "fixrank" ]]; then
       # Drop unnecessary columns
-      awk -F '\t' '{print $1,$3, $5,$6,$8,$9,$11,$12,$14,$15,$17,$18,$20}' \
+      awk -F '\t' '{print $1,$3,$5,$6,$8,$9,$11,$12,$14,$15,$17,$18,$20}' \
         "!{meta.id}.RDP.tsv" \
         > "!{meta.id}.RDP_tmp.tsv"
 
