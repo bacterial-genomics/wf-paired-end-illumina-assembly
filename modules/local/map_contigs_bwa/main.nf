@@ -35,7 +35,7 @@ process MAP_CONTIGS_BWA {
       -x intractg \
       -t !{task.cpus} \
       !{uncorrected_contigs} \
-      "!{meta.id}_R1.paired.fq" "!{meta.id}_R2.paired.fq" \
+      "!{meta.id}_R1.paired.fq.gz" "!{meta.id}_R2.paired.fq.gz" \
       | \
       samtools sort \
       -@ !{task.cpus} \
