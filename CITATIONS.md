@@ -64,7 +64,7 @@
 
 - [mlst](https://github.com/tseemann/mlst)
 
-  > Seeman T. mlst. Github: https://github.com/tseemann/mlst
+  > Seeman T. mlst. Github: <https://github.com/tseemann/mlst>
 
 - [Prokka](https://academic.oup.com/bioinformatics/article/30/14/2068/2390517)
 

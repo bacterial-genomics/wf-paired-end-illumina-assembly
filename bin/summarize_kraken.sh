@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
-summarize_kraken()
-{
+summarize_kraken() {
   #BASE=$(basename $1 _kraken.tsv)
   #echo -en "$BASE\t"
 
   # report unclassified
-  UNCL=(`grep $'\tU\t' ${1} | head -n1 | awk '{print $1,$2,$6}'`)
+  UNCL=($(grep $'\tU\t' ${1} | head -n1 | awk '{print $1,$2,$6}'))
   if [[ ${#UNCL[@]} -eq 3 ]]; then
     tabline=$(echo ${UNCL[@]} | sed -E 's/ +/%\t/1' | sed -E 's/ +/\t/1')
     echo -en "$tabline\t"

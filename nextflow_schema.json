@@ -497,7 +497,7 @@
                     "default": "fixrank",
                     "hidden": true,
                     "description": "Information that is reported in the output file produced by RDP.",
-                    "enum": ["allrank","fixrank","biom","filterbyconf","db"]
+                    "enum": ["allrank", "fixrank", "biom", "filterbyconf", "db"]
                 },
                 "min_filesize_rdp_output": {
                     "type": "string",
@@ -638,11 +638,7 @@
                 "checkm2_model": {
                     "type": "string",
                     "default": "--allmodels",
-                    "enum": [
-                        "--allmodels",
-                        "--general",
-                        "--specific"
-                    ],
+                    "enum": ["--allmodels", "--general", "--specific"],
                     "description": "quality prediction model to choose",
                     "help_text": "prediction model for genome completeness estimations"
                 },
