@@ -297,11 +297,36 @@
             "type": "object",
             "description": "Read trimming options",
             "properties": {
+                "trim_reads_tool": {
+                    "type": "string",
+                    "default": "trimmomatic",
+                    "hidden": false,
+                    "description": "Specify which read trimming tool to use during assembly.",
+                    "enum": ["trimmomatic", "fastp"]
+                },
                 "min_filesize_fastq_adapters_removed": {
                     "type": "string",
                     "default": "25M",
                     "hidden": true,
                     "description": "Minimum file size of FastQ files after adapters are removed."
+                },
+                "fastp_window_size": {
+                    "type": "integer",
+                    "default": 6,
+                    "hidden": true,
+                    "description": "Number of bases to scan when performing a sliding window to trim reads."
+                },
+                "fastp_window_mean_quality": {
+                    "type": "integer",
+                    "default": 30,
+                    "hidden": true,
+                    "description": "Mean quality requirement when performing a sliding window to trim reads."
+                },
+                "fastp_minimum_read_sequence_length": {
+                    "type": "integer",
+                    "default": 50,
+                    "hidden": true,
+                    "description": "Minimum length of a read and reads that are below this parameter are discarded."
                 },
                 "trimmomatic_phred": {
                     "type": "integer",

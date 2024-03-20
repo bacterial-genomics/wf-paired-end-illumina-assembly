@@ -46,7 +46,7 @@ include { INFILE_HANDLING_UNIX                    } from "../modules/local/infil
 
 include { REMOVE_PHIX_BBDUK                       } from "../modules/local/remove_phix_bbduk/main"
 include { TRIM_READS_TRIMMOMATIC                  } from "../modules/local/trim_reads_trimmomatic/main"
-//include { TRIM_READS_FASTP                      } from "../modules/local/trim_reads_fastp/main"
+include { TRIM_READS_FASTP                        } from "../modules/local/trim_reads_fastp/main"
 include { OVERLAP_PAIRED_READS_FLASH              } from "../modules/local/overlap_paired_reads_flash/main"
 //include { OVERLAP_PAIRED_READS_PEAR             } from "../modules/local/overlap_paired_reads_pear/main"
 
@@ -138,7 +138,7 @@ if (params.adapter_reference) {
                             }
                             .collect()
 } else {
-    error("Path to Adapter reference not specified. Please supply an adapter reference file in FastA format via `--adapter_reference` parameter.")
+    ch_adapter_reference = []
 }
 
 // CAT
@@ -235,6 +235,7 @@ workflow ASSEMBLY {
 
     // SETUP: Define empty channel
     ch_versions             = Channel.empty()
+    ch_qc_filecheck         = Channel.empty()
     ch_output_summary_files = Channel.empty()
 
     /*
@@ -253,7 +254,8 @@ workflow ASSEMBLY {
     INFILE_HANDLING_UNIX (
         INPUT_CHECK.out.raw_reads
     )
-    ch_versions = ch_versions.mix(INFILE_HANDLING_UNIX.out.versions)
+    ch_versions        = ch_versions.mix(INFILE_HANDLING_UNIX.out.versions)
+    ch_qc_filecheck    = ch_qc_filecheck.concat(INFILE_HANDLING_UNIX.out.qc_filecheck)
     ch_infile_handling = qcfilecheck(
                             "INFILE_HANDLING_UNIX",
                             INFILE_HANDLING_UNIX.out.qc_filecheck,
@@ -286,6 +288,7 @@ workflow ASSEMBLY {
         ch_phix_reference
     )
     ch_versions     = ch_versions.mix(REMOVE_PHIX_BBDUK.out.versions)
+    ch_qc_filecheck = ch_qc_filecheck.concat(REMOVE_PHIX_BBDUK.out.qc_filecheck)
     ch_removed_phix = qcfilecheck(
                         "REMOVE_PHIX_BBDUK",
                         REMOVE_PHIX_BBDUK.out.qc_filecheck,
@@ -302,34 +305,63 @@ workflow ASSEMBLY {
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_phix_removal_summary)
 
-    // PROCESS: Run trimmomatic to clip adapters and do quality trimming
-    TRIM_READS_TRIMMOMATIC (
-        ch_removed_phix,
-        ch_adapter_reference
-    )
-    ch_versions               = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
-    ch_trim_reads_trimmomatic = qcfilecheck(
-                                    "TRIM_READS_TRIMMOMATIC",
-                                    TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
-                                    TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed
-                                )
+    if ( toLower(params.trim_reads_tool) == "trimmomatic" ) {
+        // PROCESS: Run trimmomatic to clip adapters and do quality trimming
+        TRIM_READS_TRIMMOMATIC (
+            ch_removed_phix,
+            ch_adapter_reference
+        )
+        ch_versions     = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
+        ch_qc_filecheck = ch_qc_filecheck.concat(TRIM_READS_TRIMMOMATIC.out.qc_filecheck)
+        ch_trim_reads   = qcfilecheck(
+                            "TRIM_READS_TRIMMOMATIC",
+                            TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
+                            TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed
+                        )
 
-    // Collect read trimming summaries and concatenate into one file
-    ch_trimmomatic_summary = TRIM_READS_TRIMMOMATIC.out.summary
+        // Collect read trimming summaries and concatenate into one file
+        ch_trimmomatic_summary = TRIM_READS_TRIMMOMATIC.out.summary
+                                    .collectFile(
+                                        name:       "Summary-Trimmomatic.Adapter_and_QC_Trimming.tsv",
+                                        keepHeader: true,
+                                        storeDir:   "${params.outdir}/Summaries"
+                                    )
+
+        ch_output_summary_files = ch_output_summary_files.mix(ch_trimmomatic_summary)
+    } else if ( toLower(params.trim_reads_tool) == "fastp" ) {
+        // Do not use 'adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas' for fastp
+        ch_adapter_reference = ch_adapter_reference.map{ it[0].getSimpleName() == "adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas" }
+                                ? []
+                                : ch_adapter_reference
+
+        TRIM_READS_FASTP (
+            ch_removed_phix,
+            ch_adapter_reference
+        )
+        ch_versions     = ch_versions.mix(TRIM_READS_FASTP.out.versions)
+        ch_qc_filecheck = ch_qc_filecheck.concat(TRIM_READS_FASTP.out.qc_filecheck)
+        ch_trim_reads   = qcfilecheck(
+                            "TRIM_READS_FASTP",
+                            TRIM_READS_FASTP.out.qc_filecheck,
+                            TRIM_READS_FASTP.out.fastq_adapters_removed
+                        )
+
+        ch_fastp_summary = TRIM_READS_FASTP.out.summary
                                 .collectFile(
-                                    name:       "Summary.Adapter_and_QC_Trimming.tsv",
+                                    name:       "Summary-fastp.Adapter_and_QC_Trimming.tsv",
                                     keepHeader: true,
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
 
-    ch_output_summary_files = ch_output_summary_files.mix(ch_trimmomatic_summary)
+        ch_output_summary_files = ch_output_summary_files.mix(ch_fastp_summary)
+    }
 
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
     OVERLAP_PAIRED_READS_FLASH (
-        ch_trim_reads_trimmomatic
+        ch_trim_reads
     )
     ch_versions      = ch_versions.mix(OVERLAP_PAIRED_READS_FLASH.out.versions)
-
+    ch_qc_filecheck  = ch_qc_filecheck.concat(OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck)
     ch_overlap_flash = qcfilecheck(
                             "OVERLAP_PAIRED_READS_FLASH",
                             OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,
@@ -482,7 +514,8 @@ workflow ASSEMBLY {
         ch_overlap_flash,
         var_assembler_name
     )
-    ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS.out.versions)
+    ch_versions     = ch_versions.mix(ASSEMBLE_CONTIGS.out.versions)
+    ch_qc_filecheck = ch_qc_filecheck.concat(ASSEMBLE_CONTIGS.out.qc_filecheck)
 
     /*
     ================================================================================
@@ -551,6 +584,7 @@ workflow ASSEMBLY {
             .join(EXTRACT_16S_BIOPYTHON.out.extracted_rna)
     )
     ch_versions      = ch_versions.mix(EXTRACT_16S_BARRNAP.out.versions)
+    ch_qc_filecheck  = ch_qc_filecheck.concat(EXTRACT_16S_BARRNAP.out.qc_filecheck)
     ch_extracted_rna = qcfilecheck(
                             "EXTRACT_16S_BARRNAP",
                             EXTRACT_16S_BARRNAP.out.qc_filecheck,
@@ -602,12 +636,12 @@ workflow ASSEMBLY {
         ch_db_for_blast
     )
     ch_versions     = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
+    ch_qc_filecheck = ch_qc_filecheck.concat(ALIGN_16S_BLAST.out.qc_filecheck)
     ch_blast_output = qcfilecheck(
                         "ALIGN_16S_BLAST",
                         ALIGN_16S_BLAST.out.qc_filecheck,
                         ALIGN_16S_BLAST.out.blast_output
                     )
-
 
     // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes
     CLASSIFY_16S_RDP (
@@ -679,6 +713,7 @@ workflow ASSEMBLY {
         ch_cat_db_file
     )
     ch_versions             = ch_versions.mix(ASSEMBLY_ASSESSMENT.out.versions)
+    ch_qc_filecheck         = ch_qc_filecheck.concat(ASSEMBLY_ASSESSMENT.out.qc_filecheck)
     ch_output_summary_files = ch_output_summary_files.mix(ASSEMBLY_ASSESSMENT.out.summary_files)
 
     /*
@@ -688,33 +723,18 @@ workflow ASSEMBLY {
     */
 
     // Collect QC file checks and concatenate into one file
-    ch_qc_filecheck = Channel.empty()
     ch_qc_filecheck = ch_qc_filecheck
-        .concat(
-            INFILE_HANDLING_UNIX.out.qc_filecheck,
-            HOST_REMOVAL.out.qc_filecheck,
-            REMOVE_PHIX_BBDUK.out.qc_filecheck,
-            TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
-            OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,
-            ASSEMBLE_CONTIGS.out.qc_filecheck,
-            ANNOTATE_PROKKA.out.qc_filecheck,
-            EXTRACT_16S_BARRNAP.out.qc_filecheck,
-            ALIGN_16S_BLAST.out.qc_filecheck,
-            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
-            CLASSIFY_16S_RDP.out.qc_filecheck,
-            ASSEMBLY_ASSESSMENT.out.qc_filecheck
-        )
-        .map{ meta, file -> file }
-        .collect()
-        .flatten()
-        .collectFile(
-            name:       "Summary.QC_File_Checks.tsv",
-            keepHeader: true,
-            storeDir:   "${params.outdir}/Summaries",
-            sort:       'index'
-        )
+                        .map{ meta, file -> file }
+                        .collect()
+                        .flatten()
+                        .collectFile(
+                            name:       "Summary.QC_File_Checks.tsv",
+                            keepHeader: true,
+                            storeDir:   "${params.outdir}/Summaries",
+                            sort:       'index'
+                        )
 
-    ch_output_summary_files = ch_output_summary_files.mix(ch_qc_filecheck.collect())
+    ch_output_summary_files = ch_output_summary_files.mix(ch_qc_filecheck)
 
     /*
     ================================================================================
