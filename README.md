@@ -39,34 +39,46 @@ Run the built-in test set to confirm all parts are working as-expected. It will 
 nextflow run \
   bacterial-genomics/wf-paired-end-illumina-assembly \
   -r main \
-  -profile singularity,test \
+  -profile docker,test \
   --outdir my-results
 ```
 
 ## Quick Start: Run
 
-Example command on FastQs in "new-fastq-dir" data using **SPAdes** with singularity:
+Example command on FastQs in "new-fastq-dir" data using the **SPAdes** assembler (default) with the Docker container engine:
 
 ```bash
 nextflow run \
   bacterial-genomics/wf-paired-end-illumina-assembly \
   -r main \
-  -profile singularity \
+  -profile docker \
   --input new-fastq-dir \
-  --outdir my-results \
-  --assembler spades
+  --outdir my-results
 ```
 
-Example command on FastQs in "new-fastq-dir" data using **SKESA** with singularity:
+Example command on FastQs in "new-fastq-dir" data using the **SKESA** assembler with the Singularity container platform:
 
 ```bash
 nextflow run \
   bacterial-genomics/wf-paired-end-illumina-assembly \
   -r main \
-  -profile singularity \
+  -profile docker \
   --input new-fastq-dir \
   --outdir my-results \
   --assembler skesa
+```
+
+## Quick Start: Run Specific Workflow Version
+
+Example command on FastQs in "new-fastq-dir" data using the **SPAdes** assembler (default) with the Docker container engine and a [supported version number](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/tags) such as v2.3.0:
+
+```bash
+nextflow run \
+  bacterial-genomics/wf-paired-end-illumina-assembly \
+  -r v2.3.0 \
+  -profile docker \
+  --input new-fastq-dir \
+  --outdir my-results
 ```
 
 ## Introduction
