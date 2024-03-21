@@ -46,7 +46,7 @@ include { INFILE_HANDLING_UNIX                    } from "../modules/local/infil
 
 include { REMOVE_PHIX_BBDUK                       } from "../modules/local/remove_phix_bbduk/main"
 include { TRIM_READS_TRIMMOMATIC                  } from "../modules/local/trim_reads_trimmomatic/main"
-//include { TRIM_READS_FASTP                      } from "../modules/local/trim_reads_fastp/main"
+include { TRIM_READS_FASTP                        } from "../modules/local/trim_reads_fastp/main"
 include { OVERLAP_PAIRED_READS_FLASH              } from "../modules/local/overlap_paired_reads_flash/main"
 //include { OVERLAP_PAIRED_READS_PEAR             } from "../modules/local/overlap_paired_reads_pear/main"
 
@@ -59,7 +59,6 @@ include { READ_CLASSIFY_KRAKEN_TWO                } from "../modules/local/read_
 // include { READ_CLASSIFY_METAPHLAN                 } from "../modules/local/read_classify_metaphlan/main"
 
 include { EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS  } from "../modules/local/extract_read_alignment_depths_bedtools/main"
-include { CALCULATE_COVERAGE_UNIX                 } from "../modules/local/calculate_coverage_unix/main"
 
 include { MLST_MLST                               } from "../modules/local/mlst_mlst/main"
 //include { MLST_SRST2                            } from "../modules/local/mlst_srst2/main"
@@ -76,14 +75,6 @@ include { BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON   } from "../modules/local/best_
 include { CLASSIFY_16S_RDP                        } from "../modules/local/classify_16S_rdp/main"
 include { SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON     } from "../modules/local/split_multifasta_assembly_biopython/main"
 
-include { GTDBTK_DB_PREPARATION_UNIX              } from "../modules/local/gtdbtk_db_preparation_unix/main"
-include { GTDBTK_CLASSIFYWF as QA_ASSEMBLY_GTDBTK } from "../modules/nf-core/gtdbtk/classifywf/main"
-include { BUSCO_DB_PREPARATION_UNIX               } from "../modules/local/busco_db_preparation_unix/main"
-include { BUSCO as QA_ASSEMBLY_BUSCO              } from "../modules/nf-core/busco/main"
-include { QA_ASSEMBLY_QUAST                       } from "../modules/local/qa_assembly_quast/main"
-//include { QA_ASSEMBLY_CAT                       } from "../modules/local/qa_assembly_cat/main"
-//include { QA_ASSEMBLY_CHECKM2                   } from "../modules/local/qa_assembly_checkm2/main"
-
 include { CONVERT_TSV_TO_EXCEL_PYTHON             } from "../modules/local/convert_tsv_to_excel_python/main"
 include { CREATE_EXCEL_RUN_SUMMARY_PYTHON         } from "../modules/local/create_excel_run_summary_python/main"
 
@@ -94,6 +85,7 @@ include { INPUT_CHECK                             } from "../subworkflows/local/
 include { HOST_REMOVAL                            } from "../subworkflows/local/host_removal"
 include { DOWNSAMPLE                              } from "../subworkflows/local/downsampling"
 include { ASSEMBLE_CONTIGS                        } from "../subworkflows/local/assemble_contigs"
+include { ASSEMBLY_ASSESSMENT                     } from "../subworkflows/local/assembly_assessment"
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,14 +138,28 @@ if (params.adapter_reference) {
                             }
                             .collect()
 } else {
-    error("Path to Adapter reference not specified. Please supply an adapter reference file in FastA format via `--adapter_reference` parameter.")
+    ch_adapter_reference = []
+}
+
+// CAT
+if (params.cat_db) {
+    ch_cat_db_file = file(params.cat_db, checkIfExists: true)
+} else {
+    ch_cat_db_file = []
+}
+
+// CheckM2
+if (params.checkm2_db) {
+    ch_checkm2_db_file = file(params.checkm2_db, checkIfExists: true)
+} else {
+    ch_checkm2_db_file = []
 }
 
 // GTDB
 if (params.gtdb_db) {
     ch_gtdbtk_db_file = file(params.gtdb_db, checkIfExists: true)
 } else {
-    ch_gtdbtk_db_file = Channel.empty()
+    ch_gtdbtk_db_file = []
 }
 
 // Mash database for GTDB-Tk
@@ -167,7 +173,7 @@ if (params.mash_db) {
 if (params.busco_db) {
     ch_busco_db_file = file(params.busco_db, checkIfExists: true)
 } else {
-    ch_busco_db_file = Channel.empty()
+    ch_busco_db_file = []
 }
 
 // kraken
@@ -229,6 +235,7 @@ workflow ASSEMBLY {
 
     // SETUP: Define empty channel
     ch_versions             = Channel.empty()
+    ch_qc_filecheck         = Channel.empty()
     ch_output_summary_files = Channel.empty()
 
     /*
@@ -247,7 +254,8 @@ workflow ASSEMBLY {
     INFILE_HANDLING_UNIX (
         INPUT_CHECK.out.raw_reads
     )
-    ch_versions = ch_versions.mix(INFILE_HANDLING_UNIX.out.versions)
+    ch_versions        = ch_versions.mix(INFILE_HANDLING_UNIX.out.versions)
+    ch_qc_filecheck    = ch_qc_filecheck.concat(INFILE_HANDLING_UNIX.out.qc_filecheck)
     ch_infile_handling = qcfilecheck(
                             "INFILE_HANDLING_UNIX",
                             INFILE_HANDLING_UNIX.out.qc_filecheck,
@@ -266,7 +274,7 @@ workflow ASSEMBLY {
         ch_infile_handling,
         ch_sra_scrubber_db_file
     )
-    ch_versions         = ch_versions.mix(HOST_REMOVAL.out.versions)
+    ch_versions = ch_versions.mix(HOST_REMOVAL.out.versions)
 
     // SUBWORKFLOW: Downsample FastQ files
     DOWNSAMPLE (
@@ -280,6 +288,7 @@ workflow ASSEMBLY {
         ch_phix_reference
     )
     ch_versions     = ch_versions.mix(REMOVE_PHIX_BBDUK.out.versions)
+    ch_qc_filecheck = ch_qc_filecheck.concat(REMOVE_PHIX_BBDUK.out.qc_filecheck)
     ch_removed_phix = qcfilecheck(
                         "REMOVE_PHIX_BBDUK",
                         REMOVE_PHIX_BBDUK.out.qc_filecheck,
@@ -287,9 +296,7 @@ workflow ASSEMBLY {
                       )
 
     // Collect PhiX removal summaries and concatenate into one file
-    ch_phix_removal_summary = Channel.empty()
-    ch_phix_removal_summary = ch_phix_removal_summary
-                                .mix(REMOVE_PHIX_BBDUK.out.summary)
+    ch_phix_removal_summary = REMOVE_PHIX_BBDUK.out.summary
                                 .collectFile(
                                     name:       "Summary.PhiX_Removal.tsv",
                                     keepHeader: true,
@@ -298,36 +305,63 @@ workflow ASSEMBLY {
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_phix_removal_summary)
 
-    // PROCESS: Run trimmomatic to clip adapters and do quality trimming
-    TRIM_READS_TRIMMOMATIC (
-        ch_removed_phix,
-        ch_adapter_reference
-    )
-    ch_versions               = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
-    ch_trim_reads_trimmomatic = qcfilecheck(
-                                    "TRIM_READS_TRIMMOMATIC",
-                                    TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
-                                    TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed
-                                )
+    if ( toLower(params.trim_reads_tool) == "trimmomatic" ) {
+        // PROCESS: Run trimmomatic to clip adapters and do quality trimming
+        TRIM_READS_TRIMMOMATIC (
+            ch_removed_phix,
+            ch_adapter_reference
+        )
+        ch_versions     = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
+        ch_qc_filecheck = ch_qc_filecheck.concat(TRIM_READS_TRIMMOMATIC.out.qc_filecheck)
+        ch_trim_reads   = qcfilecheck(
+                            "TRIM_READS_TRIMMOMATIC",
+                            TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
+                            TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed
+                        )
 
-    // Collect read trimming summaries and concatenate into one file
-    ch_trimmomatic_summary = Channel.empty()
-    ch_trimmomatic_summary = ch_trimmomatic_summary
-                                .mix(TRIM_READS_TRIMMOMATIC.out.summary)
+        // Collect read trimming summaries and concatenate into one file
+        ch_trimmomatic_summary = TRIM_READS_TRIMMOMATIC.out.summary
+                                    .collectFile(
+                                        name:       "Summary-Trimmomatic.Adapter_and_QC_Trimming.tsv",
+                                        keepHeader: true,
+                                        storeDir:   "${params.outdir}/Summaries"
+                                    )
+
+        ch_output_summary_files = ch_output_summary_files.mix(ch_trimmomatic_summary)
+    } else if ( toLower(params.trim_reads_tool) == "fastp" ) {
+        // Do not use 'adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas' for fastp
+        ch_adapter_reference = ch_adapter_reference.map{ it[0].getSimpleName() == "adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas" }
+                                ? []
+                                : ch_adapter_reference
+
+        TRIM_READS_FASTP (
+            ch_removed_phix,
+            ch_adapter_reference
+        )
+        ch_versions     = ch_versions.mix(TRIM_READS_FASTP.out.versions)
+        ch_qc_filecheck = ch_qc_filecheck.concat(TRIM_READS_FASTP.out.qc_filecheck)
+        ch_trim_reads   = qcfilecheck(
+                            "TRIM_READS_FASTP",
+                            TRIM_READS_FASTP.out.qc_filecheck,
+                            TRIM_READS_FASTP.out.fastq_adapters_removed
+                        )
+
+        ch_fastp_summary = TRIM_READS_FASTP.out.summary
                                 .collectFile(
-                                    name:       "Summary.Adapter_and_QC_Trimming.tsv",
+                                    name:       "Summary-fastp.Adapter_and_QC_Trimming.tsv",
                                     keepHeader: true,
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
 
-    ch_output_summary_files = ch_output_summary_files.mix(ch_trimmomatic_summary)
+        ch_output_summary_files = ch_output_summary_files.mix(ch_fastp_summary)
+    }
 
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
     OVERLAP_PAIRED_READS_FLASH (
-        ch_trim_reads_trimmomatic
+        ch_trim_reads
     )
     ch_versions      = ch_versions.mix(OVERLAP_PAIRED_READS_FLASH.out.versions)
-
+    ch_qc_filecheck  = ch_qc_filecheck.concat(OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck)
     ch_overlap_flash = qcfilecheck(
                             "OVERLAP_PAIRED_READS_FLASH",
                             OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,
@@ -335,9 +369,7 @@ workflow ASSEMBLY {
                         )
 
     // Collect singleton read summaries and concatenate into one file
-    ch_overlap_summary = Channel.empty()
-    ch_overlap_summary = ch_overlap_summary
-                                .mix(OVERLAP_PAIRED_READS_FLASH.out.summary)
+    ch_overlap_summary = OVERLAP_PAIRED_READS_FLASH.out.summary
                                 .collectFile(
                                     name:       "Summary.Clean_and_Overlapping_Reads.tsv",
                                     keepHeader: true,
@@ -368,7 +400,7 @@ workflow ASSEMBLY {
                 ch_kraken1_db
             )
             ch_versions       = ch_versions.mix(KRAKEN1_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_kraken1 = KRAKEN1_DB_PREPARATION_UNIX.out.db
+            ch_db_for_kraken1 = KRAKEN1_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_kraken1_db_file.isDirectory() ) {
             ch_db_for_kraken1 = Channel
@@ -394,29 +426,28 @@ workflow ASSEMBLY {
                                     }
                                     .collect()
         } else {
-            error("Unsupported object given to --kraken1_db, database must be supplied as either a directory or a .tar.gz file!")
+            log.error("Unsupported object given to --kraken1_db, database must be supplied as either a directory or a .tar.gz file!")
+            ch_db_for_kraken1 = Channel.empty()
         }
-
-        // PROCESS: Run kraken1 on paired cleaned reads
-        READ_CLASSIFY_KRAKEN_ONE (
-            ch_overlap_flash,
-            ch_db_for_kraken1
-        )
-        ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
-
-        // Collect kraken summaries and concatenate into one file
-        ch_kraken_one_summary = Channel.empty()
-        ch_kraken_one_summary = ch_kraken_one_summary
-                                    .mix(READ_CLASSIFY_KRAKEN_ONE.out.summary)
-                                    .collectFile(
-                                        name:       "Summary.Kraken.tsv",
-                                        keepHeader: true,
-                                        storeDir:   "${params.outdir}/Summaries"
-                                    )
-
     } else {
         log.warn("Kraken could not be performed - database not specified using --kraken1_db!")
+        ch_db_for_kraken1 = Channel.empty()
     }
+
+    // PROCESS: Run kraken1 on paired cleaned reads
+    READ_CLASSIFY_KRAKEN_ONE (
+        ch_overlap_flash,
+        ch_db_for_kraken1
+    )
+    ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
+
+    // Collect kraken summaries and concatenate into one file
+    ch_kraken_one_summary = READ_CLASSIFY_KRAKEN_ONE.out.summary
+                                .collectFile(
+                                    name:       "Summary.Kraken.tsv",
+                                    keepHeader: true,
+                                    storeDir:   "${params.outdir}/Summaries"
+                                )
 
     // Prepare kraken2 database for use
     if ( ch_kraken2_db_file ) {
@@ -434,7 +465,7 @@ workflow ASSEMBLY {
                 ch_kraken2_db
             )
             ch_versions       = ch_versions.mix(KRAKEN2_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_kraken2 = KRAKEN2_DB_PREPARATION_UNIX.out.db
+            ch_db_for_kraken2 = KRAKEN2_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_kraken2_db_file.isDirectory() ) {
             ch_db_for_kraken2 = Channel
@@ -450,28 +481,28 @@ workflow ASSEMBLY {
                                     }
                                     .collect()
         } else {
-            error("Unsupported object given to --kraken2_db, database must be supplied as either a directory or a .tar.gz file!")
+            log.error("Unsupported object given to --kraken2_db, database must be supplied as either a directory or a .tar.gz file!")
+            ch_db_for_kraken2 = Channel.empty()
         }
-        // PROCESS: Run kraken2 on paired cleaned reads
-        READ_CLASSIFY_KRAKEN_TWO (
-            ch_overlap_flash,
-            ch_db_for_kraken2
-        )
-        ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
-
-        // Collect kraken2 summaries and concatenate into one file
-        ch_kraken_two_summary = Channel.empty()
-        ch_kraken_two_summary = ch_kraken_two_summary
-                                    .mix(READ_CLASSIFY_KRAKEN_TWO.out.summary)
-                                    .collectFile(
-                                        name:       "Summary.Kraken2.tsv",
-                                        keepHeader: true,
-                                        storeDir:   "${params.outdir}/Summaries"
-                                    )
-
     } else {
         log.warn("Kraken2 could not be performed - database not specified using --kraken2_db!")
+        ch_db_for_kraken2 = Channel.empty()
     }
+
+    // PROCESS: Run kraken2 on paired cleaned reads
+    READ_CLASSIFY_KRAKEN_TWO (
+        ch_overlap_flash,
+        ch_db_for_kraken2
+    )
+    ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
+
+    // Collect kraken2 summaries and concatenate into one file
+    ch_kraken_two_summary = READ_CLASSIFY_KRAKEN_TWO.out.summary
+                                .collectFile(
+                                    name:       "Summary.Kraken2.tsv",
+                                    keepHeader: true,
+                                    storeDir:   "${params.outdir}/Summaries"
+                                )
 
     /*
     ================================================================================
@@ -483,7 +514,8 @@ workflow ASSEMBLY {
         ch_overlap_flash,
         var_assembler_name
     )
-    ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS.out.versions)
+    ch_versions     = ch_versions.mix(ASSEMBLE_CONTIGS.out.versions)
+    ch_qc_filecheck = ch_qc_filecheck.concat(ASSEMBLE_CONTIGS.out.qc_filecheck)
 
     /*
     ================================================================================
@@ -498,9 +530,7 @@ workflow ASSEMBLY {
     ch_versions = ch_versions.mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.versions)
 
     // Collect alignment summary stats and concatenate into one file
-    ch_alignment_stats_summary = Channel.empty()
-    ch_alignment_stats_summary = ch_alignment_stats_summary
-                                    .mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary)
+    ch_alignment_stats_summary = EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary
                                     .map{ meta, file -> file }
                                     .collectFile(
                                         name:     "Summary.CleanedReads-AlignmentStats.tsv",
@@ -516,14 +546,13 @@ workflow ASSEMBLY {
     ch_versions = ch_versions.mix(MLST_MLST.out.versions)
 
     // Collect MLST Summaries and concatenate into one file
-    ch_mlst_summary = Channel.empty()
-    ch_mlst_summary = ch_mlst_summary
-                        .mix(MLST_MLST.out.summary)
+    ch_mlst_summary = MLST_MLST.out.summary
                         .collectFile(
                             name:     "Summary.MLST.tsv",
                             keepHeader: true,
                             storeDir: "${params.outdir}/Summaries"
                         )
+
     ch_output_summary_files = ch_output_summary_files.mix(ch_mlst_summary)
 
     // PROCESS: Annotate the polished assembly using Prokka
@@ -531,11 +560,11 @@ workflow ASSEMBLY {
         ASSEMBLE_CONTIGS.out.assembly_file
     )
     ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
-    ch_genbank = qcfilecheck(
+    ch_genbank  = qcfilecheck(
                     "ANNOTATE_PROKKA",
                     ANNOTATE_PROKKA.out.qc_filecheck,
                     ANNOTATE_PROKKA.out.prokka_genbank_file
-                  )
+                )
 
     /*
     ================================================================================
@@ -555,6 +584,7 @@ workflow ASSEMBLY {
             .join(EXTRACT_16S_BIOPYTHON.out.extracted_rna)
     )
     ch_versions      = ch_versions.mix(EXTRACT_16S_BARRNAP.out.versions)
+    ch_qc_filecheck  = ch_qc_filecheck.concat(EXTRACT_16S_BARRNAP.out.qc_filecheck)
     ch_extracted_rna = qcfilecheck(
                             "EXTRACT_16S_BARRNAP",
                             EXTRACT_16S_BARRNAP.out.qc_filecheck,
@@ -572,12 +602,13 @@ workflow ASSEMBLY {
                                     meta['id'] = db.getSimpleName()
                                     [ meta, db ]
                             }
+
             // Expects to be .tar.gz!
             BLAST_DB_PREPARATION_UNIX (
                 ch_blast_db
             )
             ch_versions     = ch_versions.mix(BLAST_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db
+            ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_blast_db_file.isDirectory() ) {
             ch_db_for_blast = Channel
@@ -605,12 +636,12 @@ workflow ASSEMBLY {
         ch_db_for_blast
     )
     ch_versions     = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
+    ch_qc_filecheck = ch_qc_filecheck.concat(ALIGN_16S_BLAST.out.qc_filecheck)
     ch_blast_output = qcfilecheck(
                         "ALIGN_16S_BLAST",
                         ALIGN_16S_BLAST.out.qc_filecheck,
                         ALIGN_16S_BLAST.out.blast_output
-                      )
-
+                    )
 
     // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes
     CLASSIFY_16S_RDP (
@@ -622,213 +653,88 @@ workflow ASSEMBLY {
                         "CLASSIFY_16S_RDP",
                         CLASSIFY_16S_RDP.out.qc_filecheck,
                         CLASSIFY_16S_RDP.out.rdp_tsv
-                      )
+                    )
 
     // Concatenate RDP summaries
-    ch_rdp_summary.map{meta, file -> file}
-                  .collectFile(
-                    name: "Summary.RDP.tsv",
-                    keepHeader: true,
-                    storeDir:   "${params.outdir}/Summaries"
-                  )
+    ch_rdp_summary
+        .map{meta, file -> file}
+        .collect()
+        .flatten()
+        .collectFile(
+            name:       "Summary.RDP.tsv",
+            keepHeader: true,
+            storeDir:   "${params.outdir}/Summaries"
+        )
 
+    ch_output_summary_files = ch_output_summary_files.mix(ch_rdp_summary.map{ meta, file -> file })
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
         ch_blast_output
     )
-    ch_versions = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
+    ch_versions  = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
     ch_top_blast = qcfilecheck(
                         "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
                         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
                         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.top_blast_species
                     )
 
-    ch_output_summary_files = ch_output_summary_files.mix(ch_top_blast.map{ meta, file -> file })
-
     // Collect top BLASTn species and concatenate into one file
-    ch_top_blast.map{ meta, file -> file }
-                .collectFile(
-                    name:       "16S-top-species.tsv",
-                    keepHeader: true,
-                    storeDir:   "${params.outdir}/SSU"
-                )
-                .collectFile(
-                    name:       "Summary.16S.tsv",
-                    keepHeader: true,
-                    storeDir:   "${params.outdir}/Summaries"
-                )
+    ch_top_blast = ch_top_blast
+                        .map{ meta, file -> file }
+                        .collectFile(
+                            name:       "${var_assembler_name}.16S-top-species.tsv",
+                            keepHeader: true,
+                            storeDir:   "${params.outdir}/SSU"
+                        )
+                        .collectFile(
+                            name:       "Summary.16S.tsv",
+                            keepHeader: true,
+                            storeDir:   "${params.outdir}/Summaries"
+                        )
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_top_blast)
+
     /*
     ================================================================================
-                            Evaluate contigs
+                          Perform assessment on final assembly file
     ================================================================================
     */
 
-    /*
-     * QUAST: Genome assembly evaluation tool
-     */
-
-    // PROCESS: Run QUAST on the polished assembly for quality assessment and
-    //  report the number of cleaned basepairs used to form the assembly
-    QA_ASSEMBLY_QUAST (
-        ch_overlap_flash.join(ASSEMBLE_CONTIGS.out.assembly_file)
+    ASSEMBLY_ASSESSMENT (
+        ASSEMBLE_CONTIGS.out.assembly_file,
+        ch_overlap_flash,
+        EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary,
+        ch_busco_config_file,
+        ch_busco_db_file,
+        ch_mash_db_file,
+        ch_gtdbtk_db_file,
+        ch_checkm2_db_file,
+        ch_cat_db_file
     )
-    ch_versions = ch_versions.mix(QA_ASSEMBLY_QUAST.out.versions)
-
-    // Collect assembly summaries and concatenate into one file
-    ch_assembly_summary = Channel.empty()
-    ch_assembly_summary = ch_assembly_summary
-                            .mix(QA_ASSEMBLY_QUAST.out.summary_assemblies)
-                            .collectFile(
-                                name:       "Summary.Assemblies.tsv",
-                                keepHeader: true,
-                                storeDir:   "${params.outdir}/Summaries"
-                            )
-
-    ch_output_summary_files = ch_output_summary_files.mix(ch_assembly_summary)
-
-    // Collect cleaned read/base summaries and concatenate into one file
-    ch_cleaned_summary = Channel.empty()
-    ch_cleaned_summary = ch_cleaned_summary
-                            .mix(QA_ASSEMBLY_QUAST.out.summary_reads)
-                            .collectFile(
-                                name:     "Summary.CleanedReads-Bases.tsv",
-                                keepHeader: true,
-                                storeDir: "${params.outdir}/Summaries"
-                            )
-
-    ch_output_summary_files = ch_output_summary_files.mix(ch_cleaned_summary)
-
-    // PROCESS: Calculate genome assembly depth of coverage
-    CALCULATE_COVERAGE_UNIX (
-        QA_ASSEMBLY_QUAST.out.qa_summaries
-            .join(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary)
-    )
-    ch_versions = ch_versions.mix(CALCULATE_COVERAGE_UNIX.out.versions)
-
-    // Collect genome coverage summaries and concatenate into one file
-    ch_genome_cov_summary = Channel.empty()
-    ch_genome_cov_summary = ch_genome_cov_summary
-                                .mix(CALCULATE_COVERAGE_UNIX.out.summary)
-                                .collectFile(
-                                    name:     "Summary.GenomeCoverage.tsv",
-                                    keepHeader: true,
-                                    storeDir: "${params.outdir}/Summaries"
-                                )
-
-    ch_output_summary_files = ch_output_summary_files.mix(ch_genome_cov_summary)
+    ch_versions             = ch_versions.mix(ASSEMBLY_ASSESSMENT.out.versions)
+    ch_qc_filecheck         = ch_qc_filecheck.concat(ASSEMBLY_ASSESSMENT.out.qc_filecheck)
+    ch_output_summary_files = ch_output_summary_files.mix(ASSEMBLY_ASSESSMENT.out.summary_files)
 
     /*
-     * GTDB-Tk: taxonomic classification using a GTDB reference
-     */
+    ================================================================================
+                        Collect QC information
+    ================================================================================
+    */
 
-    // PROCESS: Classify assembly FastA file using GTDB-Tk
-    if (!params.skip_gtdbtk && params.gtdb_db) {
-        if ( ch_gtdbtk_db_file.extension in ['gz', 'tgz'] ) {
-            // Add meta information
-            ch_gtdb_db = Channel.of(ch_gtdbtk_db_file)
-                            .map{
-                                db ->
-                                    def meta = [:]
-                                    meta['id'] = db.getSimpleName()
-                                    [ meta, db ]
-                            }
-            // Expects to be .tar.gz!
-            GTDBTK_DB_PREPARATION_UNIX (
-                ch_gtdb_db
-            )
-            ch_versions      = ch_versions.mix(GTDBTK_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_gtdbtk = GTDBTK_DB_PREPARATION_UNIX.out.db
+    // Collect QC file checks and concatenate into one file
+    ch_qc_filecheck = ch_qc_filecheck
+                        .map{ meta, file -> file }
+                        .collect()
+                        .flatten()
+                        .collectFile(
+                            name:       "Summary.QC_File_Checks.tsv",
+                            keepHeader: true,
+                            storeDir:   "${params.outdir}/Summaries",
+                            sort:       'index'
+                        )
 
-        } else if ( ch_gtdbtk_db_file.isDirectory() ) {
-            ch_db_for_gtdbtk = Channel
-                                .fromPath( "${ch_gtdbtk_db_file}/*", type: 'dir', maxDepth: 1 )
-                                .collect()
-                                .map{
-                                    [ it[0].getSimpleName(), it ]
-                                }
-
-        } else {
-            error("Unsupported object given to --gtdb_db, database must be supplied as either a directory or a .tar.gz file!")
-        }
-
-        // PROCESS: Perform GTDBTk on assembly FastA file
-        QA_ASSEMBLY_GTDBTK (
-            ASSEMBLE_CONTIGS.out.assembly_file,
-            ch_db_for_gtdbtk,
-            ch_mash_db_file
-        )
-        ch_versions             = ch_versions.mix(QA_ASSEMBLY_GTDBTK.out.versions)
-        ch_output_summary_files = ch_output_summary_files.mix(QA_ASSEMBLY_GTDBTK.out.summary.map{ meta, file -> file })
-    }
-
-    /*
-     * BUSCO: predict genes on contigs
-     */
-
-    // PROCESS: Classify contigs with BUSCO
-    if (!params.skip_busco && params.busco_db) {
-        if ( ch_busco_db_file.extension in ['gz', 'tgz'] ) {
-            // Add meta information
-            ch_busco_db = Channel.of(ch_busco_db_file)
-                            .map{
-                                db ->
-                                    def meta = [:]
-                                    meta['id'] = db.getSimpleName()
-                                    [ meta, db ]
-                            }
-            // Expects to be tar.gz!
-            BUSCO_DB_PREPARATION_UNIX(
-                ch_busco_db
-            )
-            ch_versions     = ch_versions.mix(BUSCO_DB_PREPARATION_UNIX.out.versions)
-            ch_db_for_busco = BUSCO_DB_PREPARATION_UNIX.out.db
-
-        } else if ( ch_busco_db_file.isDirectory() ) {
-            // Expects directory in <database>/lineages/<lineage>_odb10 format!
-            ch_db_for_busco = Channel
-                                .fromPath(ch_busco_db_file)
-                                .map{
-                                    db ->
-                                        if ( db.getSimpleName().contains('odb10') ) {
-                                            if ( db.getParent().getSimpleName() == "lineages" ) {
-                                                db.getParent().getParent()
-                                            } else {
-                                                error("Unsupported object given to --busco_db, database directory must be in format `<database>/lineages/<lineage>_odb10`!")
-                                            }
-                                        } else {
-                                            db
-                                        }
-                                }
-                                .collect()
-        } else {
-            error("Unsupported object given to --busco_db, database must be supplied as either a directory or a .tar.gz file!")
-        }
-
-        ch_lineage_for_busco_db = Channel
-                                    .of(ch_busco_db_file)
-                                    .map{
-                                        db ->
-                                            db = db.getSimpleName()
-                                            db.contains('odb10') ? db : 'auto'
-                                    }
-
-        // PROCESS: Split assembly FastA file into individual contig files
-        SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON (
-            ASSEMBLE_CONTIGS.out.assembly_file
-        )
-        ch_versions = ch_versions.mix(SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.versions)
-
-        // PROCESS: Perform BUSCO analysis on contigs
-        QA_ASSEMBLY_BUSCO (
-            SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.split_multifasta_assembly_dir,
-            ch_lineage_for_busco_db,
-            ch_db_for_busco,
-            ch_busco_config_file
-        )
-        ch_versions             = ch_versions.mix(QA_ASSEMBLY_BUSCO.out.versions)
-        ch_output_summary_files = ch_output_summary_files.mix(QA_ASSEMBLY_BUSCO.out.batch_summary.map{ meta, file -> file })
-    }
+    ch_output_summary_files = ch_output_summary_files.mix(ch_qc_filecheck)
 
     /*
     ================================================================================
@@ -850,7 +756,7 @@ workflow ASSEMBLY {
 
     /*
     ================================================================================
-                        Collect version and QC information
+                        Collect version information
     ================================================================================
     */
 
@@ -861,32 +767,6 @@ workflow ASSEMBLY {
             name:     "software_versions.yml",
             storeDir: params.logpath
         )
-
-    // Collect QC file checks and concatenate into one file
-    ch_qc_filecheck = Channel.empty()
-    ch_qc_filecheck = ch_qc_filecheck
-        .concat(
-            INFILE_HANDLING_UNIX.out.qc_filecheck,
-            HOST_REMOVAL.out.qc_filecheck,
-            REMOVE_PHIX_BBDUK.out.qc_filecheck,
-            TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
-            OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck,
-            ASSEMBLE_CONTIGS.out.qc_filecheck,
-            ANNOTATE_PROKKA.out.qc_filecheck,
-            EXTRACT_16S_BARRNAP.out.qc_filecheck,
-            ALIGN_16S_BLAST.out.qc_filecheck,
-            BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck
-        )
-        .map{ meta, file -> file }
-        .collect()
-        .flatten()
-        .collectFile(
-            name:       "Summary.QC_File_Checks.tsv",
-            keepHeader: true,
-            storeDir:   "${params.outdir}/Summaries",
-            sort:       'index'
-        )
-
 }
 
 /*

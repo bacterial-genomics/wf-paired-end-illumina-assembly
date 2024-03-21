@@ -48,7 +48,7 @@ process POLISH_ASSEMBLY_BWA_PILON {
         -x intractg \
         -t !{task.cpus} \
         !{uncorrected_contigs} \
-        !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} \
+        "!{meta.id}_R1.paired.fq.gz" "!{meta.id}_R2.paired.fq.gz" \
         | \
         samtools sort \
         -l 9 \
@@ -112,7 +112,7 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
     # Single read mapping if available for downstream depth of coverage
     #  calculations, not for assembly polishing.
-    if [[ !{cleaned_fastq_files[2]} ]]; then
+    if [[ !{meta.id}_single.fq.gz ]]; then
       msg "INFO: Single read mapping"
       bwa index "!{meta.id}-!{meta.assembler}.fna"
 
@@ -121,7 +121,7 @@ process POLISH_ASSEMBLY_BWA_PILON {
         -x intractg \
         "!{meta.id}-!{meta.assembler}.fna" \
         -t !{task.cpus} \
-        !{cleaned_fastq_files[2]} \
+        "!{meta.id}_single.fq.gz" \
         | \
         samtools sort \
         -l 9 \

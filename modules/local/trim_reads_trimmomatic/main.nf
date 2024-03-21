@@ -6,7 +6,7 @@ process TRIM_READS_TRIMMOMATIC {
 
     input:
     tuple val(meta), path(noPhiX)
-    path adapter_reference_file
+    path(adapter_reference_file)
 
     output:
     tuple val(meta), path("${meta.id}.Adapter*_File.tsv") , emit: qc_filecheck

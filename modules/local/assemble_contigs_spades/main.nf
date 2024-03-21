@@ -25,9 +25,9 @@ process ASSEMBLE_CONTIGS_SPADES {
     RAMSIZE=$(echo !{task.memory} | cut -d ' ' -f 1)
 
     spades.py \
-      -1 !{cleaned_fastq_files[0]} \
-      -2 !{cleaned_fastq_files[1]} \
-      -s !{cleaned_fastq_files[2]} \
+      -1 "!{meta.id}_R1.paired.fq.gz" \
+      -2 "!{meta.id}_R2.paired.fq.gz" \
+      -s "!{meta.id}_single.fq.gz" \
       -o SPAdes \
       -k !{params.spades_kmer_sizes} \
       !{mode} \

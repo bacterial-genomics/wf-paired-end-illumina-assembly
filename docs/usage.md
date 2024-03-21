@@ -54,7 +54,7 @@ CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
 ```
 
 | Column    | Description                                                                                                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `sample`  | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
 | `fastq_1` | Full path to FastQ file for Illumina short reads 1. File must be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                               |
 | `fastq_2` | Full path to FastQ file for Illumina short reads 2. File must be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                               |
@@ -185,7 +185,7 @@ Command executed:
       --threads 12 \
       --fastq-input \
       --gzip-compressed \
-      test_R1.paired.fq.gz test_R2.paired.fq.gz test.single.fq.gz \
+      test_R1.paired.fq.gz test_R2.paired.fq.gz test_single.fq.gz \
       > test_kraken.output
 
 Command exit status:
@@ -195,7 +195,7 @@ Command output:
     (empty)
 
 Command error:
-    .command.sh: line 9:  30 Killed    kraken --db /kraken_database/ --threads 12 --fastq-input --gzip-compressed test_R1.paired.fq.gz test_R2.paired.fq.gz test.single.fq.gz  > test_kraken.output
+    .command.sh: line 9:  30 Killed    kraken --db /kraken_database/ --threads 12 --fastq-input --gzip-compressed test_R1.paired.fq.gz test_R2.paired.fq.gz test_single.fq.gz  > test_kraken.output
 
 Work dir:
     /home/wf-paired-end-illumina-assembly/work/9d/172ca5881234073e8d76f2a19c88fb

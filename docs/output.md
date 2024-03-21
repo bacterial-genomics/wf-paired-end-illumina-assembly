@@ -107,7 +107,11 @@ PhiX reads are commonly used as a positive control for Illumina sequencing. Duri
 
 ### Adapter clipping and quality trimming
 
-Illumina instruments can detect and remove adapter sequences, but sometimes adapters can end up in the FastQ output due to sequencing errors. A default [adapters reference file](../bin/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas) is used within this pipeline. Trimmomatic also performs quality trimming, where broken sister reads are retained for downstream processes.
+Illumina instruments can detect and remove adapter sequences, but sometimes adapters can end up in the FastQ output due to sequencing errors.
+
+#### Trimmomatic
+
+A default [adapters reference file](../bin/adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas) is used within this pipeline for Trimmomatic. Trimmomatic also performs quality trimming, where broken sister reads are retained for downstream processes.
 Please see the [adapter clipping and quality trimming using Trimmomatic documentation](../modules/local/trim_reads_trimmomatic/README.md) for more information.
 
 <details markdown="1">
@@ -115,7 +119,7 @@ Please see the [adapter clipping and quality trimming using Trimmomatic document
 
 - The adapters reference file that is used with Trimmomatic to remove sequence reads must be accessible and meet a minimum file size `[Default: 10k]`.
 
-- FastQ files after removing adapter sequences are checked to ensure that they meet a minimum file size before continuing to downstream processes `[Default: 25M]`. This is to halt analysis of a sample that is primarily contaminated with artificial Illumina sequences.
+- FastQ files after removing adapters and performing quality trimming are checked to ensure that they meet a minimum file size before continuing to downstream processes `[Default: 25M]`. This is to halt analysis of a sample that is primarily contaminated with artificial Illumina sequences.
 
 </details>
 
@@ -126,6 +130,29 @@ Please see the [adapter clipping and quality trimming using Trimmomatic document
 
 - `CleanedReads/Trimmomatic/`
   - `[sample].trimmomatic.[tsv,xlsx]`: Summary of the number of reads discarded and retained from Trimmomatic.
+
+</details>
+
+#### fastp
+
+fastp is able to clip adapters, perform quality trimming, and retain broken sister reads for downstream processes. fastp is able to automatically detect adapter sequences, but the use of a custom list of adapter sequences can be used.
+
+<details markdown="1">
+<summary><strong>QC Steps</strong></summary>
+
+- If used, the adapters reference file that is used to remove sequence reads must be accessible and meet a minimum file size `[Default: 10k]`.
+
+- FastQ files after removing adapters and performing quality trimming are checked to ensure that they meet a minimum file size before continuing to downstream processes `[Default: 25M]`. This is to halt analysis of a sample that is primarily contaminated with artificial Illumina sequences.
+
+</details>
+
+<br />
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `CleanedReads/fastp/`
+  - `[sample].fastp.[tsv,xlsx]`: Summary of the number of reads discarded and retained from Trimmomatic.
 
 </details>
 
@@ -290,7 +317,7 @@ The final assembly file is scanned against PubMLST typing schemes to determine t
 <summary>MLST output interpretation</summary>
 
 | Symbol | Meaning                               | Length          | Identity       |
-| ------ | ------------------------------------- | --------------- | -------------- |
+|--------|---------------------------------------|-----------------|----------------|
 | `n`    | exact intact allele                   | 100%            | 100%           |
 | `~n`   | novel full length allele similar to n | 100%            | &ge; `--minid` |
 | `n?`   | partial match to known allele         | &ge; `--mincov` | &ge; `--minid` |
@@ -389,13 +416,16 @@ Concatenation of output metrics for all samples.
 
 - `Summaries/`
   - `Summary.16S.[tsv,xlsx]`: Summary of the best BLAST alignment for each sample.
+  - `Summary.RDP.[tsv,xlsx]`: Summary of RDP Classifier on predicted 16S ribosomal RNA genes.
   - `Summary.MLST.[tsv,xlsx]`: Summary of the MLST results for all samples.
-  - `Summary.PhiX.[tsv,xlsx]`: Number of reads discarded and retained for each sample.
   - `Summary.Assemblies.[tsv,xlsx]`: Assembly metrics such as N50, cumulative length, longest contig length, and GC composition for each sample.
-  - `Summary.GenomeCoverage.[tsv,xlsx]`: Summary of the overall genome coverage for each sample.
+  - `Summary.PhiX_Removal.[tsv,xlsx]`: Number of reads discarded and retained for each sample.
   - `Summary.QC_File_Checks.[tsv,xlsx]`: Summary of all QC file checks detailing if a sample passes or fails each process.
+  - `Summary.GenomeCoverage.[tsv,xlsx]`: Summary of the overall genome coverage for each sample.
   - `Summary.CleanedReads-Bases.[tsv,xlsx]`: Summary of the number of cleaned bases for each sample.
+  - `Summary.Clean_and_Overlapping_Reads.[tsv,xlsx]`: Summary of the merging of overlapping sister reads.
   - `Summary.CleanedReads-AlignmentStats.[tsv,xlsx]`: Summary of the genome size and coverages of the paired-end and single-end reads for each sample.
+  - `Summary-[fastp,trimmomatic].Adapter_and_QC_Trimming.[tsv,xlsx]`:  Summary of adapter clipping and quality trimming for each sample.
   - `Summary-Report_yyyy-MM-dd_HH-mm-ss.xlsx`: Excel workbook where each file in the Summaries directory is added to a separate worksheet within the workbook.
 
 </details>
