@@ -3,6 +3,18 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### `Added`
+
+### `Fixed`
+
+- [#88](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/88) Resolved issue where SPAdes fails when a non-integer is used with the memory parameter (@gregorysprenger).
+
+### `Updated`
+
+### `Deprecated`
+
 ## v2.3.0 - March 20, 2024
 
 ### `Added`
