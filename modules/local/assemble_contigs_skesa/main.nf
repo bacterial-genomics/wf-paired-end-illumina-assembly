@@ -15,7 +15,7 @@ process ASSEMBLE_CONTIGS_SKESA {
 
     shell:
     allow_snps = params.skesa_allow_snps ? "--allow snps" : ""
-    memory = Math.round(Math.floor(task.memory.toString().replaceAll("[GB]", "").toFloat()))
+    memory     = Math.round(Math.floor(task.memory.toString().replaceAll("[GB]", "").toFloat()))
     '''
     source bash_functions.sh
 
