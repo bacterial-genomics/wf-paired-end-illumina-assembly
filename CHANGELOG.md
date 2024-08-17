@@ -2,6 +2,16 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## v2.3.1 - TBD
+
+### `Added`
+
+### `Fixed`
+- [#92](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/92) Refactored profiles to align with Seqera Tower requirements and added a Tower yaml for reporting.
+
+### `Updated`
+
+### `Deprecated`
 
 ## v2.3.0 - March 20, 2024
 
