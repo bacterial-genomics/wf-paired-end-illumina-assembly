@@ -2,25 +2,17 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## v2.3.1 - TBD
 
-### `Added`
-
-### `Fixed`
-- [#92](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/92) Refactored profiles to align with Seqera Tower requirements and added a Tower yaml for reporting.
-
-### `Updated`
-
-### `Deprecated`
-
-## Unreleased
+## v2.3.1 - August 23, 2024
 
 ### `Added`
 
 ### `Fixed`
 
+- [#92](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/92) Refactored profiles to align with Seqera Tower requirements and added a Tower yaml for reporting (@slsevilla).
 - [#88](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/88) Resolved issue where SPAdes fails when a non-integer is used with the memory parameter (@gregorysprenger).
 - [#90](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/90) Add SKESA parameters to main params.config file to avoid `null` values (@gregorysprenger).
+- [#88](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/88) Resolved issue where SPAdes fails when a non-integer is used with the memory parameter (@gregorysprenger).
 
 ### `Updated`
 
