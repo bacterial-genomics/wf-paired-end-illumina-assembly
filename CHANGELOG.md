@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Deprecated`
 
+## Unreleased
+
+### `Added`
+
+### `Fixed`
+
+- [#88](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/88) Resolved issue where SPAdes fails when a non-integer is used with the memory parameter (@gregorysprenger).
+- [#90](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/90) Add SKESA parameters to main params.config file to avoid `null` values (@gregorysprenger).
+
+### `Updated`
+
+### `Deprecated`
+
 ## v2.3.0 - March 20, 2024
 
 ### `Added`
