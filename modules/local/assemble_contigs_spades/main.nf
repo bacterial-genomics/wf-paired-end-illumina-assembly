@@ -15,14 +15,14 @@ process ASSEMBLE_CONTIGS_SPADES {
     path("versions.yml")                                                       , emit: versions
 
     shell:
-    mode_list = ["--isolate", "--sc", "--meta", "--plasmid", "--rna", "--metaviral", "--metaplasmid", "--corona"]
-    mode = (params.spades_mode !in mode_list) ? "" : params.spades_mode
+    mode_list  = ["--isolate", "--sc", "--meta", "--plasmid", "--rna", "--metaviral", "--metaplasmid", "--corona"]
+    mode       = (params.spades_mode !in mode_list) ? "" : params.spades_mode
+    memory     = Math.round(Math.floor(task.memory.toString().replaceAll("[GB]", "").toFloat()))
     '''
     source bash_functions.sh
 
     # Run SPAdes assembler; try up to 3 times
     msg "INFO: Assembling contigs using SPAdes"
-    RAMSIZE=$(echo !{task.memory} | cut -d ' ' -f 1)
 
     spades.py \
       -1 "!{meta.id}_R1.paired.fq.gz" \
@@ -31,7 +31,7 @@ process ASSEMBLE_CONTIGS_SPADES {
       -o SPAdes \
       -k !{params.spades_kmer_sizes} \
       !{mode} \
-      --memory "${RAMSIZE}" \
+      --memory !{memory} \
       --threads !{task.cpus}
 
     # Verify file output
