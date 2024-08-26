@@ -1,5 +1,6 @@
 process CLASSIFY_16S_RDP {
 
+    label "process_medium"  // single CPU but needs the RAM boost
     tag { "${meta.id}" }
     container "tpaisie/rdp@sha256:ee388dff2e17c567946b7f2bf326765586d30f4ea0a203800616c44f599d53cc"
 
