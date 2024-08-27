@@ -1,7 +1,7 @@
 process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
 
     tag { "${meta.id}" }
-    container "gregorysprenger/seqtk@sha256:756bff7222c384d358cb22ecbbae443e112b296503cb0e1a6baf9cf80545ae20"
+    container "staphb/seqtk@sha256:82797114adb664ba939b4f6dfcb822483a4af827def4288e5207be559055f2cc"
 
     input:
     tuple val(meta), path(reads)
