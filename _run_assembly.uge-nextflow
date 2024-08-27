@@ -25,6 +25,7 @@ nextflow \
   --blast_db ${LAB_HOME}/.databases/ncbi \
   --kraken1_db ${LAB_HOME}/.databases/kraken1-db-v1.0.0 \
   --kraken2_db ${LAB_HOME}/.databases/kraken2 \
+  --create_excel_outputs \
   -resume
 
 # Check for errors and add to errors.tsv
