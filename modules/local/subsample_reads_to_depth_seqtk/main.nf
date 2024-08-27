@@ -1,7 +1,7 @@
 process SUBSAMPLE_READS_TO_DEPTH_SEQTK {
 
     tag { "${meta.id}" }
-    container "staphb/seqtk@sha256:82797114adb664ba939b4f6dfcb822483a4af827def4288e5207be559055f2cc"
+    container "staphb/seqtk@sha256:e3105ea1c7375e6bfe0603f6e031b022068b3d4d529f295c5fa24e0a6709dd2c"
 
     input:
     tuple val(meta), path(reads), path(depth), path(fraction_of_reads)
@@ -12,6 +12,8 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQTK {
     path("versions.yml")                                         , emit: versions
 
     shell:
+    seqtk_seed = (params.seqtk_seed >= 1)? params.seqtk_seed : 947266746
+
     '''
     source bash_functions.sh
 
@@ -20,24 +22,37 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQTK {
 
     depth="!{params.depth}"
 
+    echo "!{params.seqkit_seed}" > seed-value.txt
+
     if ! [[ ${fraction_of_reads_to_use} =~ ^[0-9.]+$ ]]; then
       msg "ERROR: Unable to calculate a fraction to subsample; ${fraction_of_reads_to_use} not a floating point value" >&2
       exit 1
     fi
     if [ ${depth%.*} -gt 0 ] && [ ${initial_depth%.*} -gt ${depth%.*} ]; then
-      seqtk sample !{reads[0]} ${fraction_of_reads_to_use} > "!{meta.id}_R1.subsampled.fastq"
-      seqtk sample !{reads[1]} ${fraction_of_reads_to_use} > "!{meta.id}_R2.subsampled.fastq"
+      msg "INFO: Subsampling !{meta.id} R1 with seqtk using seed:!{params.seqtk_seed}"
+
+      seqtk sample \
+        -s "!{params.seqtk_seed}" \
+        !{reads[0]} \
+        ${fraction_of_reads_to_use} \
+        > "!{meta.id}_R1.subsampled.fastq"
+
+      msg "INFO: Subsampling !{meta.id} R2 with seqtk using seed:!{params.seqtk_seed}"
+
+      seqtk sample \
+        -s "!{params.seqtk_seed}" \
+        !{reads[1]} \
+        ${fraction_of_reads_to_use} \
+        > "!{meta.id}_R2.subsampled.fastq"
 
       rm -f !{reads[0]} !{reads[1]}
 
-      gzip -9f "!{meta.id}_R1.subsampled.fastq" \
+      gzip -9f \
+        "!{meta.id}_R1.subsampled.fastq" \
         "!{meta.id}_R2.subsampled.fastq"
 
     else
       msg "INFO: Subsampling not requested or required"
-      ###   NOTE:
-      ###       this gonna be tricky?!
-      ###       pass onto phix-remove-bbduk either subsampled reads() or initial input reads() tuple
     fi
 
     ### number of contigs and repeats elements with Lander-Waterman statistics
