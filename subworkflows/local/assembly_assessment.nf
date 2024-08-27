@@ -301,7 +301,17 @@ workflow ASSEMBLY_ASSESSMENT {
                             ASSESS_ASSEMBLY_CHECKM2.out.summary
                         )
 
-    ch_output_summary_files = ch_output_summary_files.mix(ch_checkm2_output.map{ meta, file -> file })
+    // Concatenate CheckM2 summaries
+    //ch_output_summary_files = ch_output_summary_files.mix(ch_checkm2_output.map{ meta, file -> file })
+    ch_checkm2_output
+        .map{ meta, file -> file }  // Map to only include the files
+        .collectFile(
+            name:       "Summary.CheckM2.tsv",
+            keepHeader: true,
+            storeDir:   "${params.outdir}/Summaries"
+        )
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_checkm2_output)
 
     /*
     ================================================================================
