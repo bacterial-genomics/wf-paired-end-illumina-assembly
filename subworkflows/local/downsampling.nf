@@ -15,6 +15,18 @@ include { ESTIMATE_GENOME_SIZE_KMC           } from "../../modules/local/estimat
 include { COUNT_TOTAL_BP_INPUT_READS_SEQTK   } from "../../modules/local/count_total_bp_input_reads_seqtk/main"
 include { ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX } from "../../modules/local/estimate_original_input_depth_unix/main"
 include { SUBSAMPLE_READS_TO_DEPTH_SEQTK     } from "../../modules/local/subsample_reads_to_depth_seqtk/main"
+include { SUBSAMPLE_READS_TO_DEPTH_SEQKIT    } from "../../modules/local/subsample_reads_to_depth_seqkit/main"
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    WORKFLOW FUNCTIONS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// Convert params.assembler to lowercase
+def toLower(it) {
+    it.toString().toLowerCase()
+}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,6 +62,7 @@ workflow DOWNSAMPLE {
         //  still consider downsampling with specified genome_size input value
     }
 
+    // Only if specified depth is less than wanted depth, subsample infiles
     if (params.depth > 0) {
         log.info("Estimating if the input exceeds ${params.depth}x")
 
@@ -65,14 +78,26 @@ workflow DOWNSAMPLE {
         )
         ch_versions = ch_versions.mix(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.versions)
 
-        // Only if specified depth is less than wanted depth, subsample infiles
-        SUBSAMPLE_READS_TO_DEPTH_SEQTK (
-            ch_raw_reads.join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use)
-        )
-        ch_versions = ch_versions.mix(SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.versions)
+        // Subsample with seqtk
+        if ( toLower(params.subsample_tool) == "seqtk" ) {
+            SUBSAMPLE_READS_TO_DEPTH_SEQTK (
+                ch_raw_reads.join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use)
+            )
+            ch_versions = ch_versions.mix(SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.versions)
 
-        // Collect subsampled reads
-        ch_downsampled_reads = SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.reads
+            // Collect subsampled reads
+            ch_downsampled_reads = SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.reads
+
+        } else if ( toLower(params.subsample_tool) == "seqkit" ) {
+            // Subsample with seqkit
+            SUBSAMPLE_READS_TO_DEPTH_SEQKIT (
+                ch_raw_reads.join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use)
+            )
+            ch_versions = ch_versions.mix(SUBSAMPLE_READS_TO_DEPTH_SEQKIT.out.versions)
+
+            // Collect subsampled reads
+            ch_downsampled_reads = SUBSAMPLE_READS_TO_DEPTH_SEQKIT.out.reads
+        }
 
     } else {
         // Skip subsampling and pass raw reads to PhiX removal
