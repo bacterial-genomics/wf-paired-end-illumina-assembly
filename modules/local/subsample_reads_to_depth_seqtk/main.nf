@@ -1,7 +1,7 @@
 process SUBSAMPLE_READS_TO_DEPTH_SEQTK {
 
     tag { "${meta.id}" }
-    container "staphb/seqtk@sha256:e3105ea1c7375e6bfe0603f6e031b022068b3d4d529f295c5fa24e0a6709dd2c"
+    container "staphb/seqtk@sha256:82797114adb664ba939b4f6dfcb822483a4af827def4288e5207be559055f2cc"
 
     input:
     tuple val(meta), path(reads), path(depth), path(fraction_of_reads)
