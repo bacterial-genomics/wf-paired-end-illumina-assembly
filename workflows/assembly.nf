@@ -655,18 +655,16 @@ workflow ASSEMBLY {
                         CLASSIFY_16S_RDP.out.rdp_tsv
                     )
 
-    // Concatenate RDP summaries
+    // PROCESS: Concatenate RDP summaries
     ch_rdp_summary
-        .map{meta, file -> file}
-        .collect()
-        .flatten()
+        .map{ meta, file -> file }  // Map to only include the files
         .collectFile(
             name:       "Summary.RDP.tsv",
             keepHeader: true,
             storeDir:   "${params.outdir}/Summaries"
         )
 
-    ch_output_summary_files = ch_output_summary_files.mix(ch_rdp_summary.map{ meta, file -> file })
+    ch_output_summary_files = ch_output_summary_files.mix(ch_rdp_summary)
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
@@ -744,7 +742,15 @@ workflow ASSEMBLY {
 
     if (params.create_excel_outputs) {
         CREATE_EXCEL_RUN_SUMMARY_PYTHON (
-            ch_output_summary_files.collect()
+            ch_output_summary_files
+                .map { item ->
+                    if (item instanceof List && item.size() > 1) {
+                        return item[1]  // If it's a tuple, return the file path (second item)
+                    } else {
+                        return item  // Otherwise, return the item as-is (assumed to be a file path)
+                    }
+        }
+        .collect()
         )
         ch_versions = ch_versions.mix(CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.versions)
 
