@@ -23,6 +23,7 @@ nextflow \
   -N ${USER}@cdc.gov \
   -w ${OUT}/.work \
   --blast_db ${LAB_HOME}/.databases/ncbi \
+  --checkm2_db ${LAB_HOME}/.databases/checkm2 \
   --kraken1_db ${LAB_HOME}/.databases/kraken1-db-v1.0.0 \
   --kraken2_db ${LAB_HOME}/.databases/kraken2 \
   --create_excel_outputs \
