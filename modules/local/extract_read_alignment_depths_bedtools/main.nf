@@ -32,7 +32,7 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
       > "!{meta.id}-!{meta.assembler}.CleanedReads-AlnStats.tsv"
 
     sed -i \
-      '1i Sample name\tCoverage of paired reads\tCoverage of singleton reads\tGenome size' \
+      '1i Sample_name\tCoverage_of_paired_reads_(x)\tCoverage_of_singleton_reads_(x)\tGenome_size_(bp)' \
       "!{meta.id}-!{meta.assembler}.CleanedReads-AlnStats.tsv"
 
     # Get process version information
