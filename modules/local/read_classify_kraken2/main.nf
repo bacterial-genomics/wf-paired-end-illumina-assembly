@@ -32,8 +32,12 @@ process READ_CLASSIFY_KRAKEN_TWO {
         !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} !{cleaned_fastq_files[2]}
 
       msg "INFO: Summarizing Kraken2"
-      echo -e "% Reads\t# Reads\tUnclassified\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads" \
+      echo -ne "Reads_(%)\tReads_(#)\tUnclassified" \
         > "!{meta.id}.kraken2_summary.tsv"
+      echo -ne "\tReads_(%)\tReads_(#)\tGenus\tReads_(%)\tReads_(#)\tGenus\tReads_(%)\tReads_(#)\tGenus" \
+        >> "!{meta.id}.kraken2_summary.tsv"
+      echo -e "\tReads_(%)\tReads_(#)\tSpecies\tReads_(%)\tReads_(#)\tSpecies\tReads_(%)\tReads_(#)\tSpecies" \
+        >> "!{meta.id}.kraken2_summary.tsv"
 
       summarize_kraken 'kraken2.tsv' >> "!{meta.id}.kraken2_summary.tsv"
 
