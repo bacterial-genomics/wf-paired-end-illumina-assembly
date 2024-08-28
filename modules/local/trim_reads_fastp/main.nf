@@ -81,7 +81,7 @@ process TRIM_READS_FASTP {
 
     # Create report file of reads removed and broken
     echo -e "!{meta.id}\t${READ_COUNT_DISCARDED}\t${COUNT_BROKEN_TOTAL}" > !{meta.id}.fastp.tsv
-    sed -i '1i Sample name\t# discarded reads\t# singleton reads' !{meta.id}.fastp.tsv
+    sed -i '1i Sample_name\tDiscarded_reads_(#)\tSingleton_reads_(#)' !{meta.id}.fastp.tsv
 
     # Test/verify paired FastQ outfiles sizes are reasonable to continue
     for suff in R1.paired.fq R2.paired.fq; do
