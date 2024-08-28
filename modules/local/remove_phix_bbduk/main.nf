@@ -88,17 +88,17 @@ process REMOVE_PHIX_BBDUK {
     msg "INFO: ${PHIX_BASES:-0} bp of PhiX were detected and ${PHIX_READS:-0} reads were removed"
 
     SUMMARY_HEADER=(
-      "Sample name",
-      "# Cleaned reads",
-      "% Cleaned reads",
-      "# Cleaned bp",
-      "% Cleaned bp",
-      "# PhiX reads",
-      "% PhiX reads",
-      "# PhiX Bp",
-      "% PhiX bp",
-      "# Raw reads",
-      "# Raw bp\n"
+      "Sample_name",
+      "Cleaned_reads_(#)",
+      "Cleaned_reads_(%)",
+      "Cleaned_basepairs_(#)",
+      "Cleaned_basepairs_(%)",
+      "PhiX_reads_(#)",
+      "PhiX_reads_(%)",
+      "PhiX_basepairs_(#)",
+      "PhiX_basepairs_(%)",
+      "Raw_reads_(#)",
+      "Raw_basepairs_(#)\n"
     )
 
     SUMMARY_OUTPUT=(
