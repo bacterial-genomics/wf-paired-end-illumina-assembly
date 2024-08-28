@@ -48,6 +48,11 @@ process ASSESS_ASSEMBLY_CHECKM2 {
     # Replace space characters in header line with underscores
     sed -i '1s/ /_/g' !{meta.id}.CheckM2.report.tsv
 
+    # Also replace data content spaces with underscores as workaround issue with pandas converting to XLSX, error message:
+    # "pandas.errors.ParserError: Error tokenizing data. C error: Expected 9 fields in line 3, saw 11" where #s can be different, so
+    # as a workaround simply replace them with underscores (e.g., "Neural Network (Specific Model)" -> "Neural_Network_(Specific_Model)")
+    sed -i '2s/ /_/g' !{meta.id}.CheckM2.report.tsv
+
     # Compress the log and alignments files for compact storage
     gzip -9f "!{meta.id}.CheckM2.log" "!{meta.id}.CheckM2.alignments.tsv"
 
