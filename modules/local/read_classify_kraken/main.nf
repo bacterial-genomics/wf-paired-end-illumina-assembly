@@ -37,8 +37,12 @@ process READ_CLASSIFY_KRAKEN_ONE {
         > kraken.tsv 2>&1 | tr '^M' '\\n' 1>&2
 
       msg "INFO: Summarizing Kraken1"
-      echo -e "% Reads\t# Reads\tUnclassified\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tGenus\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads\tSpecies\t% Reads\t# Reads" \
+      echo -ne "Reads_(%)\tReads_(#)\tUnclassified" \
         > "!{meta.id}.kraken_summary.tsv"
+      echo -ne "\tReads_(%)\tReads_(#)\tGenus\tReads_(%)\tReads_(#)\tGenus\tReads_(%)\tReads_(#)\tGenus" \
+        >> "!{meta.id}.kraken_summary.tsv"
+      echo -e "\tReads_(%)\tReads_(#)\tSpecies\tReads_(%)\tReads_(#)\tSpecies\tReads_(%)\tReads_(#)\tSpecies" \
+        >> "!{meta.id}.kraken_summary.tsv"
 
       summarize_kraken 'kraken.tsv' >> "!{meta.id}.kraken_summary.tsv"
 
