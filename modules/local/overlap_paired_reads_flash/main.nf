@@ -75,7 +75,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     CNT_CLEANED_SINGLETON=$(echo $((${count_single}/4)))
     msg "INFO: Number of singletons cleaned: ${CNT_CLEANED_SINGLETON}"
 
-    echo -e "Sample name\t# cleaned reads (paired FastQ)\t# cleaned reads (singletons)\t# overlapped reads" \
+    echo -e "Sample_name\tCleaned_reads_(#_paired)\tCleaned_reads_(#_singletons)\tOverlapped_reads_(#)" \
       > "!{meta.id}.FLASH.tsv"
     echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS}\t${CNT_CLEANED_SINGLETON}\t${CNT_READS_OVERLAPPED:-0}" \
       >> "!{meta.id}.FLASH.tsv"
