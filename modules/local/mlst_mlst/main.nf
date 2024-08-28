@@ -58,8 +58,12 @@ process MLST_MLST {
         --exclude "${exclude_list}" \
         >> "!{meta.id}-!{meta.assembler}.MLST.tsv"
 
+      # Discard the assembly file extension in the report, ensures Sample_name consistent in reporting
+      sed -i -E "s/\.(fasta|fas|fa|fna)\t/\t/g" "!{meta.id}-!{meta.assembler}.MLST.tsv"
+
+      # Add header line to data output
       sed -i \
-        '1i Filename\tPubMLST scheme name\tSequence type\tAllele IDs' \
+        '1i Sample_name-Assembler\tPubMLST_scheme_name\tSequence_type_(ST-#)\tAllele_numbers' \
         "!{meta.id}-!{meta.assembler}.MLST.tsv"
     fi
 
