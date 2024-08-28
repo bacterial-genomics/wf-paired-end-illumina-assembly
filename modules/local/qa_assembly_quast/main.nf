@@ -64,7 +64,7 @@ process QA_ASSEMBLY_QUAST {
         awk 'BEGIN{SUM=0} {if(NR%4==2){SUM+=length($0)}} END{OFMT="%f"; print SUM}' \
           >> "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
 
-      sed -i '1i Sample name\t# cleaned bases' "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
+      sed -i '1i Sample_name\tCleaned_bases_(#)' "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
     done
 
     # Get process version information
