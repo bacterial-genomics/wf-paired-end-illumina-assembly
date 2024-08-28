@@ -77,7 +77,7 @@ process TRIM_READS_TRIMMOMATIC {
     echo -e "!{meta.id}\t${TRIMMO_DISCARD}\t${CNT_BROKEN}" \
     > "!{meta.id}.Trimmomatic.tsv"
 
-    sed -i '1i Sample name\t# discarded reads\t# singleton reads' !{meta.id}.Trimmomatic.tsv
+    sed -i '1i Sample_name\tDiscarded_reads_(#)\tSingleton_reads_(#)' !{meta.id}.Trimmomatic.tsv
 
     cat !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq > "!{meta.id}_single.fq"
 
