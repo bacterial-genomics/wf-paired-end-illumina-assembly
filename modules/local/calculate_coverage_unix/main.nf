@@ -41,10 +41,16 @@ process CALCULATE_COVERAGE_UNIX {
       if [[ "${cov}" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
         echo -e "${ln[0]}\t${cov}x" >> "!{meta.id}-!{meta.assembler}.GenomeCoverage.tsv"
         ((i=i+1))
+      else
+        # TO-DO:  Parse PE aligned stats as backup
+        #paired_mapped_depth=$(awk -F'\t' '{print $3}' Summaries/Summary.CleanedReads-AlignmentStats.tsv | sed -n 's/.*(\(.*\)).*/\1/p')
+        #echo -e "${ln[0]}\t${paired_mapped_depth}x" >> "!{meta.id}-!{meta.assembler}.GenomeCoverage.tsv"
+        #((i=i+1))
+        :
       fi
     done < <(grep -v 'Total length' !{summary_assemblies})
 
-    sed -i '1i Sample name\tCoverage' "!{meta.id}-!{meta.assembler}.GenomeCoverage.tsv"
+    sed -i '1i Sample_name\tCoverage_(x)' "!{meta.id}-!{meta.assembler}.GenomeCoverage.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
