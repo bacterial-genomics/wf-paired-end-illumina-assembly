@@ -58,13 +58,26 @@ process MLST_MLST {
         --exclude "${exclude_list}" \
         >> "!{meta.id}-!{meta.assembler}.MLST.tsv"
 
-      # Discard the assembly file extension in the report, ensures Sample_name consistent in reporting
-      sed -i -E "s/\.(fasta|fas|fa|fna)\t/\t/g" "!{meta.id}-!{meta.assembler}.MLST.tsv"
+      # Replace the assembly file (with "-<assembler pkg>" in first column with nextflow's
+      #   sample_name in the report, to ensure Sample_name consistent in report.
+      # NOTE: Sample name alone not clear enough which assembler was used at this stage to
+      #       avoid confusion when > 1 assembler is used in same output directory path.
+      awk -v id="!{meta.id}-!{meta.assembler}" \
+        'BEGIN{FS=OFS="\t"} {$1=id; print}' \
+        "${meta.id}-${meta.assembler}.MLST.tsv" \
+        > tmp \
+      && mv tmp "${meta.id}-${meta.assembler}.MLST.tsv"
 
       # Add header line to data output
-      sed -i \
-        '1i Sample_name-Assembler\tPubMLST_scheme_name\tSequence_type_(ST-#)\tAllele_numbers' \
-        "!{meta.id}-!{meta.assembler}.MLST.tsv"
+      # NOTE: use awk instead of sed to avoid error on () characters
+      awk \
+        'BEGIN{print "Sample_name-Assembler\tPubMLST_scheme_name\tSequence_type_(ST-#)\tAllele_numbers"}
+         {print}
+        ' \
+        "${meta.id}-${meta.assembler}.MLST.tsv" \
+        > tmp \
+      && \
+      mv tmp "${meta.id}-${meta.assembler}.MLST.tsv"
     fi
 
     # Get process version information
