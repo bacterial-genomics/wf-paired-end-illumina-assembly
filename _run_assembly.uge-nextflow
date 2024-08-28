@@ -136,8 +136,8 @@ if [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   sed -i '1i Sample Name\tProcess\tError\tError Directory\tTimestamp\tRun Name' ${OUT}/pipeline_info/errors.tsv
 
   # Remove duplicate lines and lines that have an empty first column
-  awk -F '\t' '!_[$1,$2,$3,$6]++' ${OUT}/pipeline_info/errors.tsv \
-    | awk -F '\t' '$1{print $0}' \
+  awk -F $'\t' '!_[$1,$2,$3,$6]++' ${OUT}/pipeline_info/errors.tsv \
+    | awk -F $'\t' '$1{print $0}' \
     > ${OUT}/pipeline_info/errors_new.tsv
 
   # Delete original errors.tsv and rename errors_new.tsv
