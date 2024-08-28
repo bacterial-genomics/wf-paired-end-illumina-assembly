@@ -19,7 +19,14 @@ process CREATE_EXCEL_RUN_SUMMARY_PYTHON {
 
     def create_summary_workbook(output_file, tsv_file):
         sheet_name = tsv_file.split(".")[1]
-        data = pd.read_csv(tsv_file, sep="\t", error_bad_lines=False)
+        #data = pd.read_csv(tsv_file, sep="\t", error_bad_lines=False)
+        try:
+            data = pd.read_csv(tsv_file, sep="\t")
+            data.to_excel(output_file, sheet_name=sheet_name, index=False)
+        except pd.errors.ParserError as e:
+            # Allow it to skip over problematic files, while still processing the rest, but print offending filenames for debug help
+            print(f"ERROR: Skipping {tsv_file} due to parsing error: {e}")
+
         data.to_excel(output_file, sheet_name=sheet_name, index=False)
 
     date = datetime.datetime.now()
@@ -36,6 +43,7 @@ process CREATE_EXCEL_RUN_SUMMARY_PYTHON {
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
+        pandas: $(python -c "import pandas as pd; print(pd.__version__)")
         python: $(python3 --version 2>&1 | awk '{print $2}')
         ubuntu: $(awk -F ' ' '{print $2, $3}' /etc/issue | tr -d '\\n')
     END_VERSIONS
