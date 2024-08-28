@@ -19,7 +19,7 @@ process CREATE_EXCEL_RUN_SUMMARY_PYTHON {
 
     def create_summary_workbook(output_file, tsv_file):
         sheet_name = tsv_file.split(".")[1]
-        data = pd.read_csv(tsv_file, sep="\t")
+        data = pd.read_csv(tsv_file, sep="\t", error_bad_lines=False)
         data.to_excel(output_file, sheet_name=sheet_name, index=False)
 
     date = datetime.datetime.now()
