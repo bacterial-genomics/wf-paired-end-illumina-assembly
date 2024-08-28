@@ -71,7 +71,7 @@ process REMOVE_HOST_HOSTILE {
     RELATIVE_OUTPATH_R2=$(grep '"fastq2_out_path":' .command.out | awk '{print $2}' | sed 's/[",]//g')
 
     # Validate output files are sufficient size to continue
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.Hostile-removed_FastQ_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.Hostile-removed_FastQ_File.tsv"
 
     for file in ${RELATIVE_OUTPATH_R1} ${RELATIVE_OUTPATH_R2}; do
       if verify_minimum_file_size "${file}" 'Hostile-removed FastQ Files' "!{min_filesize_output_fastq}"; then
@@ -111,12 +111,12 @@ process REMOVE_HOST_HOSTILE {
 
     DELIM='\t'
     SUMMARY_HEADER=(
-      "Sample name"
-      "# Input reads"
-      "# Output reads"
-      "% Output reads"
-      "# Removed reads"
-      "% Removed reads"
+      "Sample_name"
+      "Input_reads_(#)"
+      "Output_reads_(#)"
+      "Output_reads_(%)"
+      "Removed_reads_(#)"
+      "Removed_reads_(%)"
     )
     SUMMARY_HEADER=$(printf "%s${DELIM}" "${SUMMARY_HEADER[@]}")
     SUMMARY_HEADER="${SUMMARY_HEADER%${DELIM}}"
