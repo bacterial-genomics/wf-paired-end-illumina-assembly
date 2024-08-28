@@ -19,7 +19,7 @@ process MAP_CONTIGS_BWA {
     source bash_functions.sh
 
     # Map SKESA contigs with cleaned PE reads
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Filtered_Assembly_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Filtered_Assembly_File.tsv"
     if verify_minimum_file_size "!{uncorrected_contigs}" 'Filtered Assembly File' "!{params.min_filesize_filtered_assembly}"; then
       echo -e "!{meta.id}-!{meta.assembler}\tFiltered Assembly File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.Filtered_Assembly_File.tsv"
@@ -43,7 +43,7 @@ process MAP_CONTIGS_BWA {
       -o "!{meta.id}-!{meta.assembler}.paired.bam" \
       --reference !{uncorrected_contigs}
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
     if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.paired.bam" 'Binary PE Alignment Map File' "!{params.min_filesize_binary_pe_alignment}"; then
       echo -e "!{meta.id}-!{meta.assembler}\tBinary PE Alignment Map File\tPASS" \
         >> "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
@@ -56,7 +56,7 @@ process MAP_CONTIGS_BWA {
 
     cp -L "!{meta.id}-!{meta.assembler}.uncorrected.fna" "!{meta.id}-!{meta.assembler}.fna"
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Final_Corrected_Assembly_FastA_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Final_Corrected_Assembly_FastA_File.tsv"
     if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.fna" 'Final Corrected Assembly FastA File' "!{params.min_filesize_final_assembly}"; then
       echo -e "!{meta.id}-!{meta.assembler}\tFinal Corrected Assembly FastA File\tPASS" \
         >> "!{meta.id}-!{meta.assembler}.Final_Corrected_Assembly_FastA_File.tsv"
@@ -83,7 +83,7 @@ process MAP_CONTIGS_BWA {
         -o "!{meta.id}-!{meta.assembler}.single.bam" \
         --reference "!{meta.id}-!{meta.assembler}.fna"
 
-      echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Binary_SE_Alignment_Map_File.tsv"
+      echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Binary_SE_Alignment_Map_File.tsv"
       if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.single.bam" 'Binary SE Alignment Map File' '!{params.min_filesize_binary_se_alignment}'; then
         echo -e "!{meta.id}-!{meta.assembler}\tBinary SE Alignment Map File\tPASS" \
             >> "!{meta.id}-!{meta.assembler}.Binary_SE_Alignment_Map_File.tsv"
