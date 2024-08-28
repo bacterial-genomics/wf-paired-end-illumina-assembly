@@ -40,7 +40,7 @@ process EXTRACT_16S_BARRNAP {
       fi
     fi
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
+    echo -e "Sample _name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
     if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Extracted File' "!{params.min_filesize_extracted_ssu_file}"; then
       echo -e "!{meta.id}-!{meta.assembler}\tSSU Extracted File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
@@ -58,7 +58,7 @@ process EXTRACT_16S_BARRNAP {
     mv -f "!{meta.id}-!{meta.assembler}.fa-renamed" \
       "16S.!{meta.id}-!{meta.assembler}.fa"
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
     if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Renamed File' "!{params.min_filesize_renamed_ssu_file}"; then
       echo -e "!{meta.id}-!{meta.assembler}\tSSU Renamed File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
