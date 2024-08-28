@@ -34,7 +34,7 @@ process REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR {
       outs=!{meta.id}_discarded_singletons.fastq \
       repair=t
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.BBTools-Repair-removed_FastQ_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.BBTools-Repair-removed_FastQ_File.tsv"
     for suff in R1.fastq.gz R2.fastq.gz; do
       if verify_minimum_file_size "!{meta.id}_repaired-${suff}" 'Repaired FastQ Files' "!{params.min_filesize_broken_pairs_bbtools_repair_removed}"; then
         echo -e "!{meta.id}\tBBTools-repair-removed FastQ ($suff) File\tPASS" \
@@ -81,17 +81,17 @@ process REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR {
 
     DELIM=$'\t'
     SUMMARY_HEADER=(
-      "Sample name"
-      "# Input reads"
-      "# Input bases"
-      "# Output reads"
-      "% Output reads"
-      "# Output bases"
-      "% Output bases"
-      "# Removed reads"
-      "% Removed reads"
-      "# Removed bases"
-      "% Removed bases"
+      "Sample_name"
+      "Input_reads_(#)"
+      "Input_basepairs_(#)"
+      "Output_reads_(#)"
+      "Output_reads_(%)"
+      "Output_basepairs_(#)"
+      "Output_basepairs_(%)"
+      "Removed_reads_(#)"
+      "Removed_reads_(%)"
+      "Removed_basepairs_(#)"
+      "Removed_basepairs_(%)"
     )
     SUMMARY_HEADER=$(printf "%s${DELIM}" "${SUMMARY_HEADER[@]}")
     SUMMARY_HEADER="${SUMMARY_HEADER%${DELIM}}"
