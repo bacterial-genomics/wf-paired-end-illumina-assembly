@@ -10,7 +10,10 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "outdir"],
+            "required": [
+                "input",
+                "outdir"
+            ],
             "properties": {
                 "input": {
                     "type": "string",
@@ -27,7 +30,8 @@
                     "type": "string",
                     "default": "25M",
                     "hidden": true,
-                    "description": "Minimum file size of input FastQ files."
+                    "description": "Minimum file size of input FastQ files.",
+                    "pattern": "^\\d+(\\.\\d+)?s?[k|M|G]?$"
                 },
                 "logpath": {
                     "type": "string",
@@ -47,7 +51,12 @@
                     "default": "both",
                     "hidden": true,
                     "description": "Remove host reads from FastQ files",
-                    "enum": ["skip", "both", "hostile", "sra-human-scrubber"]
+                    "enum": [
+                        "skip",
+                        "both",
+                        "hostile",
+                        "sra-human-scrubber"
+                    ]
                 },
                 "min_filesize_fastq_sra_human_scrubber_removed": {
                     "type": "string",
@@ -87,14 +96,22 @@
             "title": "Downsampling options",
             "type": "object",
             "description": "Downsampling options",
+            "subsample_tool": {
+                "type": "string",
+                "default": "seqtk",
+                "hidden": false,
+                "description": "Specify which read subsampling tool to use during downsampling.",
+                "enum": [
+                    "seqtk",
+                    "seqkit"
+                ]
+            },
+            "properties": {
                 "subsample_tool": {
                     "type": "string",
                     "default": "seqtk",
-                    "hidden": false,
-                    "description": "Specify which read subsampling tool to use during downsampling.",
-                    "enum": ["seqtk", "seqkit"]
+                    "hidden": true
                 },
-            "properties": {
                 "depth": {
                     "type": "integer",
                     "default": 100,
@@ -105,6 +122,18 @@
                     "type": "string",
                     "hidden": true,
                     "description": "Genome size to subsample FastQ files to."
+                },
+                "seqkit_seed": {
+                    "type": "integer",
+                    "default": 947266746,
+                    "hidden": true,
+                    "description": "Seed value to use in downsampling reads sets with SeqKit"
+                },
+                "seqtk_seed": {
+                    "type": "integer",
+                    "default": 947266746,
+                    "hidden": true,
+                    "description": "Seed value to use in downsampling reads sets with Seqtk"
                 }
             }
         },
@@ -117,7 +146,10 @@
                     "type": "string",
                     "default": "spades",
                     "description": "Specify which assembler to execute.",
-                    "enum": ["spades", "skesa"]
+                    "enum": [
+                        "spades",
+                        "skesa"
+                    ]
                 },
                 "min_filesize_raw_assembly": {
                     "type": "string",
@@ -309,7 +341,10 @@
                     "default": "trimmomatic",
                     "hidden": false,
                     "description": "Specify which read trimming tool to use during assembly.",
-                    "enum": ["trimmomatic", "fastp"]
+                    "enum": [
+                        "trimmomatic",
+                        "fastp"
+                    ]
                 },
                 "min_filesize_fastq_adapters_removed": {
                     "type": "string",
@@ -340,7 +375,10 @@
                     "default": 33,
                     "hidden": true,
                     "description": "Phred quality score of Illumina FastQ files.",
-                    "enum": [33, 64]
+                    "enum": [
+                        33,
+                        64
+                    ]
                 },
                 "trimmomatic_min_length": {
                     "type": "integer",
@@ -420,21 +458,39 @@
                     "default": "rRNA",
                     "hidden": true,
                     "description": "GenBank feature type to search in genbank file for extraction.",
-                    "enum": ["CDS", "gene", "rRNA", "source", "tRNA", "misc_feature"]
+                    "enum": [
+                        "CDS",
+                        "gene",
+                        "rRNA",
+                        "source",
+                        "tRNA",
+                        "misc_feature"
+                    ]
                 },
                 "genbank_query_qualifier": {
                     "type": "string",
                     "default": "product",
                     "hidden": true,
                     "description": "Qualifier term within each genbank feature to search in genbank file for extraction.",
-                    "enum": ["gene", "inference", "locus_tag", "old_locus_tag", "product", "translation"]
+                    "enum": [
+                        "gene",
+                        "inference",
+                        "locus_tag",
+                        "old_locus_tag",
+                        "product",
+                        "translation"
+                    ]
                 },
                 "genbank_search_type": {
                     "type": "string",
                     "default": "any_q_is_rec",
                     "hidden": true,
                     "description": "Type of query match to search in genbank file for extraction.",
-                    "enum": ["all_q_in_rec", "any_q_in_rec", "any_q_is_rec"]
+                    "enum": [
+                        "all_q_in_rec",
+                        "any_q_in_rec",
+                        "any_q_is_rec"
+                    ]
                 },
                 "min_filesize_extracted_ssu_file": {
                     "type": "string",
@@ -497,14 +553,22 @@
                     "default": "16srrna",
                     "hidden": true,
                     "description": "Gene type to classify when using RDP.",
-                    "enum": ["16srrna"]
+                    "enum": [
+                        "16srrna"
+                    ]
                 },
                 "rdp_output_format": {
                     "type": "string",
                     "default": "fixrank",
                     "hidden": true,
                     "description": "Information that is reported in the output file produced by RDP.",
-                    "enum": ["allrank", "fixrank", "biom", "filterbyconf", "db"]
+                    "enum": [
+                        "allrank",
+                        "fixrank",
+                        "biom",
+                        "filterbyconf",
+                        "db"
+                    ]
                 },
                 "min_filesize_rdp_output": {
                     "type": "string",
@@ -539,7 +603,8 @@
                     "type": "integer",
                     "default": 1000,
                     "hidden": true,
-                    "description": "Minimum contig length (in bp) when filtering contigs."
+                    "description": "Minimum contig length (in bp) when filtering contigs.",
+                    "minimum": 1
                 },
                 "filter_contigs_keep_low_complexity": {
                     "type": "boolean",
@@ -551,7 +616,11 @@
                     "default": "rename_retain",
                     "hidden": true,
                     "description": "Rename and/or retain deflines when filtering contigs.",
-                    "enum": ["rename", "rename_retain", "retain"]
+                    "enum": [
+                        "rename",
+                        "rename_retain",
+                        "retain"
+                    ]
                 },
                 "filter_contigs_no_sort": {
                     "type": "boolean",
@@ -645,7 +714,11 @@
                 "checkm2_model": {
                     "type": "string",
                     "default": "--allmodels",
-                    "enum": ["--allmodels", "--general", "--specific"],
+                    "enum": [
+                        "--allmodels",
+                        "--general",
+                        "--specific"
+                    ],
                     "description": "quality prediction model to choose",
                     "help_text": "prediction model for genome completeness estimations"
                 },
@@ -697,23 +770,27 @@
                 },
                 "mlst_ignore_scheme": {
                     "type": "string",
-                    "default": "ecoli,abaumannii,vcholerae_2",
-                    "description": "Comma separated list of mlst schemes to ignore."
+                    "default": "abaumannii_2,blicheniformis_14,bordetella_3,brachyspira_2,brachyspira_3,brachyspira_4,brachyspira_5,campylobacter_nonjejuni_2,campylobacter_nonjejuni_3,campylobacter_nonjejuni_4,campylobacter_nonjejuni_5,campylobacter_nonjejuni_6,campylobacter_nonjejuni_7,campylobacter_nonjejuni_8,campylobacter_nonjejuni_9,diphtheria_3,ecoli_achtman_4,leptospira_2,leptospira_3,listeria_2,llactis_phage,mbovis_2,mcatarrhalis_achtman_6,mgallisepticum_2,mhominis_3,mycobacteria_2,pacnes_3,pmultocida_2,senterica_achtman_2,vcholerae_2,ypseudotuberculosis_achtman_3",
+                    "description": "Comma separated list of mlst schemes to ignore.",
+                    "hidden": true
                 },
                 "mlst_min_score": {
                     "type": "string",
                     "default": "50",
-                    "description": "Minumum score out of 100 to match a scheme when using autodection."
+                    "description": "Minumum score out of 100 to match a scheme when using autodection.",
+                    "hidden": true
                 },
                 "mlst_min_identity": {
                     "type": "string",
                     "default": "95",
-                    "description": "Percent identity of an allele to consider them 'similar'."
+                    "description": "Percent identity of an allele to consider them 'similar'.",
+                    "hidden": true
                 },
                 "mlst_min_coverage": {
                     "type": "string",
                     "default": "10",
-                    "description": "Percent coverage to report a partial allele."
+                    "description": "Percent coverage to report a partial allele.",
+                    "hidden": true
                 }
             }
         },
@@ -882,7 +959,14 @@
                     "description": "Method used to save pipeline results to output directory.",
                     "help_text": "The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.",
                     "fa_icon": "fas fa-copy",
-                    "enum": ["symlink", "rellink", "link", "copy", "copyNoFollow", "move"],
+                    "enum": [
+                        "symlink",
+                        "rellink",
+                        "link",
+                        "copy",
+                        "copyNoFollow",
+                        "move"
+                    ],
                     "hidden": true
                 },
                 "email": {
@@ -981,10 +1065,10 @@
             "$ref": "#/definitions/reference_file_options"
         },
         {
-            "$ref": "#/definitions/read_trimming_options"
+            "$ref": "#/definitions/taxonomic_profiling_options"
         },
         {
-            "$ref": "#/definitions/taxonomic_profiling_options"
+            "$ref": "#/definitions/read_trimming_options"
         },
         {
             "$ref": "#/definitions/ribosomal_rna_analysis_options"
@@ -1028,5 +1112,12 @@
         {
             "$ref": "#/definitions/generic_options"
         }
-    ]
+    ],
+    "properties": {
+        "schema_ignore_params": {
+            "type": "string",
+            "default": "filter_blast_bitscore,filter_blast_column,min_filesize_filtered_blastn,min_filesize_blastn_output,min_filesize_blastn_db,min_filesize_extracted_ssu_file,min_filesize_renamed_ssu_file,genbank_search_type,genbank_query_qualifier,genbank_query_feature,genbank_query,min_filesize_annotated_genbank,min_filesize_binary_se_alignment,min_filesize_final_assembly,min_filesize_polished_assembly,min_filesize_binary_pe_alignment,min_filesize_filtered_assembly,filter_contigs_no_sort,filter_contigs_deflines,filter_contigs_keep_low_complexity,filter_contigs_length,filter_contigs_gcskew,filter_contigs_discard_file,filter_contigs_coverage,min_filesize_raw_assembly,min_filesize_non_overlapping_fastq,min_filesize_fastq_adapters_removed,min_filesize_adapters,min_filesize_fastq_phix_removed,min_filesize_phix_genome,min_filesize_fastq_input,workflows,available_workflows,max_retry,bigdata,logpath,qc_filecheck_log_dir,process_log_dir,kraken1_db,kraken2_db,blast_db,polish_corrections,skesa_allow_snps,skesa_min_contig_length,skesa_max_snp_length,skesa_fraction,skesa_steps,skesa_vector_percent,skesa_kmer_length,excel_sheet_name,merge_lanes,sge_high_memory,sge_options,sge_queue_size,sge_queue,sge_penv,singularity_cache,sge_process_time,gtdbtk_pplacer_scratch,gtdbtk_min_perc_aa,gtdbtk_pplacer_cpus,gtdbtk_min_af,depth,genome_size,busco_config,adapter_reference,phix_reference,spades_mode,spades_kmer_sizes,validationSchemaIgnoreParams,validationShowHiddenParams,validation-schema-ignore-params,validation-show-hidden-params,mash_db,min_filesize_sra_human_scrubber_db_file,trimmomatic_keep_both_reads,trimmomatic_palindrome_clip_threshold,trimmomatic_simple_clip_threshold,trimmomatic_required_quality,trimmomatic_trailing_quality,trimmomatic_leading_quality,trimmomatic_min_length,trimmomatic_min_adapter_length,trimmomatic_seed_mismatches,trimmomatic_window_size,trimmomatic_phred,create_excel_outputs,rdp_phylomarker,rdp_output_format,min_filesize_rdp_output,ASSEMBLY:READ_CLASSIFY_KRAKEN_ONE,ASSEMBLY:ASSEMBLE_CONTIGS:ASSEMBLE_CONTIGS_SPADES,ASSEMBLY:READ_CLASSIFY_KRAKEN_ONE,ASSEMBLY:ASSEMBLE_CONTIGS:ASSEMBLE_CONTIGS_SKESA,min_filesize_checkm2_report,cat_db,min_filesize_cat_output,download_cat_db,trim_reads_tool,subsample_tool,seqtk_seed,seqkit_seed",
+            "hidden": true
+        }
+    }
 }
