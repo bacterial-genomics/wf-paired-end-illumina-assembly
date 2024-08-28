@@ -10,10 +10,7 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": [
-                "input",
-                "outdir"
-            ],
+            "required": ["input", "outdir"],
             "properties": {
                 "input": {
                     "type": "string",
@@ -51,12 +48,7 @@
                     "default": "both",
                     "hidden": true,
                     "description": "Remove host reads from FastQ files",
-                    "enum": [
-                        "skip",
-                        "both",
-                        "hostile",
-                        "sra-human-scrubber"
-                    ]
+                    "enum": ["skip", "both", "hostile", "sra-human-scrubber"]
                 },
                 "min_filesize_fastq_sra_human_scrubber_removed": {
                     "type": "string",
@@ -101,10 +93,7 @@
                 "default": "seqtk",
                 "hidden": false,
                 "description": "Specify which read subsampling tool to use during downsampling.",
-                "enum": [
-                    "seqtk",
-                    "seqkit"
-                ]
+                "enum": ["seqtk", "seqkit"]
             },
             "properties": {
                 "subsample_tool": {
@@ -146,10 +135,7 @@
                     "type": "string",
                     "default": "spades",
                     "description": "Specify which assembler to execute.",
-                    "enum": [
-                        "spades",
-                        "skesa"
-                    ]
+                    "enum": ["spades", "skesa"]
                 },
                 "min_filesize_raw_assembly": {
                     "type": "string",
@@ -341,10 +327,7 @@
                     "default": "trimmomatic",
                     "hidden": false,
                     "description": "Specify which read trimming tool to use during assembly.",
-                    "enum": [
-                        "trimmomatic",
-                        "fastp"
-                    ]
+                    "enum": ["trimmomatic", "fastp"]
                 },
                 "min_filesize_fastq_adapters_removed": {
                     "type": "string",
@@ -375,10 +358,7 @@
                     "default": 33,
                     "hidden": true,
                     "description": "Phred quality score of Illumina FastQ files.",
-                    "enum": [
-                        33,
-                        64
-                    ]
+                    "enum": [33, 64]
                 },
                 "trimmomatic_min_length": {
                     "type": "integer",
@@ -458,39 +438,21 @@
                     "default": "rRNA",
                     "hidden": true,
                     "description": "GenBank feature type to search in genbank file for extraction.",
-                    "enum": [
-                        "CDS",
-                        "gene",
-                        "rRNA",
-                        "source",
-                        "tRNA",
-                        "misc_feature"
-                    ]
+                    "enum": ["CDS", "gene", "rRNA", "source", "tRNA", "misc_feature"]
                 },
                 "genbank_query_qualifier": {
                     "type": "string",
                     "default": "product",
                     "hidden": true,
                     "description": "Qualifier term within each genbank feature to search in genbank file for extraction.",
-                    "enum": [
-                        "gene",
-                        "inference",
-                        "locus_tag",
-                        "old_locus_tag",
-                        "product",
-                        "translation"
-                    ]
+                    "enum": ["gene", "inference", "locus_tag", "old_locus_tag", "product", "translation"]
                 },
                 "genbank_search_type": {
                     "type": "string",
                     "default": "any_q_is_rec",
                     "hidden": true,
                     "description": "Type of query match to search in genbank file for extraction.",
-                    "enum": [
-                        "all_q_in_rec",
-                        "any_q_in_rec",
-                        "any_q_is_rec"
-                    ]
+                    "enum": ["all_q_in_rec", "any_q_in_rec", "any_q_is_rec"]
                 },
                 "min_filesize_extracted_ssu_file": {
                     "type": "string",
@@ -553,22 +515,14 @@
                     "default": "16srrna",
                     "hidden": true,
                     "description": "Gene type to classify when using RDP.",
-                    "enum": [
-                        "16srrna"
-                    ]
+                    "enum": ["16srrna"]
                 },
                 "rdp_output_format": {
                     "type": "string",
                     "default": "fixrank",
                     "hidden": true,
                     "description": "Information that is reported in the output file produced by RDP.",
-                    "enum": [
-                        "allrank",
-                        "fixrank",
-                        "biom",
-                        "filterbyconf",
-                        "db"
-                    ]
+                    "enum": ["allrank", "fixrank", "biom", "filterbyconf", "db"]
                 },
                 "min_filesize_rdp_output": {
                     "type": "string",
@@ -616,11 +570,7 @@
                     "default": "rename_retain",
                     "hidden": true,
                     "description": "Rename and/or retain deflines when filtering contigs.",
-                    "enum": [
-                        "rename",
-                        "rename_retain",
-                        "retain"
-                    ]
+                    "enum": ["rename", "rename_retain", "retain"]
                 },
                 "filter_contigs_no_sort": {
                     "type": "boolean",
@@ -714,11 +664,7 @@
                 "checkm2_model": {
                     "type": "string",
                     "default": "--allmodels",
-                    "enum": [
-                        "--allmodels",
-                        "--general",
-                        "--specific"
-                    ],
+                    "enum": ["--allmodels", "--general", "--specific"],
                     "description": "quality prediction model to choose",
                     "help_text": "prediction model for genome completeness estimations"
                 },
@@ -959,14 +905,7 @@
                     "description": "Method used to save pipeline results to output directory.",
                     "help_text": "The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.",
                     "fa_icon": "fas fa-copy",
-                    "enum": [
-                        "symlink",
-                        "rellink",
-                        "link",
-                        "copy",
-                        "copyNoFollow",
-                        "move"
-                    ],
+                    "enum": ["symlink", "rellink", "link", "copy", "copyNoFollow", "move"],
                     "hidden": true
                 },
                 "email": {
