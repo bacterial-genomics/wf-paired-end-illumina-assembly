@@ -19,7 +19,7 @@ process INFILE_HANDLING_UNIX {
     msg "INFO: Read 1: !{reads[0]}"
     msg "INFO: Read 2: !{reads[1]}"
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.Raw_Initial_FastQ_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.Raw_Initial_FastQ_File.tsv"
 
     i=1
     for fastq in !{reads}; do
