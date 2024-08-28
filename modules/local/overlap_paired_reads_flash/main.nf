@@ -37,7 +37,7 @@ process OVERLAP_PAIRED_READS_FLASH {
         -m ${OVERLAP_LEN} \
         "!{meta.id}_R1.paired.fq" "!{meta.id}_R2.paired.fq"
 
-      echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}.Non-overlapping_FastQ_File.tsv"
+      echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.Non-overlapping_FastQ_File.tsv"
       for suff in notCombined_1.fastq notCombined_2.fastq; do
         if verify_minimum_file_size "flash.${suff}" 'Non-overlapping FastQ Files' "!{params.min_filesize_non_overlapping_fastq}"; then
           echo -e "!{meta.id}\tNon-overlapping FastQ File (${suff})\tPASS" \
