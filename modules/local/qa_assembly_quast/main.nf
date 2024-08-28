@@ -42,6 +42,9 @@ process QA_ASSEMBLY_QUAST {
       sed -i "s|${assemblies_name}|!{meta.id}|g" "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
     fi
 
+    # Replace space characters in header line with underscores
+    sed -i '1s/ /_/g' "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
+
     # TO-DO: move this unix-only component to separate QA_READS_BASEPAIR_COUNT_UNIX
     # Count nucleotides per read set
     echo -n '' > "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
