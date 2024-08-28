@@ -49,7 +49,7 @@ process ANNOTATE_PROKKA {
     done
 
     # Verify output file
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Annotated_GenBank_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Annotated_GenBank_File.tsv"
     if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.gbk" 'Annotated GenBank File' "!{params.min_filesize_annotated_genbank}"; then
       echo -e "!{meta.id}-!{meta.assembler}\tAnnotated GenBank File\tPASS" \
         >> "!{meta.id}-!{meta.assembler}.Annotated_GenBank_File.tsv"
