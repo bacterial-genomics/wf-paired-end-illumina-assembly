@@ -24,7 +24,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
       -c !{params.filter_blast_column} \
       -s !{params.filter_blast_bitscore}
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Filtered_16S_BLASTn_File.tsv"
 
     if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.blast.tsv" 'Filtered 16S BLASTn File' "!{params.min_filesize_filtered_blastn}"; then
       echo -e "!{meta.id}-!{meta.assembler}\tFiltered 16S BLASTn File\tPASS" \
@@ -36,7 +36,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
       > "!{meta.id}-!{meta.assembler}.16S-top-species.tsv"
 
       sed -i \
-        '1i Sample name\tPercent identity\tPercent alignment\tSpecies match' \
+        '1i Sample_name\tIdentity_(%)\tPAlignment_(%)\tSpecies_match' \
         "!{meta.id}-!{meta.assembler}.16S-top-species.tsv"
 
     else
