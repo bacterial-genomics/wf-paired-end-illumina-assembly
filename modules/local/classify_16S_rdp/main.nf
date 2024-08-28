@@ -38,7 +38,7 @@ process CLASSIFY_16S_RDP {
 
       # Add header
       sed -i \
-        '1i Domain\tDomain result\tPhylum\tPhylum result\tClass\tClass result\tOrder\tOrder result\tFamily\tFamily result\tGenus\tGenus result' \
+        '1i Domain\tDomain_result\tPhylum\tPhylum_result\tClass\tClass_result\tOrder\tOrder_result\tFamily\tFamily_result\tGenus\tGenus_result' \
         "!{meta.id}.RDP.tsv"
     else
       # Add RDP format as a header for file collection
