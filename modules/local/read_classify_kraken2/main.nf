@@ -41,10 +41,6 @@ process READ_CLASSIFY_KRAKEN_TWO {
 
       summarize_kraken 'kraken2.tsv' >> "!{meta.id}.kraken2_summary.tsv"
 
-      # Cute, Kraken2 gives a trailing tab character that doesn't exist in Kraken1 output summary,
-      # which makes pandas XLSX conversion fail due to different column numbers in header and data.
-      sed -i "s/\t$//1" "!{meta.id}.kraken2_summary.tsv"
-
       mv kraken2.tsv !{meta.id}.kraken2_output.tsv
       gzip !{meta.id}.kraken2_output.tsv
     fi
