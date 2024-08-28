@@ -46,7 +46,7 @@ process ASSESS_ASSEMBLY_CHECKM2 {
     fi
 
     # Replace space characters in header line with underscores
-    sed -i '1s/ /_/g' !{meta.id}.CheckM2_Report_File.tsv
+    sed -i '1s/ /_/g' !{meta.id}.CheckM2.report.tsv
 
     # Compress the log and alignments files for compact storage
     gzip -9f "!{meta.id}.CheckM2.log" "!{meta.id}.CheckM2.alignments.tsv"
