@@ -2,6 +2,7 @@ process INFILE_HANDLING_UNIX {
 
     tag { "${meta.id}" }
     container "ubuntu:jammy"
+    // container "quay.io/biocontainers/seqfu@sha256:6fb86161b4b29b876253dfe4c72f8620801dfc8b905e9ed026c9386aef3b62e1"
 
     input:
     tuple val(meta), path(reads)
