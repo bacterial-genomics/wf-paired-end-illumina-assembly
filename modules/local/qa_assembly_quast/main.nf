@@ -42,6 +42,9 @@ process QA_ASSEMBLY_QUAST {
       sed -i "s|${assemblies_name}|!{meta.id}|g" "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
     fi
 
+    # Keep same first column header column name as all others -- "Sample_name"
+    sed -i '1s/^Assembly/Sample_name/g' "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
+
     # Replace space characters in header line with underscores
     sed -i '1s/ /_/g' "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
 
