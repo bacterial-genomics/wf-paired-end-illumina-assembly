@@ -15,11 +15,11 @@ process CLASSIFY_16S_RDP {
 
     shell:
     // WARN: RDP does not report version information. This variable must be updated when container is updated.
-    VERSION = '2.14'
+    VERSION='2.14'
     '''
     source bash_functions.sh
 
-    msg "INFO: Performing RDP 16S Classification"
+    msg "INFO: Performing RDP 16S Classification of !{meta.id} ..."
 
     classifier \
       classify \
@@ -27,6 +27,8 @@ process CLASSIFY_16S_RDP {
       --gene "!{params.rdp_phylomarker}" \
       --outputFile "!{meta.id}.RDP.tsv" \
       "!{barnapp_extracted_rna}"
+
+    msg "INFO: Completed RDP 16S Classification of !{meta.id}"
 
     if [[ "!{params.rdp_output_format}" == "fixrank" ]]; then
       # Drop unnecessary columns
