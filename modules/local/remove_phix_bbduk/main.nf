@@ -37,8 +37,11 @@ process REMOVE_PHIX_BBDUK {
     # done
 
     # Remove PhiX
-    msg "INFO: Removing PhiX using BBDuk.."
+    msg "INFO: Removing PhiX from !{meta.id} using BBDuk..."
 
+    # NOTE: With excess sequence reads, it is very normal and possible to see initial error of
+    #       "NOTE: Process `ASSEMBLY:REMOVE_PHIX_BBDUK (name)` terminated with an error exit status (140) -- Execution is retried (1)"
+    #       But an automatic retry in the workflow with increase RAM should process the bulky sample just fine.
     bbduk.sh \
       k=31 \
       hdist=1 \
@@ -51,6 +54,8 @@ process REMOVE_PHIX_BBDUK {
       out=!{meta.id}_noPhiX-R1.fsq \
       out2=!{meta.id}_noPhiX-R2.fsq \
       ref="!{phix_reference_file}"
+
+    msg "INFO: PhiX removed from !{meta.id} using BBDuk"
 
     echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.PhiX-removed_FastQ_File.tsv"
     for suff in R1.fsq R2.fsq; do
