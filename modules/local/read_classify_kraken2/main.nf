@@ -31,15 +31,18 @@ process READ_CLASSIFY_KRAKEN_TWO {
         --threads !{task.cpus} \
         !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} !{cleaned_fastq_files[2]}
 
-      msg "INFO: Summarizing Kraken2"
-      echo -ne "Reads_(%)\tReads_(#)\tUnclassified" \
-        > "!{meta.id}.kraken2_summary.tsv"
-      echo -ne "\tReads_(%)\tReads_(#)\tGenus\tReads_(%)\tReads_(#)\tGenus\tReads_(%)\tReads_(#)\tGenus" \
-        >> "!{meta.id}.kraken2_summary.tsv"
-      echo -e "\tReads_(%)\tReads_(#)\tSpecies\tReads_(%)\tReads_(#)\tSpecies\tReads_(%)\tReads_(#)\tSpecies" \
-        >> "!{meta.id}.kraken2_summary.tsv"
+      echo -ne "!{meta.id}\t" > "!{meta.id}.kraken2_summary.tsv"
+      summarize_kraken 'kraken2.tsv' | sed 's/%//g' >> "!{meta.id}.kraken2_summary.tsv"
 
-      summarize_kraken 'kraken2.tsv' >> "!{meta.id}.kraken2_summary.tsv"
+      # Add header to output
+      SUMMARY_HEADER=(
+        "Sample_name"
+        "Reads_(%)" "Reads_(#)" "Unclassified"
+        "Reads_(%)" "Reads_(#)" "Genus" "Reads_(%)" "Reads_(#)" "Genus" "Reads_(%)" "Reads_(#)" "Genus"
+        "Reads_(%)" "Reads_(#)" "Species" "Reads_(%)" "Reads_(#)" "Species" "Reads_(%)" "Reads_(#)" "Species"
+      )
+      SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
+      sed -i "1i ${SUMMARY_HEADER}" "!{meta.id}.kraken2_summary.tsv"
 
       mv kraken2.tsv !{meta.id}.kraken2_output.tsv
       gzip !{meta.id}.kraken2_output.tsv
