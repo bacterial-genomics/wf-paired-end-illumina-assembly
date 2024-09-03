@@ -28,5 +28,8 @@ summarize_kraken() {
   done < <(grep $'\tS\t' "${1}" | head -n3 | awk -F $'\t' '{print $1,$2,$6}')
 
   # Join the array with tabs and print the final result
-  (IFS=$'\t'; echo "${output[*]}")
+  (
+    IFS=$'\t'
+    echo "${output[*]}"
+  )
 }
