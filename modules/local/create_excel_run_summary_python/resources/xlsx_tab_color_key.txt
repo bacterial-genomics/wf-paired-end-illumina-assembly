@@ -1,0 +1,57 @@
+# NOTE: Colors should follow workflow order in ROYGBIV then greyscale
+#
+# Validate Inputs (=255, 0, 0       # Red)
+Input_FastQ_Checksums=255, 0, 0
+#
+# Human Removal (=255, 165, 0     # Orange)
+#
+# Downsample (=165, 42, 42     # Brown)
+#
+# Clean Reads (=255, 255, 0     # Yellow)
+PhiX_Removal=255, 255, 0
+Adapter_and_QC_Trimming=255, 255, 0
+Clean_and_Overlapping_Reads=255, 255, 0
+CleanedReads_Bases=255, 255, 0
+#
+# Genome Assembly (=154, 205, 50     # YellowGreen) -- replaced Chartreuse
+#
+# Depth of Coverage (=0, 128, 0       # Dark Green)
+Assembly_Depth=0, 128, 0
+CleanedReads_Aligned=0, 128, 0
+#
+# Genotyping (=0, 255, 0       # Green)
+MLST=0, 255, 0
+#
+# Genome Annotation (=0, 255, 255     # Cyan)
+#
+# 16S rRNA Gene Classification (=0, 0, 255       # Blue)
+16S_Species_BLAST=0, 0, 255
+16S_Genus_RDP=0, 0, 255
+#
+# Taxonomic Classification of Reads (=255, 0, 255     # Magenta)
+Kraken=255, 0, 255
+Kraken2=255, 0, 255
+#
+# Assembly Assessment (=128, 0, 128     # Purple)
+Assembly_Metrics=128, 0, 128
+#
+# Misc (=128, 128, 128   # Gray)
+QC_File_Checks=128, 128, 128
+Output_FastQ_Checksums=128, 128, 128
+#
+#
+#
+# =255, 0, 0       # Red
+# =255, 165, 0     # Orange
+# =165, 42, 42     # Brown
+# =255, 255, 0     # Yellow
+# =127, 255, 0     # Chartreuse
+# =0, 128, 0       # Dark Green
+# =0, 255, 0       # Green
+# =0, 255, 255     # Cyan
+# =0, 0, 255       # Blue
+# =255, 0, 255     # Magenta
+# =128, 0, 128     # Purple
+# =128, 128, 128   # Gray
+# =0, 0, 0         # Black
+# =255, 255, 255   # White
