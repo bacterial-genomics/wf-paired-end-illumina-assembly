@@ -254,6 +254,11 @@ workflow ASSEMBLY {
     INFILE_HANDLING_UNIX (
         INPUT_CHECK.out.raw_reads
     )
+    // INFILE_HANDLING_UNIX
+    //     .view { file -> println "From INFILE_HANDLING_UNIX, emitting file: ${file}" }
+    // INFILE_HANDLING_UNIX
+    //     .view { item -> println "From INFILE_HANDLING_UNIX, channel item: ${item}" }
+
     ch_versions        = ch_versions.mix(INFILE_HANDLING_UNIX.out.versions)
     ch_qc_filecheck    = ch_qc_filecheck.concat(INFILE_HANDLING_UNIX.out.qc_filecheck)
     ch_infile_handling = qcfilecheck(
@@ -268,18 +273,32 @@ workflow ASSEMBLY {
                                     meta['assembler'] = "${var_assembler_name}"
                                     [ meta, file]
                             }
+    // ch_infile_handling
+    //     .view { file -> println "From ch_infile_handling, emitting file: ${file}" }
+    // ch_infile_handling
+    //     .view { item -> println "From ch_infile_handling, channel item: ${item}" }
 
     // SUBWORKFLOW: Remove host from FastQ files
     HOST_REMOVAL (
         ch_infile_handling,
         ch_sra_scrubber_db_file
     )
+    // HOST_REMOVAL
+    //     .view { file -> println "From HOST_REMOVAL, emitting file: ${file}" }
+    // HOST_REMOVAL
+    //     .view { item -> println "From HOST_REMOVAL, channel item: ${item}" }
+
     ch_versions = ch_versions.mix(HOST_REMOVAL.out.versions)
 
     // SUBWORKFLOW: Downsample FastQ files
     DOWNSAMPLE (
         HOST_REMOVAL.out.host_removed_reads
     )
+    // DOWNSAMPLE
+    //     .view { file -> println "From DOWNSAMPLE, emitting file: ${file}" }
+    // DOWNSAMPLE
+    //     .view { item -> println "From DOWNSAMPLE, channel item: ${item}" }
+
     ch_versions = ch_versions.mix(DOWNSAMPLE.out.versions)
 
     // PROCESS: Run bbduk to remove PhiX reads
@@ -287,6 +306,11 @@ workflow ASSEMBLY {
         DOWNSAMPLE.out.reads,
         ch_phix_reference
     )
+    // REMOVE_PHIX_BBDUK
+    //     .view { file -> println "From REMOVE_PHIX_BBDUK, emitting file: ${file}" }
+    // REMOVE_PHIX_BBDUK
+    //     .view { item -> println "From REMOVE_PHIX_BBDUK, channel item: ${item}" }
+
     ch_versions     = ch_versions.mix(REMOVE_PHIX_BBDUK.out.versions)
     ch_qc_filecheck = ch_qc_filecheck.concat(REMOVE_PHIX_BBDUK.out.qc_filecheck)
     ch_removed_phix = qcfilecheck(
@@ -302,6 +326,7 @@ workflow ASSEMBLY {
                                     keepHeader: true,
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
+                                .view { collectedFiles -> println "From REMOVE_PHIX_BBDUK.out.summary, collected files: ${collectedFiles}" }
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_phix_removal_summary)
 
@@ -311,13 +336,18 @@ workflow ASSEMBLY {
             ch_removed_phix,
             ch_adapter_reference
         )
+        // TRIM_READS_TRIMMOMATIC
+        //     .view { file -> println "From TRIM_READS_TRIMMOMATIC, emitting file: ${file}" }
+        // TRIM_READS_TRIMMOMATIC
+        //     .view { item -> println "From TRIM_READS_TRIMMOMATIC, channel item: ${item}" }
+
         ch_versions     = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
         ch_qc_filecheck = ch_qc_filecheck.concat(TRIM_READS_TRIMMOMATIC.out.qc_filecheck)
         ch_trim_reads   = qcfilecheck(
                             "TRIM_READS_TRIMMOMATIC",
                             TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
                             TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed
-                        )
+                          )
 
         // Collect read trimming summaries and concatenate into one file
         ch_trimmomatic_summary = TRIM_READS_TRIMMOMATIC.out.summary
@@ -326,6 +356,7 @@ workflow ASSEMBLY {
                                         keepHeader: true,
                                         storeDir:   "${params.outdir}/Summaries"
                                     )
+                                    .view { collectedFiles -> println "From TRIM_READS_TRIMMOMATIC.out.summary, collected files: ${collectedFiles}" }
 
         ch_output_summary_files = ch_output_summary_files.mix(ch_trimmomatic_summary)
     } else if ( toLower(params.trim_reads_tool) == "fastp" ) {
@@ -338,13 +369,18 @@ workflow ASSEMBLY {
             ch_removed_phix,
             ch_adapter_reference
         )
+        // TRIM_READS_FASTP
+        //     .view { file -> println "From TRIM_READS_FASTP, emitting file: ${file}" }
+        // TRIM_READS_FASTP
+        //     .view { item -> println "From TRIM_READS_FASTP, channel item: ${item}" }
+
         ch_versions     = ch_versions.mix(TRIM_READS_FASTP.out.versions)
         ch_qc_filecheck = ch_qc_filecheck.concat(TRIM_READS_FASTP.out.qc_filecheck)
         ch_trim_reads   = qcfilecheck(
                             "TRIM_READS_FASTP",
                             TRIM_READS_FASTP.out.qc_filecheck,
                             TRIM_READS_FASTP.out.fastq_adapters_removed
-                        )
+                          )
 
         ch_fastp_summary = TRIM_READS_FASTP.out.summary
                                 .collectFile(
@@ -352,6 +388,7 @@ workflow ASSEMBLY {
                                     keepHeader: true,
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
+                                .view { collectedFiles -> println "From TRIM_READS_FASTP.out.summary, collected files: ${collectedFiles}" }
 
         ch_output_summary_files = ch_output_summary_files.mix(ch_fastp_summary)
     }
@@ -360,6 +397,11 @@ workflow ASSEMBLY {
     OVERLAP_PAIRED_READS_FLASH (
         ch_trim_reads
     )
+    // OVERLAP_PAIRED_READS_FLASH
+    //     .view { file -> println "From OVERLAP_PAIRED_READS_FLASH, emitting file: ${file}" }
+    // OVERLAP_PAIRED_READS_FLASH
+    //     .view { item -> println "From OVERLAP_PAIRED_READS_FLASH, channel item: ${item}" }
+
     ch_versions      = ch_versions.mix(OVERLAP_PAIRED_READS_FLASH.out.versions)
     ch_qc_filecheck  = ch_qc_filecheck.concat(OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck)
     ch_overlap_flash = qcfilecheck(
@@ -375,6 +417,7 @@ workflow ASSEMBLY {
                                     keepHeader: true,
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
+                                .view { collectedFiles -> println "From OVERLAP_PAIRED_READS_FLASH.out.summary, collected files: ${collectedFiles}" }
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_overlap_summary)
 
@@ -439,6 +482,11 @@ workflow ASSEMBLY {
         ch_overlap_flash,
         ch_db_for_kraken1
     )
+    // READ_CLASSIFY_KRAKEN_ONE
+    //     .view { file -> println "From READ_CLASSIFY_KRAKEN_ONE, emitting file: ${file}" }
+    // READ_CLASSIFY_KRAKEN_ONE
+    //     .view { item -> println "From READ_CLASSIFY_KRAKEN_ONE, channel item: ${item}" }
+
     ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
 
     // Collect kraken summaries and concatenate into one file
@@ -448,6 +496,9 @@ workflow ASSEMBLY {
                                     keepHeader: true,
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
+                                .view { collectedFiles -> println "From READ_CLASSIFY_KRAKEN_ONE.out.summary, collected files: ${collectedFiles}" }
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_kraken_one_summary)
 
     // Prepare kraken2 database for use
     if ( ch_kraken2_db_file ) {
@@ -494,6 +545,11 @@ workflow ASSEMBLY {
         ch_overlap_flash,
         ch_db_for_kraken2
     )
+    // READ_CLASSIFY_KRAKEN_TWO
+    //     .view { file -> println "From READ_CLASSIFY_KRAKEN_TWO, emitting file: ${file}" }
+    // READ_CLASSIFY_KRAKEN_TWO
+    //     .view { item -> println "From READ_CLASSIFY_KRAKEN_TWO, channel item: ${item}" }
+
     ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
 
     // Collect kraken2 summaries and concatenate into one file
@@ -503,6 +559,10 @@ workflow ASSEMBLY {
                                     keepHeader: true,
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
+                                .view { collectedFiles -> println "From READ_CLASSIFY_KRAKEN_TWO.out.summary, collected files: ${collectedFiles}" }
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_kraken_two_summary)
+
 
     /*
     ================================================================================
@@ -514,6 +574,11 @@ workflow ASSEMBLY {
         ch_overlap_flash,
         var_assembler_name
     )
+    // ASSEMBLE_CONTIGS
+    //     .view { file -> println "From ASSEMBLE_CONTIGS, emitting file: ${file}" }
+    // ASSEMBLE_CONTIGS
+    //     .view { item -> println "From ASSEMBLE_CONTIGS, channel item: ${item}" }
+
     ch_versions     = ch_versions.mix(ASSEMBLE_CONTIGS.out.versions)
     ch_qc_filecheck = ch_qc_filecheck.concat(ASSEMBLE_CONTIGS.out.qc_filecheck)
 
@@ -527,22 +592,34 @@ workflow ASSEMBLY {
     EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS (
         ASSEMBLE_CONTIGS.out.bam_files
     )
+    // EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS
+    //     .view { file -> println "From EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS, emitting file: ${file}" }
+    // EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS
+    //     .view { item -> println "From EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS, channel item: ${item}" }
+
     ch_versions = ch_versions.mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.versions)
 
     // Collect alignment summary stats and concatenate into one file
     ch_alignment_stats_summary = EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary
                                     .map{ meta, file -> file }
                                     .collectFile(
-                                        name:     "Summary.CleanedReads-AlignmentStats.tsv",
+                                        name:     "Summary.CleanedReads_Aligned.tsv",
                                         keepHeader: true,
                                         storeDir: "${params.outdir}/Summaries"
                                     )
+                                .view { collectedFiles -> println "From EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary, collected files: ${collectedFiles}" }
+
     ch_output_summary_files    = ch_output_summary_files.mix(ch_alignment_stats_summary)
 
     // PROCESS: Run MLST to find MLST for each polished assembly
     MLST_MLST (
         ASSEMBLE_CONTIGS.out.assembly_file
     )
+    // MLST_MLST
+    //     .view { file -> println "From MLST_MLST, emitting file: ${file}" }
+    // MLST_MLST
+    //     .view { item -> println "From MLST_MLST, channel item: ${item}" }
+
     ch_versions = ch_versions.mix(MLST_MLST.out.versions)
 
     // Collect MLST Summaries and concatenate into one file
@@ -552,6 +629,7 @@ workflow ASSEMBLY {
                             keepHeader: true,
                             storeDir: "${params.outdir}/Summaries"
                         )
+                        .view { collectedFiles -> println "From MLST_MLST.out.summary, collected files: ${collectedFiles}" }
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_mlst_summary)
 
@@ -559,6 +637,11 @@ workflow ASSEMBLY {
     ANNOTATE_PROKKA (
         ASSEMBLE_CONTIGS.out.assembly_file
     )
+    // ANNOTATE_PROKKA
+    //     .view { file -> println "From ANNOTATE_PROKKA, emitting file: ${file}" }
+    // ANNOTATE_PROKKA
+    //     .view { item -> println "From ANNOTATE_PROKKA, channel item: ${item}" }
+
     ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
     ch_genbank  = qcfilecheck(
                     "ANNOTATE_PROKKA",
@@ -576,6 +659,11 @@ workflow ASSEMBLY {
     EXTRACT_16S_BIOPYTHON (
         ch_genbank.join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
+    // EXTRACT_16S_BIOPYTHON
+    //     .view { file -> println "From EXTRACT_16S_BIOPYTHON, emitting file: ${file}" }
+    // EXTRACT_16S_BIOPYTHON
+    //     .view { item -> println "From EXTRACT_16S_BIOPYTHON, channel item: ${item}" }
+
     ch_versions = ch_versions.mix(EXTRACT_16S_BIOPYTHON.out.versions)
 
     // PROCESS: Extract 16S rRNA gene sequences with Barrnap if missing from 16S_EXTRACT_BIOPYTHON
@@ -583,6 +671,11 @@ workflow ASSEMBLY {
         ASSEMBLE_CONTIGS.out.assembly_file
             .join(EXTRACT_16S_BIOPYTHON.out.extracted_rna)
     )
+    // EXTRACT_16S_BARRNAP
+    //     .view { file -> println "From EXTRACT_16S_BARRNAP, emitting file: ${file}" }
+    // EXTRACT_16S_BARRNAP
+    //     .view { item -> println "From EXTRACT_16S_BARRNAP, channel item: ${item}" }
+
     ch_versions      = ch_versions.mix(EXTRACT_16S_BARRNAP.out.versions)
     ch_qc_filecheck  = ch_qc_filecheck.concat(EXTRACT_16S_BARRNAP.out.qc_filecheck)
     ch_extracted_rna = qcfilecheck(
@@ -635,6 +728,11 @@ workflow ASSEMBLY {
         ch_extracted_rna,
         ch_db_for_blast
     )
+    // ALIGN_16S_BLAST
+    //     .view { file -> println "From ALIGN_16S_BLAST, emitting file: ${file}" }
+    // ALIGN_16S_BLAST
+    //     .view { item -> println "From ALIGN_16S_BLAST, channel item: ${item}" }
+
     ch_versions     = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
     ch_qc_filecheck = ch_qc_filecheck.concat(ALIGN_16S_BLAST.out.qc_filecheck)
     ch_blast_output = qcfilecheck(
@@ -647,6 +745,11 @@ workflow ASSEMBLY {
     CLASSIFY_16S_RDP (
         EXTRACT_16S_BARRNAP.out.extracted_rna
     )
+    // CLASSIFY_16S_RDP
+    //     .view { file -> println "From CLASSIFY_16S_RDP, emitting file: ${file}" }
+    // CLASSIFY_16S_RDP
+    //     .view { item -> println "From CLASSIFY_16S_RDP, channel item: ${item}" }
+
     ch_versions = ch_versions.mix(CLASSIFY_16S_RDP.out.versions)
 
     ch_rdp_summary = qcfilecheck(
@@ -656,13 +759,26 @@ workflow ASSEMBLY {
                     )
 
     // PROCESS: Concatenate RDP summaries
-    ch_rdp_summary
-        .map{ meta, file -> file }  // Map to only include the files
-        .collectFile(
-            name:       "Summary.RDP.tsv",
-            keepHeader: true,
-            storeDir:   "${params.outdir}/Summaries"
-        )
+    ch_rdp_summary = ch_rdp_summary
+                        .map{ meta, file ->       // Map to only include the files
+                          if (file.exists() && file.size() > 0) {
+                              return file
+                          } else {
+                              error "File does not exist or empty size: ${file}"
+                          }
+                        }
+                        .view { file -> println "From ch_rdp_summary, File to be collected: ${file}" }
+                        .collectFile(
+                            name:       "${var_assembler_name}.16S_top_genus_RDP.tsv",
+                            keepHeader: true,
+                            storeDir:   "${params.outdir}/SSU"
+                        )
+                        .collectFile(
+                            name:       "Summary.16S_Genus_RDP.tsv",
+                            keepHeader: true,
+                            storeDir:   "${params.outdir}/Summaries"
+                        )
+                        .view { collectedFiles -> println "From ch_rdp_summary, collected files: ${collectedFiles}" }
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_rdp_summary)
 
@@ -670,26 +786,47 @@ workflow ASSEMBLY {
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
         ch_blast_output
     )
+    BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
+        .view { file -> println "From BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary, emitting file: ${file}" }
+    BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
+        .view { item -> println "From BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary, channel item: ${item}" }
     ch_versions  = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
     ch_top_blast = qcfilecheck(
                         "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
                         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.qc_filecheck,
-                        BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.top_blast_species
+                        BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
                     )
+
+    // // Collect BLAST summaries and concatenate into one file
+    // ch_blast_summary = BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
+    //                             .collectFile(
+    //                                 name:       "Summary.BLAST.16S_rRNA-top-species.tsv",
+    //                                 keepHeader: true,
+    //                                 storeDir:   "${params.outdir}/Summaries"
+    //                             )
+
+    // ch_output_summary_files = ch_output_summary_files.mix(ch_blast_summary)
 
     // Collect top BLASTn species and concatenate into one file
     ch_top_blast = ch_top_blast
-                        .map{ meta, file -> file }
+                        .map{ meta, file -> file 
+                          if (file.exists() && file.size() > 0) {
+                              return file
+                          } else {
+                              error "File does not exist or empty size: ${file}"
+                          }
+                        }
                         .collectFile(
-                            name:       "${var_assembler_name}.16S-top-species.tsv",
+                            name:       "${var_assembler_name}.16S_top_species_BLAST.tsv",
                             keepHeader: true,
                             storeDir:   "${params.outdir}/SSU"
                         )
                         .collectFile(
-                            name:       "Summary.16S.tsv",
+                            name:       "Summary.16S_Species_BLAST.tsv",
                             keepHeader: true,
                             storeDir:   "${params.outdir}/Summaries"
                         )
+                        .view { collectedFiles -> println "From ch_top_blast, collected files: ${collectedFiles}" }
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_top_blast)
 
@@ -741,23 +878,41 @@ workflow ASSEMBLY {
     */
 
     if (params.create_excel_outputs) {
-        CREATE_EXCEL_RUN_SUMMARY_PYTHON (
-            ch_output_summary_files
-                .map { item ->
-                    if (item instanceof List && item.size() > 1) {
-                        return item[1]  // If it's a tuple, return the file path (second item)
+        tab_colors_file = file("${projectDir}/modules/local/create_excel_run_summary_python/resources/xlsx_tab_color_key.txt")
+
+        // Collect summary files into the list_of_files variable
+        list_of_files = ch_output_summary_files
+            .view { item ->
+                println "From ch_output_summary_files, DEBUG: Received item: ${item.getClass().getName()} - ${item}"
+            }
+            .filter { item ->
+                // Extract the file if it's a tuple or list
+                def file = (item instanceof List) ? item[1] : item  // Assuming file is the second element in the tuple
+                def fileName = file.getName()  // Convert Path to String
+                if (fileName.startsWith("Summary.") && file.size() > 0) {
+                    println "From ch_output_summary_files, Valid summary file found: ${fileName} (Size: ${file.size()} bytes)"
+                    return true
+                } else {
+                    if (file.size() == 0) {
+                        println "From ch_output_summary_files, Skipping empty summary file: ${fileName}"
                     } else {
-                        return item  // Otherwise, return the item as-is (assumed to be a file path)
+                        println "From ch_output_summary_files, Skipping non-summary file: ${fileName}"
                     }
-        }
-        .collect()
-        )
+                    return false
+                }
+            }
+            .collect()
+            // Debugging print to show all files collected
+            .view { files -> println "Files passed to CREATE_EXCEL_RUN_SUMMARY_PYTHON: ${files}" }
+
+        // Pass both variables to the process
+        CREATE_EXCEL_RUN_SUMMARY_PYTHON(list_of_files, tab_colors_file)
         ch_versions = ch_versions.mix(CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.versions)
 
-        CONVERT_TSV_TO_EXCEL_PYTHON (
-            CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.summary
-        )
-        ch_versions = ch_versions.mix(CONVERT_TSV_TO_EXCEL_PYTHON.out.versions)
+        // CONVERT_TSV_TO_EXCEL_PYTHON (
+        //     CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.summary
+        // )
+        // ch_versions = ch_versions.mix(CONVERT_TSV_TO_EXCEL_PYTHON.out.versions)
     }
 
     /*
