@@ -92,7 +92,7 @@ workflow ASSEMBLY_ASSESSMENT {
     // Collect assembly summaries and concatenate into one file
     ch_assembly_summary = QA_ASSEMBLY_QUAST.out.summary_assemblies
                             .collectFile(
-                                name:       "Summary.Assemblies.tsv",
+                                name:       "Summary.Assembly_Metrics.tsv",
                                 keepHeader: true,
                                 storeDir:   "${params.outdir}/Summaries"
                             )
@@ -102,7 +102,7 @@ workflow ASSEMBLY_ASSESSMENT {
     // Collect cleaned read/base summaries and concatenate into one file
     ch_cleaned_summary = QA_ASSEMBLY_QUAST.out.summary_reads
                             .collectFile(
-                                name:     "Summary.CleanedReads-Bases.tsv",
+                                name:     "Summary.CleanedReads_Bases.tsv",
                                 keepHeader: true,
                                 storeDir: "${params.outdir}/Summaries"
                             )
@@ -125,7 +125,7 @@ workflow ASSEMBLY_ASSESSMENT {
     // Collect genome coverage summaries and concatenate into one file
     ch_genome_cov_summary = CALCULATE_COVERAGE_UNIX.out.summary
                                 .collectFile(
-                                    name:     "Summary.GenomeCoverage.tsv",
+                                    name:     "Summary.Assembly_Depth.tsv",
                                     keepHeader: true,
                                     storeDir: "${params.outdir}/Summaries"
                                 )
