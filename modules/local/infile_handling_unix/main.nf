@@ -2,16 +2,16 @@ process INFILE_HANDLING_UNIX {
 
     tag { "${meta.id}" }
     container "ubuntu:jammy"
-    // container "quay.io/biocontainers/seqfu@sha256:6fb86161b4b29b876253dfe4c72f8620801dfc8b905e9ed026c9386aef3b62e1"
 
     input:
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("${meta.id}.Raw_Initial_FastQ_File.tsv"), emit: qc_filecheck
-    tuple val(meta), path(reads)                                  , emit: input
+    tuple val(meta), path("${meta.id}.Raw_Initial_FastQ_Size_of_File.tsv"), emit: qc_filecheck
+    tuple val(meta), path(reads)                                          , emit: input
+    path("${meta.id}.Input_FastQ.SHA256-checksums.tsv")                   , emit: checksums
     path(".command.{out,err}")
-    path("versions.yml")                                          , emit: versions
+    path("versions.yml")                                                  , emit: versions
 
     shell:
     '''
@@ -20,37 +20,32 @@ process INFILE_HANDLING_UNIX {
     msg "INFO: Read 1: !{reads[0]}"
     msg "INFO: Read 2: !{reads[1]}"
 
-    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.Raw_Initial_FastQ_File.tsv"
+    ### Evaluate Filesize of each Input FastQ file ###
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.Raw_Initial_FastQ_Size_of_File.tsv"
 
     i=1
     for fastq in !{reads}; do
-      # Check if input FastQ file is corrupted
-      if [[ ${fastq} =~ .gz ]]; then
-        gunzip -t ${fastq} 2>/dev/null || \
-          $(
-            msg "ERROR: Input file ${fastq} is corrupted and assembly cannot be performed!" >&2 \
-            && exit 1
-          )
-      elif [[ ${fastq} =~ .fastq ]] || [[ ${fastq} =~ .fq ]]; then
-        cat ${fastq} > /dev/null 2>&1 || \
-        $(
-          msg "ERROR: Input file ${fastq} is corrupted and assembly cannot be performed!" >&2 \
-          && exit 1
-        )
-      fi
-
       # Check if input FastQ file meets minimum file size requirement
       if verify_minimum_file_size "${fastq}" 'Raw Initial FastQ Files' "!{params.min_filesize_fastq_input}"; then
-        echo -e "!{meta.id}\tRaw Initial FastQ (R${i}) File\tPASS" >> "!{meta.id}.Raw_Initial_FastQ_File.tsv"
+        echo -e "!{meta.id}\tRaw Initial FastQ (R${i}) Filesize\tPASS" >> "!{meta.id}.Raw_Initial_FastQ_Size_of_File.tsv"
       else
-        echo -e "!{meta.id}\tRaw Initial FastQ (R${i}) File\tFAIL" >> "!{meta.id}.Raw_Initial_FastQ_File.tsv"
+        msg "ERROR: R${i} file for !{meta.id}: ${fastq} is not at least !{params.min_filesize_fastq_input} in size" >&2
+        echo -e "!{meta.id}\tRaw Initial FastQ (R${i}) Filesize\tFAIL" >> "!{meta.id}.Raw_Initial_FastQ_Size_of_File.tsv"
       fi
       ((i++))
     done
 
+    ### Calculate SHA-256 Checksums of each Input FastQ file ###
+    find . -type l -regex ".*\\\\(\\.fq\\\\|\\.fq\\\\.gz\\\\|\\.fastq\\\\|\\.fastq\\\\.gz\\)$" | while read f; do
+      f="$(readlink -f ${f})"
+      cat "${f}" | paste - - - - | sort -k1,1 -t " " | tr "\\t" "\\n" | sha256sum | awk '{print $1, "'"$f"'"}'
+    done >> "!{meta.id}.Input_FastQ.SHA256-checksums.tsv"
+
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
+        find: $(find --version | grep ^find | sed 's/find //1')
+        sha256sum: $(sha256sum --version | grep ^sha256sum | sed 's/sha256sum //1')
         ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
     END_VERSIONS
     '''
