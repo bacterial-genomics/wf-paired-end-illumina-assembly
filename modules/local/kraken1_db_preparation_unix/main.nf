@@ -26,7 +26,7 @@ process KRAKEN1_DB_PREPARATION_UNIX {
 
     # Verify all 4 files are found
     if [[ $(find database/ -type f | wc -l) != 4 ]]; then
-        msg "ERROR: Missing one of the following files: `database.{idx,kdb}, {names,nodes}.dmp`."
+        msg "ERROR: Missing one of the following files: `database.{idx,kdb}, {names,nodes}.dmp`." >&2
         exit 1
     fi
 

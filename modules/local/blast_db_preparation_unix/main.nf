@@ -19,7 +19,7 @@ process BLAST_DB_PREPARATION_UNIX {
 
     # Make sure database contains 16S_ribosomal_RNA files
     if [[ $(find database/ -type f -name "16S_ribosomal_RNA*" | wc -l) -lt 1 ]]; then
-        msg "ERROR: Missing 16S ribosomal RNA database files from NCBI BLAST!"
+        msg "ERROR: Missing 16S ribosomal RNA database files from NCBI BLAST!" >&2
         exit 1
     fi
 
