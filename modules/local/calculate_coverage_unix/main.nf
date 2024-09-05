@@ -39,7 +39,7 @@ process CALCULATE_COVERAGE_UNIX {
       #   cleaned reads basepair count and the assembly cumulative length to
       #   estimate coverage.
       # NOTE: This shouldn't happen, but it's a backup and easily discernible
-      #       from the mapped-based method, because no stdev ("_+/-_") is 
+      #       from the mapped-based method, because no stdev ("_+/-_") is
       #       reported with this method.
       else
         msg "INFO: Read alignment data absent for ${ln[0]}, so cleaned bases"
@@ -47,9 +47,9 @@ process CALCULATE_COVERAGE_UNIX {
         basepairs=$(grep ${ln[0]} !{summary_cleanedreads} | cut -f 2)
         assembly_length=$(grep ${ln[0]} !{summary_assembly_metrics} | cut -f 4)
         if [[ -z "$basepairs" || -z "$assembly_length" || ! "$basepairs" =~ ^[0-9]+$ || ! "$assembly_length" =~ ^[0-9]+$ || "$basepairs" -le 0 || "$assembly_length" -le 0 ]]; then
-          msg "ERROR: skipping ${ln[0]}: $basepairs bp or $assembly_length bp are unset, empty, not integers, or not greater than zero" >&2 
+          msg "ERROR: skipping ${ln[0]}: $basepairs bp or $assembly_length bp are unset, empty, not integers, or not greater than zero" >&2
           continue
-        fi 
+        fi
         cleaned_basepairs_per_assembly_length=$(awk -v a="${basepairs}" -v b="${assembly_length}" '{print a / b}')
         cleaned_basepairs_per_assembly_length=$(printf "%.1fx" "$cleaned_basepairs_per_assembly_length")
 
