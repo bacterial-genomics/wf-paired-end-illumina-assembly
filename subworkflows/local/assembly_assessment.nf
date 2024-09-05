@@ -94,6 +94,7 @@ workflow ASSEMBLY_ASSESSMENT {
                             .collectFile(
                                 name:       "Summary.Assembly_Metrics.tsv",
                                 keepHeader: true,
+                                sort:       { file -> file.text },
                                 storeDir:   "${params.outdir}/Summaries"
                             )
 
@@ -102,9 +103,10 @@ workflow ASSEMBLY_ASSESSMENT {
     // Collect cleaned read/base summaries and concatenate into one file
     ch_cleaned_summary = QA_ASSEMBLY_QUAST.out.summary_reads
                             .collectFile(
-                                name:     "Summary.CleanedReads_Bases.tsv",
+                                name:       "Summary.CleanedReads_Bases.tsv",
                                 keepHeader: true,
-                                storeDir: "${params.outdir}/Summaries"
+                                sort:       { file -> file.text },
+                                storeDir:   "${params.outdir}/Summaries"
                             )
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_cleaned_summary)
@@ -125,9 +127,10 @@ workflow ASSEMBLY_ASSESSMENT {
     // Collect genome coverage summaries and concatenate into one file
     ch_genome_cov_summary = CALCULATE_COVERAGE_UNIX.out.summary
                                 .collectFile(
-                                    name:     "Summary.Assembly_Depth.tsv",
+                                    name:       "Summary.Assembly_Depth.tsv",
                                     keepHeader: true,
-                                    storeDir: "${params.outdir}/Summaries"
+                                    sort:       { file -> file.text },
+                                    storeDir:   "${params.outdir}/Summaries"
                                 )
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_genome_cov_summary)
@@ -303,13 +306,14 @@ workflow ASSEMBLY_ASSESSMENT {
 
     // Concatenate CheckM2 summaries
     //ch_output_summary_files = ch_output_summary_files.mix(ch_checkm2_output.map{ meta, file -> file })
-    ch_checkm2_output
+    ch_checkm2_output = ch_checkm2_output
         .map{ meta, file -> file }  // Map to only include the files
         .collectFile(
             name:       "Summary.CheckM2.tsv",
             keepHeader: true,
+            sort:       { file -> file.text },
             storeDir:   "${params.outdir}/Summaries"
-        )
+    )
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_checkm2_output)
 
