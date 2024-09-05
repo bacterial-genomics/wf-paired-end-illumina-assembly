@@ -43,6 +43,7 @@ if(params.busco_config){
 // MODULES: Local modules
 //
 include { INFILE_HANDLING_UNIX                    } from "../modules/local/infile_handling_unix/main"
+include { VALIDATE_FASTQ_SEQFU                    } from "../modules/local/validate_fastq_seqfu/main.nf"
 
 include { REMOVE_PHIX_BBDUK                       } from "../modules/local/remove_phix_bbduk/main"
 include { TRIM_READS_TRIMMOMATIC                  } from "../modules/local/trim_reads_trimmomatic/main"
@@ -273,10 +274,30 @@ workflow ASSEMBLY {
                                     meta['assembler'] = "${var_assembler_name}"
                                     [ meta, file]
                             }
-    // ch_infile_handling
-    //     .view { file -> println "From ch_infile_handling, emitting file: ${file}" }
-    // ch_infile_handling
-    //     .view { item -> println "From ch_infile_handling, channel item: ${item}" }
+    ch_infile_checksum = INFILE_HANDLING_UNIX.out.checksums
+                            .collectFile(
+                                name:       "Summary.Input_Checksums.tsv",
+                                keepHeader: true,
+                                sort:       { file -> file.text },
+                                storeDir:   "${params.outdir}/Summaries"
+                            )
+                            .view { collectedFiles -> println "From INFILE_HANDLING_UNIX.out.checksums, collected files: ${collectedFiles}" }
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_infile_checksum)
+
+
+    // Check input files are valid FastQ format
+    VALIDATE_FASTQ_SEQFU (
+        INPUT_CHECK.out.raw_reads
+    )
+
+    ch_versions              = ch_versions.mix(VALIDATE_FASTQ_SEQFU.out.versions)
+    ch_qc_filecheck          = ch_qc_filecheck.concat(VALIDATE_FASTQ_SEQFU.out.qc_filecheck)
+    ch_validate_fastq_format = qcfilecheck(
+                                  "VALIDATE_FASTQ_SEQFU",
+                                  VALIDATE_FASTQ_SEQFU.out.qc_filecheck,
+                                  VALIDATE_FASTQ_SEQFU.out.input
+                              )
 
     // SUBWORKFLOW: Remove host from FastQ files
     HOST_REMOVAL (
@@ -324,6 +345,7 @@ workflow ASSEMBLY {
                                 .collectFile(
                                     name:       "Summary.PhiX_Removal.tsv",
                                     keepHeader: true,
+                                    sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
                                 .view { collectedFiles -> println "From REMOVE_PHIX_BBDUK.out.summary, collected files: ${collectedFiles}" }
@@ -347,13 +369,14 @@ workflow ASSEMBLY {
                             "TRIM_READS_TRIMMOMATIC",
                             TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
                             TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed
-                          )
+                            )
 
         // Collect read trimming summaries and concatenate into one file
         ch_trimmomatic_summary = TRIM_READS_TRIMMOMATIC.out.summary
                                     .collectFile(
                                         name:       "Summary-Trimmomatic.Adapter_and_QC_Trimming.tsv",
                                         keepHeader: true,
+                                        sort:       { file -> file.text },
                                         storeDir:   "${params.outdir}/Summaries"
                                     )
                                     .view { collectedFiles -> println "From TRIM_READS_TRIMMOMATIC.out.summary, collected files: ${collectedFiles}" }
@@ -386,6 +409,7 @@ workflow ASSEMBLY {
                                 .collectFile(
                                     name:       "Summary-Fastp.Adapter_and_QC_Trimming.tsv",
                                     keepHeader: true,
+                                    sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
                                 .view { collectedFiles -> println "From TRIM_READS_FASTP.out.summary, collected files: ${collectedFiles}" }
@@ -410,16 +434,38 @@ workflow ASSEMBLY {
                             OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files
                         )
 
+    ch_cleanedreads_checksum = OVERLAP_PAIRED_READS_FLASH.out.checksums
+                            .collectFile(
+                                name:       "Summary.CleanedReads_Checksums.tsv",
+                                keepHeader: true,
+                                sort:       { file -> file.text },
+                                storeDir:   "${params.outdir}/Summaries"
+                            )
+                            .view { collectedFiles -> println "From OVERLAP_PAIRED_READS_FLASH.out.checksums, collected files: ${collectedFiles}" }
+
+    ch_output_summary_files  = ch_output_summary_files.mix(ch_cleanedreads_checksum)
+
     // Collect singleton read summaries and concatenate into one file
     ch_overlap_summary = OVERLAP_PAIRED_READS_FLASH.out.summary
                                 .collectFile(
                                     name:       "Summary.Clean_and_Overlapping_Reads.tsv",
                                     keepHeader: true,
+                                    sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
                                 .view { collectedFiles -> println "From OVERLAP_PAIRED_READS_FLASH.out.summary, collected files: ${collectedFiles}" }
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_overlap_summary)
+
+    /*
+    ================================================================================
+                                    CleanedReads Assessment
+    ================================================================================
+    */
+
+    // KAT K-mer plot
+
+    // seqkit stats for TSV
 
     /*
     ================================================================================
@@ -494,6 +540,7 @@ workflow ASSEMBLY {
                                 .collectFile(
                                     name:       "Summary.Kraken.tsv",
                                     keepHeader: true,
+                                    sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
                                 .view { collectedFiles -> println "From READ_CLASSIFY_KRAKEN_ONE.out.summary, collected files: ${collectedFiles}" }
@@ -557,6 +604,7 @@ workflow ASSEMBLY {
                                 .collectFile(
                                     name:       "Summary.Kraken2.tsv",
                                     keepHeader: true,
+                                    sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
                                 .view { collectedFiles -> println "From READ_CLASSIFY_KRAKEN_TWO.out.summary, collected files: ${collectedFiles}" }
@@ -605,6 +653,7 @@ workflow ASSEMBLY {
                                     .collectFile(
                                         name:     "Summary.CleanedReads_Aligned.tsv",
                                         keepHeader: true,
+                                        sort:      { file -> file.text },
                                         storeDir: "${params.outdir}/Summaries"
                                     )
                                 .view { collectedFiles -> println "From EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary, collected files: ${collectedFiles}" }
@@ -627,6 +676,7 @@ workflow ASSEMBLY {
                         .collectFile(
                             name:     "Summary.MLST.tsv",
                             keepHeader: true,
+                            sort:      { file -> file.text },
                             storeDir: "${params.outdir}/Summaries"
                         )
                         .view { collectedFiles -> println "From MLST_MLST.out.summary, collected files: ${collectedFiles}" }
@@ -761,21 +811,23 @@ workflow ASSEMBLY {
     // PROCESS: Concatenate RDP summaries
     ch_rdp_summary = ch_rdp_summary
                         .map{ meta, file ->       // Map to only include the files
-                          if (file.exists() && file.size() > 0) {
-                              return file
-                          } else {
-                              error "File does not exist or empty size: ${file}"
-                          }
+                            if (file.exists() && file.size() > 0) {
+                                return file
+                            } else {
+                                error "File does not exist or empty size: ${file}"
+                            }
                         }
                         .view { file -> println "From ch_rdp_summary, File to be collected: ${file}" }
                         .collectFile(
                             name:       "${var_assembler_name}.16S_top_genus_RDP.tsv",
                             keepHeader: true,
+                            sort:       { file -> file.text },
                             storeDir:   "${params.outdir}/SSU"
                         )
                         .collectFile(
                             name:       "Summary.16S_Genus_RDP.tsv",
                             keepHeader: true,
+                            sort:       { file -> file.text },
                             storeDir:   "${params.outdir}/Summaries"
                         )
                         .view { collectedFiles -> println "From ch_rdp_summary, collected files: ${collectedFiles}" }
@@ -797,19 +849,9 @@ workflow ASSEMBLY {
                         BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
                     )
 
-    // // Collect BLAST summaries and concatenate into one file
-    // ch_blast_summary = BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
-    //                             .collectFile(
-    //                                 name:       "Summary.BLAST.16S_rRNA-top-species.tsv",
-    //                                 keepHeader: true,
-    //                                 storeDir:   "${params.outdir}/Summaries"
-    //                             )
-
-    // ch_output_summary_files = ch_output_summary_files.mix(ch_blast_summary)
-
     // Collect top BLASTn species and concatenate into one file
     ch_top_blast = ch_top_blast
-                        .map{ meta, file -> file 
+                        .map{ meta, file -> file
                           if (file.exists() && file.size() > 0) {
                               return file
                           } else {
@@ -819,11 +861,13 @@ workflow ASSEMBLY {
                         .collectFile(
                             name:       "${var_assembler_name}.16S_top_species_BLAST.tsv",
                             keepHeader: true,
+                            sort:       { file -> file.text },
                             storeDir:   "${params.outdir}/SSU"
                         )
                         .collectFile(
                             name:       "Summary.16S_Species_BLAST.tsv",
                             keepHeader: true,
+                            sort:       { file -> file.text },
                             storeDir:   "${params.outdir}/Summaries"
                         )
                         .view { collectedFiles -> println "From ch_top_blast, collected files: ${collectedFiles}" }
@@ -865,8 +909,8 @@ workflow ASSEMBLY {
                         .collectFile(
                             name:       "Summary.QC_File_Checks.tsv",
                             keepHeader: true,
+                            sort:       { file -> file.text },
                             storeDir:   "${params.outdir}/Summaries",
-                            sort:       'index'
                         )
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_qc_filecheck)
@@ -889,7 +933,7 @@ workflow ASSEMBLY {
                 // Extract the file if it's a tuple or list
                 def file = (item instanceof List) ? item[1] : item  // Assuming file is the second element in the tuple
                 def fileName = file.getName()  // Convert Path to String
-                if (fileName.startsWith("Summary.") && file.size() > 0) {
+                if (fileName.startsWith("Summary") && file.size() > 0) {
                     println "From ch_output_summary_files, Valid summary file found: ${fileName} (Size: ${file.size()} bytes)"
                     return true
                 } else {
@@ -908,11 +952,6 @@ workflow ASSEMBLY {
         // Pass both variables to the process
         CREATE_EXCEL_RUN_SUMMARY_PYTHON(list_of_files, tab_colors_file)
         ch_versions = ch_versions.mix(CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.versions)
-
-        // CONVERT_TSV_TO_EXCEL_PYTHON (
-        //     CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.summary
-        // )
-        // ch_versions = ch_versions.mix(CONVERT_TSV_TO_EXCEL_PYTHON.out.versions)
     }
 
     /*
