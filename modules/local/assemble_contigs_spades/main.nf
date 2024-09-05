@@ -36,11 +36,11 @@ process ASSEMBLE_CONTIGS_SPADES {
 
     # Verify file output
     echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
-    if verify_minimum_file_size "SPAdes/contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then
-      echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly File\tPASS"  \
+    if verify_minimum_file_size "SPAdes/contigs.fasta" 'Raw Assembly FastA File' "!{params.min_filesize_raw_assembly}"; then
+      echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly FastA File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     else
-      echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly File\tFAIL" \
+      echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly FastA File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     fi
 
