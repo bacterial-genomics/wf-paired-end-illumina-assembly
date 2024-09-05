@@ -57,11 +57,11 @@ process POLISH_ASSEMBLY_BWA_PILON {
         --reference !{uncorrected_contigs}
 
       echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
-      if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.paired.bam" 'Binary PE Alignment Map File' "!{params.min_filesize_binary_pe_alignment}"; then
-        echo -e "!{meta.id}-!{meta.assembler}\tBinary PE Alignment Map File (${i} of !{polish_corrections})\tPASS" \
+      if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.paired.bam" 'Binary PE Alignment Map BAM File' "!{params.min_filesize_binary_pe_alignment}"; then
+        echo -e "!{meta.id}-!{meta.assembler}\tBinary PE Alignment Map BAM File (${i} of !{polish_corrections})\tPASS" \
           >> "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
       else
-        echo -e "!{meta.id}-!{meta.assembler}\tBinary PE Alignment Map File (${i} of !{polish_corrections})\tFAIL" \
+        echo -e "!{meta.id}-!{meta.assembler}\tBinary PE Alignment Map BAM File (${i} of !{polish_corrections})\tFAIL" \
           >> "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
       fi
 
