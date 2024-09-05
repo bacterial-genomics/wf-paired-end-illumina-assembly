@@ -56,30 +56,19 @@ process MLST_MLST {
         --threads !{task.cpus} \
         --scheme "${mlst_scheme}" \
         --exclude "${exclude_list}" \
-        >> "!{meta.id}-!{meta.assembler}.MLST.tsv"
+        > "!{meta.id}-!{meta.assembler}.MLST.tsv"
 
-      # Replace the assembly file (with "-<assembler pkg>" in first column with nextflow's
-      #   sample_name in the report, to ensure Sample_name consistent in report.
-      # NOTE: Sample name alone not clear enough which assembler was used at this stage to
-      #       avoid confusion when > 1 assembler is used in same output directory path.
-      tab=$'\\t'
-      awk -v id="!{meta.id}-!{meta.assembler}" -v OFS="$tab" -v FS="$tab" \
-        '{$1=id; print}' \
+      # Print header line and add in Sample_name identifier to data row
+      awk -F $'\t' -v id="!{meta.id}" \
+        'BEGIN{
+          OFS=FS
+          print "Sample_name" OFS "PubMLST_scheme_name" OFS "Sequence_type_(ST-#)" OFS "Allele_numbers"
+        }
+        {$1=id; print}' \
         "!{meta.id}-!{meta.assembler}.MLST.tsv" \
         > tmp \
-      && mv tmp "!{meta.id}-!{meta.assembler}.MLST.tsv"
-
-      # Add header line to data output
-      # NOTE: use awk instead of sed to avoid error on () characters
-      tab=$'\\t'
-      awk -v OFS="$tab" -v FS="$tab" \
-          'BEGIN{print "Sample_name-Assembler" OFS "PubMLST_scheme_name" OFS "Sequence_type_(ST-#)" OFS "Allele_numbers"}
-          {print}
-          ' \
-          "!{meta.id}-!{meta.assembler}.MLST.tsv" \
-          > tmp \
-      && \
-      mv tmp "!{meta.id}-!{meta.assembler}.MLST.tsv"
+        && \
+        mv tmp "!{meta.id}-!{meta.assembler}.MLST.tsv"
     fi
 
     # Get process version information
