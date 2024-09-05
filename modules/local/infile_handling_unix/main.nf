@@ -36,9 +36,19 @@ process INFILE_HANDLING_UNIX {
     done
 
     ### Calculate SHA-256 Checksums of each Input FastQ file ###
+    SUMMARY_HEADER=(
+      "Sample_name"
+      "Checksum_(SHA-256)"
+      "File"
+    )
+    SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
+
+    echo "${SUMMARY_HEADER}" > "!{meta.id}.Input_FastQ.SHA256-checksums.tsv"
+
     find . -type l -regex ".*\\\\(\\.fq\\\\|\\.fq\\\\.gz\\\\|\\.fastq\\\\|\\.fastq\\\\.gz\\)$" | while read f; do
       f="$(readlink -f ${f})"
-      cat "${f}" | paste - - - - | sort -k1,1 -t " " | tr "\\t" "\\n" | sha256sum | awk '{print $1, "'"$f"'"}'
+      echo -ne "!{meta.id}\t" >> "!{meta.id}.Input_FastQ.SHA256-checksums.tsv"
+      cat "${f}" | paste - - - - | sort -k1,1 -t " " | tr "\\t" "\\n" | sha256sum | awk '{print $1 "\t" "'"$f"'"}'
     done >> "!{meta.id}.Input_FastQ.SHA256-checksums.tsv"
 
     # Get process version information
