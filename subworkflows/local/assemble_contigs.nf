@@ -63,6 +63,7 @@ workflow ASSEMBLE_CONTIGS {
     if ( var_assembler_name == "SKESA" ) {
         // SKESA assembler
         // PROCESS: Run SKESA to assemble contigs with cleaned paired reads and cleaned singletons
+        //          which skips post-assembly mapping for SNP and InDel corrections too for speed.
         ASSEMBLE_CONTIGS_SKESA (
             ch_cleaned_reads
         )
@@ -79,7 +80,7 @@ workflow ASSEMBLE_CONTIGS {
         )
         ch_versions = ch_versions.mix(FILTER_CONTIGS_BIOPYTHON.out.versions)
 
-        // PROCESS: Create BAM file
+        // PROCESS: Create BAM file for depth of coverage calculations
         MAP_CONTIGS_BWA (
             ch_cleaned_reads.join(FILTER_CONTIGS_BIOPYTHON.out.uncorrected_contigs)
         )
@@ -109,7 +110,6 @@ workflow ASSEMBLE_CONTIGS {
         )
         ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS_SPADES.out.versions)
 
-        // ch_contigs = ASSEMBLE_CONTIGS_SPADES.out.contigs.map{ meta, file -> [ meta, [file] ] }
         ch_contigs = qcfilecheck(
                         "ASSEMBLE_CONTIGS_SPADES",
                         ASSEMBLE_CONTIGS_SPADES.out.qc_filecheck,
@@ -122,7 +122,10 @@ workflow ASSEMBLE_CONTIGS {
         )
         ch_versions = ch_versions.mix(FILTER_CONTIGS_BIOPYTHON.out.versions)
 
-        // PROCESS: Use BWA/Samtools/Pilon to correct contigs with cleaned PE reads
+        // PROCESS: Use BWA/Samtools/Pilon to SNP and InDel correct contigs with cleaned PE reads
+        // NOTE:  The "path(cleaned_fastq_files)" is already input to this POLISH channel, but
+        //        currently just the meta.id is used for the readset. Should be using the
+        //        path(cleaned_fastq_files) items though.
         POLISH_ASSEMBLY_BWA_PILON (
             ch_cleaned_reads.join(FILTER_CONTIGS_BIOPYTHON.out.uncorrected_contigs)
         )
