@@ -25,23 +25,25 @@ process CLASSIFY_16S_RDP {
       classify \
       --format "!{params.rdp_output_format}" \
       --gene "!{params.rdp_phylomarker}" \
-      --outputFile "!{meta.id}.RDP.tsv" \
+      --outputFile "!{meta.id}.RDP-raw.tsv" \
       "!{barnapp_extracted_rna}"
 
     msg "INFO: Completed RDP 16S Classification of !{meta.id}"
 
-    if [[ "!{params.rdp_output_format}" == "fixrank" ]]; then
-      # Drop unnecessary columns
-      awk -F $'\t' 'BEGIN{OFS = FS} {print $1,$3,$5,$6,$8,$9,$11,$12,$14,$15,$17,$18,$20}' \
-        "!{meta.id}.RDP.tsv" \
-        > "!{meta.id}.RDP_tmp.tsv"
+  if [[ "!{params.rdp_output_format}" == "fixrank" ]]; then
+      # Split up the first column "<Sample_name>_<int>"; add header;
+      #   discard some columns that are now stored as headers
+      #   (e.g., "domain", "phylum", "class", "order", "family", "genus")
+      awk 'BEGIN {
+        FS=OFS="\t";
+        print "Sample_name\tUnique_16S_rRNA_extraction_count\tDomain\tDomain_result\tPhylum\tPhylum_result\tClass\tClass_result\tOrder\tOrder_result\tFamily\tFamily_result\tGenus\tGenus_result"
+      }
+      {
+        split($1, a, "_");
+        print a[1], a[2], $3, $4, $6, $7, $9, $10, $12, $13, $15, $16, $18, $19
+      }' "!{meta.id}.RDP-raw.tsv" \
+      > "!{meta.id}.RDP.tsv"
 
-      mv -f "!{meta.id}.RDP_tmp.tsv" "!{meta.id}.RDP.tsv"
-
-      # Add header
-      sed -i \
-        '1i Sample_name\tDomain\tDomain_result\tPhylum\tPhylum_result\tClass\tClass_result\tOrder\tOrder_result\tFamily\tFamily_result\tGenus\tGenus_result' \
-        "!{meta.id}.RDP.tsv"
     else
       # Other `--format <arg>` options have varying numbers and names for header, so avoid adding any for now
       msg "WARN: RDP Classifier with `--format !{params.rdp_output_format}` unknown header column names might prevent downstream XLSX summary conversion"
