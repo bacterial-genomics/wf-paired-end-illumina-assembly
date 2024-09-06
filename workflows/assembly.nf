@@ -630,6 +630,17 @@ workflow ASSEMBLY {
     ch_versions     = ch_versions.mix(ASSEMBLE_CONTIGS.out.versions)
     ch_qc_filecheck = ch_qc_filecheck.concat(ASSEMBLE_CONTIGS.out.qc_filecheck)
 
+    ch_assembly_checksum = ASSEMBLE_CONTIGS.out.checksums
+                            .collectFile(
+                                name:       "Summary.Assembly_Checksums.tsv",
+                                keepHeader: true,
+                                sort:       { file -> file.text },
+                                storeDir:   "${params.outdir}/Summaries"
+                            )
+                            .view { collectedFiles -> println "From OVERLAP_PAIRED_READS_FLASH.out.checksums, collected files: ${collectedFiles}" }
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_assembly_checksum)
+
     /*
     ================================================================================
                             Assembly Information
@@ -698,6 +709,18 @@ workflow ASSEMBLY {
                     ANNOTATE_PROKKA.out.qc_filecheck,
                     ANNOTATE_PROKKA.out.prokka_genbank_file
                 )
+
+    ch_annotation_checksum = ANNOTATE_PROKKA.out.checksums
+                            .collectFile(
+                                name:       "Summary.Annotation_Checksums.tsv",
+                                keepHeader: true,
+                                sort:       { file -> file.text },
+                                storeDir:   "${params.outdir}/Summaries"
+                            )
+                            .view { collectedFiles -> println "From ANNOTATE_PROKKA.out.checksums, collected files: ${collectedFiles}" }
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_annotation_checksum)
+
 
     /*
     ================================================================================
@@ -903,15 +926,15 @@ workflow ASSEMBLY {
 
     // Collect QC file checks and concatenate into one file
     ch_qc_filecheck = ch_qc_filecheck
-                        .map{ meta, file -> file }
-                        .collect()
-                        .flatten()
-                        .collectFile(
-                            name:       "Summary.QC_File_Checks.tsv",
-                            keepHeader: true,
-                            sort:       { file -> file.text },
-                            storeDir:   "${params.outdir}/Summaries",
-                        )
+                          .map{ meta, file -> file }
+                          .collect()
+                          .flatten()
+                          .collectFile(
+                              name:       "Summary.QC_File_Checks.tsv",
+                              keepHeader: true,
+                              sort:       { file -> file.text },
+                              storeDir:   "${params.outdir}/Summaries",
+                          )
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_qc_filecheck)
 
