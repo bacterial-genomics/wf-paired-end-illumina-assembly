@@ -60,10 +60,10 @@ process EXTRACT_16S_BARRNAP {
 
     echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
     if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Renamed FastA File' "!{params.min_filesize_renamed_ssu_file}"; then
-      echo -e "!{meta.id}-!{meta.assembler}\tSSU Renamed FastA File\tPASS"  \
-        >> "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
+      echo -e "!{meta.id}\tSSU Renamed FastA File\tPASS"  \
+        >> "!{meta.id}.SSU_Renamed_File.tsv"
     else
-      echo -e "!{meta.id}-!{meta.assembler}\tSSU Renamed FastA File\tFAIL" \
+      echo -e "!{meta.id}\tSSU Renamed FastA File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
     fi
 
