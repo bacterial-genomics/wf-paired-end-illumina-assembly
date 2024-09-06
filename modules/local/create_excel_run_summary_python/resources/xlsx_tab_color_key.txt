@@ -1,31 +1,33 @@
 # NOTE: Colors should follow workflow order in ROYGBIV then greyscale
 #
-# Validate Inputs (=255, 0, 0       # Red)
+# Validate Inputs                   (=255, 0, 0       # Red)
 Input_Checksums=255, 0, 0
 #
-# Human Removal (=255, 165, 0     # Orange)
+# Human Removal                     (=255, 165, 0     # Orange)
 #
-# Downsample (=165, 42, 42     # Brown)
+# Downsample                        (=165, 42, 42     # Brown)
 #
-# Clean Reads (=255, 255, 0     # Yellow)
+# Clean Reads                       (=255, 255, 0     # Yellow)
 PhiX_Removal=255, 255, 0
 Adapter_and_QC_Trimming=255, 255, 0
 Clean_and_Overlapping_Reads=255, 255, 0
 CleanedReads_Bases=255, 255, 0
 CleanedReads_Checksums=255, 255, 0
 #
-# Genome Assembly (=154, 205, 50     # YellowGreen) -- replaced Chartreuse
+# Genome Assembly                   (=154, 205, 50     # YellowGreen) -- replaced Chartreuse
+Assembly_Checksums=154, 205, 50
 #
-# Depth of Coverage (=0, 128, 0       # Dark Green)
+# Depth of Coverage                 (=0, 128, 0       # Dark Green)
 Assembly_Depth=0, 128, 0
 CleanedReads_Aligned=0, 128, 0
 #
-# Genotyping (=0, 255, 0       # Green)
+# Genotyping                        (=0, 255, 0       # Green)
 MLST=0, 255, 0
 #
-# Genome Annotation (=0, 255, 255     # Cyan)
+# Genome Annotation                 (=0, 255, 255     # Cyan)
+Annotation_Checksums=0, 255, 255
 #
-# 16S rRNA Gene Classification (=0, 0, 255       # Blue)
+# 16S rRNA Gene Classification      (=0, 0, 255       # Blue)
 16S_Species_BLAST=0, 0, 255
 16S_Genus_RDP=0, 0, 255
 #
@@ -33,10 +35,11 @@ MLST=0, 255, 0
 Kraken=255, 0, 255
 Kraken2=255, 0, 255
 #
-# Assembly Assessment (=128, 0, 128     # Purple)
+# Assembly Assessment               (=128, 0, 128     # Purple)
 Assembly_Metrics=128, 0, 128
+CheckM2=128, 0, 128
 #
-# Misc (=128, 128, 128   # Gray)
+# Misc                              (=128, 128, 128   # Gray)
 QC_File_Checks=128, 128, 128
 Output_Checksums=128, 128, 128
 #
