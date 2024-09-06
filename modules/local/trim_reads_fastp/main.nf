@@ -84,6 +84,7 @@ process TRIM_READS_FASTP {
     sed -i '1i Sample_name\tDiscarded_reads_(#)\tSingleton_reads_(#)' !{meta.id}.fastp.tsv
 
     # Test/verify paired FastQ outfiles sizes are reasonable to continue
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > !{meta.id}.Adapter-removed_FastQ_File.tsv
     for suff in R1.paired.fq R2.paired.fq; do
       if verify_minimum_file_size "!{meta.id}_${suff}" 'Adapter-removed FastQ Files' "!{params.min_filesize_fastq_adapters_removed}"; then
         echo -e "!{meta.id}\tAdapter-removed ($suff) FastQ File\tPASS" \

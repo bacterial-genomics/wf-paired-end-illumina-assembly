@@ -83,6 +83,7 @@ process TRIM_READS_TRIMMOMATIC {
 
     rm -f !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq
 
+    # Test/verify paired FastQ outfiles sizes are reasonable to continue
     echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.Adapter-removed_FastQ_File.tsv"
     for suff in R1.paired.fq R2.paired.fq; do
       if verify_minimum_file_size "!{meta.id}_${suff}" 'Adapter-removed FastQ Files' "!{params.min_filesize_fastq_adapters_removed}"; then
