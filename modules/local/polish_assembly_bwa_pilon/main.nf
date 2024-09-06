@@ -12,6 +12,7 @@ process POLISH_ASSEMBLY_BWA_PILON {
     tuple val(meta), path("${meta.id}-${meta.assembler}.{paired,single}.bam")                       , emit: bam
     path("${meta.id}-${meta.assembler}.{SNPs,InDels}-corrected.cnt.tsv")
     tuple val(meta), path("${meta.id}-${meta.assembler}.fna")                                       , emit: assembly
+    path("${meta.id}.Assembly_FastA.SHA256-checksums.tsv")                                          , emit: checksums
     path(".command.{out,err}")
     path("versions.yml")                                                                            , emit: versions
 
@@ -23,10 +24,10 @@ process POLISH_ASSEMBLY_BWA_PILON {
     # Correct cleaned SPAdes contigs with cleaned PE reads
     echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Filtered_Assembly_File.tsv"
     if verify_minimum_file_size "!{uncorrected_contigs}" 'Filtered Assembly File' "!{params.min_filesize_filtered_assembly}"; then
-      echo -e "!{meta.id}-!{meta.assembler}\tFiltered Assembly File\tPASS"  \
+      echo -e "!{meta.id}\tFiltered Assembly File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.Filtered_Assembly_File.tsv"
     else
-      echo -e "!{meta.id}-!{meta.assembler}\tFiltered Assembly File\tFAIL" \
+      echo -e "!{meta.id}\tFiltered Assembly File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.Filtered_Assembly_File.tsv"
     fi
 
@@ -43,6 +44,8 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
       bwa index !{uncorrected_contigs}
 
+      msg "INFO: Paired read mapping (${i} of !{polish_corrections}) of !{meta.id}..."
+
       bwa mem \
         -v 2 \
         -x intractg \
@@ -58,14 +61,16 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
       echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
       if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.paired.bam" 'Binary PE Alignment Map BAM File' "!{params.min_filesize_binary_pe_alignment}"; then
-        echo -e "!{meta.id}-!{meta.assembler}\tBinary PE Alignment Map BAM File (${i} of !{polish_corrections})\tPASS" \
+        echo -e "!{meta.id}\tBinary PE Alignment Map BAM File (${i} of !{polish_corrections})\tPASS" \
           >> "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
       else
-        echo -e "!{meta.id}-!{meta.assembler}\tBinary PE Alignment Map BAM File (${i} of !{polish_corrections})\tFAIL" \
+        echo -e "!{meta.id}\tBinary PE Alignment Map BAM File (${i} of !{polish_corrections})\tFAIL" \
           >> "!{meta.id}-!{meta.assembler}.Binary_PE_Alignment_Map_File.tsv"
       fi
 
       samtools index "!{meta.id}-!{meta.assembler}.paired.bam"
+
+      msg "INFO: Pilon correcting SNPs and InDels (${i} of !{polish_corrections}) of !{meta.id}..."
 
       pilon \
         --genome !{uncorrected_contigs} \
@@ -74,14 +79,16 @@ process POLISH_ASSEMBLY_BWA_PILON {
         --changes \
         --fix snps,indels \
         --mindepth 0.50 \
-        --threads !{task.cpus} >&2
+        --threads !{task.cpus}
+
+      msg "INFO: Completed Pilon correction of SNPs and InDels (${i} of !{polish_corrections}) for !{meta.id}"
 
       echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Polished_Assembly_File.tsv"
       if verify_minimum_file_size "!{uncorrected_contigs}" 'Polished Assembly File' "!{params.min_filesize_polished_assembly}"; then
-        echo -e "!{meta.id}-!{meta.assembler}\tPolished Assembly File (${i} of !{polish_corrections})\tPASS" \
+        echo -e "!{meta.id}\tPolished Assembly File (${i} of !{polish_corrections})\tPASS" \
           >> "!{meta.id}-!{meta.assembler}.Polished_Assembly_File.tsv"
       else
-        echo -e "!{meta.id}-!{meta.assembler}\tPolished Assembly File (${i} of !{polish_corrections})\tFAIL" \
+        echo -e "!{meta.id}\tPolished Assembly File (${i} of !{polish_corrections})\tFAIL" \
           >> "!{meta.id}-!{meta.assembler}.Polished_Assembly_File.tsv"
       fi
 
@@ -103,17 +110,18 @@ process POLISH_ASSEMBLY_BWA_PILON {
 
     echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Final_Corrected_Assembly_FastA_File.tsv"
     if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.fna" 'Final Corrected Assembly FastA File' "!{params.min_filesize_final_assembly}"; then
-      echo -e "!{meta.id}-!{meta.assembler}\tFinal Corrected Assembly FastA File\tPASS" \
+      echo -e "!{meta.id}\tFinal Corrected Assembly FastA File\tPASS" \
         >> "!{meta.id}-!{meta.assembler}.Final_Corrected_Assembly_FastA_File.tsv"
     else
-      echo -e "!{meta.id}-!{meta.assembler}\tFinal Corrected Assembly FastA File\tFAIL" \
+      echo -e "!{meta.id}\tFinal Corrected Assembly FastA File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.Final_Corrected_Assembly_FastA_File.tsv"
     fi
 
     # Single read mapping if available for downstream depth of coverage
     #  calculations, not for assembly polishing.
     if [[ !{meta.id}_single.fq.gz ]]; then
-      msg "INFO: Single read mapping"
+      msg "INFO: Single read mapping of !{meta.id}..."
+
       bwa index "!{meta.id}-!{meta.assembler}.fna"
 
       bwa mem \
@@ -129,23 +137,40 @@ process POLISH_ASSEMBLY_BWA_PILON {
         -o "!{meta.id}-!{meta.assembler}.single.bam" \
         --reference "!{meta.id}-!{meta.assembler}.fna"
 
+      msg "INFO: Completed single read mapping of !{meta.id}"
+
       echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Binary_SE_Alignment_Map_File.tsv"
       if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.single.bam" 'Binary SE Alignment Map File' '!{params.min_filesize_binary_se_alignment}'; then
-        echo -e "!{meta.id}-!{meta.assembler}\tBinary SE Alignment Map File\tPASS" \
+        echo -e "!{meta.id}\tBinary SE Alignment Map File\tPASS" \
             >> "!{meta.id}-!{meta.assembler}.Binary_SE_Alignment_Map_File.tsv"
       else
-        echo -e "!{meta.id}-!{meta.assembler}\tBinary SE Alignment Map File\tFAIL" \
+        echo -e "!{meta.id}\tBinary SE Alignment Map File\tFAIL" \
           >> "!{meta.id}-!{meta.assembler}.Binary_SE_Alignment_Map_File.tsv"
       fi
 
       samtools index "!{meta.id}-!{meta.assembler}.single.bam"
     fi
 
+    # Calculate checksum
+    FILE="!{meta.id}-!{meta.assembler}.fna"
+    CHECKSUM=$(awk '/^>/ {print substr($1, 1)} !/^>/ {print}' "${FILE}" | sha256sum | awk '{print $1}')
+    echo "${CHECKSUM}" | awk -v sample_id="!{meta.id}" -v file="${FILE}" '
+        BEGIN {
+            # Print the header once
+            print "Sample_name\tChecksum\tFile"
+        }
+        {
+            # Print the data row once, using the CHECKSUM from input
+            print sample_id "\t" $1 "\t" file
+        }' \
+        > "!{meta.id}.Assembly_FastA.SHA256-checksums.tsv"
+
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         pilon: $(pilon --version | cut -d ' ' -f 3)
         bwa: $(bwa 2>&1 | head -n 3 | tail -1 | awk 'NF>1{print $NF}')
+        sha256sum: $(sha256sum --version | grep ^sha256sum | sed 's/sha256sum //1')
         samtools: $(samtools --version | head -n 1 | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
