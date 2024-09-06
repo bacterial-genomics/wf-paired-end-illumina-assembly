@@ -32,10 +32,10 @@ process ALIGN_16S_BLAST {
 
     echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.blast.tsv" '16S BLASTn Output TSV File' "!{params.min_filesize_blastn_output}"; then
-      echo -e "!{meta.id}-!{meta.assembler}\t16S BLASTn Output TSV File\tPASS"  \
+      echo -e "!{meta.id}\t16S BLASTn Output TSV File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     else
-      echo -e "!{meta.id}-!{meta.assembler}\t16S BLASTn Output TSV File\tFAIL" \
+      echo -e "!{meta.id}\t16S BLASTn Output TSV File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.16S_BLASTn_Output_File.tsv"
     fi
 
