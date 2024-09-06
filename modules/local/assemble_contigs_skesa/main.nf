@@ -39,10 +39,10 @@ process ASSEMBLE_CONTIGS_SKESA {
 
     echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     if verify_minimum_file_size "!{meta.id}-SKESA_contigs.fasta" 'Raw Assembly FastA File' "!{params.min_filesize_raw_assembly}"; then
-      echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly FastA File\tPASS"  \
+      echo -e "!{meta.id}\tRaw Assembly FastA File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     else
-      echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly FastA File\tFAIL" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
+      echo -e "!{meta.id}\tRaw Assembly FastA File\tFAIL" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     fi
 
     # Get process version information

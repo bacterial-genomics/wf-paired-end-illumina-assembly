@@ -11,6 +11,7 @@ process ANNOTATE_PROKKA {
     tuple val(meta), path("${meta.id}-${meta.assembler}.Annotated_GenBank_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}-${meta.assembler}.gbk")                       , emit: prokka_genbank_file
     path("prokka/${meta.id}-${meta.assembler}.log.gz")
+    path("${meta.id}.Annotation_GenBank.SHA256-checksums.tsv")                      , emit: checksums
     path(".command.{out,err}")
     path("versions.yml")                                                            , emit: versions
 
@@ -24,7 +25,7 @@ process ANNOTATE_PROKKA {
     sed -i "s/!{meta.id}/${short_base}/g" !{assembly}
 
     # Annotate cleaned and corrected assembly
-    msg "INFO: Annotating assembly using Prokka"
+    msg "INFO: Annotating assembly using Prokka for !{meta.id}..."
 
     # Run Prokka
     prokka \
@@ -38,6 +39,8 @@ process ANNOTATE_PROKKA {
       !{curated_proteins} \
       --cpus !{task.cpus} \
       !{assembly}
+
+    msg "INFO: Completed annotating the assembly using Prokka for !{meta.id}..."
 
     # Regardless of the file extension, unify to GBK extension for GenBank format
     for ext in gb gbf gbff gbk; do
@@ -61,10 +64,25 @@ process ANNOTATE_PROKKA {
     # Compress the bulky verbose logfile for compact storage
     gzip -9f "prokka/!{meta.id}-!{meta.assembler}.log"
 
+    # Calculate checksum
+    FILE="!{meta.id}-!{meta.assembler}.gbk"
+    CHECKSUM=$(awk '/^LOCUS/ {gsub(/[[:space:]]+[0-9]{2}-[A-Z]{3}-[0-9]{4}/, "", $0); print} !/^LOCUS/ {print}' "${FILE}" | sha256sum | awk '{print $1}')
+    echo "${CHECKSUM}" | awk -v sample_id="!{meta.id}" -v file="${FILE}" '
+        BEGIN {
+            # Print the header once
+            print "Sample_name\tChecksum\tFile"
+        }
+        {
+            # Print the data row once, using the CHECKSUM from input
+            print sample_id "\t" $1 "\t" file
+        }' \
+        > "!{meta.id}.Annotation_GenBank.SHA256-checksums.tsv"
+
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         prokka: $(prokka --version 2>&1 | awk 'NF>1{print $NF}')
+        sha256sum: $(sha256sum --version | grep ^sha256sum | sed 's/sha256sum //1')
     END_VERSIONS
     '''
 }
