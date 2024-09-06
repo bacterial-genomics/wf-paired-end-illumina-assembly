@@ -56,8 +56,9 @@ workflow ASSEMBLE_CONTIGS {
     var_assembler_name  // var (str): assembler_name
 
     main:
-    ch_versions      = Channel.empty()
-    ch_qc_filechecks = Channel.empty()
+    ch_versions       = Channel.empty()
+    ch_checksums_file = Channel.empty()
+    ch_qc_filechecks  = Channel.empty()
 
     // Update meta to include meta.assembler
     if ( var_assembler_name == "SKESA" ) {
@@ -99,7 +100,8 @@ workflow ASSEMBLE_CONTIGS {
                             )
 
         // Collect QC File Checks
-        ch_qc_filechecks = ch_qc_filechecks
+        ch_checksums_file = ch_checksums_file.mix(MAP_CONTIGS_BWA.out.checksums)
+        ch_qc_filechecks  = ch_qc_filechecks
                                 .mix(ASSEMBLE_CONTIGS_SKESA.out.qc_filecheck)
                                 .mix(MAP_CONTIGS_BWA.out.qc_filecheck)
     } else {
@@ -144,7 +146,8 @@ workflow ASSEMBLE_CONTIGS {
                             )
 
         // Collect QC File Checks
-        ch_qc_filechecks = ch_qc_filechecks
+        ch_checksums_file = ch_checksums_file.mix(POLISH_ASSEMBLY_BWA_PILON.out.checksums)
+        ch_qc_filechecks  = ch_qc_filechecks
                                 .mix(ASSEMBLE_CONTIGS_SPADES.out.qc_filecheck)
                                 .mix(POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck)
     }
@@ -153,5 +156,6 @@ workflow ASSEMBLE_CONTIGS {
     bam_files     = ch_bam_files            // channel: [ val(meta), [{paired,single}.bam] ]
     assembly_file = ch_assembly_file        // channel: [ val(meta), [assembly.fna] ]
     qc_filecheck  = ch_qc_filechecks
+    checksums     = ch_checksums_file       // channel: [ val(meta), [assembly.fna] ]
     versions      = ch_versions
 }
