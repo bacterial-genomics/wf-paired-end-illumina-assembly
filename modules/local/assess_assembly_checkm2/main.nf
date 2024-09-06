@@ -42,11 +42,12 @@ process ASSESS_ASSEMBLY_CHECKM2 {
     mv -f checkm2/diamond_output/DIAMOND_RESULTS.tsv "!{meta.id}-!{meta.assembler}.CheckM2.alignments.tsv"
     mv -f checkm2/checkm2.log "!{meta.id}-!{meta.assembler}.CheckM2.log"
 
-    # Verify output report file
+    # Test/verify paired FastQ outfiles sizes are reasonable to continue
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.CheckM2_Report_File.tsv"
     if verify_minimum_file_size "!{meta.id}-!{meta.assembler}.CheckM2.results.tsv" 'CheckM2 Report File' "!{params.min_filesize_checkm2_report}"; then
-      echo -e "!{meta.id}\tCheckM2 Report File\tPASS" > !{meta.id}.CheckM2_Report_File.tsv
+      echo -e "!{meta.id}\tCheckM2 Report File\tPASS" >> "!{meta.id}.CheckM2_Report_File.tsv"
     else
-      echo -e "!{meta.id}\tCheckM2 Report File\tFAIL" > !{meta.id}.CheckM2_Report_File.tsv
+      echo -e "!{meta.id}\tCheckM2 Report File\tFAIL" >> "!{meta.id}.CheckM2_Report_File.tsv"
     fi
 
     # Replace space characters in header line with underscores
