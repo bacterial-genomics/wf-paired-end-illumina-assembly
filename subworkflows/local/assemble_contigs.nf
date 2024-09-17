@@ -104,6 +104,7 @@ workflow ASSEMBLE_CONTIGS {
         ch_qc_filechecks  = ch_qc_filechecks
                                 .mix(ASSEMBLE_CONTIGS_SKESA.out.qc_filecheck)
                                 .mix(MAP_CONTIGS_BWA.out.qc_filecheck)
+
     } else {
         // Defaulting to SPAdes assembler
         // PROCESS: Run SPAdes to assemble contigs with cleaned paired reads and cleaned singletons
@@ -111,7 +112,6 @@ workflow ASSEMBLE_CONTIGS {
             ch_cleaned_reads
         )
         ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS_SPADES.out.versions)
-
         ch_contigs = qcfilecheck(
                         "ASSEMBLE_CONTIGS_SPADES",
                         ASSEMBLE_CONTIGS_SPADES.out.qc_filecheck,
