@@ -2,16 +2,22 @@
 #
 # Validate Inputs                   (=255, 0, 0       # Red)
 Input_Checksums=255, 0, 0
+Input_Reads.Metrics=255, 0, 0
 #
 # Human Removal                     (=255, 165, 0     # Orange)
 #
 # Downsample                        (=165, 42, 42     # Brown)
+Downsampled_Reads.Metrics=165, 42, 42
 #
 # Clean Reads                       (=255, 255, 0     # Yellow)
+PhiX=255, 255, 0
 PhiX_Removal=255, 255, 0
+PhiX_Removed_Reads.Metrics=255, 255, 0
 Adapter_and_QC_Trimming=255, 255, 0
+Adapter_and_Quality_Trimmed-Reads.Metrics=255, 255, 0
 Clean_and_Overlapping_Reads=255, 255, 0
 CleanedReads_Bases=255, 255, 0
+CleanedReads.Metrics=255, 255, 0
 CleanedReads_Checksums=255, 255, 0
 #
 # Genome Assembly                   (=154, 205, 50     # YellowGreen) -- replaced Chartreuse
