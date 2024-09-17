@@ -2,7 +2,7 @@ process REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR {
 
     label "process_high"
     tag { "${meta.id}" }
-    container "snads/bbtools@sha256:9f2a9b08563839cec87d856f0fc7607c235f464296fd71e15906ea1d15254695"
+    container "staphb/bbtools@sha256:f7b98063910e2e3b5be12f62076ec5cfdeaa562a01596758feb9a892ce18a363"
 
     input:
     tuple val(meta), path(reads)
