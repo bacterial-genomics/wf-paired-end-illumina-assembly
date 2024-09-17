@@ -48,7 +48,7 @@ process INFILE_HANDLING_UNIX {
     find . -type l -regex ".*\\\\(\\.fq\\\\|\\.fq\\\\.gz\\\\|\\.fastq\\\\|\\.fastq\\\\.gz\\)$" | while read f; do
       f="$(readlink -f ${f})"
       echo -ne "!{meta.id}\t" >> "!{meta.id}.Input_FastQ.SHA256-checksums.tsv"
-      cat "${f}" | paste - - - - | sort -k1,1 -t " " | tr "\\t" "\\n" | sha256sum | awk '{print $1 "\t" "'"$f"'"}'
+      awk 'NR%2==0' "${f}" | paste - - | sort -k1,1 | sha256sum | awk '{print $1 "\t" "'"$f"'"}'
     done >> "!{meta.id}.Input_FastQ.SHA256-checksums.tsv"
 
     # Get process version information
