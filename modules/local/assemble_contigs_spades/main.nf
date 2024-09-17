@@ -2,7 +2,7 @@ process ASSEMBLE_CONTIGS_SPADES {
 
     label "process_high"
     tag { "${meta.id}" }
-    container "gregorysprenger/spades@sha256:3fe1ebda8f5746ca3e3ff79c74c220d2ca75e3120f20441c3e6ae88eff03b4dc"
+    container "staphb/spades@sha256:5df39e8404df2678ccc6c6ed9d7aa0e59b79dfa798aef7fd4fc06cc86ba0b4c0"
 
     input:
     tuple val(meta), path(cleaned_fastq_files)
