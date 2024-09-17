@@ -1,8 +1,8 @@
 process OVERLAP_PAIRED_READS_FLASH {
 
-    label "process_low"
+    label "process_medium"
     tag { "${meta.id}" }
-    container "snads/flash@sha256:363b2f44d040c669191efbc3d3ba99caf5efd3fdef370af8f00f3328932143a6"
+    container "staphb/flash@sha256:44889120b49d3f8eefdde8f6040b096d5ee122ceb71d936b596757e4fc16a2c0"
 
     input:
     tuple val(meta), path(fastq_pairs)
@@ -10,7 +10,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     output:
     tuple val(meta), path("${meta.id}.Non-overlapping_FastQ_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}*{paired,single}.fq.gz")         , emit: cleaned_fastq_files
-    path("${meta.id}.FLASH.tsv")                                      , emit: summary
+    path("${meta.id}.Overlap.tsv")                                    , emit: summary
     path("${meta.id}.CleanedReads_FastQ.SHA256-checksums.tsv")        , emit: checksums
     path(".command.{out,err}")
     path("versions.yml")                                              , emit: versions
@@ -18,6 +18,8 @@ process OVERLAP_PAIRED_READS_FLASH {
     shell:
     '''
     source bash_functions.sh
+
+    echo !{fastq_pairs}
 
     # Determine read length based on the first 100 reads
     echo "$(cat !{meta.id}_R1.paired.fq | head -n 400)" > read_R1_len.txt
@@ -81,9 +83,14 @@ process OVERLAP_PAIRED_READS_FLASH {
 
     # Report I/O sequence stats
     echo -e "Sample_name\tCleaned_reads_(#_paired)\tCleaned_reads_(#_singletons)\tOverlapped_reads_(#)" \
-      > "!{meta.id}.FLASH.tsv"
+      > "!{meta.id}.Overlap.tsv"
     echo -e "!{meta.id}\t${CNT_CLEANED_PAIRS}\t${CNT_CLEANED_SINGLETON}\t${CNT_READS_OVERLAPPED:-0}" \
-      >> "!{meta.id}.FLASH.tsv"
+      >> "!{meta.id}.Overlap.tsv"
+
+    # Compress the output FastQ files for outdir storage
+    gzip -9f "!{meta.id}_single.fq" \
+      "!{meta.id}_R1.paired.fq" \
+      "!{meta.id}_R2.paired.fq"
 
     ### Calculate SHA-256 Checksums of each Input FastQ file ###
     SUMMARY_HEADER=(
@@ -95,21 +102,15 @@ process OVERLAP_PAIRED_READS_FLASH {
 
     echo "${SUMMARY_HEADER}" > "!{meta.id}.CleanedReads_FastQ.SHA256-checksums.tsv"
 
-    # Compress the output FastQ files for outdir storage
-    gzip -9f "!{meta.id}_single.fq" \
-      "!{meta.id}_R1.paired.fq" \
-      "!{meta.id}_R2.paired.fq"
-
     # Calculate checksums
     for f in "!{meta.id}_R1.paired.fq.gz" "!{meta.id}_R2.paired.fq.gz" "!{meta.id}_single.fq.gz"; do
       echo -ne "!{meta.id}\t" >> "!{meta.id}.CleanedReads_FastQ.SHA256-checksums.tsv"
-      cat "${f}" | paste - - - - | sort -k1,1 -t " " | tr "\\t" "\\n" | sha256sum | awk '{print $1 "\t" "'"${f}"'"}'
+      zcat "${f}" | awk 'NR%2==0' | paste - - | sort -k1,1 | sha256sum | awk '{print $1 "\t" "'"${f}"'"}'
     done >> "!{meta.id}.CleanedReads_FastQ.SHA256-checksums.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-        find: $(find --version | grep ^find | sed 's/find //1')
         sha256sum: $(sha256sum --version | grep ^sha256sum | sed 's/sha256sum //1')
         flash: $(flash --version | head -n 1 | awk 'NF>1{print $NF}')
     END_VERSIONS
