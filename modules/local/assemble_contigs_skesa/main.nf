@@ -2,7 +2,7 @@ process ASSEMBLE_CONTIGS_SKESA {
 
     label "process_high"
     tag { "${meta.id}" }
-    container "gregorysprenger/skesa@sha256:4455882b5d0fd968630325428729395422be7340301c31d15874a295904b7f26"
+    container "staphb/skesa@sha256:b520da51cd3929683c5eb94739bcd6c32045863dab16e777a4e02d2ff3802f20"
 
     input:
     tuple val(meta), path(cleaned_fastq_files)
