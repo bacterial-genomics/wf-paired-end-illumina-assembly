@@ -1,7 +1,7 @@
 process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
 
     tag { "${meta.id}-${meta.assembler}" }
-    container "snads/bedtools@sha256:9b80fb5c5ef1b6f4a4a211d8739fa3fe107da34d1fb6609d6b70ddc7afdce12c"
+    container "staphb/bedtools@sha256:52d4a9359d3adaa6ac8f8ebbdc5596bae791a738974e9a85f72892486a43336e"
 
     input:
     tuple val(meta), path(bam_files)
