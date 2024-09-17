@@ -2,7 +2,7 @@ process ANNOTATE_PROKKA {
 
     label "process_high"
     tag { "${meta.id}-${meta.assembler}" }
-    container "snads/prokka@sha256:ef7ee0835819dbb35cf69d1a2c41c5060691e71f9138288dd79d4922fa6d0050"
+    container "staphb/prokka@sha256:6bb2522e077ef08a8be7a3856fe80372ede3b832becba0728e1ddbe83d89a042"
 
     input:
     tuple val(meta), path(assembly)
