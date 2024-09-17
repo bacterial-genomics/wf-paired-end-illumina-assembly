@@ -11,6 +11,7 @@ process REMOVE_HOST_HOSTILE {
     tuple val(meta), path("${meta.id}.Hostile-removed_FastQ_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("hostile/${meta.id}*.clean_*")              , emit: host_removed_reads
     path("${meta.id}.Hostile-Removal.tsv")                            , emit: summary
+    path("${meta.id}.Hostile_FastQ.SHA256-checksums.tsv")             , emit: checksums
     path(".command.{out,err}")
     path("versions.yml")                                              , emit: versions
 
@@ -41,7 +42,7 @@ process REMOVE_HOST_HOSTILE {
     fi
 
     # Remove Host Reads
-    msg "INFO: Removing host reads using Hostile"
+    msg "INFO: Removing host reads using Hostile for !{meta.id}"
 
     if [[ ! -z "!{params.hostile_host_reference_path_prefix}" ]]; then
       hostile \
@@ -49,6 +50,7 @@ process REMOVE_HOST_HOSTILE {
         --fastq1 "!{reads[0]}" \
         --fastq2 "!{reads[1]}" \
         --out-dir hostile \
+        --force \
         "${HOST_INDEX_ARGUMENT}" \
         --threads !{task.cpus}
     else
@@ -57,6 +59,7 @@ process REMOVE_HOST_HOSTILE {
         --fastq1 "!{reads[0]}" \
         --fastq2 "!{reads[1]}" \
         --out-dir hostile \
+        --force \
         --threads !{task.cpus}
     fi
 
@@ -73,14 +76,16 @@ process REMOVE_HOST_HOSTILE {
     # Validate output files are sufficient size to continue
     echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.Hostile-removed_FastQ_File.tsv"
 
+    i=1
     for file in ${RELATIVE_OUTPATH_R1} ${RELATIVE_OUTPATH_R2}; do
       if verify_minimum_file_size "${file}" 'Hostile-removed FastQ Files' "!{min_filesize_output_fastq}"; then
-        echo -e "!{meta.id}\tHostile-removed FastQ ($file) File\tPASS" \
+        echo -e "!{meta.id}\tHostile-removed FastQ (R${i}) File\tPASS" \
           >> !{meta.id}.Hostile-removed_FastQ_File.tsv
       else
-        echo -e "!{meta.id}\tHostile-removed FastQ ($file) File\tFAIL" \
+        echo -e "!{meta.id}\tHostile-removed FastQ (R${i}) File\tFAIL" \
           >> !{meta.id}.Hostile-removed_FastQ_File.tsv
       fi
+      ((i++))
     done
 
     # NOTE: grep used because `jq` absent from package
@@ -109,7 +114,6 @@ process REMOVE_HOST_HOSTILE {
     msg "INFO: ${PERCENT_REMOVED}% of input reads were removed (${COUNT_READS_REMOVED} reads)"
     msg "INFO: ${COUNT_READS_OUTPUT} non-host reads (${PERCENT_OUTPUT}%) were retained"
 
-    DELIM='\t'
     SUMMARY_HEADER=(
       "Sample_name"
       "Input_reads_(#)"
@@ -118,8 +122,7 @@ process REMOVE_HOST_HOSTILE {
       "Removed_reads_(#)"
       "Removed_reads_(%)"
     )
-    SUMMARY_HEADER=$(printf "%s${DELIM}" "${SUMMARY_HEADER[@]}")
-    SUMMARY_HEADER="${SUMMARY_HEADER%${DELIM}}"
+    SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
 
     SUMMARY_OUTPUT=(
       "!{meta.id}"
@@ -129,12 +132,29 @@ process REMOVE_HOST_HOSTILE {
       "${COUNT_READS_REMOVED}"
       "${PERCENT_REMOVED}"
     )
-    SUMMARY_OUTPUT=$(printf "%s${DELIM}" "${SUMMARY_OUTPUT[@]}")
-    SUMMARY_OUTPUT="${SUMMARY_OUTPUT%${DELIM}}"
+    SUMMARY_OUTPUT=$(printf "%s\t" "${SUMMARY_OUTPUT[@]}" | sed 's/\t$//')
 
     # Store input/output counts
     echo -e "${SUMMARY_HEADER}" > !{meta.id}.Hostile-Removal.tsv
     echo -e "${SUMMARY_OUTPUT}" >> !{meta.id}.Hostile-Removal.tsv
+
+    ### Calculate SHA-256 Checksums of each FastQ file ###
+    SUMMARY_HEADER=(
+      "Sample_name"
+      "Checksum_(SHA-256)"
+      "File"
+    )
+    SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
+
+    echo "${SUMMARY_HEADER}" > "!{meta.id}.Hostile_FastQ.SHA256-checksums.tsv"
+
+    # Calculate checksums
+    for f in "${RELATIVE_OUTPATH_R1}" "${RELATIVE_OUTPATH_R2}"; do
+      echo -ne "!{meta.id}\t" >> "!{meta.id}.Hostile_FastQ.SHA256-checksums.tsv"
+      BASE="$(basename ${f})"
+      HASH=$(zcat "${f}" | awk 'NR%2==0' | paste - - | sort -k1,1 | sha256sum | awk '{print $1}')
+      echo -e "${HASH}\t${BASE}"
+    done >> "!{meta.id}.Hostile_FastQ.SHA256-checksums.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
