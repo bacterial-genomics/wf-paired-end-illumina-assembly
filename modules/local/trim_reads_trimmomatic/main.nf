@@ -2,18 +2,19 @@ process TRIM_READS_TRIMMOMATIC {
 
     label "process_high"
     tag { "${meta.id}" }
-    container "snads/trimmomatic@sha256:afbb19fdf540e6bd508b657e8dafffb6b411b5b0bf0e302347889220a0b571f1"
+    container "staphb/trimmomatic@sha256:57b673e66313e355a447e4fa1a78fd3ba1ae3ddd8c8f91358efe99140acb5ddb"
 
     input:
-    tuple val(meta), path(noPhiX)
+    tuple val(meta), path(reads)
     path(adapter_reference_file)
 
     output:
-    tuple val(meta), path("${meta.id}.Adapter*_File.tsv") , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}*{paired,single}.fq"), emit: fastq_adapters_removed
-    path("${meta.id}.Trimmomatic.tsv")                    , emit: summary
+    tuple val(meta), path("${meta.id}.Adapter*_Fast*_File.tsv"), emit: qc_filecheck  // regex grabs 2 QC Files here
+    tuple val(meta), path("${meta.id}*{paired,single}.fq")     , emit: fastq_adapters_removed
+    path("${meta.id}.Trimmomatic.tsv")                         , emit: summary
+    path("${meta.id}.Trim_FastQ.SHA256-checksums.tsv")         , emit: checksums
     path(".command.{out,err}")
-    path("versions.yml")                                  , emit: versions
+    path("versions.yml")                                       , emit: versions
 
     shell:
     keep_both_reads           = params.trimmomatic_keep_both_reads                                                      ? 'TRUE'                                       : 'FALSE'
@@ -41,24 +42,27 @@ process TRIM_READS_TRIMMOMATIC {
     fi
 
     # Adapter clip and quality trim
-    msg "INFO: Performing read trimming with Trimmomatic"
+    msg "INFO: Performing read trimming on !{meta.id} with Trimmomatic ..."
 
+    # NOTE: *order* matters on trimming here with Trimmomatic!!!
     trimmomatic PE \
       !{phred} \
       -threads !{task.cpus} \
-      !{noPhiX[0]} !{noPhiX[1]} \
+      !{reads[0]} !{reads[1]} \
       !{meta.id}_R1.paired.fq !{meta.id}_R1.unpaired.fq \
       !{meta.id}_R2.paired.fq !{meta.id}_R2.unpaired.fq \
-      MINLEN:!{min_length} \
+      ILLUMINACLIP:!{adapter_reference_file}:!{illumina_clip_params} \
+      SLIDINGWINDOW:!{window_size}:!{req_quality} \
       LEADING:!{leading_quality} \
       TRAILING:!{trailing_quality} \
-      SLIDINGWINDOW:!{window_size}:!{req_quality} \
-      ILLUMINACLIP:!{adapter_reference_file}:!{illumina_clip_params}
+      MINLEN:!{min_length}
+
+    msg "INFO: Completed read trimming on !{meta.id} with Trimmomatic"
 
     TRIMMO_DISCARD=$(grep '^Input Read Pairs: ' .command.err \
     | grep ' Dropped: ' | awk '{print $20}')
 
-    msg "INFO: ${TRIMMO_DISCARD} reads are poor quality and were discarded" >&2
+    msg "INFO: ${TRIMMO_DISCARD} reads are poor quality and were discarded"
 
     CNT_BROKEN_R1=$(awk '{lines++} END{print lines/4}' !{meta.id}_R1.unpaired.fq)
     CNT_BROKEN_R2=$(awk '{lines++} END{print lines/4}' !{meta.id}_R2.unpaired.fq)
@@ -70,9 +74,9 @@ process TRIM_READS_TRIMMOMATIC {
 
     CNT_BROKEN=$((${CNT_BROKEN_R1} + ${CNT_BROKEN_R2}))
 
-    msg "INFO: $CNT_BROKEN_R1 forward reads lacked a high quality R2 sister read" >&2
-    msg "INFO: $CNT_BROKEN_R2 reverse reads lacked a high quality R1 sister read" >&2
-    msg "INFO: $CNT_BROKEN total broken read pairs were saved as singletons" >&2
+    msg "INFO: ${CNT_BROKEN_R1} forward reads lacked a high quality R2 sister read"
+    msg "INFO: ${CNT_BROKEN_R2} reverse reads lacked a high quality R1 sister read"
+    msg "INFO: ${CNT_BROKEN} total broken read pairs were saved as singletons"
 
     echo -e "!{meta.id}\t${TRIMMO_DISCARD}\t${CNT_BROKEN}" \
     > "!{meta.id}.Trimmomatic.tsv"
@@ -84,20 +88,41 @@ process TRIM_READS_TRIMMOMATIC {
     rm -f !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq
 
     # Test/verify paired FastQ outfiles sizes are reasonable to continue
-    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.Adapter-removed_FastQ_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.Adapter_and_QC_Trimmed_FastQ_File.tsv"
     for suff in R1.paired.fq R2.paired.fq; do
       if verify_minimum_file_size "!{meta.id}_${suff}" 'Adapter-removed FastQ Files' "!{params.min_filesize_fastq_adapters_removed}"; then
         echo -e "!{meta.id}\tAdapter-removed ($suff) FastQ File\tPASS" \
-          >> "!{meta.id}.Adapter-removed_FastQ_File.tsv"
+          >> "!{meta.id}.Adapter_and_QC_Trimmed_FastQ_File.tsv"
       else
         echo -e "!{meta.id}\tAdapter-removed ($suff) FastQ File\tFAIL" \
-          >> "!{meta.id}.Adapter-removed_FastQ_File.tsv"
+          >> "!{meta.id}.Adapter_and_QC_Trimmed_FastQ_File.tsv"
       fi
     done
+
+    ### Calculate SHA-256 Checksums of each FastQ file ###
+    msg "INFO: Calculating checksums for !{meta.id}_R1.paired.fq and !{meta.id}_R2.paired.fq !{meta.id}_single.fq ..."
+
+    SUMMARY_HEADER=(
+      "Sample_name"
+      "Checksum_(SHA-256)"
+      "File"
+    )
+    SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
+
+    echo "${SUMMARY_HEADER}" > "!{meta.id}.Trim_FastQ.SHA256-checksums.tsv"
+
+    # Calculate checksums
+    for f in "!{meta.id}_R1.paired.fq" "!{meta.id}_R2.paired.fq" "!{meta.id}_single.fq"; do
+      echo -ne "!{meta.id}\t" >> "!{meta.id}.Trim_FastQ.SHA256-checksums.tsv"
+      awk 'NR%2==0'  "${f}" | paste - - | sort -k1,1 | sha256sum | awk '{print $1 "\t" "'"${f}"'"}'
+    done >> "!{meta.id}.Trim_FastQ.SHA256-checksums.tsv"
+
+    msg "INFO: Calculated checksums for !{meta.id}_R1.paired.fq and !{meta.id}_R2.paired.fq !{meta.id}_single.fq"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
+        sha256sum: $(sha256sum --version | grep ^sha256sum | sed 's/sha256sum //1')
         trimmomatic: $(trimmomatic -version)
     END_VERSIONS
     '''
