@@ -12,16 +12,16 @@
 //
 // MODULES: Local modules
 //
-include { CAT_DB_PREPARATION_UNIX                 } from "../../modules/local/cat_db_preparation_unix/main"
-include { DOWNLOAD_CAT_DB_UNIX                    } from "../../modules/local/download_cat_db_unix/main"
-include { BUSCO_DB_PREPARATION_UNIX               } from "../../modules/local/busco_db_preparation_unix/main"
-include { GTDBTK_DB_PREPARATION_UNIX              } from "../../modules/local/gtdbtk_db_preparation_unix/main"
-include { CHECKM2_DB_PREPARATION_UNIX             } from "../../modules/local/checkm2_db_preparation_unix/main"
+include { CAT_DB_PREPARATION_UNIX     } from "../../modules/local/cat_db_preparation_unix/main"
+include { DOWNLOAD_CAT_DB_UNIX        } from "../../modules/local/download_cat_db_unix/main"
+include { BUSCO_DB_PREPARATION_UNIX   } from "../../modules/local/busco_db_preparation_unix/main"
+include { GTDBTK_DB_PREPARATION_UNIX  } from "../../modules/local/gtdbtk_db_preparation_unix/main"
+include { CHECKM2_DB_PREPARATION_UNIX } from "../../modules/local/checkm2_db_preparation_unix/main"
 
-include { QA_ASSEMBLY_QUAST                       } from "../../modules/local/qa_assembly_quast/main"
-include { CALCULATE_COVERAGE_UNIX                 } from "../../modules/local/calculate_coverage_unix/main"
-include { CLASSIFY_CONTIGS_CAT                    } from "../../modules/local/classify_contigs_cat/main"
-include { ASSESS_ASSEMBLY_CHECKM2                 } from "../../modules/local/assess_assembly_checkm2/main"
+include { QA_ASSEMBLY_QUAST           } from "../../modules/local/qa_assembly_quast/main"
+include { CALCULATE_COVERAGE_UNIX     } from "../../modules/local/calculate_coverage_unix/main"
+include { CLASSIFY_CONTIGS_CAT        } from "../../modules/local/classify_contigs_cat/main"
+include { ASSESS_ASSEMBLY_CHECKM2     } from "../../modules/local/assess_assembly_checkm2/main"
 
 //
 // MODULES: nf-core modules
@@ -62,6 +62,7 @@ workflow ASSEMBLY_ASSESSMENT {
 
     take:
     ch_assembly_file           // channel: [ val(meta), [ contigs.fasta ] ]
+    ch_read_counts             // channel: [ val(meta), ["Summary.Cleaned_Reads.Metrics.tsv"] ]
     ch_cleaned_fastq_files     // channel: [ val(meta), [ cleaned_fastq_files (R1, R2, single) ] ]
     ch_read_alignment_stats    // channel: [ val(meta), [ CleanedReads-AlnStats.tsv ] ]
     ch_busco_config_file       // channel: busco_config.ini
@@ -85,7 +86,7 @@ workflow ASSEMBLY_ASSESSMENT {
     // PROCESS: Run QUAST on the polished assembly for quality assessment and
     //  report the number of cleaned basepairs used to form the assembly
     QA_ASSEMBLY_QUAST (
-        ch_cleaned_fastq_files.join(ch_assembly_file)
+        ch_assembly_file
     )
     ch_versions = ch_versions.mix(QA_ASSEMBLY_QUAST.out.versions)
 
@@ -100,17 +101,6 @@ workflow ASSEMBLY_ASSESSMENT {
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_assembly_summary)
 
-    // Collect cleaned read/base summaries and concatenate into one file
-    ch_cleaned_summary = QA_ASSEMBLY_QUAST.out.summary_reads
-                            .collectFile(
-                                name:       "Summary.CleanedReads_Bases.tsv",
-                                keepHeader: true,
-                                sort:       { file -> file.text },
-                                storeDir:   "${params.outdir}/Summaries"
-                            )
-
-    ch_output_summary_files = ch_output_summary_files.mix(ch_cleaned_summary)
-
     /*
     ================================================================================
                         Calculate coverage of assembly
@@ -120,7 +110,8 @@ workflow ASSEMBLY_ASSESSMENT {
     // PROCESS: Calculate genome assembly depth of coverage
     CALCULATE_COVERAGE_UNIX (
         QA_ASSEMBLY_QUAST.out.qa_summaries
-                          .join(ch_read_alignment_stats)
+            .join(ch_assembly_file)
+            .join(ch_read_alignment_stats)
     )
     ch_versions = ch_versions.mix(CALCULATE_COVERAGE_UNIX.out.versions)
 
