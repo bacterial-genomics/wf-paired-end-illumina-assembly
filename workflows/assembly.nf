@@ -45,6 +45,12 @@ if(params.busco_config){
 include { INFILE_HANDLING_UNIX                    } from "../modules/local/infile_handling_unix/main"
 include { VALIDATE_FASTQ_SEQFU                    } from "../modules/local/validate_fastq_seqfu/main.nf"
 
+include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_INPUT_FQ_SEQKIT } from "../modules/local/calculate_metrics_fastq_seqkit/main"
+include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_NOPHIX_FQ_SEQKIT } from "../modules/local/calculate_metrics_fastq_seqkit/main"
+include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_TRIM_FQ_SEQKIT } from "../modules/local/calculate_metrics_fastq_seqkit/main"
+include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_CLEANEDREADS_FQ_SEQKIT } from "../modules/local/calculate_metrics_fastq_seqkit/main"
+include { CALCULATE_METRICS_FASTQ_SEQTK           } from "../modules/local/calculate_metrics_fastq_seqtk/main"
+
 include { REMOVE_PHIX_BBDUK                       } from "../modules/local/remove_phix_bbduk/main"
 include { TRIM_READS_TRIMMOMATIC                  } from "../modules/local/trim_reads_trimmomatic/main"
 include { TRIM_READS_FASTP                        } from "../modules/local/trim_reads_fastp/main"
@@ -256,17 +262,16 @@ workflow ASSEMBLY {
         INPUT_CHECK.out.raw_reads
     )
     // INFILE_HANDLING_UNIX
-    //     .view { file -> println "From INFILE_HANDLING_UNIX, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From INFILE_HANDLING_UNIX, emitting file: ${file}" }
     // INFILE_HANDLING_UNIX
-    //     .view { item -> println "From INFILE_HANDLING_UNIX, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From INFILE_HANDLING_UNIX, channel item: ${item}" }
     ch_versions        = ch_versions.mix(INFILE_HANDLING_UNIX.out.versions)
     ch_qc_filecheck    = ch_qc_filecheck.concat(INFILE_HANDLING_UNIX.out.qc_filecheck)
     ch_infile_handling = qcfilecheck(
                             "INFILE_HANDLING_UNIX",
                             INFILE_HANDLING_UNIX.out.qc_filecheck,
                             INFILE_HANDLING_UNIX.out.input
-                        )
+                          )
 
     ch_infile_handling = ch_infile_handling
                             .map{
@@ -274,6 +279,7 @@ workflow ASSEMBLY {
                                     meta['assembler'] = "${var_assembler_name}"
                                     [ meta, file]
                             }
+
     ch_infile_checksum = INFILE_HANDLING_UNIX.out.checksums
                             .collectFile(
                                 name:       "Summary.Input_Checksums.tsv",
@@ -281,23 +287,37 @@ workflow ASSEMBLY {
                                 sort:       { file -> file.text },
                                 storeDir:   "${params.outdir}/Summaries"
                             )
-                            .view { collectedFiles -> println "From INFILE_HANDLING_UNIX.out.checksums, collected files: ${collectedFiles}" }
-
+                            .view { collectedFiles -> println "DEBUG: From INFILE_HANDLING_UNIX.out.checksums, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_infile_checksum)
 
+    // PROCESS: Calculate input FastQ metrics for each sample with SeqKit
+    CALC_STATS_INPUT_FQ_SEQKIT (
+        INPUT_CHECK.out.raw_reads,
+        "Input_Reads"
+    )
+    ch_versions = ch_versions.mix(CALC_STATS_INPUT_FQ_SEQKIT.out.versions)
+
+    // Collect raw input read/base summaries and concatenate into one file
+    ch_input_reads_metrics_summary = CALC_STATS_INPUT_FQ_SEQKIT.out.output
+                                        .collectFile(
+                                            name:       "Summary.Input_Reads.Metrics.tsv",
+                                            keepHeader: true,
+                                            sort:       { file -> file.text },
+                                            storeDir:   "${params.outdir}/Summaries"
+                                        )
+    ch_output_summary_files = ch_output_summary_files.mix(ch_input_reads_metrics_summary)
 
     // Check input files are valid FastQ format
     VALIDATE_FASTQ_SEQFU (
         INPUT_CHECK.out.raw_reads
     )
-
     ch_versions              = ch_versions.mix(VALIDATE_FASTQ_SEQFU.out.versions)
     ch_qc_filecheck          = ch_qc_filecheck.concat(VALIDATE_FASTQ_SEQFU.out.qc_filecheck)
     ch_validate_fastq_format = qcfilecheck(
                                   "VALIDATE_FASTQ_SEQFU",
                                   VALIDATE_FASTQ_SEQFU.out.qc_filecheck,
                                   VALIDATE_FASTQ_SEQFU.out.input
-                              )
+                                )
 
     // SUBWORKFLOW: Remove host from FastQ files
     HOST_REMOVAL (
@@ -305,22 +325,18 @@ workflow ASSEMBLY {
         ch_sra_scrubber_db_file
     )
     // HOST_REMOVAL
-    //     .view { file -> println "From HOST_REMOVAL, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From HOST_REMOVAL, emitting file: ${file}" }
     // HOST_REMOVAL
-    //     .view { item -> println "From HOST_REMOVAL, channel item: ${item}" }
-
-    ch_versions = ch_versions.mix(HOST_REMOVAL.out.versions)
+    //     .view { item -> println "DEBUG: From HOST_REMOVAL, channel item: ${item}" }
+    ch_versions             = ch_versions.mix(HOST_REMOVAL.out.versions)
+    ch_output_summary_files = ch_output_summary_files.mix(HOST_REMOVAL.out.output_summary_files)
 
     // SUBWORKFLOW: Downsample FastQ files
     DOWNSAMPLE (
         HOST_REMOVAL.out.host_removed_reads
     )
-    // DOWNSAMPLE
-    //     .view { file -> println "From DOWNSAMPLE, emitting file: ${file}" }
-    // DOWNSAMPLE
-    //     .view { item -> println "From DOWNSAMPLE, channel item: ${item}" }
-
-    ch_versions = ch_versions.mix(DOWNSAMPLE.out.versions)
+    ch_versions             = ch_versions.mix(DOWNSAMPLE.out.versions)
+    ch_output_summary_files = ch_output_summary_files.mix(DOWNSAMPLE.out.output_summary_files)
 
     // PROCESS: Run bbduk to remove PhiX reads
     REMOVE_PHIX_BBDUK (
@@ -328,10 +344,9 @@ workflow ASSEMBLY {
         ch_phix_reference
     )
     // REMOVE_PHIX_BBDUK
-    //     .view { file -> println "From REMOVE_PHIX_BBDUK, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From REMOVE_PHIX_BBDUK, emitting file: ${file}" }
     // REMOVE_PHIX_BBDUK
-    //     .view { item -> println "From REMOVE_PHIX_BBDUK, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From REMOVE_PHIX_BBDUK, channel item: ${item}" }
     ch_versions     = ch_versions.mix(REMOVE_PHIX_BBDUK.out.versions)
     ch_qc_filecheck = ch_qc_filecheck.concat(REMOVE_PHIX_BBDUK.out.qc_filecheck)
     ch_removed_phix = qcfilecheck(
@@ -348,9 +363,25 @@ workflow ASSEMBLY {
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
-                                .view { collectedFiles -> println "From REMOVE_PHIX_BBDUK.out.summary, collected files: ${collectedFiles}" }
-
+                                .view { collectedFiles -> println "DEBUG: From REMOVE_PHIX_BBDUK.out.summary, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_phix_removal_summary)
+
+    // PROCESS: Calculate PhiX-free FastQ metrics for each sample with SeqKit
+    CALC_STATS_NOPHIX_FQ_SEQKIT (
+        REMOVE_PHIX_BBDUK.out.phix_removed_reads,
+        "PhiX_Removed_Reads"
+    )
+    ch_versions = ch_versions.mix(CALC_STATS_NOPHIX_FQ_SEQKIT.out.versions)
+
+    // Collect PhiX-free read/base summaries and concatenate into one file
+    ch_nophix_reads_metrics_summary = CALC_STATS_NOPHIX_FQ_SEQKIT.out.output
+                                        .collectFile(
+                                            name:       "Summary.PhiX_Removed_Reads.Metrics.tsv",
+                                            keepHeader: true,
+                                            sort:       { file -> file.text },
+                                            storeDir:   "${params.outdir}/Summaries"
+                                        )
+    ch_output_summary_files = ch_output_summary_files.mix(ch_nophix_reads_metrics_summary)
 
     if ( toLower(params.trim_reads_tool) == "trimmomatic" ) {
         // PROCESS: Run trimmomatic to clip adapters and do quality trimming
@@ -359,10 +390,9 @@ workflow ASSEMBLY {
             ch_adapter_reference
         )
         // TRIM_READS_TRIMMOMATIC
-        //     .view { file -> println "From TRIM_READS_TRIMMOMATIC, emitting file: ${file}" }
+        //     .view { file -> println "DEBUG: From TRIM_READS_TRIMMOMATIC, emitting file: ${file}" }
         // TRIM_READS_TRIMMOMATIC
-        //     .view { item -> println "From TRIM_READS_TRIMMOMATIC, channel item: ${item}" }
-
+        //     .view { item -> println "DEBUG: From TRIM_READS_TRIMMOMATIC, channel item: ${item}" }
         ch_versions     = ch_versions.mix(TRIM_READS_TRIMMOMATIC.out.versions)
         ch_qc_filecheck = ch_qc_filecheck.concat(TRIM_READS_TRIMMOMATIC.out.qc_filecheck)
         ch_trim_reads   = qcfilecheck(
@@ -379,9 +409,26 @@ workflow ASSEMBLY {
                                         sort:       { file -> file.text },
                                         storeDir:   "${params.outdir}/Summaries"
                                     )
-                                    .view { collectedFiles -> println "From TRIM_READS_TRIMMOMATIC.out.summary, collected files: ${collectedFiles}" }
-
+                                    .view { collectedFiles -> println "DEBUG: From TRIM_READS_TRIMMOMATIC.out.summary, collected files: ${collectedFiles}" }
         ch_output_summary_files = ch_output_summary_files.mix(ch_trimmomatic_summary)
+
+        // PROCESS: Calculate adapter-and-quality-trimmed FastQ metrics for each sample with SeqKit
+        CALC_STATS_TRIM_FQ_SEQKIT (
+            TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed,
+            "Adapter_and_Quality_Trimmed_Reads"
+        )
+        ch_versions = ch_versions.mix(CALC_STATS_TRIM_FQ_SEQKIT.out.versions)
+
+        // Collect adapter-and-quality-trimmed read/base summaries and concatenate into one file
+        ch_trim_reads_metrics_summary = CALC_STATS_TRIM_FQ_SEQKIT.out.output
+                                            .collectFile(
+                                                name:       "Summary.Adapter_and_Quality_Trimmed-Reads.Metrics.tsv",
+                                                keepHeader: true,
+                                                sort:       { file -> file.text },
+                                                storeDir:   "${params.outdir}/Summaries"
+                                            )
+        ch_output_summary_files = ch_output_summary_files.mix(ch_trim_reads_metrics_summary)
+
     } else if ( toLower(params.trim_reads_tool) == "fastp" ) {
         // Do not use 'adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas' for fastp
         ch_adapter_reference = ch_adapter_reference.map{ it[0].getSimpleName() == "adapters_Nextera_NEB_TruSeq_NuGEN_ThruPLEX.fas" }
@@ -393,10 +440,9 @@ workflow ASSEMBLY {
             ch_adapter_reference
         )
         // TRIM_READS_FASTP
-        //     .view { file -> println "From TRIM_READS_FASTP, emitting file: ${file}" }
+        //     .view { file -> println "DEBUG: From TRIM_READS_FASTP, emitting file: ${file}" }
         // TRIM_READS_FASTP
-        //     .view { item -> println "From TRIM_READS_FASTP, channel item: ${item}" }
-
+        //     .view { item -> println "DEBUG: From TRIM_READS_FASTP, channel item: ${item}" }
         ch_versions     = ch_versions.mix(TRIM_READS_FASTP.out.versions)
         ch_qc_filecheck = ch_qc_filecheck.concat(TRIM_READS_FASTP.out.qc_filecheck)
         ch_trim_reads   = qcfilecheck(
@@ -412,9 +458,25 @@ workflow ASSEMBLY {
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
-                                .view { collectedFiles -> println "From TRIM_READS_FASTP.out.summary, collected files: ${collectedFiles}" }
-
+                                .view { collectedFiles -> println "DEBUG: From TRIM_READS_FASTP.out.summary, collected files: ${collectedFiles}" }
         ch_output_summary_files = ch_output_summary_files.mix(ch_fastp_summary)
+
+        // PROCESS: Calculate adapter-and-quality-trimmed FastQ metrics for each sample with SeqKit
+        CALC_STATS_TRIM_FQ_SEQKIT (
+            TRIM_READS_FASTP.out.fastq_adapters_removed,
+            "Adapter_and_Quality_Trimmed_Reads"
+        )
+        ch_versions = ch_versions.mix(CALC_STATS_TRIM_FQ_SEQKIT.out.versions)
+
+        // Collect adapter-and-quality-trimmed read/base summaries and concatenate into one file
+        ch_trim_reads_metrics_summary = CALC_STATS_TRIM_FQ_SEQKIT.out.output
+                                            .collectFile(
+                                                name:       "Summary.Adapter_and_Quality_Trimmed-Reads.Metrics.tsv",
+                                                keepHeader: true,
+                                                sort:       { file -> file.text },
+                                                storeDir:   "${params.outdir}/Summaries"
+                                            )
+        ch_output_summary_files = ch_output_summary_files.mix(ch_trim_reads_metrics_summary)
     }
 
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
@@ -422,10 +484,9 @@ workflow ASSEMBLY {
         ch_trim_reads
     )
     // OVERLAP_PAIRED_READS_FLASH
-    //     .view { file -> println "From OVERLAP_PAIRED_READS_FLASH, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From OVERLAP_PAIRED_READS_FLASH, emitting file: ${file}" }
     // OVERLAP_PAIRED_READS_FLASH
-    //     .view { item -> println "From OVERLAP_PAIRED_READS_FLASH, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From OVERLAP_PAIRED_READS_FLASH, channel item: ${item}" }
     ch_versions      = ch_versions.mix(OVERLAP_PAIRED_READS_FLASH.out.versions)
     ch_qc_filecheck  = ch_qc_filecheck.concat(OVERLAP_PAIRED_READS_FLASH.out.qc_filecheck)
     ch_overlap_flash = qcfilecheck(
@@ -441,8 +502,7 @@ workflow ASSEMBLY {
                                 sort:       { file -> file.text },
                                 storeDir:   "${params.outdir}/Summaries"
                             )
-                            .view { collectedFiles -> println "From OVERLAP_PAIRED_READS_FLASH.out.checksums, collected files: ${collectedFiles}" }
-
+                            .view { collectedFiles -> println "DEBUG: From OVERLAP_PAIRED_READS_FLASH.out.checksums, collected files: ${collectedFiles}" }
     ch_output_summary_files  = ch_output_summary_files.mix(ch_cleanedreads_checksum)
 
     // Collect singleton read summaries and concatenate into one file
@@ -453,8 +513,7 @@ workflow ASSEMBLY {
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
-                                .view { collectedFiles -> println "From OVERLAP_PAIRED_READS_FLASH.out.summary, collected files: ${collectedFiles}" }
-
+                                .view { collectedFiles -> println "DEBUG: From OVERLAP_PAIRED_READS_FLASH.out.summary, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_overlap_summary)
 
     /*
@@ -462,6 +521,39 @@ workflow ASSEMBLY {
                                     CleanedReads Assessment
     ================================================================================
     */
+    // PROCESS: Calculate cleaned FastQ metrics for each sample with SeqKit
+    CALC_STATS_CLEANEDREADS_FQ_SEQKIT (
+        OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
+        "CleanedReads"  //Keep this one without underscore to help user know it is files in CleanedReads/*fq.gz
+    )
+    ch_versions = ch_versions.mix(CALC_STATS_CLEANEDREADS_FQ_SEQKIT.out.versions)
+
+    // Collect cleaned read/base summaries and concatenate into one file
+    ch_cleaned_reads_metrics_summary = CALC_STATS_CLEANEDREADS_FQ_SEQKIT.out.output
+                                        .collectFile(
+                                            name:       "Summary.CleanedReads.Metrics.tsv",
+                                            keepHeader: true,
+                                            sort:       { file -> file.text },
+                                            storeDir:   "${params.outdir}/Summaries"
+                                        )
+    ch_output_summary_files = ch_output_summary_files.mix(ch_cleaned_reads_metrics_summary)
+
+    // NOTE: This is just a backup working solution; use SeqKit only for now due to extra metrics provided
+    // // PROCESS: Calculate cleaned FastQ metrics for each sample with SeqKit
+    // CALCULATE_METRICS_FASTQ_SEQTK (
+    //     OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files
+    // )
+    // ch_versions = ch_versions.mix(CALCULATE_METRICS_FASTQ_SEQTK.out.versions)
+    // // Collect cleaned read/base summaries and concatenate into one file
+    // ch_cleaned_reads_metrics_summary = CALCULATE_METRICS_FASTQ_SEQTK.out.output
+    //                                     .collectFile(
+    //                                         name:       "Summary.Cleaned_Reads.Metrics.tsv",
+    //                                         keepHeader: true,
+    //                                         sort:       { file -> file.text },
+    //                                         storeDir:   "${params.outdir}/Summaries"
+    //                                     )
+    //                                     .view { collectedFiles -> println "DEBUG: From ch_cleaned_reads_metrics_summary, collected files: ${collectedFiles}" }
+    // ch_output_summary_files = ch_output_summary_files.mix(ch_cleaned_reads_metrics_summary)
 
     // KAT K-mer plot
 
@@ -514,10 +606,12 @@ workflow ASSEMBLY {
                                             }
                                     }
                                     .collect()
+
         } else {
             log.error("Unsupported object given to --kraken1_db, database must be supplied as either a directory or a .tar.gz file!")
             ch_db_for_kraken1 = Channel.empty()
         }
+
     } else {
         log.warn("Kraken could not be performed - database not specified using --kraken1_db!")
         ch_db_for_kraken1 = Channel.empty()
@@ -529,10 +623,9 @@ workflow ASSEMBLY {
         ch_db_for_kraken1
     )
     // READ_CLASSIFY_KRAKEN_ONE
-    //     .view { file -> println "From READ_CLASSIFY_KRAKEN_ONE, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From READ_CLASSIFY_KRAKEN_ONE, emitting file: ${file}" }
     // READ_CLASSIFY_KRAKEN_ONE
-    //     .view { item -> println "From READ_CLASSIFY_KRAKEN_ONE, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From READ_CLASSIFY_KRAKEN_ONE, channel item: ${item}" }
     ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_ONE.out.versions)
 
     // Collect kraken summaries and concatenate into one file
@@ -543,8 +636,7 @@ workflow ASSEMBLY {
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
-                                .view { collectedFiles -> println "From READ_CLASSIFY_KRAKEN_ONE.out.summary, collected files: ${collectedFiles}" }
-
+                                .view { collectedFiles -> println "DEBUG: From READ_CLASSIFY_KRAKEN_ONE.out.summary, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_kraken_one_summary)
 
     // Prepare kraken2 database for use
@@ -578,10 +670,12 @@ workflow ASSEMBLY {
                                             }
                                     }
                                     .collect()
+
         } else {
             log.error("Unsupported object given to --kraken2_db, database must be supplied as either a directory or a .tar.gz file!")
             ch_db_for_kraken2 = Channel.empty()
         }
+
     } else {
         log.warn("Kraken2 could not be performed - database not specified using --kraken2_db!")
         ch_db_for_kraken2 = Channel.empty()
@@ -593,10 +687,9 @@ workflow ASSEMBLY {
         ch_db_for_kraken2
     )
     // READ_CLASSIFY_KRAKEN_TWO
-    //     .view { file -> println "From READ_CLASSIFY_KRAKEN_TWO, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From READ_CLASSIFY_KRAKEN_TWO, emitting file: ${file}" }
     // READ_CLASSIFY_KRAKEN_TWO
-    //     .view { item -> println "From READ_CLASSIFY_KRAKEN_TWO, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From READ_CLASSIFY_KRAKEN_TWO, channel item: ${item}" }
     ch_versions = ch_versions.mix(READ_CLASSIFY_KRAKEN_TWO.out.versions)
 
     // Collect kraken2 summaries and concatenate into one file
@@ -607,8 +700,7 @@ workflow ASSEMBLY {
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
-                                .view { collectedFiles -> println "From READ_CLASSIFY_KRAKEN_TWO.out.summary, collected files: ${collectedFiles}" }
-
+                                .view { collectedFiles -> println "DEBUG: From READ_CLASSIFY_KRAKEN_TWO.out.summary, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_kraken_two_summary)
 
 
@@ -623,10 +715,9 @@ workflow ASSEMBLY {
         var_assembler_name
     )
     // ASSEMBLE_CONTIGS
-    //     .view { file -> println "From ASSEMBLE_CONTIGS, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From ASSEMBLE_CONTIGS, emitting file: ${file}" }
     // ASSEMBLE_CONTIGS
-    //     .view { item -> println "From ASSEMBLE_CONTIGS, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From ASSEMBLE_CONTIGS, channel item: ${item}" }
     ch_versions     = ch_versions.mix(ASSEMBLE_CONTIGS.out.versions)
     ch_qc_filecheck = ch_qc_filecheck.concat(ASSEMBLE_CONTIGS.out.qc_filecheck)
 
@@ -637,8 +728,7 @@ workflow ASSEMBLY {
                                 sort:       { file -> file.text },
                                 storeDir:   "${params.outdir}/Summaries"
                             )
-                            .view { collectedFiles -> println "From OVERLAP_PAIRED_READS_FLASH.out.checksums, collected files: ${collectedFiles}" }
-
+                            .view { collectedFiles -> println "DEBUG: From OVERLAP_PAIRED_READS_FLASH.out.checksums, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_assembly_checksum)
 
     /*
@@ -652,10 +742,9 @@ workflow ASSEMBLY {
         ASSEMBLE_CONTIGS.out.bam_files
     )
     // EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS
-    //     .view { file -> println "From EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS, emitting file: ${file}" }
     // EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS
-    //     .view { item -> println "From EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS, channel item: ${item}" }
     ch_versions = ch_versions.mix(EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.versions)
 
     // Collect alignment summary stats and concatenate into one file
@@ -667,8 +756,7 @@ workflow ASSEMBLY {
                                         sort:      { file -> file.text },
                                         storeDir: "${params.outdir}/Summaries"
                                     )
-                                .view { collectedFiles -> println "From EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary, collected files: ${collectedFiles}" }
-
+                                .view { collectedFiles -> println "DEBUG: From EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary, collected files: ${collectedFiles}" }
     ch_output_summary_files    = ch_output_summary_files.mix(ch_alignment_stats_summary)
 
     // PROCESS: Run MLST to find MLST for each polished assembly
@@ -676,10 +764,9 @@ workflow ASSEMBLY {
         ASSEMBLE_CONTIGS.out.assembly_file
     )
     // MLST_MLST
-    //     .view { file -> println "From MLST_MLST, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From MLST_MLST, emitting file: ${file}" }
     // MLST_MLST
-    //     .view { item -> println "From MLST_MLST, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From MLST_MLST, channel item: ${item}" }
     ch_versions = ch_versions.mix(MLST_MLST.out.versions)
 
     // Collect MLST Summaries and concatenate into one file
@@ -690,8 +777,7 @@ workflow ASSEMBLY {
                             sort:      { file -> file.text },
                             storeDir: "${params.outdir}/Summaries"
                         )
-                        .view { collectedFiles -> println "From MLST_MLST.out.summary, collected files: ${collectedFiles}" }
-
+                        .view { collectedFiles -> println "DEBUG: From MLST_MLST.out.summary, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_mlst_summary)
 
     // PROCESS: Annotate the polished assembly using Prokka
@@ -699,10 +785,9 @@ workflow ASSEMBLY {
         ASSEMBLE_CONTIGS.out.assembly_file
     )
     // ANNOTATE_PROKKA
-    //     .view { file -> println "From ANNOTATE_PROKKA, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From ANNOTATE_PROKKA, emitting file: ${file}" }
     // ANNOTATE_PROKKA
-    //     .view { item -> println "From ANNOTATE_PROKKA, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From ANNOTATE_PROKKA, channel item: ${item}" }
     ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
     ch_genbank  = qcfilecheck(
                     "ANNOTATE_PROKKA",
@@ -717,8 +802,7 @@ workflow ASSEMBLY {
                                 sort:       { file -> file.text },
                                 storeDir:   "${params.outdir}/Summaries"
                             )
-                            .view { collectedFiles -> println "From ANNOTATE_PROKKA.out.checksums, collected files: ${collectedFiles}" }
-
+                            .view { collectedFiles -> println "DEBUG: From ANNOTATE_PROKKA.out.checksums, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_annotation_checksum)
 
 
@@ -733,10 +817,9 @@ workflow ASSEMBLY {
         ch_genbank.join(ASSEMBLE_CONTIGS.out.assembly_file)
     )
     // EXTRACT_16S_BIOPYTHON
-    //     .view { file -> println "From EXTRACT_16S_BIOPYTHON, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From EXTRACT_16S_BIOPYTHON, emitting file: ${file}" }
     // EXTRACT_16S_BIOPYTHON
-    //     .view { item -> println "From EXTRACT_16S_BIOPYTHON, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From EXTRACT_16S_BIOPYTHON, channel item: ${item}" }
     ch_versions = ch_versions.mix(EXTRACT_16S_BIOPYTHON.out.versions)
 
     // PROCESS: Extract 16S rRNA gene sequences with Barrnap if missing from 16S_EXTRACT_BIOPYTHON
@@ -745,10 +828,9 @@ workflow ASSEMBLY {
             .join(EXTRACT_16S_BIOPYTHON.out.extracted_rna)
     )
     // EXTRACT_16S_BARRNAP
-    //     .view { file -> println "From EXTRACT_16S_BARRNAP, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From EXTRACT_16S_BARRNAP, emitting file: ${file}" }
     // EXTRACT_16S_BARRNAP
-    //     .view { item -> println "From EXTRACT_16S_BARRNAP, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From EXTRACT_16S_BARRNAP, channel item: ${item}" }
     ch_versions      = ch_versions.mix(EXTRACT_16S_BARRNAP.out.versions)
     ch_qc_filecheck  = ch_qc_filecheck.concat(EXTRACT_16S_BARRNAP.out.qc_filecheck)
     ch_extracted_rna = qcfilecheck(
@@ -789,9 +871,11 @@ workflow ASSEMBLY {
                                             }
                                     }
                                     .collect()
+
         } else {
             error("Unsupported object given to --blast_db, database must be supplied as either a directory or a .tar.gz file!")
         }
+
     } else {
         error("Missing 16S ribosomal RNA database! Database must be supplied to `--blast_db` as either a directory or a .tar.gz file!")
     }
@@ -802,10 +886,9 @@ workflow ASSEMBLY {
         ch_db_for_blast
     )
     // ALIGN_16S_BLAST
-    //     .view { file -> println "From ALIGN_16S_BLAST, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From ALIGN_16S_BLAST, emitting file: ${file}" }
     // ALIGN_16S_BLAST
-    //     .view { item -> println "From ALIGN_16S_BLAST, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From ALIGN_16S_BLAST, channel item: ${item}" }
     ch_versions     = ch_versions.mix(ALIGN_16S_BLAST.out.versions)
     ch_qc_filecheck = ch_qc_filecheck.concat(ALIGN_16S_BLAST.out.qc_filecheck)
     ch_blast_output = qcfilecheck(
@@ -819,10 +902,9 @@ workflow ASSEMBLY {
         EXTRACT_16S_BARRNAP.out.extracted_rna
     )
     // CLASSIFY_16S_RDP
-    //     .view { file -> println "From CLASSIFY_16S_RDP, emitting file: ${file}" }
+    //     .view { file -> println "DEBUG: From CLASSIFY_16S_RDP, emitting file: ${file}" }
     // CLASSIFY_16S_RDP
-    //     .view { item -> println "From CLASSIFY_16S_RDP, channel item: ${item}" }
-
+    //     .view { item -> println "DEBUG: From CLASSIFY_16S_RDP, channel item: ${item}" }
     ch_versions = ch_versions.mix(CLASSIFY_16S_RDP.out.versions)
 
     ch_rdp_summary = qcfilecheck(
@@ -840,7 +922,7 @@ workflow ASSEMBLY {
                                 error "File does not exist or empty size: ${file}"
                             }
                         }
-                        .view { file -> println "From ch_rdp_summary, File to be collected: ${file}" }
+                        .view { file -> println "DEBUG: From ch_rdp_summary, File to be collected: ${file}" }
                         .collectFile(
                             name:       "${var_assembler_name}.16S_top_genus_RDP.tsv",
                             keepHeader: true,
@@ -853,8 +935,7 @@ workflow ASSEMBLY {
                             sort:       { file -> file.text },
                             storeDir:   "${params.outdir}/Summaries"
                         )
-                        .view { collectedFiles -> println "From ch_rdp_summary, collected files: ${collectedFiles}" }
-
+                        .view { collectedFiles -> println "DEBUG: From ch_rdp_summary, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_rdp_summary)
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
@@ -862,9 +943,9 @@ workflow ASSEMBLY {
         ch_blast_output
     )
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
-        .view { file -> println "From BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary, emitting file: ${file}" }
+        .view { file -> println "DEBUG: From BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary, emitting file: ${file}" }
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
-        .view { item -> println "From BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary, channel item: ${item}" }
+        .view { item -> println "DEBUG: From BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary, channel item: ${item}" }
     ch_versions  = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
     ch_top_blast = qcfilecheck(
                         "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
@@ -893,8 +974,7 @@ workflow ASSEMBLY {
                             sort:       { file -> file.text },
                             storeDir:   "${params.outdir}/Summaries"
                         )
-                        .view { collectedFiles -> println "From ch_top_blast, collected files: ${collectedFiles}" }
-
+                        .view { collectedFiles -> println "DEBUG: From ch_top_blast, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_top_blast)
 
     /*
@@ -905,6 +985,7 @@ workflow ASSEMBLY {
 
     ASSEMBLY_ASSESSMENT (
         ASSEMBLE_CONTIGS.out.assembly_file,
+        ch_cleaned_reads_metrics_summary,
         ch_overlap_flash,
         EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary,
         ch_busco_config_file,
@@ -936,6 +1017,40 @@ workflow ASSEMBLY {
                               storeDir:   "${params.outdir}/Summaries",
                           )
 
+    // Execute when the ch_qc_filecheck channel completes
+    ch_qc_filecheck.subscribe { files ->
+        int failCount = 0
+        int passCount = 0
+        int fileCount = 0
+
+        // Loop through the collected files and count passes/fails
+        new File("${params.outdir}/pipeline_info/qc_file_checks/").eachFileMatch(~'.*\\.tsv') { file ->
+            fileCount++  // Increment the file counter for each file
+            file.eachLine { line ->
+                if (line.contains('FAIL')) {
+                    System.err.println('ERROR: ' + line + ' in file: ' + file.name)
+                    System.out.println('ERROR: ' + line + ' in file: ' + file.name)
+                    failCount++
+                } else if (line.contains('PASS')) {
+                    passCount++
+                }
+            }
+        }
+
+        // Print the total number of files found
+        System.out.println('INFO: found ' + fileCount + ' QC test results')
+
+        // Print the total number of fails and passes
+        System.err.println('INFO: found ' + failCount + ' QC failure steps across all files')
+        System.out.println('INFO: found ' + passCount + ' QC passed steps, out of total: ' + fileCount)
+
+        // Extra warning if there are any failures
+        if (failCount > 0) {
+            System.err.println('ERROR: found ' + failCount + ' QC files that failed!')
+            System.out.println('ERROR: found ' + failCount + ' QC files that failed!')
+        }
+    }
+
     ch_output_summary_files = ch_output_summary_files.mix(ch_qc_filecheck)
 
     /*
@@ -950,27 +1065,27 @@ workflow ASSEMBLY {
         // Collect summary files into the list_of_files variable
         list_of_files = ch_output_summary_files
             .view { item ->
-                println "From ch_output_summary_files, DEBUG: Received item: ${item.getClass().getName()} - ${item}"
+                println "DEBUG: From ch_output_summary_files, Received item: ${item.getClass().getName()} - ${item}"
             }
             .filter { item ->
                 // Extract the file if it's a tuple or list
                 def file = (item instanceof List) ? item[1] : item  // Assuming file is the second element in the tuple
                 def fileName = file.getName()  // Convert Path to String
                 if (fileName.startsWith("Summary") && file.size() > 0) {
-                    println "From ch_output_summary_files, Valid summary file found: ${fileName} (Size: ${file.size()} bytes)"
+                    println "DEBUG: From ch_output_summary_files, Valid summary file found: ${fileName} (Size: ${file.size()} bytes)"
                     return true
                 } else {
                     if (file.size() == 0) {
-                        println "From ch_output_summary_files, Skipping empty summary file: ${fileName}"
+                        println "DEBUG: From ch_output_summary_files, Skipping empty summary file: ${fileName}"
                     } else {
-                        println "From ch_output_summary_files, Skipping non-summary file: ${fileName}"
+                        println "DEBUG: From ch_output_summary_files, Skipping non-summary file: ${fileName}"
                     }
                     return false
                 }
             }
             .collect()
             // Debugging print to show all files collected
-            .view { files -> println "Files passed to CREATE_EXCEL_RUN_SUMMARY_PYTHON: ${files}" }
+            .view { files -> println "DEBUG: Files passed to CREATE_EXCEL_RUN_SUMMARY_PYTHON: ${files}" }
 
         // Pass both variables to the process
         CREATE_EXCEL_RUN_SUMMARY_PYTHON(list_of_files, tab_colors_file)
