@@ -15,6 +15,7 @@ include { REMOVE_HOST_HOSTILE                } from "../../modules/local/remove_
 include { REMOVE_HOST_SRA_HUMAN_SCRUBBER     } from "../../modules/local/remove_host_sra_human_scrubber/main"
 include { UPDATE_DB_SRA_HUMAN_SCRUBBER       } from "../../modules/local/update_db_sra_human_scrubber/main"
 include { REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR } from "../../modules/local/remove_broken_pairs_bbtools_repair/main"
+include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_HOST_REMOVED_FQ_SEQKIT } from "../../modules/local/calculate_metrics_fastq_seqkit/main"
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -57,8 +58,9 @@ workflow HOST_REMOVAL {
     ch_sra_scrubber_db_file  // channel: [ sra-human-scrubber database file ]
 
     main:
-    ch_versions      = Channel.empty()
-    ch_qc_filechecks = Channel.empty()
+    ch_versions             = Channel.empty()
+    ch_qc_filechecks        = Channel.empty()
+    ch_output_summary_files = Channel.empty()
 
     // Database handling
     if ( !ch_sra_scrubber_db_file.isEmpty() ) {
@@ -127,8 +129,28 @@ workflow HOST_REMOVAL {
                                     .mix(REMOVE_HOST_SRA_HUMAN_SCRUBBER.out.qc_filecheck)
                                     .mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.qc_filecheck)
 
+        // PROCESS: Calculate downsampled FastQ metrics for each sample with SeqKit
+        CALC_STATS_HOST_REMOVED_FQ_SEQKIT (
+            REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.repaired_reads,
+            "Human_Removed_Reads"
+        )
+
+        ch_versions = ch_versions.mix(CALC_STATS_HOST_REMOVED_FQ_SEQKIT.out.versions)
+
+        // Collect cleaned read/base summaries and concatenate into one file
+        ch_host_removed_reads_metrics_summary = CALC_STATS_HOST_REMOVED_FQ_SEQKIT.out.output
+                                                    .collectFile(
+                                                        name:       "Summary.Human_Removed_Reads.Metrics.tsv",
+                                                        keepHeader: true,
+                                                        sort:       { file -> file.text },
+                                                        storeDir:   "${params.outdir}/Summaries"
+                                                    )
+
+        ch_output_summary_files = ch_output_summary_files.mix(ch_host_removed_reads_metrics_summary)
+
     } else if ( toLower(params.host_remove) == "hostile" ) {
         // hostile removal tool
+
         // PROCESS: Run hostile to remove background host DNA read sequences
         REMOVE_HOST_HOSTILE (
             ch_infile_handling
@@ -145,8 +167,28 @@ workflow HOST_REMOVAL {
         // Collect QC File Checks
         ch_qc_filechecks      = ch_qc_filechecks.mix(REMOVE_HOST_HOSTILE.out.qc_filecheck)
 
+        // PROCESS: Calculate downsampled FastQ metrics for each sample with SeqKit
+        CALC_STATS_HOST_REMOVED_FQ_SEQKIT (
+            REMOVE_HOST_HOSTILE.out.host_removed_reads,
+            "Human_Removed_Reads"
+        )
+
+        ch_versions = ch_versions.mix(CALC_STATS_HOST_REMOVED_FQ_SEQKIT.out.versions)
+
+        // Collect cleaned read/base summaries and concatenate into one file
+        ch_host_removed_reads_metrics_summary = CALC_STATS_HOST_REMOVED_FQ_SEQKIT.out.output
+                                                    .collectFile(
+                                                        name:       "Summary.Human_Removed_Reads.Metrics.tsv",
+                                                        keepHeader: true,
+                                                        sort:       { file -> file.text },
+                                                        storeDir:   "${params.outdir}/Summaries"
+                                                    )
+
+        ch_output_summary_files = ch_output_summary_files.mix(ch_host_removed_reads_metrics_summary)
+
     } else if ( toLower(params.host_remove) == "both" && ch_db_for_sra_human_scrubber ) {
-        // sra-human-scrubber removal tool then hostile removal tool
+        // sra-human-scrubber removal tool (+ repair step), then hostile removal tool
+
         // PROCESS: Run sra-human-scrubber first and then hostile to remove background host DNA read sequences
         REMOVE_HOST_SRA_HUMAN_SCRUBBER (
             ch_infile_handling,
@@ -186,7 +228,7 @@ workflow HOST_REMOVAL {
         REMOVE_HOST_HOSTILE (
             ch_repair_sra
         )
-        ch_versions           = ch_versions.mix(REMOVE_HOST_HOSTILE.out.versions)
+        ch_versions = ch_versions.mix(REMOVE_HOST_HOSTILE.out.versions)
 
         // Collect output files
         ch_host_removed_reads = qcfilecheck(
@@ -201,6 +243,24 @@ workflow HOST_REMOVAL {
                                     .mix(REMOVE_BROKEN_PAIRS_BBTOOLS_REPAIR.out.qc_filecheck)
                                     .mix(REMOVE_HOST_HOSTILE.out.qc_filecheck)
 
+        // PROCESS: Calculate downsampled FastQ metrics for each sample with SeqKit
+        CALC_STATS_HOST_REMOVED_FQ_SEQKIT (
+            REMOVE_HOST_HOSTILE.out.host_removed_reads,
+            "Human_Removed_Reads"
+        )
+
+        ch_versions = ch_versions.mix(CALC_STATS_HOST_REMOVED_FQ_SEQKIT.out.versions)
+
+        // Collect cleaned read/base summaries and concatenate into one file
+        ch_host_removed_reads_metrics_summary = CALC_STATS_HOST_REMOVED_FQ_SEQKIT.out.output
+                                                    .collectFile(
+                                                        name:       "Summary.Human_Removed_Reads.Metrics.tsv",
+                                                        keepHeader: true,
+                                                        sort:       { file -> file.text },
+                                                        storeDir:   "${params.outdir}/Summaries"
+                                                    )
+
+        ch_output_summary_files = ch_output_summary_files.mix(ch_host_removed_reads_metrics_summary)
 
     } else if ( toLower(params.host_remove) == "skip" ) {
         // User-specified skip host removal
@@ -214,7 +274,8 @@ workflow HOST_REMOVAL {
     }
 
     emit:
-    host_removed_reads = ch_host_removed_reads // channel: [ val(meta), [host_removed_fastq_files (R1, R2)] ]
-    qc_filecheck       = ch_qc_filechecks
-    versions           = ch_versions
+    host_removed_reads   = ch_host_removed_reads // channel: [ val(meta), [host_removed_fastq_files (R1, R2)] ]
+    qc_filecheck         = ch_qc_filechecks
+    versions             = ch_versions
+    output_summary_files = ch_output_summary_files
 }
