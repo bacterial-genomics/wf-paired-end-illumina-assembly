@@ -36,11 +36,11 @@ process CLASSIFY_16S_RDP {
       #   (e.g., "domain", "phylum", "class", "order", "family", "genus")
       awk 'BEGIN {
         FS=OFS="\t";
-        print "Sample_name\tUnique_16S_rRNA_extraction_count\tDomain\tDomain_result\tPhylum\tPhylum_result\tClass\tClass_result\tOrder\tOrder_result\tFamily\tFamily_result\tGenus\tGenus_result"
+        print "Sample_name\tUnique_16S_rRNA_extraction_count\tDomain_result\tPhylum_result\tClass_result\tOrder_result\tFamily_result\tGenus_result"
       }
       {
         split($1, a, "_");
-        print a[1], a[2], $3, $4, $6, $7, $9, $10, $12, $13, $15, $16, $18, $19
+        print a[1], a[2], $3, $6, $9, $12, $15, $18
       }' "!{meta.id}.RDP-raw.tsv" \
       > "!{meta.id}.RDP.tsv"
 
