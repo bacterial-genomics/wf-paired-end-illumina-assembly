@@ -32,9 +32,9 @@ process POLISH_ASSEMBLY_BWA_PILON {
     fi
 
     # Set up files to retain InDel and SNP correction information
-    echo -e "Correction round\tNumber of InDels corrected" \
+    echo -e "Sample_name\tCorrection_round\tInDels_corrected_[#]" \
       > "!{meta.id}-!{meta.assembler}.InDels-corrected.cnt.tsv"
-    echo -e "Correction round\tNumber of SNPs corrected" \
+    echo -e "Sample_name\tCorrection_round\tSNPs_corrected_[#]" \
       > "!{meta.id}-!{meta.assembler}.SNPs-corrected.cnt.tsv"
 
     msg "INFO: Polishing contigs with paired end reads.."
@@ -93,9 +93,9 @@ process POLISH_ASSEMBLY_BWA_PILON {
       fi
 
       # Place round number and number of InDels/SNPs corrected into respective files
-      echo -e "${i}\t$(grep -c '-' !{meta.id}-!{meta.assembler}.changes)" \
+      echo -e "!{meta.id}\t${i}\t$(grep -c '-' !{meta.id}-!{meta.assembler}.changes)" \
         >> "!{meta.id}-!{meta.assembler}.InDels-corrected.cnt.tsv"
-      echo -e "${i}\t$(grep -vc '-' !{meta.id}-!{meta.assembler}.changes)" \
+      echo -e "!{meta.id}\t${i}\t$(grep -vc '-' !{meta.id}-!{meta.assembler}.changes)" \
         >> "!{meta.id}-!{meta.assembler}.SNPs-corrected.cnt.tsv"
 
       rm -f "!{meta.id}-!{meta.assembler}.{changes,uncorrected.fna}"
