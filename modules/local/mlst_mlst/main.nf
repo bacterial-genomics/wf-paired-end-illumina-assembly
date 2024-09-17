@@ -1,7 +1,7 @@
 process MLST_MLST {
 
     tag { "${meta.id}-${meta.assembler}" }
-    container "gregorysprenger/mlst@sha256:69c8c8027474b8f361ef4a579df171702f3ed52f45e3fb388a41ccbf4542706f"
+    container "staphb/mlst@sha256:17e78a25fc5171706b22c8c3d4b1ca2352593b56fef8f28401dd5da3e2e7abe8"  // staphb/mlst:2.23.0-2024-09-01
 
     input:
     tuple val(meta), path(assembly)
@@ -20,8 +20,7 @@ process MLST_MLST {
     '''
     source bash_functions.sh
 
-    # MLST for each assembly
-    msg "INFO: Performing MLST"
+    msg "INFO: Looking for MLST schemes to exclude ..."
 
     # Check if input scheme is in mlst's database
     mlst_scheme="!{scheme}"
@@ -47,7 +46,11 @@ process MLST_MLST {
       exclude_list=$(echo ${exclude_list[@]} | tr ' ' ',')
     fi
 
+    msg "INFO: Excluding MLST schemes: ${exclude_list}"
+
     if [[ -s !{assembly} ]]; then
+      msg "INFO: Performing MLST ..."
+
       mlst \
         "!{assembly}" \
         !{min_score} \
@@ -57,6 +60,8 @@ process MLST_MLST {
         --scheme "${mlst_scheme}" \
         --exclude "${exclude_list}" \
         > "!{meta.id}-!{meta.assembler}.MLST.tsv"
+
+      msg "INFO: Completed MLST genotyping"
 
       # Print header line and add in Sample_name identifier to data row
       awk -F $'\t' -v id="!{meta.id}" \
@@ -69,6 +74,9 @@ process MLST_MLST {
         > tmp \
         && \
         mv tmp "!{meta.id}-!{meta.assembler}.MLST.tsv"
+
+      msg "INFO: Appended header to MLST summary output file"
+
     fi
 
     # Get process version information
