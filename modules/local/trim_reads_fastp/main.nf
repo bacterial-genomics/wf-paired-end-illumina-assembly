@@ -9,12 +9,13 @@ process TRIM_READS_FASTP {
     path(adapter_reference_file)
 
     output:
-    tuple val(meta), path("${meta.id}.Adapter*_File.tsv") , emit: qc_filecheck
-    tuple val(meta), path("${meta.id}*{paired,single}.fq"), emit: fastq_adapters_removed
-    path("${meta.id}.fastp.tsv")                          , emit: summary
+    tuple val(meta), path("${meta.id}.Adapter*_Fast*_File.tsv"), emit: qc_filecheck  // regex grabs 2 QC Files here
+    tuple val(meta), path("${meta.id}*{paired,single}.fq")     , emit: fastq_adapters_removed
+    path("${meta.id}.Fastp.tsv")                               , emit: summary
     path("${meta.id}.fastp.*")
+    path("${meta.id}.Trim_FastQ.SHA256-checksums.tsv")         , emit: checksums
     path(".command.{out,err}")
-    path("versions.yml")                                  , emit: versions
+    path("versions.yml")                                       , emit: versions
 
     shell:
     adapter_fasta = adapter_reference_file ? "--adapter_fasta ${adapter_reference_file}" : ""
@@ -32,7 +33,7 @@ process TRIM_READS_FASTP {
     fi
 
     # Adapter clip and quality trim
-    msg "INFO: Performing read trimming with fastp"
+    msg "INFO: Performing read trimming on !{meta.id} with Fastp ..."
 
     # Run fastp
     fastp \
@@ -52,6 +53,8 @@ process TRIM_READS_FASTP {
       --html !{meta.id}.fastp.html \
       --thread !{task.cpus}
 
+    msg "INFO: Completed read trimming on !{meta.id} with Fastp"
+
     # Calculate number of reads discarded
     READ_COUNT_INPUT=$(
                       grep -A3 '"before_filtering"' !{meta.id}.fastp.json \
@@ -67,7 +70,7 @@ process TRIM_READS_FASTP {
 
     READ_COUNT_DISCARDED=$((${READ_COUNT_INPUT} - ${READ_COUNT_OUTPUT}))
 
-    msg "INFO: ${READ_COUNT_DISCARDED} reads are poor quality and were discarded" >&2
+    msg "INFO: ${READ_COUNT_DISCARDED} reads are poor quality and were discarded"
 
     # Count up the total number of broken sister reads
     COUNT_BROKEN_R1=$(awk '{lines++} END{print lines/4}' !{meta.id}_R1.unpaired.fq)
@@ -75,23 +78,23 @@ process TRIM_READS_FASTP {
     COUNT_BROKEN_TOTAL=$((${COUNT_BROKEN_R1} + ${COUNT_BROKEN_R2}))
 
     # Log report the total counts of singletons
-    msg "INFO: $COUNT_BROKEN_R1 forward reads lacked a high quality R2 sister read" >&2
-    msg "INFO: $COUNT_BROKEN_R2 reverse reads lacked a high quality R1 sister read" >&2
-    msg "INFO: $COUNT_BROKEN_TOTAL total broken read pairs were saved as singletons" >&2
+    msg "INFO: ${COUNT_BROKEN_R1} forward reads lacked a high quality R2 sister read"
+    msg "INFO: ${COUNT_BROKEN_R2} reverse reads lacked a high quality R1 sister read"
+    msg "INFO: ${COUNT_BROKEN_TOTAL} total broken read pairs were saved as singletons"
 
     # Create report file of reads removed and broken
-    echo -e "!{meta.id}\t${READ_COUNT_DISCARDED}\t${COUNT_BROKEN_TOTAL}" > !{meta.id}.fastp.tsv
-    sed -i '1i Sample_name\tDiscarded_reads_(#)\tSingleton_reads_(#)' !{meta.id}.fastp.tsv
+    echo -e "!{meta.id}\t${READ_COUNT_DISCARDED}\t${COUNT_BROKEN_TOTAL}" > !{meta.id}.Fastp.tsv
+    sed -i '1i Sample_name\tDiscarded_reads_(#)\tSingleton_reads_(#)' !{meta.id}.Fastp.tsv
 
     # Test/verify paired FastQ outfiles sizes are reasonable to continue
-    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > !{meta.id}.Adapter-removed_FastQ_File.tsv
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > !{meta.id}.Adapter_and_QC_Trimmed_FastQ_File.tsv
     for suff in R1.paired.fq R2.paired.fq; do
       if verify_minimum_file_size "!{meta.id}_${suff}" 'Adapter-removed FastQ Files' "!{params.min_filesize_fastq_adapters_removed}"; then
         echo -e "!{meta.id}\tAdapter-removed ($suff) FastQ File\tPASS" \
-          >> !{meta.id}.Adapter-removed_FastQ_File.tsv
+          >> !{meta.id}.Adapter_and_QC_Trimmed_FastQ_File.tsv
       else
         echo -e "!{meta.id}\tAdapter-removed ($suff) FastQ File\tFAIL" \
-          >> !{meta.id}.Adapter-removed_FastQ_File.tsv
+          >> !{meta.id}.Adapter_and_QC_Trimmed_FastQ_File.tsv
       fi
     done
 
@@ -99,9 +102,30 @@ process TRIM_READS_FASTP {
     cat !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq >> !{meta.id}_single.fq
     rm -f !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq
 
+    ### Calculate SHA-256 Checksums of each FastQ file ###
+    msg "INFO: Calculating checksums for !{meta.id}_R1.paired.fq and !{meta.id}_R2.paired.fq ..."
+
+    SUMMARY_HEADER=(
+      "Sample_name"
+      "Checksum_(SHA-256)"
+      "File"
+    )
+    SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
+
+    echo "${SUMMARY_HEADER}" > "!{meta.id}.Trim_FastQ.SHA256-checksums.tsv"
+
+    # Calculate checksums
+    for f in "!{meta.id}_R1.paired.fq" "!{meta.id}_R2.paired.fq" "!{meta.id}_single.fq"; do
+      echo -ne "!{meta.id}\t" >> "!{meta.id}.Trim_FastQ.SHA256-checksums.tsv"
+      awk 'NR%2==0'  "${f}" | paste - - | sort -k1,1 | sha256sum | awk '{print $1 "\t" "'"${f}"'"}'
+    done >> "!{meta.id}.Trim_FastQ.SHA256-checksums.tsv"
+
+    msg "INFO: Calculated checksums for !{meta.id}_R1.paired.fq and !{meta.id}_R2.paired.fq"
+
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
+        sha256sum: $(sha256sum --version | grep "^sha256sum" | sed 's/sha256sum //1')
         fastp: $(fastp --version 2>&1 | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
