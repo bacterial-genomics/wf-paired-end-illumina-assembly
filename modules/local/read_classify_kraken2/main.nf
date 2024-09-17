@@ -21,7 +21,8 @@ process READ_CLASSIFY_KRAKEN_TWO {
 
     # Investigate taxonomic identity of cleaned reads
     if [ ! -s !{meta.id}.kraken2_summary.tsv ]; then
-      msg "INFO: Performing Kraken2 classifications"
+      msg "INFO: Performing Kraken2 classifications of !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} !{cleaned_fastq_files[2]} ..."
+
       kraken2 \
         --use-names \
         --gzip-compressed \
@@ -30,6 +31,10 @@ process READ_CLASSIFY_KRAKEN_TWO {
         --report kraken2.tsv \
         --threads !{task.cpus} \
         !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} !{cleaned_fastq_files[2]}
+
+      msg "INFO: Completed Kraken2 classifications of !{cleaned_fastq_files[0]} !{cleaned_fastq_files[1]} !{cleaned_fastq_files[2]}"
+
+      msg "INFO: Summarizing Kraken2 report kraken2.tsv ..."
 
       echo -ne "!{meta.id}\t" > "!{meta.id}.kraken2_summary.tsv"
       summarize_kraken 'kraken2.tsv' | sed 's/%//g' >> "!{meta.id}.kraken2_summary.tsv"
@@ -43,6 +48,8 @@ process READ_CLASSIFY_KRAKEN_TWO {
       )
       SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
       sed -i "1i ${SUMMARY_HEADER}" "!{meta.id}.kraken2_summary.tsv"
+
+      msg "INFO: Created Kraken2 summary !{meta.id}.kraken2_summary.tsv"
 
       mv kraken2.tsv !{meta.id}.kraken2_output.tsv
       gzip !{meta.id}.kraken2_output.tsv
