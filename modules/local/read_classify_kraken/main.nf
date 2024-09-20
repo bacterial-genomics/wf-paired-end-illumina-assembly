@@ -2,7 +2,7 @@ process READ_CLASSIFY_KRAKEN_ONE {
 
     label "process_high"
     tag { "${meta.id}" }
-    container "gregorysprenger/kraken@sha256:b5ab4b75fb197b16e81d8cc3878e08479bc7d105ac0b2e948e6f6a9985cfc93e"
+    container "staphb/kraken@sha256:6f426bbe8ba0b49b6285d773392a94aa79f424ddc50bfb7a00bb52552ea77267"
 
     input:
     tuple val(meta), path(cleaned_fastq_files)
