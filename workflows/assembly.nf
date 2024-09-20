@@ -404,7 +404,7 @@ workflow ASSEMBLY {
         // Collect read trimming summaries and concatenate into one file
         ch_trimmomatic_summary = TRIM_READS_TRIMMOMATIC.out.summary
                                     .collectFile(
-                                        name:       "Summary-Trimmomatic.Adapter_and_QC_Trimming.tsv",
+                                        name:       "Summary-Trimmomatic.Adapter_and_QC_Trim.tsv",
                                         keepHeader: true,
                                         sort:       { file -> file.text },
                                         storeDir:   "${params.outdir}/Summaries"
@@ -415,14 +415,14 @@ workflow ASSEMBLY {
         // PROCESS: Calculate adapter-and-quality-trimmed FastQ metrics for each sample with SeqKit
         CALC_STATS_TRIM_FQ_SEQKIT (
             TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed,
-            "Adapter_and_Quality_Trimmed_Reads"
+            "Adapter_QC_Trim_Reads"
         )
         ch_versions = ch_versions.mix(CALC_STATS_TRIM_FQ_SEQKIT.out.versions)
 
         // Collect adapter-and-quality-trimmed read/base summaries and concatenate into one file
         ch_trim_reads_metrics_summary = CALC_STATS_TRIM_FQ_SEQKIT.out.output
                                             .collectFile(
-                                                name:       "Summary.Adapter_and_Quality_Trimmed-Reads.Metrics.tsv",
+                                                name:       "Summary.Adapter_QC_Trim_Reads.Metrics.tsv",
                                                 keepHeader: true,
                                                 sort:       { file -> file.text },
                                                 storeDir:   "${params.outdir}/Summaries"
@@ -453,7 +453,7 @@ workflow ASSEMBLY {
 
         ch_fastp_summary = TRIM_READS_FASTP.out.summary
                                 .collectFile(
-                                    name:       "Summary-Fastp.Adapter_and_QC_Trimming.tsv",
+                                    name:       "Summary-Fastp.Adapter_and_QC_Trim.tsv",
                                     keepHeader: true,
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
@@ -464,14 +464,14 @@ workflow ASSEMBLY {
         // PROCESS: Calculate adapter-and-quality-trimmed FastQ metrics for each sample with SeqKit
         CALC_STATS_TRIM_FQ_SEQKIT (
             TRIM_READS_FASTP.out.fastq_adapters_removed,
-            "Adapter_and_Quality_Trimmed_Reads"
+            "Adapter_QC_Trim_Reads"
         )
         ch_versions = ch_versions.mix(CALC_STATS_TRIM_FQ_SEQKIT.out.versions)
 
         // Collect adapter-and-quality-trimmed read/base summaries and concatenate into one file
         ch_trim_reads_metrics_summary = CALC_STATS_TRIM_FQ_SEQKIT.out.output
                                             .collectFile(
-                                                name:       "Summary.Adapter_and_Quality_Trimmed-Reads.Metrics.tsv",
+                                                name:       "Summary.Adapter_QC_Trim_Reads.Metrics.tsv",
                                                 keepHeader: true,
                                                 sort:       { file -> file.text },
                                                 storeDir:   "${params.outdir}/Summaries"
@@ -497,7 +497,7 @@ workflow ASSEMBLY {
 
     ch_cleanedreads_checksum = OVERLAP_PAIRED_READS_FLASH.out.checksums
                             .collectFile(
-                                name:       "Summary.CleanedReads_Checksums.tsv",
+                                name:       "Summary.Clean_Reads_Checksums.tsv",
                                 keepHeader: true,
                                 sort:       { file -> file.text },
                                 storeDir:   "${params.outdir}/Summaries"
@@ -508,7 +508,7 @@ workflow ASSEMBLY {
     // Collect singleton read summaries and concatenate into one file
     ch_overlap_summary = OVERLAP_PAIRED_READS_FLASH.out.summary
                                 .collectFile(
-                                    name:       "Summary.Clean_and_Overlapping_Reads.tsv",
+                                    name:       "Summary.Clean_and_Overlapped.tsv",
                                     keepHeader: true,
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
@@ -518,20 +518,20 @@ workflow ASSEMBLY {
 
     /*
     ================================================================================
-                                    CleanedReads Assessment
+                                    Clean_Reads Assessment
     ================================================================================
     */
     // PROCESS: Calculate cleaned FastQ metrics for each sample with SeqKit
     CALC_STATS_CLEANEDREADS_FQ_SEQKIT (
         OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files,
-        "CleanedReads"  //Keep this one without underscore to help user know it is files in CleanedReads/*fq.gz
+        "Clean_Reads"
     )
     ch_versions = ch_versions.mix(CALC_STATS_CLEANEDREADS_FQ_SEQKIT.out.versions)
 
     // Collect cleaned read/base summaries and concatenate into one file
     ch_cleaned_reads_metrics_summary = CALC_STATS_CLEANEDREADS_FQ_SEQKIT.out.output
                                         .collectFile(
-                                            name:       "Summary.CleanedReads.Metrics.tsv",
+                                            name:       "Summary.Clean_Reads.Metrics.tsv",
                                             keepHeader: true,
                                             sort:       { file -> file.text },
                                             storeDir:   "${params.outdir}/Summaries"
@@ -751,7 +751,7 @@ workflow ASSEMBLY {
     ch_alignment_stats_summary = EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary
                                     .map{ meta, file -> file }
                                     .collectFile(
-                                        name:     "Summary.CleanedReads_Aligned.tsv",
+                                        name:     "Summary.Clean_Reads_Aligned.tsv",
                                         keepHeader: true,
                                         sort:      { file -> file.text },
                                         storeDir: "${params.outdir}/Summaries"
@@ -985,8 +985,6 @@ workflow ASSEMBLY {
 
     ASSEMBLY_ASSESSMENT (
         ASSEMBLE_CONTIGS.out.assembly_file,
-        ch_cleaned_reads_metrics_summary,
-        ch_overlap_flash,
         EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary,
         ch_busco_config_file,
         ch_busco_db_file,
