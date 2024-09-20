@@ -9,7 +9,7 @@ process INFILE_HANDLING_UNIX {
     output:
     tuple val(meta), path("${meta.id}.Raw_Initial_FastQ_Size_of_File.tsv"), emit: qc_filecheck
     tuple val(meta), path(reads)                                          , emit: input
-    path("${meta.id}.Input_FastQ.SHA256-checksums.tsv")                   , emit: checksums
+    path("${meta.id}.Input_FastQ.SHA512-checksums.tsv")                   , emit: checksums
     path(".command.{out,err}")
     path("versions.yml")                                                  , emit: versions
 
@@ -35,27 +35,27 @@ process INFILE_HANDLING_UNIX {
       ((i++))
     done
 
-    ### Calculate SHA-256 Checksums of each Input FastQ file ###
+    ### Calculate SHA-512 Checksums of each Input FastQ file ###
     SUMMARY_HEADER=(
       "Sample_name"
-      "Checksum_(SHA-256)"
+      "Checksum_(SHA-512)"
       "File"
     )
     SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
 
-    echo "${SUMMARY_HEADER}" > "!{meta.id}.Input_FastQ.SHA256-checksums.tsv"
+    echo "${SUMMARY_HEADER}" > "!{meta.id}.Input_FastQ.SHA512-checksums.tsv"
 
     find . -type l -regex ".*\\\\(\\.fq\\\\|\\.fq\\\\.gz\\\\|\\.fastq\\\\|\\.fastq\\\\.gz\\)$" | while read f; do
       f="$(readlink -f ${f})"
-      echo -ne "!{meta.id}\t" >> "!{meta.id}.Input_FastQ.SHA256-checksums.tsv"
-      awk 'NR%2==0' "${f}" | paste - - | sort -k1,1 | sha256sum | awk '{print $1 "\t" "'"$f"'"}'
-    done >> "!{meta.id}.Input_FastQ.SHA256-checksums.tsv"
+      echo -ne "!{meta.id}\t" >> "!{meta.id}.Input_FastQ.SHA512-checksums.tsv"
+      awk 'NR%2==0' "${f}" | paste - - | sort -k1,1 | sha512sum | awk '{print $1 "\t" "'"$f"'"}'
+    done >> "!{meta.id}.Input_FastQ.SHA512-checksums.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         find: $(find --version | grep ^find | sed 's/find //1')
-        sha256sum: $(sha256sum --version | grep ^sha256sum | sed 's/sha256sum //1')
+        sha512sum: $(sha512sum --version | grep ^sha512sum | sed 's/sha512sum //1')
         ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
     END_VERSIONS
     '''
