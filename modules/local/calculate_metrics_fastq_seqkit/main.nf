@@ -10,7 +10,7 @@ process CALCULATE_METRICS_FASTQ_SEQKIT {
     output:
     path("${meta.id}.${input_fastq_type}.metrics_summary.tsv"), emit: output
     path(".command.{out,err}")
-    path("versions.yml")                                             , emit: versions
+    path("versions.yml")                                      , emit: versions
 
     shell:
     '''
@@ -95,7 +95,7 @@ process CALCULATE_METRICS_FASTQ_SEQKIT {
     # NOTE: DONE!
     # # TO-DO: move this unix-only component to separate QA_READS_BASEPAIR_COUNT_UNIX
     # # Count nucleotides per read set
-    # echo -n '' > "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
+    # echo -n '' > "!{meta.id}-!{meta.assembler}.Clean_Reads-Bases.tsv"
     # for (( i=0; i<3; i+=3 )); do
     #   R1=$(basename "!{meta.id}_R1.paired.fq.gz" _R1.paired.fq.gz)
     #   R2=$(basename "!{meta.id}_R2.paired.fq.gz" _R2.paired.fq.gz)
@@ -107,12 +107,12 @@ process CALCULATE_METRICS_FASTQ_SEQKIT {
     #     msg "ERROR: improperly grouped ${R1} ${R2} ${single}" >&2
     #     exit 1
     #   fi
-    #   echo -ne "${R1}\t" >> "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
+    #   echo -ne "${R1}\t" >> "!{meta.id}-!{meta.assembler}.Clean_Reads-Bases.tsv"
     #   zcat "!{meta.id}_R1.paired.fq.gz" "!{meta.id}_R2.paired.fq.gz" "!{meta.id}_single.fq.gz" | \
     #     awk 'BEGIN{SUM=0} {if(NR%4==2){SUM+=length($0)}} END{OFMT="%f"; print SUM}' \
-    #       >> "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
+    #       >> "!{meta.id}-!{meta.assembler}.Clean_Reads-Bases.tsv"
 
-    #   sed -i '1i Sample_name\tCleaned_bases_(#)' "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
+    #   sed -i '1i Sample_name\tCleaned_bases_(#)' "!{meta.id}-!{meta.assembler}.Clean_Reads-Bases.tsv"
     # done
 
     # Get process version information
