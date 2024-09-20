@@ -5,27 +5,31 @@ Input_Checksums=255, 0, 0
 Input_Reads.Metrics=255, 0, 0
 #
 # Human Removal                     (=255, 165, 0     # Orange)
+SRA_Human_Scrubbed=255, 165, 0
+SRA_Scrubbed_Reads.Metrics=255, 165, 0
+BBTools_Repair_Removal=255, 165, 0
+BBTools_Repaired_Reads.Metrics=255, 165, 0
+Hostile_Human_Removed=255, 165, 0
+Hostile_Removed_Reads.Metrics=255, 165, 0
 #
 # Downsample                        (=165, 42, 42     # Brown)
 Downsampled_Reads.Metrics=165, 42, 42
 #
 # Clean Reads                       (=255, 255, 0     # Yellow)
-PhiX=255, 255, 0
 PhiX_Removal=255, 255, 0
 PhiX_Removed_Reads.Metrics=255, 255, 0
-Adapter_and_QC_Trimming=255, 255, 0
-Adapter_and_Quality_Trimmed-Reads.Metrics=255, 255, 0
-Clean_and_Overlapping_Reads=255, 255, 0
-CleanedReads_Bases=255, 255, 0
-CleanedReads.Metrics=255, 255, 0
-CleanedReads_Checksums=255, 255, 0
+Adapter_and_QC_Trim=255, 255, 0
+Adapter_QC_Trim_Reads.Metrics=255, 255, 0
+Clean_and_Overlapped=255, 255, 0
+Clean_Reads.Metrics=255, 255, 0
+Clean_Reads_Checksums=255, 255, 0
 #
 # Genome Assembly                   (=154, 205, 50     # YellowGreen) -- replaced Chartreuse
 Assembly_Checksums=154, 205, 50
 #
 # Depth of Coverage                 (=0, 128, 0       # Dark Green)
 Assembly_Depth=0, 128, 0
-CleanedReads_Aligned=0, 128, 0
+Clean_Reads_Aligned=0, 128, 0
 #
 # Genotyping                        (=0, 255, 0       # Green)
 MLST=0, 255, 0
