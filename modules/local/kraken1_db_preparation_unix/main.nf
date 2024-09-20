@@ -30,15 +30,15 @@ process KRAKEN1_DB_PREPARATION_UNIX {
         exit 1
     fi
 
-    # ### Calculate SHA-256 Checksum Kraken inspect.txt file ###
+    # ### Calculate SHA-512 Checksum Kraken inspect.txt file ###
     # SUMMARY_HEADER=(
     #   "Sample_name"
-    #   "Checksum_(SHA-256)"
+    #   "Checksum_(SHA-512)"
     #   "File"
     # )
     # SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
 
-    # echo "${SUMMARY_HEADER}" > "!{meta.id}.Kraken_Database.SHA256-checksums.tsv"
+    # echo "${SUMMARY_HEADER}" > "!{meta.id}.Kraken_Database.SHA512-checksums.tsv"
 
     # if [ -s "!{database}/inspect.txt" ]; then
     #     msg "INFO: Found pre-calculated inspect.txt Kraken db information"
@@ -47,8 +47,8 @@ process KRAKEN1_DB_PREPARATION_UNIX {
     #     kraken2-inspect --db "!{database}" --threads "!{task.cpus}" > "!{database}/inspect.txt"
     #     msg "INFO: Creating inspect.txt Kraken db information..."
     # fi
-    # CHECKSUM=$(sha256sum !{database}/inspect.txt | awk '{print $1}')
-    # echo -e "!{meta.id}\t${CHECKSUM}\t!{database}/inspect.txt" >> "!{meta.id}.Kraken_Database.SHA256-checksums.tsv"
+    # CHECKSUM=$(sha512sum !{database}/inspect.txt | awk '{print $1}')
+    # echo -e "!{meta.id}\t${CHECKSUM}\t!{database}/inspect.txt" >> "!{meta.id}.Kraken_Database.SHA512-checksums.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
