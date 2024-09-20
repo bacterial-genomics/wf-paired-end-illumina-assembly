@@ -49,7 +49,7 @@ prompt_new_outdir() {
   read -p "Would you like to use a different output path? (yes|no) " -n 1 -r
   echo -e "${COLOR_OFF}"
 
-  if [[ $REPLY =~ ^[yY] ]]; then
+  if [[ "${REPLY}" =~ ^[yY] ]]; then
     echo -e "${RED_BG}"
     read -p "Enter new Output path: " _new_outdir
     echo -e "${COLOR_OFF}"
@@ -76,15 +76,10 @@ prompt_if_previous_nextflow_run() {
     read -p "Do you want to continue? (yes|no) " -n 1 -r
     echo -e "${COLOR_OFF}"
 
-    if [[ $REPLY =~ ^[yY] ]]; then
+    if [[ "${REPLY}" =~ ^[yY] ]]; then
       # Continue submission if user wants to possibly overwrite data
       echo -e "${YELLOW_TXT}\nData in ${1} will be overwritten."
       echo -e "Continuing to submit samples...${COLOR_OFF}"
-
-      # Rename .work directory
-      # if [[ -d "${OUT}/.work" ]]; then
-      #   mv "${OUT}/.work" "${OUT}/.work_$(basename $(readlink -f ${OUT}/.work))"
-      # fi
     else
       # If user doesn't want to continue, ask for a different output path
       prompt_new_outdir
@@ -94,7 +89,7 @@ prompt_if_previous_nextflow_run() {
 }
 
 # Check argument requirements
-[[ $1 == "--help" || $1 == "-h" ]] && { usage; exit 0; }
+[[ "${1}" == "--help" || "${1}" == "-h" ]] && { usage; exit 0; }
 if [[ $# -lt 1  || $# -gt 2 ]]; then
   echo -e "${RED_TXT}ERROR:${COLOR_OFF} improper number ("$#") of arguments provided" >&2
   usage
@@ -102,36 +97,36 @@ if [[ $# -lt 1  || $# -gt 2 ]]; then
 fi
 
 # Confirm we are on a host that can submit jobs
-if [ ${HOSTNAME%%.*} == 'biolinux' ] || \
-  [ ${HOSTNAME%%.*} == 'login02' ] || \
-  [ ${HOSTNAME%%.*} == 'rosalind01' ] || \
-  [ $(echo ${HOSTNAME%%.*} | sed 's/[0-9]//g') == 'node' ]; then
+if [ "${HOSTNAME%%.*}" == 'biolinux' ] || \
+  [ "${HOSTNAME%%.*}" == 'login02' ] || \
+  [ "${HOSTNAME%%.*}" == 'rosalind01' ] || \
+  [ "$(echo ${HOSTNAME%%.*} | sed 's/[0-9]//g')" == 'node' ]; then
   :
 else
-  echo -e "${RED_TXT}ERROR:${COLOR_OFF} must be on aspen or biolinux" >&2
+  echo -e "${RED_TXT}ERROR:${COLOR_OFF} must be on rosalind, aspen, or biolinux" >&2
   exit 1
 fi
 
 # I/O handling
-if [[ $1 =~ .+[[:space:]].+ ]]; then
+if [[ "${1}" =~ .+[[:space:]].+ ]]; then
   echo -e "${RED_TXT}ERROR:${COLOR_OFF} whitespace in $1 path unsupported" >&2
   exit 1
 fi
-if [[ $2 =~ .+[[:space:]].+ ]]; then
+if [[ "${2}" =~ .+[[:space:]].+ ]]; then
   echo -e "${RED_TXT}ERROR:${COLOR_OFF} whitespace in $2 path unsupported" >&2
   exit 1
 fi
-IN=$(readlink -f "$1")
-if [[ -z "$2" ]]; then
+IN="$(readlink -f ${1})"
+if [[ -z "${2}" ]]; then
   OUT="${PWD}"
 else
-  OUT=$(readlink -f "$2")
+  OUT="$(readlink -f ${2})"
 fi
 
 # Get LAB_HOME or custom tmp/cache variables from user's ~/.bashrc,
 #  while still enabling fancy people to override these from their
 #  current working environment too.
-source ${HOME}/.bashrc
+source "${HOME}/.bashrc"
 if [[ -z "${LAB_HOME}" ]]; then
   echo -e "${RED_TXT}ERROR:${COLOR_OFF} ${LAB_HOME} not set" >&2
   exit 1
@@ -140,20 +135,20 @@ fi
 # Check if Singularity environment variables are set,
 #  and confirm the user has write access.
 #  We expect these 2 paths to already exist.
-if [[ -z ${SINGULARITY_CACHEDIR} ]]; then
+if [[ -z "${SINGULARITY_CACHEDIR}" ]]; then
   echo -e "${RED_TXT}ERROR:${COLOR_OFF} \$SINGULARITY_CACHEDIR not set" >&2
   exit 1
 else
-  if [[ ! -d ${SINGULARITY_CACHEDIR} ]] || [[ ! -w ${SINGULARITY_CACHEDIR} ]]; then
+  if [[ ! -d "${SINGULARITY_CACHEDIR}" ]] || [[ ! -w "${SINGULARITY_CACHEDIR}" ]]; then
     echo -e "${RED_TXT}ERROR:${COLOR_OFF} \$SINGULARITY_CACHEDIR ${SINGULARITY_CACHEDIR} not writeable for ${USER}" >&2
     exit 1
   fi
 fi
-if [[ -z ${SINGULARITY_TMPDIR} ]]; then
+if [[ -z "${SINGULARITY_TMPDIR}" ]]; then
   echo -e "${RED_TXT}ERROR:${COLOR_OFF} \$SINGULARITY_TMPDIR not set" >&2
   exit 1
 else
-  if [[ ! -d ${SINGULARITY_TMPDIR} ]] || [[ ! -w ${SINGULARITY_TMPDIR} ]]; then
+  if [[ ! -d "${SINGULARITY_TMPDIR}" ]] || [[ ! -w "${SINGULARITY_TMPDIR}" ]]; then
     echo -e "${RED_TXT}ERROR:${COLOR_OFF} \$SINGULARITY_TMPDIR ${SINGULARITY_TMPDIR} not writeable for ${USER}" >&2
     exit 1
   fi
@@ -162,7 +157,7 @@ fi
 # If Windows-style mount point (e.g., "Z:\Streptobacillus\Raw_FQs") given as a
 #  path, check both user's home, lab home, and group as possible mount areas
 #  to determine if files exist in 1 but not the others.
-if [[ ${IN} =~ ^.+[A-Z]\:.+ ]]; then
+if [[ "${IN}" =~ ^.+[A-Z]\:.+ ]]; then
   path_slashes_replaced="$(echo "${IN}" | cut -d ':' -f 2 | sed 's/\\/\//g')"
   user_home="${HOME}"/"${path_slashes_replaced}"
   user_group_main="/scicomp${path_slashes_replaced}" # Dropped slash between scicomp and var
@@ -183,12 +178,12 @@ if [[ ${IN} =~ ^.+[A-Z]\:.+ ]]; then
       -regex ".+_(R)?(1|2)(.+)?\.(fq|fastq)($|\.gz$)" \
       2> /dev/null \
       | wc -l)
-    if [[ ${cnt_read_files} -ge 1 ]]; then
+    if [[ "${cnt_read_files}" -ge 1 ]]; then
         echo -e "${YELLOW_TXT}\n${cnt_read_files} FastQ files found in: ${path}${COLOR_OFF}"
         echo -e "${RED_BG}"
         read -p "Use ${path} as Input Directory? (yes|no) " -n 1 -r
         echo -e "${COLOR_OFF}"
-        if [[ $REPLY =~ ^[yY] ]]; then
+        if [[ "${REPLY}" =~ ^[yY] ]]; then
           IN="${path}"
         else
           exit 0
@@ -199,15 +194,15 @@ if [[ ${IN} =~ ^.+[A-Z]\:.+ ]]; then
 fi
 
 # For now, just output into shared LAB_HOME area
-if [[ ${OUT} =~ ^.+[A-Z]\:.+ ]]; then
+if [[ "${OUT}" =~ ^.+[A-Z]\:.+ ]]; then
   echo -e "${YELLOW_TXT}\nWindows hard mount path detected as Output Directory ${COLOR_OFF}"
-  proposed_outdir="${LAB_HOME}"/"$(date '+%Y-%b-%d_%a_%H:%M:%S')"
+  proposed_outdir="${LAB_HOME}"/"$(date '+%Y-%b-%d_%a_%H-%M-%S')"
 
   echo -e "${RED_BG}"
   read -p "Use ${proposed_outdir} as Output Directory? (yes|no) " -n 1 -r
   echo -e "${COLOR_OFF}"
 
-  if [[ $REPLY =~ ^[yY] ]]; then
+  if [[ "${REPLY}" =~ ^[yY] ]]; then
     OUT="${path}"
   else
     echo -e "${RED_TXT}\nOkay, bad autoselection? Re-run with a different specified path ${COLOR_OFF}\n"
@@ -218,7 +213,7 @@ fi
 # If Windows-style path from Core Facility given via email
 #  (e.g., "\\...cdc.gov\groups\OID\...BCFB\by-instrument\NovaSeq\")
 #  is given as path, form the Linux path
-if [[ ${IN} =~ ^.+\.cdc\.gov\\.+\\.+ ]]; then
+if [[ "${IN}" =~ ^.+\.cdc\.gov\\.+\\.+ ]]; then
   inpath_stripped_hostname="${IN/*.cdc\.gov/\scicomp}"
   inpath_dewindowsed="$(echo "${inpath_stripped_hostname}" | sed 's/\\/\//g')"
   IN="${inpath_dewindowsed}"
@@ -242,7 +237,7 @@ if [ -d "${OUT}/.log" ] && \
 fi
 
 # Add found files to an array
-found_files=( $(find -L ${IN} \
+found_files=( $(find -L "${IN}" \
       -maxdepth 2 \
       -type f \
       -readable \
@@ -280,7 +275,7 @@ done
 # Prompt user if >10 samples to prevent accidentally assembling too many
 if [[ ${#submitted[@]} -ge 10 ]]; then
   echo -e "${YELLOW_TXT}\nWARNING: ${#submitted[@]} samples have been identified:\n${COLOR_OFF}"
-  for f in ${submitted[@]}; do
+  for f in "${submitted[@]}"; do
     echo -e "${YELLOW_TXT}${f}${COLOR_OFF}"
   done | xargs -L3 | column -t
 
@@ -288,7 +283,7 @@ if [[ ${#submitted[@]} -ge 10 ]]; then
   echo -e "${RED_BG}"
   read -p "Do you want to continue submitting ${#submitted[@]} samples? (yes|no) " -n 1 -r
   echo -e "${COLOR_OFF}"
-  if [[ $REPLY =~ ^[yY] ]]; then
+  if [[ "${REPLY}" =~ ^[yY] ]]; then
     echo -e "\nContinuing to submit ${#submitted[@]} samples...\n"
   else
     echo -e "${RED_TXT}\nSubmission cancelled ${COLOR_OFF}"
@@ -297,10 +292,10 @@ if [[ ${#submitted[@]} -ge 10 ]]; then
 fi
 
 # Set up log directory in OUT directory
-mkdir -p ${OUT}/pipeline_info
+mkdir -p "${OUT}/pipeline_info"
 
 # Get node number - <=230 = biolinux, >=231 = rosalind
-NODE_NUM=$(echo ${HOSTNAME%%.*} | sed 's/node//1')
+NODE_NUM="$(echo ${HOSTNAME%%.*} | sed 's/node//1')"
 
 # If FastQ files are able to be submitted, submit and display basenames
 if [[ ${#submitted[@]} -ge 1 ]] && \
@@ -310,17 +305,17 @@ if [[ ${#submitted[@]} -ge 1 ]] && \
   qsub \
     -m ba \
     -q all.q \
-    -v IN=${IN} \
-    -v OUT=${OUT} \
-    -o ${OUT}/pipeline_info \
-    -e ${OUT}/pipeline_info \
-    -M ${USER}@cdc.gov \
-    -v LAB_HOME=${LAB_HOME} \
-    -N ASM_${#submitted[@]} \
-    -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
-    -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+    -v IN="${IN}" \
+    -v OUT="${OUT}" \
+    -o "${OUT}/pipeline_info" \
+    -e "${OUT}/pipeline_info" \
+    -M "${USER}@cdc.gov" \
+    -v LAB_HOME="${LAB_HOME}" \
+    -N "ASM_${#submitted[@]}" \
+    -v SINGULARITY_TMPDIR="${SINGULARITY_TMPDIR}" \
+    -v SINGULARITY_CACHEDIR="${SINGULARITY_CACHEDIR}" \
+    -v NXF_SINGULARITY_CACHEDIR="${SINGULARITY_CACHEDIR}" \
+    "${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow"
 
 elif [[ ${#submitted[@]} -ge 1 ]] && \
   [[ ${HOSTNAME%%.*} == 'rosalind01' ]] || \
@@ -329,18 +324,18 @@ elif [[ ${#submitted[@]} -ge 1 ]] && \
   qsub \
     -m ba \
     -q all.q \
-    -v IN=${IN} \
-    -v OUT=${OUT} \
-    -o ${OUT}/pipeline_info \
-    -e ${OUT}/pipeline_info \
-    -M ${USER}@cdc.gov \
-    -v LAB_HOME=${LAB_HOME} \
-    -N ASM_${#submitted[@]} \
+    -v IN="${IN}" \
+    -v OUT="${OUT}" \
+    -o "${OUT}/pipeline_info" \
+    -e "${OUT}/pipeline_info" \
+    -M "${USER}@cdc.gov" \
+    -v LAB_HOME="${LAB_HOME}" \
+    -N "ASM_${#submitted[@]}" \
     -l max_runtime=72:00:00 \
-    -v SINGULARITY_TMPDIR=${SINGULARITY_TMPDIR} \
-    -v SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    -v NXF_SINGULARITY_CACHEDIR=${SINGULARITY_CACHEDIR} \
-    ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow
+    -v SINGULARITY_TMPDIR="${SINGULARITY_TMPDIR}" \
+    -v SINGULARITY_CACHEDIR="${SINGULARITY_CACHEDIR}" \
+    -v NXF_SINGULARITY_CACHEDIR="${SINGULARITY_CACHEDIR}" \
+    "${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow"
 
 else
   echo -e "${RED_TXT}Biolinux/Aspen/Rosalind HPC is not detected.\nSubmission cancelled. ${COLOR_OFF}"
