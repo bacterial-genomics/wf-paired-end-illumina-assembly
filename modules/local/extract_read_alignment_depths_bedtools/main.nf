@@ -7,7 +7,7 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     tuple val(meta), path(bam_files)
 
     output:
-    tuple val(meta), path("${meta.id}-${meta.assembler}.CleanedReads-AlnStats.tsv"), emit: summary
+    tuple val(meta), path("${meta.id}-${meta.assembler}.Clean_Reads-AlnStats.tsv"), emit: summary
     path(".command.{out,err}")
     path("versions.yml")                                                           , emit: versions
 
@@ -78,7 +78,7 @@ process EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS {
     )
     SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
 
-    echo -e "${SUMMARY_HEADER}\n${COVERAGE_DATA}" > "!{meta.id}-!{meta.assembler}.CleanedReads-AlnStats.tsv"
+    echo -e "${SUMMARY_HEADER}\n${COVERAGE_DATA}" > "!{meta.id}-!{meta.assembler}.Clean_Reads-AlnStats.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
