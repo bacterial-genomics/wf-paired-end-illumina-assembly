@@ -11,7 +11,7 @@ process ANNOTATE_PROKKA {
     tuple val(meta), path("${meta.id}-${meta.assembler}.Annotated_GenBank_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}-${meta.assembler}.gbk")                       , emit: prokka_genbank_file
     path("prokka/${meta.id}-${meta.assembler}.log.gz")
-    path("${meta.id}.Annotation_GenBank.SHA256-checksums.tsv")                      , emit: checksums
+    path("${meta.id}.Annotation_GenBank.SHA512-checksums.tsv")                      , emit: checksums
     path(".command.{out,err}")
     path("versions.yml")                                                            , emit: versions
 
@@ -66,23 +66,23 @@ process ANNOTATE_PROKKA {
 
     # Calculate checksum
     FILE="!{meta.id}-!{meta.assembler}.gbk"
-    CHECKSUM=$(awk '/^LOCUS/ {gsub(/[[:space:]]+[0-9]{2}-[A-Z]{3}-[0-9]{4}/, "", $0); print} !/^LOCUS/ {print}' "${FILE}" | sha256sum | awk '{print $1}')
+    CHECKSUM=$(awk '/^LOCUS/ {gsub(/[[:space:]]+[0-9]{2}-[A-Z]{3}-[0-9]{4}/, "", $0); print} !/^LOCUS/ {print}' "${FILE}" | sha512sum | awk '{print $1}')
     echo "${CHECKSUM}" | awk -v sample_id="!{meta.id}" -v file="${FILE}" '
         BEGIN {
             # Print the header once
-            print "Sample_name\tChecksum\tFile"
+            print "Sample_name\tChecksum_(SHA-512)\tFile"
         }
         {
             # Print the data row once, using the CHECKSUM from input
             print sample_id "\t" $1 "\t" file
         }' \
-        > "!{meta.id}.Annotation_GenBank.SHA256-checksums.tsv"
+        > "!{meta.id}.Annotation_GenBank.SHA512-checksums.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
         prokka: $(prokka --version 2>&1 | awk 'NF>1{print $NF}')
-        sha256sum: $(sha256sum --version | grep ^sha256sum | sed 's/sha256sum //1')
+        sha512sum: $(sha512sum --version | grep ^sha512sum | sed 's/sha512sum //1')
     END_VERSIONS
     '''
 }
