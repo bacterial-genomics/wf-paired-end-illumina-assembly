@@ -2,7 +2,7 @@ process CLASSIFY_16S_RDP {
 
     label "process_medium"  // single CPU but needs the RAM boost
     tag { "${meta.id}" }
-    container "tpaisie/rdp@sha256:ee388dff2e17c567946b7f2bf326765586d30f4ea0a203800616c44f599d53cc"
+    container "staphb/rdp@sha256:c1e9882d51cdbcf8293fc2a0740679c2f630185bb7604f9c1a375ba3b6643802"
 
     input:
     tuple val(meta), path(barnapp_extracted_rna)
