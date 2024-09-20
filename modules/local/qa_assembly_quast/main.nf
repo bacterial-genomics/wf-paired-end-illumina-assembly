@@ -18,20 +18,21 @@ process QA_ASSEMBLY_QUAST {
     source bash_functions.sh
 
     # Run Quast
-    msg "INFO: Evaluating assembly using QUAST"
+    msg "INFO: Evaluating !{meta.id} assembly using QUAST ..."
 
     quast.py \
       --silent \
       --no-html \
+      --no-plots \
       --strict-NA \
-      --gene-finding \
       --min-contig 100 \
       --output-dir quast \
-      --gene-thresholds 300 \
       --ambiguity-usage one \
       --threads !{task.cpus} \
       --contig-thresholds 500,1000 \
       "!{assembly}"
+
+    msg "INFO: Completed QUAST evaluation of !{meta.id} assembly"
 
     mv -f quast/transposed_report.tsv "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
 
@@ -46,6 +47,8 @@ process QA_ASSEMBLY_QUAST {
 
     # Replace space characters in header line with underscores
     sed -i '1s/ /_/g' "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
+
+    msg "INFO: Completed QUAST output renaming for !{meta.id}"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
