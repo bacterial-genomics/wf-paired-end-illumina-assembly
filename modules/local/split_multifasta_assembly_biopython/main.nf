@@ -19,11 +19,11 @@ process SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON {
     # Split assembly multi-record FastA into individual FastA files for each contig
     if [[ -s "!{assembly}" ]]; then
       split.multifasta.py \
-        --outdir "bins" \
+        --ext "!{params.split_multifasta_extension}" \
         --infile "!{assembly}" \
-        !{no_gaps} \
+        --outdir "bins" \
         --suffix '' \
-        --ext !{params.split_multifasta_extension}
+        !{no_gaps} \
 
     else
       msg "ERROR: ${assembly} absent" >&2
@@ -32,8 +32,8 @@ process SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON {
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-        python: $(python --version 2>&1 | awk '{print $2}')
         biopython: $(python -c 'import Bio; print(Bio.__version__)' 2>&1)
+        python: $(python --version 2>&1 | awk '{print $2}')
     END_VERSIONS
     '''
 }
