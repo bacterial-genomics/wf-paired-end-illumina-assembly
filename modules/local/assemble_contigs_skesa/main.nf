@@ -19,7 +19,7 @@ process ASSEMBLE_CONTIGS_SKESA {
     '''
     source bash_functions.sh
 
-    msg "INFO: Assembling contigs using SKESA"
+    msg "INFO: Assembling !{meta.id} contigs using SKESA ..."
 
     if [[ ! -f "!{meta.id}-SKESA_contigs.fasta" ]]; then
       skesa \
@@ -37,6 +37,8 @@ process ASSEMBLE_CONTIGS_SKESA {
         --vector_percent !{params.skesa_vector_percent}
     fi
 
+    msg "INFO: Completed genome assembly for !{meta.id} using SKESA"
+
     echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     if verify_minimum_file_size "!{meta.id}-SKESA_contigs.fasta" 'Raw Assembly FastA File' "!{params.min_filesize_raw_assembly}"; then
       echo -e "!{meta.id}\tRaw Assembly FastA File\tPASS"  \
@@ -44,6 +46,8 @@ process ASSEMBLE_CONTIGS_SKESA {
     else
       echo -e "!{meta.id}\tRaw Assembly FastA File\tFAIL" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     fi
+
+    msg "INFO: Completed QC file checks for !{meta.id} SKESA"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
