@@ -11,7 +11,7 @@ process OVERLAP_PAIRED_READS_FLASH {
     tuple val(meta), path("${meta.id}.Non-overlapping_FastQ_File.tsv"), emit: qc_filecheck
     tuple val(meta), path("${meta.id}*{paired,single}.fq.gz")         , emit: cleaned_fastq_files
     path("${meta.id}.Overlap.tsv")                                    , emit: summary
-    path("${meta.id}.CleanedReads_FastQ.SHA256-checksums.tsv")        , emit: checksums
+    path("${meta.id}.Clean_Reads_FastQ.SHA512-checksums.tsv")         , emit: checksums
     path(".command.{out,err}")
     path("versions.yml")                                              , emit: versions
 
@@ -92,26 +92,26 @@ process OVERLAP_PAIRED_READS_FLASH {
       "!{meta.id}_R1.paired.fq" \
       "!{meta.id}_R2.paired.fq"
 
-    ### Calculate SHA-256 Checksums of each Input FastQ file ###
+    ### Calculate SHA-512 Checksums of each Input FastQ file ###
     SUMMARY_HEADER=(
       "Sample_name"
-      "Checksum_(SHA-256)"
+      "Checksum_(SHA-512)"
       "File"
     )
     SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
 
-    echo "${SUMMARY_HEADER}" > "!{meta.id}.CleanedReads_FastQ.SHA256-checksums.tsv"
+    echo "${SUMMARY_HEADER}" > "!{meta.id}.Clean_Reads_FastQ.SHA512-checksums.tsv"
 
     # Calculate checksums
     for f in "!{meta.id}_R1.paired.fq.gz" "!{meta.id}_R2.paired.fq.gz" "!{meta.id}_single.fq.gz"; do
-      echo -ne "!{meta.id}\t" >> "!{meta.id}.CleanedReads_FastQ.SHA256-checksums.tsv"
-      zcat "${f}" | awk 'NR%2==0' | paste - - | sort -k1,1 | sha256sum | awk '{print $1 "\t" "'"${f}"'"}'
-    done >> "!{meta.id}.CleanedReads_FastQ.SHA256-checksums.tsv"
+      echo -ne "!{meta.id}\t" >> "!{meta.id}.Clean_Reads_FastQ.SHA512-checksums.tsv"
+      zcat "${f}" | awk 'NR%2==0' | paste - - | sort -k1,1 | sha512sum | awk '{print $1 "\t" "'"${f}"'"}'
+    done >> "!{meta.id}.Clean_Reads_FastQ.SHA512-checksums.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
-        sha256sum: $(sha256sum --version | grep ^sha256sum | sed 's/sha256sum //1')
+        sha512sum: $(sha512sum --version | grep ^sha512sum | sed 's/sha512sum //1')
         flash: $(flash --version | head -n 1 | awk 'NF>1{print $NF}')
     END_VERSIONS
     '''
