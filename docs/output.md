@@ -72,15 +72,15 @@ Please see the [host removal using Hostile documentation](../modules/local/remov
 <details markdown="1">
 <summary>Output files</summary>
 
-- `CleanedReads/Hostile/`
+- `Clean_Reads/Hostile/`
 
-  - `[sample].fastq.gz`: Human host-removed FastQ files. 
+  - `[sample].fastq.gz`: Human host-removed FastQ files.
   - `[sample].Summary.Hostile.tsv`: Summary of the number of reads discarded and retained from Hostile.
   - `[sample].Hostile_FastQ.SHA512-checksums.tsv`: Checksum values for each FastQ output from Hostile.
 
-- `CleanedReads/SRA-Human-Scrubber/`
-  - `[sample].Summary.BBTools-Repair-Removal.tsv`: Summary of the number of reads discarded and retained after repairing broken sister reads produced from SRA-Human-Scrubber.
-  - `[sample].Summary.SRA-Human-Scrubber-Removal.tsv`: Summary of the number of reads discarded and retained from SRA-Human-Scrubber.
+- `Clean_Reads/SRA-Human-Scrubber/`
+  - `[sample].Summary.BBTools_Repair_Removal.tsv`: Summary of the number of reads discarded and retained after repairing broken sister reads produced from SRA-Human-Scrubber.
+  - `[sample].Summary.SRA_Human_Scrubber_Removal.tsv`: Summary of the number of reads discarded and retained from SRA-Human-Scrubber.
 
 </details>
 
@@ -102,7 +102,7 @@ PhiX reads are commonly used as a positive control for Illumina sequencing. Duri
 <details markdown="1">
 <summary>Output files</summary>
 
-- `CleanedReads/BBDuk/`
+- `Clean_Reads/BBDuk/`
   - `[sample].noPhiX_FastQ.SHA512-checksums.tsv`: Checksum values for each PhiX-free FastQ output of BBDuk.
   - `[sample].PhiX_Removed_Reads.metrics_summary.tsv`: Metrics on FastQ reads output including minimum, average, and maximum lengths as well as total counts and total length.
   - `[sample].PhiX.tsv`: Number of reads discarded and retained from BBDuk.
@@ -132,7 +132,7 @@ Please see the [adapter clipping and quality trimming using Trimmomatic document
 <details markdown="1">
 <summary>Output files</summary>
 
-- `CleanedReads/Trimmomatic/`
+- `Clean_Reads/Trimmomatic/`
   - `[sample].Adapter_and_Quality_Trimmed_Reads.metrics_summary.tsv`: Metrics on FastQ reads output including minimum, average, and maximum lengths as well as total counts and total length.
   - `[sample].Trim_FastQ.SHA512-checksums.tsv`: Checksum values for each FastQ output from Trimmomatic.
   - `[sample].Trimmomatic.tsv`: Summary of the number of reads discarded and retained from Trimmomatic.
@@ -157,7 +157,7 @@ fastp is able to clip adapters, perform quality trimming, and retain broken sist
 <details markdown="1">
 <summary>Output files</summary>
 
-- `CleanedReads/fastp/`
+- `Clean_Reads/fastp/`
   - `[sample].Adapter_and_Quality_Trimmed_Reads.metrics_summary.tsv`: Metrics on FastQ reads output including minimum, average, and maximum lengths as well as total counts and total length.
   - `[sample].Trim_FastQ.SHA512-checksums.tsv`: Checksum values for each FastQ output from Fastp.
   - `[sample].Fastp.tsv`: Summary of the number of reads discarded and retained from Fastp.
@@ -180,18 +180,18 @@ Overlapping content between sister reads that are at least 80% similar are colla
 <details markdown="1">
 <summary>Output files</summary>
 
-- `CleanedReads/`
+- `Clean_Reads/`
 
   - `[sample]_single.fq.gz`: Final cleaned singleton reads.
   - `[sample]_R[1/2].paired.fq.gz`: Final cleaned paired reads.
 
-- `CleanedReads/FLASh/`
-  - `[sample].CleanedReads_FastQ.metrics_summary.tsv`: Metrics on FastQ reads output including minimum, average, and maximum lengths as well as total counts and total length.
-  - `[sample].CleanedReads_FastQ.SHA512-checksums.tsv`: Checksum values for each FastQ output from FLASh.
+- `Clean_Reads/FLASh/`
+  - `[sample].Clean_Reads_FastQ.metrics_summary.tsv`: Metrics on FastQ reads output including minimum, average, and maximum lengths as well as total counts and total length.
+  - `[sample].Clean_Reads_FastQ.SHA512-checksums.tsv`: Checksum values for each FastQ output from FLASh.
   - `[sample].Overlap.tsv`: Number of reads that were overlapped into singleton reads.
 
 > [!NOTE]
-> FastQ sequences after overlapping with FLASh are stored in `CleanedReads/` rather than `CleanedReads/FLASh` as they are the final outputs for read cleaning.
+> FastQ sequences after overlapping with FLASh are stored in `Clean_Reads/` rather than `Clean_Reads/FLASh` as they are the final outputs for read cleaning.
 
 </details>
 
@@ -250,7 +250,7 @@ The cleaned reads are used to assemble contigs using SPAdes or SKESA `[Default: 
 
 - The resulting contig file (after filtering out low coverage, short, and low compositional complexity contigs) must meet a minimum file size `[Default: 1M]`. This is to prevent the analysis of a highly incomplete bacterial genome.
 
-- The cleaned paired-end reads are mapped onto the filtered assembly file in sequential steps (`[Default: 3]`), and the resulting binary paired-end alignment file must meet a minimum file size criteria `[Default: 25M]`. This is to prevent the analysis of an assembly file that has an unusually low read sequence amount.
+- The cleaned paired-end reads are mapped onto the filtered assembly file in sequential steps (`[Default: 3]`), and the resulting binary paired-end alignment file must meet a minimum file size criteria `[Default: 6M]`. This is to prevent the analysis of an assembly file that has an unusually low read sequence amount.
 
 - The assembly file goes through SNP and InDel corrections in sequential steps (`[Default: 3]`), and the resulting assembly file must meet a minimum file size criteria `[Default: 1M]`. This is to prevent further analysis of an unusually incomplete genome.
 
@@ -322,7 +322,7 @@ QUAST is used to perform quality assessment on the assembly file to report metri
 - `Assembly/QA/[sample]/`
   - `[sample]-[assembler].QuastSummary.tsv`: Assembly metrics such as N50, cumulative length, longest contig length, and GC composition.
   - `[sample]-[assembler].GenomeCoverage.tsv`: Genome coverage information.
-  - `[sample]-[assembler].CleanedReads-Bases.tsv`: Number of cleaned bases.
+  - `[sample]-[assembler].Clean_Reads-Bases.tsv`: Number of cleaned bases.
 
 </details>
 
@@ -448,18 +448,18 @@ Concatenation of output metrics for all samples.
 - `Summaries/`
   - `Summary.16S_Genus_RDP.tsv`: RDP Classifier best matches from predicted 16S ribosomal RNA genes (to genus-level)
   - `Summary.16S_Species_BLAST.tsv`: Top bitscore BLASTn alignments for each 16S rRNA gene (to species-level)
-  - `Summary.Adapter_and_Quality_Trimmed-Reads.Metrics.tsv`: Sequence metrics after adapter clipping and quality trimming
+  - `Summary.Adapter_QC_Trim_Reads.Metrics.tsv`: Sequence metrics after adapter clipping and quality trimming
   - `Summary.Annotation_Checksums.tsv`: Checksum (hash) values for annotated GenBank output files
   - `Summary.Assembly_Checksums.tsv`: Checksum (hash) values for final output assembly FastA output files
   - `Summary.Assembly_Depth.tsv`: Assembly depth of coverage mean and standard deviation values (units in "x")
   - `Summary.Assembly_Metrics.tsv`: Assembly metrics (e.g., N50, cumulative length, longest contig length, and GC composition)
   - `Summary.CheckM2.tsv`: Estimation percentages on completeness and contamination of each genome assembly
-  - `Summary.Clean_and_Overlapping_Reads.tsv`: Counts and percentages from overlapping sister reads
-  - `Summary.CleanedReads_Aligned.tsv`: Paired, singleton, and total cleaned reads mapped onto the assembly statistics (e.g., mean and standard deviation depths, basepairs mapped, assembly size)
-  - `Summary.CleanedReads_Checksums.tsv`: Checksum (hash) values for final output cleaned reads FastQ output files
-  - `Summary.CleanedReads.Metrics.tsv`: Sequence metrics after all read cleaning steps
+  - `Summary.Clean_and_Overlapped.tsv`: Counts and percentages from overlapping sister reads
+  - `Summary.Clean_Reads_Aligned.tsv`: Paired, singleton, and total cleaned reads mapped onto the assembly statistics (e.g., mean and standard deviation depths, basepairs mapped, assembly size)
+  - `Summary.Clean_Reads_Checksums.tsv`: Checksum (hash) values for final output cleaned reads FastQ output files
+  - `Summary.Clean_Reads.Metrics.tsv`: Sequence metrics after all read cleaning steps
   - `Summary.Downsampled_Reads.Metrics.tsv`: Sequence metrics after subsampling the read set (if performed)
-  - `Summary-[Fastp,Trimmomatic].Adapter_and_QC_Trimming.tsv`: Number of discarded reads and singleton reads that remain after adapter clipping and quality trimming
+  - `Summary-[Fastp,Trimmomatic].Adapter_and_QC_Trim.tsv`: Number of discarded reads and singleton reads that remain after adapter clipping and quality trimming
   - `Summary.Input_Checksums.tsv`: Checksum (hash) values for FastQ input files
   - `Summary.Input_Reads.Metrics.tsv`: Sequence metrics on the initial user-provided input sequences
   - `Summary.Kraken2.tsv`: Counts and proportions of unclassified, top 3 genera, top 3 species with k-mer matches with the cleaned reads
@@ -519,7 +519,7 @@ Information about the pipeline execution, output logs, error logs, and QC file c
   - `[sample].Non-overlapping_FastQ_Files.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria after removing overlapping reads `[Default: 20M]`.
   - `[sample].Raw_Assembly_File.tsv`: Details if the genome assembly file produced by an assembler software package meets the minimum file size criteria `[Default: 1M]`.
   - `[sample].Filtered_Assembly_File.tsv`: Details if the genome assembly file meets the minimum file size criteria after low compositional complexity contigs are discarded `[Default: 1M]`.
-  - `[sample].Binary_PE_Alignment_Map_File.tsv`: Details if the binary paired-end (PE) alignment file meets the minimum file size criteria after the cleaned paired-end reads are mapped onto the filtered genome assembly `[Default: 25M]`.
+  - `[sample].Binary_PE_Alignment_Map_File.tsv`: Details if the binary paired-end (PE) alignment file meets the minimum file size criteria after the cleaned paired-end reads are mapped onto the filtered genome assembly `[Default: 6M]`.
   - `[sample].Polished_Assembly_File.tsv`: Details if the genome assembly file meets the minimum file size criteria after SNP and InDel corrections are performed `[Default: 1M]`.
   - `[sample].Final_Corrected_Assembly_FastA_File.tsv`: Details if the final error-corrected genome assembly file meets the minimum file size criteria `[Default: 1M]`.
   - `[sample].Binary_SE_Alignment_Map_File.tsv`: Details if the single-end (SE) alignment file meets the minimum file size criteria after the cleaned singleton reads are mapped onto the final genome assembly file `[Default: 1k]`.
