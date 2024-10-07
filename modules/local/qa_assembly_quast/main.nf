@@ -24,10 +24,8 @@ process QA_ASSEMBLY_QUAST {
       --silent \
       --no-html \
       --no-plots \
-      --strict-NA \
       --min-contig 100 \
       --output-dir quast \
-      --ambiguity-usage one \
       --threads !{task.cpus} \
       --contig-thresholds 500,1000 \
       "!{assembly}"
