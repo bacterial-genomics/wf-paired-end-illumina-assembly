@@ -1,6 +1,6 @@
 process OVERLAP_PAIRED_READS_FLASH {
 
-    label "process_medium"
+    label "process_high"  //extra RAM unnecessary but this is a bottleneck for CPU speed in the workflow
     tag { "${meta.id}" }
     container "staphb/flash@sha256:44889120b49d3f8eefdde8f6040b096d5ee122ceb71d936b596757e4fc16a2c0"
 
