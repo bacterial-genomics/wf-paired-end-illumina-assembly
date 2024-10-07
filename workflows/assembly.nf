@@ -404,7 +404,7 @@ workflow ASSEMBLY {
         // Collect read trimming summaries and concatenate into one file
         ch_trimmomatic_summary = TRIM_READS_TRIMMOMATIC.out.summary
                                     .collectFile(
-                                        name:       "Summary-Trimmomatic.Adapter_and_QC_Trim.tsv",
+                                        name:       "Summary.Adapter_and_QC_Trim.tsv",
                                         keepHeader: true,
                                         sort:       { file -> file.text },
                                         storeDir:   "${params.outdir}/Summaries"
@@ -453,7 +453,7 @@ workflow ASSEMBLY {
 
         ch_fastp_summary = TRIM_READS_FASTP.out.summary
                                 .collectFile(
-                                    name:       "Summary-Fastp.Adapter_and_QC_Trim.tsv",
+                                    name:       "Summary.Adapter_and_QC_Trim.tsv",
                                     keepHeader: true,
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
@@ -1086,7 +1086,8 @@ workflow ASSEMBLY {
             .view { files -> println "DEBUG: Files passed to CREATE_EXCEL_RUN_SUMMARY_PYTHON: ${files}" }
 
         // Pass both variables to the process
-        CREATE_EXCEL_RUN_SUMMARY_PYTHON(list_of_files, tab_colors_file)
+        def workflow_version = workflow.manifest.version ?: 'dev'
+        CREATE_EXCEL_RUN_SUMMARY_PYTHON(list_of_files, tab_colors_file, workflow_version)
         ch_versions = ch_versions.mix(CREATE_EXCEL_RUN_SUMMARY_PYTHON.out.versions)
     }
 
