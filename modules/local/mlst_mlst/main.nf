@@ -56,6 +56,7 @@ process MLST_MLST {
         !{min_score} \
         !{min_identity} \
         !{min_coverage} \
+        --novel "!{meta.id}-!{meta.assembler}.MLST.novel.fasta" \
         --threads !{task.cpus} \
         --scheme "${mlst_scheme}" \
         --exclude "${exclude_list}" \
