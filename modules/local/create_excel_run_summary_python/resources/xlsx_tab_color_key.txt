@@ -47,7 +47,10 @@ Kraken2=255, 0, 255
 #
 # Assembly Assessment               (=128, 0, 128     # Purple)
 Assembly_Metrics=128, 0, 128
-CheckM2=128, 0, 128
+Assembly_Completeness=128, 0, 128
+BUSCO_Completeness=128, 0, 128
+Contigs_Classified=128, 0, 128
+Assemblies_Classified=128, 0, 128
 #
 # Misc                              (=128, 128, 128   # Gray)
 QC_File_Checks=128, 128, 128
