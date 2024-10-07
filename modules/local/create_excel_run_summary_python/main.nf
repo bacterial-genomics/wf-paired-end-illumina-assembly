@@ -5,11 +5,12 @@ process CREATE_EXCEL_RUN_SUMMARY_PYTHON {
     input:
     path(list_of_files)
     path(tab_colors)
+    val(wf_version)
 
     output:
     path("Summary-Report.xlsx"), emit: summary
     path(".command.{out,err}")
-    path("versions.yml")         , emit: versions
+    path("versions.yml")       , emit: versions
 
     shell:
     '''
@@ -18,7 +19,12 @@ process CREATE_EXCEL_RUN_SUMMARY_PYTHON {
     msg "INFO: Converting summary TSV files: !{list_of_files} into single XLSX workbook..."
 
     # Default outfile is "Summary-Report.xlsx" in python script
-    tsv_to_excel.py !{list_of_files} --color-dict !{tab_colors}
+    tsv_to_excel.py \
+      !{list_of_files} \
+      --color-dict !{tab_colors} \
+      -t "wf-paired-end-illumina-assembly_v!{wf_version}" \
+      -s "genome_assembly" \
+      -c "bacterial-genomics"
 
     msg "INFO: Converted summary TSV files into single XLSX workbook."
 
