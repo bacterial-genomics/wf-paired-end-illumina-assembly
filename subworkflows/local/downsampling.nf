@@ -58,7 +58,7 @@ workflow DOWNSAMPLE {
 
     } else {
         if (params.depth <= 0) {
-            log.info("Depth is set to ${params.genome_size}x. No subsampling to perform and therefore no genome size estimation required.")
+            log.info("Depth is set to <= 0x. No subsampling to perform and therefore no genome size estimation required.")
         } else {
             log.info("Using the user-input genome size of ${params.genome_size}bp")
         }
