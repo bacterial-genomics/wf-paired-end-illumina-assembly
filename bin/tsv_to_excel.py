@@ -25,7 +25,7 @@ def parseArgs():
     opt.add_argument('-h', '--help',
         action='help',
 		help='show this help message and exit')
-    opt.add_argument('-c', '--color-dict', 
+    opt.add_argument('-d', '--color-dict', 
         metavar='FILE',
         type=str,
         required=False,
@@ -36,6 +36,24 @@ def parseArgs():
         metavar='FILE',
         default='Summary-Report.xlsx', 
         help='Microsoft Excel XLSX formatted output file [Summary-Report.xlsx]')
+    opt.add_argument('-c', '--xlsx-property-category',
+        required=False,
+        type=str,
+        metavar='STR',
+        default='',
+        help='Output XLSX file property category [None]')
+    opt.add_argument('-s', '--xlsx-property-subject',
+        required=False,
+        type=str,
+        metavar='STR',
+        default='',
+        help='Output XLSX file property subject [None]')
+    opt.add_argument('-t', '--xlsx-property-title',
+        required=False,
+        type=str,
+        metavar='STR',
+        default='',
+        help='Output XLSX file property title [None]')
     return parser.parse_args()
 
 def get_target_creation_time(file):
@@ -107,16 +125,20 @@ def load_color_dict(color_dict_file):
     
     return color_dict
 
-def color_sheet_tabs(filename, color_dict_hex):
+def color_sheet_tabs(filename, color_dict_hex, title, category, subject):
     """Color tabs in XLSX based on a color dictionary of names and color codes."""
     workbook = load_workbook(filename)
-    
+
+    workbook.properties.title = title
+    workbook.properties.category = category
+    workbook.properties.subject = subject
+
     for sheet_name in workbook.sheetnames:
         if sheet_name in color_dict_hex:
             hex_color = color_dict_hex[sheet_name]
             color = Color(rgb=hex_color)
             workbook[sheet_name].sheet_properties.tabColor = color
-    
+
     workbook.save(filename)
 
 def main():
@@ -152,7 +174,7 @@ def main():
     # Optionally color the XLSX tabs
     if opts.color_dict is not None:
         color_dict_hex = load_color_dict(opts.color_dict)
-        color_sheet_tabs(xlsx_outfile, color_dict_hex)
+        color_sheet_tabs(xlsx_outfile, color_dict_hex, opts.xlsx_property_title, opts.xlsx_property_category, opts.xlsx_property_subject)
 
 if __name__ == "__main__":
     main()
