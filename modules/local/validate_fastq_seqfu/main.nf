@@ -1,7 +1,7 @@
 process VALIDATE_FASTQ_SEQFU {
 
     tag { "${meta.id}" }
-    container "quay.io/biocontainers/seqfu@sha256:6fb86161b4b29b876253dfe4c72f8620801dfc8b905e9ed026c9386aef3b62e1"
+    container "staphb/seqfu@sha256:20831d2727d0f613f753eb301e19b345f5c9ea82c23762cb78a0c273539a3647"
 
     input:
     tuple val(meta), path(reads)
