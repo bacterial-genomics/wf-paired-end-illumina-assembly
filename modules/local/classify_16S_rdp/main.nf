@@ -34,13 +34,15 @@ process CLASSIFY_16S_RDP {
       # Split up the first column "<Sample_name>_<int>"; add header;
       #   discard some columns that are now stored as headers
       #   (e.g., "domain", "phylum", "class", "order", "family", "genus")
+      # NOTE: a[length(a)] is used to take the last item in cases where
+      #       samplename is Name_S1_L001_1 so it would get the final "1"
       awk 'BEGIN {
         FS=OFS="\t";
         print "Sample_name\tUnique_16S_rRNA_extraction_count\tDomain_result\tPhylum_result\tClass_result\tOrder_result\tFamily_result\tGenus_result"
       }
       {
         split($1, a, "_");
-        print a[1], a[2], $3, $6, $9, $12, $15, $18
+        print a[1], a[length(a)], $3, $6, $9, $12, $15, $18
       }' "!{meta.id}.RDP-raw.tsv" \
       > "!{meta.id}.RDP.tsv"
 
