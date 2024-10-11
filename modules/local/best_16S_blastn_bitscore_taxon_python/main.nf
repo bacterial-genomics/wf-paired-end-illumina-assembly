@@ -36,8 +36,10 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
 
       # Report the top alignment match data: %nucl iden, %query cov aln, taxon
       #   and split up the first column "<Sample_name>_<int>"; add header.
+      # NOTE: a[length(a)] is used to take the last item in cases where
+      #       samplename is Name_S1_L001_1 so it would get the final "1"
       awk 'BEGIN { FS=OFS="\t"; print "Sample_name\tUnique_16S_rRNA_extraction_count\tIdentity_(%)\tAlignment_(%)\tSpecies_match" }
-        { split($1, a, "_"); print a[1], a[2], $3, $13, $14 }' \
+        { split($1, a, "_"); print a[1], a[length(a)], $3, $13, $14 }' \
         "!{meta.id}-!{meta.assembler}.top-blast-bitscore.tsv" \
         > tmp.tsv \
         && mv -f tmp.tsv "!{meta.id}-!{meta.assembler}.16S-top-species.tsv"
