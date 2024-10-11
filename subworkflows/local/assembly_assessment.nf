@@ -3,6 +3,9 @@
 // Parameters for each of these have to be used independent of each other.
 //
 
+import java.nio.file.Files
+import java.nio.file.Paths
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT LOCAL MODULES/SUBWORKFLOWS
@@ -12,16 +15,17 @@
 //
 // MODULES: Local modules
 //
-include { CAT_DB_PREPARATION_UNIX                 } from "../../modules/local/cat_db_preparation_unix/main"
-include { DOWNLOAD_CAT_DB_UNIX                    } from "../../modules/local/download_cat_db_unix/main"
-include { BUSCO_DB_PREPARATION_UNIX               } from "../../modules/local/busco_db_preparation_unix/main"
-include { GTDBTK_DB_PREPARATION_UNIX              } from "../../modules/local/gtdbtk_db_preparation_unix/main"
-include { CHECKM2_DB_PREPARATION_UNIX             } from "../../modules/local/checkm2_db_preparation_unix/main"
+include { CAT_DB_PREPARATION_UNIX     } from "../../modules/local/cat_db_preparation_unix/main"
+include { DOWNLOAD_CAT_DB_UNIX        } from "../../modules/local/download_cat_db_unix/main"
+include { BUSCO_DB_PREPARATION_UNIX   } from "../../modules/local/busco_db_preparation_unix/main"
+include { SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON } from "../../modules/local/split_multifasta_assembly_biopython/main"
+include { GTDBTK_DB_PREPARATION_UNIX  } from "../../modules/local/gtdbtk_db_preparation_unix/main"
+include { CHECKM2_DB_PREPARATION_UNIX } from "../../modules/local/checkm2_db_preparation_unix/main"
 
-include { QA_ASSEMBLY_QUAST                       } from "../../modules/local/qa_assembly_quast/main"
-include { CALCULATE_COVERAGE_UNIX                 } from "../../modules/local/calculate_coverage_unix/main"
-include { CLASSIFY_CONTIGS_CAT                    } from "../../modules/local/classify_contigs_cat/main"
-include { ASSESS_ASSEMBLY_CHECKM2                 } from "../../modules/local/assess_assembly_checkm2/main"
+include { QA_ASSEMBLY_QUAST           } from "../../modules/local/qa_assembly_quast/main"
+include { CALCULATE_COVERAGE_UNIX     } from "../../modules/local/calculate_coverage_unix/main"
+include { CLASSIFY_CONTIGS_CAT        } from "../../modules/local/classify_contigs_cat/main"
+include { ASSESS_ASSEMBLY_CHECKM2     } from "../../modules/local/assess_assembly_checkm2/main"
 
 //
 // MODULES: nf-core modules
@@ -62,8 +66,7 @@ workflow ASSEMBLY_ASSESSMENT {
 
     take:
     ch_assembly_file           // channel: [ val(meta), [ contigs.fasta ] ]
-    ch_cleaned_fastq_files     // channel: [ val(meta), [ cleaned_fastq_files (R1, R2, single) ] ]
-    ch_read_alignment_stats    // channel: [ val(meta), [ CleanedReads-AlnStats.tsv ] ]
+    ch_read_alignment_stats    // channel: [ val(meta), [ Clean_Reads-AlnStats.tsv ] ]
     ch_busco_config_file       // channel: busco_config.ini
     ch_busco_db_file           // channel: database
     ch_mash_db_file            // channel: database
@@ -85,29 +88,20 @@ workflow ASSEMBLY_ASSESSMENT {
     // PROCESS: Run QUAST on the polished assembly for quality assessment and
     //  report the number of cleaned basepairs used to form the assembly
     QA_ASSEMBLY_QUAST (
-        ch_cleaned_fastq_files.join(ch_assembly_file)
+        ch_assembly_file
     )
     ch_versions = ch_versions.mix(QA_ASSEMBLY_QUAST.out.versions)
 
     // Collect assembly summaries and concatenate into one file
     ch_assembly_summary = QA_ASSEMBLY_QUAST.out.summary_assemblies
-                            .collectFile(
-                                name:       "Summary.Assemblies.tsv",
-                                keepHeader: true,
-                                storeDir:   "${params.outdir}/Summaries"
-                            )
+                              .collectFile(
+                                  name:       "Summary.Assembly_Metrics.tsv",
+                                  keepHeader: true,
+                                  sort:       { file -> file.text },
+                                  storeDir:   "${params.outdir}/Summaries"
+                              )
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_assembly_summary)
-
-    // Collect cleaned read/base summaries and concatenate into one file
-    ch_cleaned_summary = QA_ASSEMBLY_QUAST.out.summary_reads
-                            .collectFile(
-                                name:     "Summary.CleanedReads-Bases.tsv",
-                                keepHeader: true,
-                                storeDir: "${params.outdir}/Summaries"
-                            )
-
-    ch_output_summary_files = ch_output_summary_files.mix(ch_cleaned_summary)
 
     /*
     ================================================================================
@@ -118,16 +112,18 @@ workflow ASSEMBLY_ASSESSMENT {
     // PROCESS: Calculate genome assembly depth of coverage
     CALCULATE_COVERAGE_UNIX (
         QA_ASSEMBLY_QUAST.out.qa_summaries
-                          .join(ch_read_alignment_stats)
+            .join(ch_assembly_file)
+            .join(ch_read_alignment_stats)
     )
     ch_versions = ch_versions.mix(CALCULATE_COVERAGE_UNIX.out.versions)
 
     // Collect genome coverage summaries and concatenate into one file
     ch_genome_cov_summary = CALCULATE_COVERAGE_UNIX.out.summary
                                 .collectFile(
-                                    name:     "Summary.GenomeCoverage.tsv",
+                                    name:       "Summary.Assembly_Depth.tsv",
                                     keepHeader: true,
-                                    storeDir: "${params.outdir}/Summaries"
+                                    sort:       { file -> file.text },
+                                    storeDir:   "${params.outdir}/Summaries"
                                 )
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_genome_cov_summary)
@@ -175,12 +171,25 @@ workflow ASSEMBLY_ASSESSMENT {
 
     // PROCESS: Perform GTDB-Tk on assembly FastA file
     QA_ASSEMBLY_GTDBTK (
-        ch_assembly_file,
-        ch_db_for_gtdbtk,
-        ch_mash_db_file
+        ch_assembly_file,  // tuple val(meta)   , path("bins/*")
+        ch_db_for_gtdbtk,  // tuple val(db_name), path("database/*")
+        '/scratch',        // val use_pplacer_scratch_dir NOTE: current nf-core module doesn't even use this path!
+        []                 // path mash_db
     )
     ch_versions             = ch_versions.mix(QA_ASSEMBLY_GTDBTK.out.versions)
     ch_output_summary_files = ch_output_summary_files.mix(QA_ASSEMBLY_GTDBTK.out.summary.map{ meta, file -> file })
+
+    // Collect GTDB-Tk summaries and concatenate into one file
+    ch_gtdbtk_summary = QA_ASSEMBLY_GTDBTK.out.summary
+                            .map{ meta, file -> file }  // Map to only include the files
+                            .collectFile(
+                                name:       "Summary.Assemblies_Classified.tsv",
+                                keepHeader: true,
+                                sort:       { file -> file.text },
+                                storeDir:   "${params.outdir}/Summaries"
+                            )
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_gtdbtk_summary)
 
     /*
     ================================================================================
@@ -252,6 +261,17 @@ workflow ASSEMBLY_ASSESSMENT {
 
     ch_output_summary_files = ch_output_summary_files.mix(ch_cat_output.map{ meta, file -> file })
 
+    // Collect CAT summaries and concatenate into one file
+    ch_classified_contigs_cat_summary = CLASSIFY_CONTIGS_CAT.out.output
+                                            .collectFile(
+                                                name:       "Summary.Contigs_Classified.tsv",
+                                                keepHeader: true,
+                                                sort:       { file -> file.text },
+                                                storeDir:   "${params.outdir}/Summaries"
+                                            )
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_classified_contigs_cat_summary)
+
     /*
     ================================================================================
                         CheckM2: Check for completeness and contamination
@@ -301,7 +321,17 @@ workflow ASSEMBLY_ASSESSMENT {
                             ASSESS_ASSEMBLY_CHECKM2.out.summary
                         )
 
-    ch_output_summary_files = ch_output_summary_files.mix(ch_checkm2_output.map{ meta, file -> file })
+    // Concatenate CheckM2 summaries
+    ch_checkm2_output = ASSESS_ASSEMBLY_CHECKM2.out.summary
+                            .map{ meta, file -> file }  // Map to only include the files
+                            .collectFile(
+                                name:       "Summary.Assembly_Completeness.tsv",
+                                keepHeader: true,
+                                sort:       { file -> file.text },
+                                storeDir:   "${params.outdir}/Summaries"
+    )
+
+    ch_output_summary_files = ch_output_summary_files.mix(ch_checkm2_output)
 
     /*
     ================================================================================
@@ -345,10 +375,15 @@ workflow ASSEMBLY_ASSESSMENT {
                                         }
                                 }
                                 .collect()
+            // Debug prints
+            println "DEBUG: Type of ch_db_for_busco: ${ch_db_for_busco.getClass()}"
+            println "DEBUG: Contents of ch_db_for_busco: ${ch_db_for_busco.inspect()}"
         } else {
             error("Unsupported object given to --busco_db, database must be supplied as either a directory or a .tar.gz file!")
         }
 
+        // NOTE: this defaults to "[auto]" not "auto" and gives error, no output
+        // "ERROR: [auto]_odb10 is not a valid option for 'lineages'" without [0] for channel item in QA_ASSEMBLY_BUSCO
         ch_lineage_for_busco_db = Channel
                                     .of(ch_busco_db_file)
                                     .map{
@@ -365,14 +400,83 @@ workflow ASSEMBLY_ASSESSMENT {
         ch_versions = ch_versions.mix(SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.versions)
 
         // PROCESS: Perform BUSCO analysis on contigs
+            // SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.split_multifasta_assembly_dir, // tuple val(meta), path('tmp_input/*')
+            // ch_lineage_for_busco_db, // val lineage ; Required: lineage to check against, "auto" enables --auto-lineage instead
         QA_ASSEMBLY_BUSCO (
-            SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON.out.split_multifasta_assembly_dir,
-            ch_lineage_for_busco_db,
-            ch_db_for_busco,
-            ch_busco_config_file
+            ch_assembly_file,        // tuple val(meta), path('tmp_input/*')
+            'genome',                // val mode ; Required: One of genome, proteins, or transcriptome
+            'auto',                  // val lineage ; Required: lineage to check against, "auto" enables --auto-lineage instead
+            ch_db_for_busco,         // path busco_lineages_path ; Recommended: path to busco lineages - downloads if not set
+            ch_busco_config_file     // path config_file ; Optional: busco configuration file
         )
         ch_versions             = ch_versions.mix(QA_ASSEMBLY_BUSCO.out.versions)
         ch_output_summary_files = ch_output_summary_files.mix(QA_ASSEMBLY_BUSCO.out.batch_summary.map{ meta, file -> file })
+
+        // Collect BUSCO summaries and concatenate into one file
+        println "DEBUG: ch_busco_summary QA_ASSEMBLY_BUSCO.out.batch_summary = ${QA_ASSEMBLY_BUSCO.out.batch_summary}"
+        ch_busco_summary = QA_ASSEMBLY_BUSCO.out.batch_summary
+            .map { meta, file ->
+                println "DEBUG: ch_busco_summary meta.id = ${meta.id} (${meta.getClass()})"
+                println "DEBUG: ch_busco_summary file = ${file} (${file.getClass()})"
+                return [meta.id, file] // meta.id and file path (or string representing file path)
+            }
+            .collectFile(
+                name:       "Summary.BUSCO_Completeness.tsv",
+                keepHeader: true,
+                sort: {
+                    // Adding debug to print all incoming elements
+                    println "DEBUG: ch_busco_summary Sorting pair: ${it} (${it.getClass()})"
+                    def filePath = (it[1] instanceof String) ? Paths.get(it[1]) : it[1]
+                    println "DEBUG: ch_busco_summary Resolved filePath = ${filePath}"
+
+                    // Check if the file exists before reading
+                    if (Files.exists(filePath)) {
+                        Files.readString(filePath)
+                    } else {
+                        println "ERROR: ch_busco_summary File does not exist at path: ${filePath}"
+                        return ""
+                    }
+                },
+                storeDir: "${params.outdir}/Summaries"
+            ) { pair ->
+                def sample_id = pair[0]
+                def path = pair[1]
+
+                println "DEBUG: ch_busco_summary Processing sample_id = ${sample_id}"
+                println "DEBUG: ch_busco_summary Processing path = ${path} (${path.getClass()})"
+
+                def filePath = (path instanceof String) ? Paths.get(path) : path
+
+                if (!Files.exists(filePath)) {
+                    println "ERROR: ch_busco_summary File does not exist for sample ${sample_id}: ${filePath}"
+                    return ""
+                }
+
+                def lines = Files.readAllLines(filePath) // Read each line as a list of strings
+                lines[0] = "Sample_name\t" + lines[0].replaceAll(/\s/, '_')
+
+                def modifiedRows = lines.collect { line ->
+                    def columns = line.split('\t').toList()
+                    columns.remove(1) // Remove the second column
+                    return columns
+                }
+
+                def idx = 0
+                def finalRows = modifiedRows.collect { columns ->
+                    def result
+                    if (idx == 0) {
+                        result = "Sample_name\t" + columns.join('\t')
+                    } else {
+                        result = "$sample_id\t" + columns.join('\t')
+                    }
+                    idx++
+                    return result
+                }
+
+                return finalRows.join('\n') + '\n'
+            }
+
+        // ch_output_summary_files = ch_output_summary_files.mix(ch_busco_summary)
     }
 
     emit:

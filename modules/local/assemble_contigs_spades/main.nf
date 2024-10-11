@@ -2,7 +2,7 @@ process ASSEMBLE_CONTIGS_SPADES {
 
     label "process_high"
     tag { "${meta.id}" }
-    container "gregorysprenger/spades@sha256:3fe1ebda8f5746ca3e3ff79c74c220d2ca75e3120f20441c3e6ae88eff03b4dc"
+    container "staphb/spades@sha256:5df39e8404df2678ccc6c6ed9d7aa0e59b79dfa798aef7fd4fc06cc86ba0b4c0"
 
     input:
     tuple val(meta), path(cleaned_fastq_files)
@@ -35,12 +35,12 @@ process ASSEMBLE_CONTIGS_SPADES {
       --threads !{task.cpus}
 
     # Verify file output
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
-    if verify_minimum_file_size "SPAdes/contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then
-      echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly File\tPASS"  \
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
+    if verify_minimum_file_size "SPAdes/contigs.fasta" 'Raw Assembly FastA File' "!{params.min_filesize_raw_assembly}"; then
+      echo -e "!{meta.id}\tRaw Assembly FastA File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     else
-      echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly File\tFAIL" \
+      echo -e "!{meta.id}\tRaw Assembly FastA File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     fi
 

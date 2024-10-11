@@ -26,9 +26,29 @@ process KRAKEN1_DB_PREPARATION_UNIX {
 
     # Verify all 4 files are found
     if [[ $(find database/ -type f | wc -l) != 4 ]]; then
-        msg "ERROR: Missing one of the following files: `database.{idx,kdb}, {names,nodes}.dmp`."
+        msg "ERROR: Missing one of the following files: `database.{idx,kdb}, {names,nodes}.dmp`." >&2
         exit 1
     fi
+
+    # ### Calculate SHA-512 Checksum Kraken inspect.txt file ###
+    # SUMMARY_HEADER=(
+    #   "Sample_name"
+    #   "Checksum_(SHA-512)"
+    #   "File"
+    # )
+    # SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
+
+    # echo "${SUMMARY_HEADER}" > "!{meta.id}.Kraken_Database.SHA512-checksums.tsv"
+
+    # if [ -s "!{database}/inspect.txt" ]; then
+    #     msg "INFO: Found pre-calculated inspect.txt Kraken db information"
+    # else
+    #     msg "INFO: Creating inspect.txt Kraken db information..."
+    #     kraken2-inspect --db "!{database}" --threads "!{task.cpus}" > "!{database}/inspect.txt"
+    #     msg "INFO: Creating inspect.txt Kraken db information..."
+    # fi
+    # CHECKSUM=$(sha512sum !{database}/inspect.txt | awk '{print $1}')
+    # echo -e "!{meta.id}\t${CHECKSUM}\t!{database}/inspect.txt" >> "!{meta.id}.Kraken_Database.SHA512-checksums.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

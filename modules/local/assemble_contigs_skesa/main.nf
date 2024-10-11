@@ -2,7 +2,7 @@ process ASSEMBLE_CONTIGS_SKESA {
 
     label "process_high"
     tag { "${meta.id}" }
-    container "gregorysprenger/skesa@sha256:4455882b5d0fd968630325428729395422be7340301c31d15874a295904b7f26"
+    container "staphb/skesa@sha256:b520da51cd3929683c5eb94739bcd6c32045863dab16e777a4e02d2ff3802f20"
 
     input:
     tuple val(meta), path(cleaned_fastq_files)
@@ -19,7 +19,7 @@ process ASSEMBLE_CONTIGS_SKESA {
     '''
     source bash_functions.sh
 
-    msg "INFO: Assembling contigs using SKESA"
+    msg "INFO: Assembling !{meta.id} contigs using SKESA ..."
 
     if [[ ! -f "!{meta.id}-SKESA_contigs.fasta" ]]; then
       skesa \
@@ -37,13 +37,17 @@ process ASSEMBLE_CONTIGS_SKESA {
         --vector_percent !{params.skesa_vector_percent}
     fi
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
-    if verify_minimum_file_size "!{meta.id}-SKESA_contigs.fasta" 'Raw Assembly File' "!{params.min_filesize_raw_assembly}"; then
-      echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly File\tPASS"  \
+    msg "INFO: Completed genome assembly for !{meta.id} using SKESA"
+
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
+    if verify_minimum_file_size "!{meta.id}-SKESA_contigs.fasta" 'Raw Assembly FastA File' "!{params.min_filesize_raw_assembly}"; then
+      echo -e "!{meta.id}\tRaw Assembly FastA File\tPASS"  \
         >> "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     else
-      echo -e "!{meta.id}-!{meta.assembler}\tRaw Assembly File\tFAIL" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
+      echo -e "!{meta.id}\tRaw Assembly FastA File\tFAIL" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
     fi
+
+    msg "INFO: Completed QC file checks for !{meta.id} SKESA"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

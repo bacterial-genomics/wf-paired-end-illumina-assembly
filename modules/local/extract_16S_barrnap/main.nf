@@ -40,13 +40,13 @@ process EXTRACT_16S_BARRNAP {
       fi
     fi
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
-    if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Extracted File' "!{params.min_filesize_extracted_ssu_file}"; then
-      echo -e "!{meta.id}-!{meta.assembler}\tSSU Extracted File\tPASS"  \
-        >> "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
+    echo -e "Sample _name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
+    if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Extracted FastA File' "!{params.min_filesize_extracted_ssu_file}"; then
+      echo -e "!{meta.id}\tSSU Extracted FastA File\tPASS"  \
+        >> "!{meta.id}.SSU_Extracted_File.tsv"
     else
-      echo -e "!{meta.id}-!{meta.assembler}\tSSU Extracted File\tFAIL" \
-        >> "!{meta.id}-!{meta.assembler}.SSU_Extracted_File.tsv"
+      echo -e "!{meta.id}\tSSU Extracted FastA File\tFAIL" \
+        >> "!{meta.id}.SSU_Extracted_File.tsv"
     fi
 
     awk -v awk_var="!{meta.id}" \
@@ -58,12 +58,12 @@ process EXTRACT_16S_BARRNAP {
     mv -f "!{meta.id}-!{meta.assembler}.fa-renamed" \
       "16S.!{meta.id}-!{meta.assembler}.fa"
 
-    echo -e "Sample name\tQC step\tOutcome (Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
-    if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Renamed File' "!{params.min_filesize_renamed_ssu_file}"; then
-      echo -e "!{meta.id}-!{meta.assembler}\tSSU Renamed File\tPASS"  \
-        >> "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
+    if verify_minimum_file_size "16S.!{meta.id}-!{meta.assembler}.fa" 'SSU Renamed FastA File' "!{params.min_filesize_renamed_ssu_file}"; then
+      echo -e "!{meta.id}\tSSU Renamed FastA File\tPASS"  \
+        >> "!{meta.id}.SSU_Renamed_File.tsv"
     else
-      echo -e "!{meta.id}-!{meta.assembler}\tSSU Renamed File\tFAIL" \
+      echo -e "!{meta.id}\tSSU Renamed FastA File\tFAIL" \
         >> "!{meta.id}-!{meta.assembler}.SSU_Renamed_File.tsv"
     fi
 

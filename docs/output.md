@@ -16,7 +16,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and is used to 
   - [PhiX read removal](#phix-read-removal)
   - [Adapter clipping and quality trimming](#adapter-clipping-and-quality-trimming)
   - [Merge overlapping sister reads](#merge-overlapping-sister-reads) to create singletons
-- [Taxonomic classification of trimmed reads](#taxonomic-classification-of-trimmed-reads)
+- [Taxonomic classification of cleaned reads](#taxonomic-classification-of-cleaned-reads)
   - [Kraken](#kraken)
   - [Kraken2](#kraken2)
 - [Assembly](#assembly) of trimmed reads
@@ -57,7 +57,7 @@ Input files are checked for corruption and must meet a minimum file size to be p
 
 ### Host read removal
 
-Host read removal can be skipped or performed by Hostile and/or NCBI SRA-Human-Scrubber by specifying `--host_remove {both,hostile,sra-human-scrubber,skip}`. For SRA-Human-Scrubber, reads are repaired using BBTools to discard broken sister reads. Information about the number of reads discarded and retained are saved in the output directory.
+Host read removal can be skipped or performed by Hostile and/or NCBI SRA-Human-Scrubber by specifying `--host_remove {both,hostile,sra-human-scrubber,skip}`. When `both` is invoked, they occur in sequential fashion-- first SRA Scrub tool and repair, then hostile occurs. For SRA-Human-Scrubber, reads are repaired using BBTools to discard broken sister reads. Information about the number of reads discarded and retained are saved in the output directory.
 Please see the [host removal using Hostile documentation](../modules/local/remove_host_hostile/README.md) and [host removal using SRA-Human-Scrubber documentation](../modules/local/remove_host_sra_human_scrubber/README.md) for more information.
 
 <details markdown="1">
@@ -72,13 +72,15 @@ Please see the [host removal using Hostile documentation](../modules/local/remov
 <details markdown="1">
 <summary>Output files</summary>
 
-- `CleanedReads/Hostile/`
+- `Clean_Reads/Hostile/`
 
-  - `[sample].Summary.Hostile-Removal.[tsv,xlsx]`: Summary of the number of reads discarded and retained from Hostile.
+  - `[sample].fastq.gz`: Human host-removed FastQ files.
+  - `[sample].Summary.Hostile.tsv`: Summary of the number of reads discarded and retained from Hostile.
+  - `[sample].Hostile_FastQ.SHA512-checksums.tsv`: Checksum values for each FastQ output from Hostile.
 
-- `CleanedReads/SRA-Human-Scrubber/`
-  - `[sample].Summary.BBTools-Repair-Removal.[tsv,xlsx]`: Summary of the number of reads discarded and retained after repairing broken sister reads produced from SRA-Human-Scrubber.
-  - `[sample].Summary.SRA-Human-Scrubber-Removal.[tsv,xlsx]`: Summary of the number of reads discarded and retained from SRA-Human-Scrubber.
+- `Clean_Reads/SRA-Human-Scrubber/`
+  - `[sample].Summary.BBTools_Repair_Removal.tsv`: Summary of the number of reads discarded and retained after repairing broken sister reads produced from SRA-Human-Scrubber.
+  - `[sample].Summary.SRA_Human_Scrubber_Removal.tsv`: Summary of the number of reads discarded and retained from SRA-Human-Scrubber.
 
 </details>
 
@@ -100,8 +102,10 @@ PhiX reads are commonly used as a positive control for Illumina sequencing. Duri
 <details markdown="1">
 <summary>Output files</summary>
 
-- `CleanedReads/BBDUK/`
-  - `[sample].Summary.PhiX.[tsv,xlsx]`: Number of reads discarded and retained from BBDuk.
+- `Clean_Reads/BBDuk/`
+  - `[sample].noPhiX_FastQ.SHA512-checksums.tsv`: Checksum values for each PhiX-free FastQ output of BBDuk.
+  - `[sample].PhiX_Removed_Reads.metrics_summary.tsv`: Metrics on FastQ reads output including minimum, average, and maximum lengths as well as total counts and total length.
+  - `[sample].PhiX.tsv`: Number of reads discarded and retained from BBDuk.
 
 </details>
 
@@ -128,8 +132,10 @@ Please see the [adapter clipping and quality trimming using Trimmomatic document
 <details markdown="1">
 <summary>Output files</summary>
 
-- `CleanedReads/Trimmomatic/`
-  - `[sample].trimmomatic.[tsv,xlsx]`: Summary of the number of reads discarded and retained from Trimmomatic.
+- `Clean_Reads/Trimmomatic/`
+  - `[sample].Adapter_and_Quality_Trimmed_Reads.metrics_summary.tsv`: Metrics on FastQ reads output including minimum, average, and maximum lengths as well as total counts and total length.
+  - `[sample].Trim_FastQ.SHA512-checksums.tsv`: Checksum values for each FastQ output from Trimmomatic.
+  - `[sample].Trimmomatic.tsv`: Summary of the number of reads discarded and retained from Trimmomatic.
 
 </details>
 
@@ -151,8 +157,10 @@ fastp is able to clip adapters, perform quality trimming, and retain broken sist
 <details markdown="1">
 <summary>Output files</summary>
 
-- `CleanedReads/fastp/`
-  - `[sample].fastp.[tsv,xlsx]`: Summary of the number of reads discarded and retained from Trimmomatic.
+- `Clean_Reads/fastp/`
+  - `[sample].Adapter_and_Quality_Trimmed_Reads.metrics_summary.tsv`: Metrics on FastQ reads output including minimum, average, and maximum lengths as well as total counts and total length.
+  - `[sample].Trim_FastQ.SHA512-checksums.tsv`: Checksum values for each FastQ output from Fastp.
+  - `[sample].Fastp.tsv`: Summary of the number of reads discarded and retained from Fastp.
 
 </details>
 
@@ -172,74 +180,89 @@ Overlapping content between sister reads that are at least 80% similar are colla
 <details markdown="1">
 <summary>Output files</summary>
 
-- `CleanedReads/`
+- `Clean_Reads/`
 
   - `[sample]_single.fq.gz`: Final cleaned singleton reads.
   - `[sample]_R[1/2].paired.fq.gz`: Final cleaned paired reads.
 
-- `CleanedReads/FLASH/`
-  - `[sample].overlap.[tsv,xlsx]`: Number of reads that were overlapped into singleton reads.
-  - `[sample].clean-reads.[tsv,xlsx]`: Number of non-overlapping reads.
+- `Clean_Reads/FLASh/`
+  - `[sample].Clean_Reads_FastQ.metrics_summary.tsv`: Metrics on FastQ reads output including minimum, average, and maximum lengths as well as total counts and total length.
+  - `[sample].Clean_Reads_FastQ.SHA512-checksums.tsv`: Checksum values for each FastQ output from FLASh.
+  - `[sample].Overlap.tsv`: Number of reads that were overlapped into singleton reads.
+
+> [!NOTE]
+> FastQ sequences after overlapping with FLASh are stored in `Clean_Reads/` rather than `Clean_Reads/FLASh` as they are the final outputs for read cleaning.
 
 </details>
 
-## Taxonomic classification of trimmed reads
+## Taxonomic classification of cleaned reads
 
-These classifiers perform classifications on a read-by-read basis or through the use of k-mers on the cleaned and trimmed FastQ files. The results that are obtained are heavily dependent on the quality and diversity of the database used. Therefore, the results produced from these classifiers should be used as a quality check to evaluate the possibility of sample contamination.
+These classifiers perform classifications on a read-by-read basis or through the use of k-mers on the cleaned FastQ files. The results that are obtained are heavily dependent on the quality and diversity of the database used. Therefore, the results produced from these classifiers should be used as a quality check to evaluate the possibility of sample contamination.
 
 > [!WARNING]
 > Taxonomic classification tools will be skipped if the accompanying database is not specified.
 
 ### Kraken
 
-Kraken is a k-mer based classification tool that assigns taxonomic labels using the Lowest Common Ancestor (LCA) algorithm.
+Kraken is a k-mer based classification tool that assigns taxonomic labels using the Lowest Common Ancestor (LCA) algorithm. It consumes much more RAM than Kraken2, but Kraken can be valuable for precise exact k-mer matches of target organisms with lots of highly similar near taxonomic neighbors (e.g., occurring within a species complex).
 
 <details markdown="1">
 <summary>Output files</summary>
 
-- `Taxonomy/kraken/[sample]/`
-  - `[sample].kraken_summary.[tsv,xlsx]`: Summary of the unclassified, top 3 genus and top 3 species classifications from the Kraken report.
-  - `[sample].kraken_output.[tsv,xlsx].gz`: Taxonomic classification in the Kraken report format.
+- `Taxonomy/Kraken/[sample]/`
+  - `[sample].kraken_summary.tsv`: Summary of the unclassified, top 3 genus and top 3 species classifications from the Kraken report.
+  - `[sample].kraken_output.tsv.gz`: Full taxonomic k-mer matches, not yet filtered for top hits, in the Kraken report format.
 
 </details>
 
 ### Kraken2
 
-Kraken2 is a k-mer based classification tool that assigns taxonomic labels using the Lowest Common Ancestor (LCA) algorithm.
+Kraken2 is a minimizer based classification tool that assigns taxonomic labels using the Lowest Common Ancestor (LCA) algorithm.
 
 <details markdown="1">
 <summary>Output files</summary>
 
-- `Taxonomy/kraken2/[sample]/`
-  - `[sample].kraken2_summary.[tsv,xlsx]`: Summary of the unclassified, top 3 genus and top 3 species classifications from the Kraken report.
-  - `[sample].kraken2_output.[tsv,xlsx].gz`: Taxonomic classification in the Kraken report format.
+- `Taxonomy/Kraken2/[sample]/`
+  - `[sample].kraken2_summary.tsv`: Summary of the unclassified, top 3 genus and top 3 species classifications from the Kraken2 report.
+  - `[sample].kraken2_output.tsv.gz`: Full taxonomic minimizer matches, not yet filtered for top hits, in the Kraken2 report format.
+
+> [!TIP]
+> Some pure isolates consistently give near neighbor matches, but you might wonder if an assembly used in database creation was contaminated. If you're curious which specific assemblies were used in your Kraken or Kraken2 database creation, you can view each and every one of them!
+>
+> Many of the pre-computed databases from Dr. Ben Langmead [here](https://benlangmead.github.io/aws-indexes/k2) have a file called "inspect.txt" which has a line-by-line listing of each assembly used to create the database. If you do not have that, you can create it with `kraken-inspect --db /my/db/path --threads 12 > inspect.txt` or `kraken2-inspect --db /my/db/path --threads 12 > inspect.txt` depending on whether you're using Kraken or Kraken2 (respectively).
 
 </details>
 
 ## Assembly
 
-The cleaned and trimmed reads are used to assemble contigs using SPAdes or SKESA `[Default: SPAdes]`. Contigs that have low compositional complexity are discarded. Please see the [contig filtering documentation](../modules/local/filter_contigs_biopython/README.md) for more information. Contigs from SPAdes require polishing to create the final genome assembly, which is done by using BWA, Pilon, and Samtools. Contigs from SKESA do not require this step.
+The cleaned reads are used to assemble contigs using SPAdes or SKESA `[Default: SPAdes]`. Contigs that have low compositional complexity are discarded. Please see the [contig filtering documentation](../modules/local/filter_contigs_biopython/README.md) for more information. Contigs from SPAdes also involves SNP and InDel correction/polishing to create the final genome assembly, which is done by using BWA, Pilon, and Samtools. Contigs from SKESA do not require this step.
 
 > [!IMPORTANT]
 > Outputs generated by SPAdes and SKESA cannot be compared even when using the same FastQ inputs.
 
 > [!TIP]
-> For many input FastQ files, SKESA may be useful in decreasing runtime. For input FastQ files that may be heavily contaminated, SPAdes may help maintain contiguity.
+> For many input FastQ files where you might want to decrease overall runtime, SKESA is useful to still obtain high SNP-level accuracy but at the expense of longer contigs. For tasks where contiguity (longer contigs) are important (e.g., gene neighborhood evaluations, operon detection), SPAdes is the more appropriate choice.
 
 <details markdown="1">
 <summary><strong>QC Steps</strong></summary>
 
 - The contigs produced from an assembler software package must meet a minimum file size criteria `[Default: 1M]`. This is to prevent the analysis of a highly incomplete bacterial genome.
 
-- The resulting contig file after low compositional complexity contigs are discarded must meet a minimum file size `[Default: 1M]`. This is to prevent the analysis of a highly incomplete bacterial genome.
+- The resulting contig file (after filtering out low coverage, short, and low compositional complexity contigs) must meet a minimum file size `[Default: 1M]`. This is to prevent the analysis of a highly incomplete bacterial genome.
 
-- The cleaned paired-end reads are mapped onto the filtered assembly file in sequential steps (`[Default: 3]`), and the resulting binary paired-end alignment file must meet a minimum file size criteria `[Default: 25M]`. This is to prevent the analysis of an assembly file that has an unusually low read sequence amount.
+- The cleaned paired-end reads are mapped onto the filtered assembly file in sequential steps (`[Default: 3]`), and the resulting binary paired-end alignment file must meet a minimum file size criteria `[Default: 6M]`. This is to prevent the analysis of an assembly file that has an unusually low read sequence amount.
 
 - The assembly file goes through SNP and InDel corrections in sequential steps (`[Default: 3]`), and the resulting assembly file must meet a minimum file size criteria `[Default: 1M]`. This is to prevent further analysis of an unusually incomplete genome.
 
 - The final error-corrected assembly file must meet a minimum file size criteria `[Default: 1M]`. This is to ensure that the final assembly file is not unexpectedly small or incomplete.
 
 - If singletons (single-end reads) exist after read cleaning, they are mapped onto the assembly file and the resulting binary single-end alignment file must meet a minimum file size criteria `[Default: 1k]`. This is to ensure that read depth calculations can be performed on the single-end reads.
+
+> [!TIP]
+> Discarded contigs from filtering are stored in `Assembly/[assembler]/[sample]/[sample]-[assembler].discarded-contigs.fa.gz`. You can view the reason for each individual contig being discarded by `zcat discarded-contigs.fa.gz | grep '>'` and within the contig name there will be 1 or more reasons listed. For example "Failed=complexityFailed=lengthFailed=gc_content" had 3 independent reasons for being removed, whereas "Failed=length" was simply too short of a contig.
+
+> [!TIP]
+> Contig filtering statistics are stored in `Assembly/[assembler]/[sample]/[sample]-[assembler].filter-contigs-stats.txt`. There you'll find total contig counts and cumulative lengths for input, removed, and saved. Also, for coverage statistics there are minimum, average, maximum, 25% quartile, 50% quartile (median), and 75% quartile coverage values. All of these statistics are meant to help guide alternative contig filtering if you have an unusual assembly that requires non-default parameters.
 
 </details>
 
@@ -261,13 +284,15 @@ SPAdes is a k-mer based software that forms a genome assembly from read sequence
 <summary>Output files</summary>
 
 - `Assembly/SPAdes/[sample]/`
-  - `[sample]-SPAdes.log.gz`: SPAdes log file.
-  - `[sample]-SPAdes_graph.gfa`: Assembly graph in gfa format.
-  - `[sample]-SPAdes_warnings.log`: Log file that lists warnings when forming a genome assembly.
-  - `[sample]-SPAdes_params.txt.gz`: Command used to perform the SPAdes analysis.
   - `[sample]-SPAdes_contigs.fasta`: Assembled contigs in FastA format.
-  - `[sample]-SPAdes.SNPs-corrected.cnt.txt`: Number of SNPs corrected in each round of corrections.
+  - `[sample]-SPAdes_graph.gfa`: Assembly graph in gfa format.
+  - `[sample]-SPAdes.discarded-contigs.fa.gz`: Post-assembly contigs that were filtered out (i.e., discarded).
+  - `[sample]-SPAdes.filter-contigs-stats.txt`: Post-assembly contig filtering statistics.
   - `[sample]-SPAdes.InDels-corrected.cnt.txt`: Number of InDels corrected in each round of corrections.
+  - `[sample]-SPAdes.log.gz`: SPAdes log file.
+  - `[sample]-SPAdes_params.txt.gz`: Command used to perform the SPAdes analysis.
+  - `[sample]-SPAdes_warnings.log`: Log file that lists warnings when forming a genome assembly.
+  - `[sample]-SPAdes.SNPs-corrected.cnt.txt`: Number of SNPs corrected in each round of corrections.
 
 </details>
 
@@ -280,6 +305,8 @@ Strategic K-mer Extension for Scrupulous Assemblies (SKESA) is a software that i
 
 - `Assembly/SKESA/[sample]/`
   - `[sample]-SKESA_contigs.fasta`: Assembled contigs in FastA format.
+  - `[sample]-SKESA.discarded-contigs.fa.gz`: Post-assembly contigs that were filtered out (i.e., discarded).
+  - `[sample]-SKESA.filter-contigs-stats.txt`: Post-assembly contig filtering statistics.
 
 </details>
 
@@ -293,9 +320,9 @@ QUAST is used to perform quality assessment on the assembly file to report metri
 <summary>Output files</summary>
 
 - `Assembly/QA/[sample]/`
-  - `[sample]-[assembler].QuastSummary.[tsv,xlsx]`: Assembly metrics such as N50, cumulative length, longest contig length, and GC composition.
-  - `[sample]-[assembler].GenomeCoverage.[tsv,xlsx]`: Genome coverage information.
-  - `[sample]-[assembler].CleanedReads-Bases.[tsv,xlsx]`: Number of cleaned bases.
+  - `[sample]-[assembler].QuastSummary.tsv`: Assembly metrics such as N50, cumulative length, longest contig length, and GC composition.
+  - `[sample]-[assembler].GenomeCoverage.tsv`: Genome coverage information.
+  - `[sample]-[assembler].Clean_Reads-Bases.tsv`: Number of cleaned bases.
 
 </details>
 
@@ -307,7 +334,7 @@ The final assembly file is scanned against PubMLST typing schemes to determine t
 <summary>Output files</summary>
 
 - `Summaries/`
-  - `Summary.MLST.[tsv,xlsx]`: Summary of the MLST results for all samples.
+  - `Summary.MLST.tsv`: Summary of the MLST results for all samples.
 
 </details>
 
@@ -352,15 +379,15 @@ The final assembly file is annotated to identify and label features using Prokka
 
 ### 16S ribosomal RNA (rRNA) classification
 
-The GenBank file is parsed for 16S rRNA gene records. If there are no 16S rRNA gene records, Barrnap is used to predict 16S rRNA genes using the assembly file. BLAST is then used to align these gene records to its database, where the best alignment is filtered out based on bit score.
+The GenBank file is parsed for 16S rRNA gene records (with BioPython). If there are no 16S rRNA gene records, Barrnap, with relaxed settings, is used to find partial 16S rRNA genes using the assembly file. BLAST+ (blastn) is then used to align these gene records to its database, where the best alignment is filtered out based on bit score. The default database is an NCBI currated set of 16S rRNA genes of species Type strains, but best matches are not always perfect.
 
 > [!NOTE]
 > Some assembled genomes do not contain identifiable 16S rRNA sequences and therefore 16S is not able to be classified. If the classification of 16S rRNA sequences is required, the sample must be re-sequenced.
 
 > [!IMPORTANT]
-> The 16S rRNA classification produced should not be used as a definitive classification as some taxa have 16S sequences that are extremely similar between different species.
+> The 16S rRNA classification produced should **not** be used as a definitive classification as some taxa have 16S sequences that are extremely similar between different species.
 >
-> For an exact species match, 100% identity and 100% alignment are needed.
+> When the top bitscore match is < 100% identity or < 100% alignment, you should be extra cautious in what species you're reporting.
 
 <details markdown="1">
 <summary><strong>QC Steps</strong></summary>
@@ -382,11 +409,15 @@ The GenBank file is parsed for 16S rRNA gene records. If there are no 16S rRNA g
 
 - `SSU/`
 
-  - `16S-top-species.[tsv,xlsx]`: Summary of the best BLAST alignment for each sample.
   - `16S.[sample]-[assembler].fa`: 16S rRNA gene sequence of the best BLAST alignment in FastA format.
+  - `[assembler].16S_top_genus_RDP.tsv`: Summary of the best RDP match for each sample.
+  - `[assembler].16S_top_species_BLAST.tsv`: Summary of the best BLAST alignment for each sample.
 
 - `SSU/BLAST/`
-  - `[sample]-[assembler].blast.[tsv,xlsx].gz`: BLAST output 16S rRNA gene records in tab-separated value (TSV) format.
+  - `[sample]-[assembler].blast.tsv.gz`: Full, not yet bitscore sorted, BLASTn output for each 16S rRNA gene record in tab-separated value (TSV) format using the BLAST outfmt 6 standard with additional taxonomy fields
+
+- `SSU/RDP/`
+  - `[sample]-[assembler].rdp.tsv`: RDP classification output for each 16S rRNA gene record in tab-separated value (TSV) format
 
 </details>
 
@@ -398,7 +429,7 @@ GTDB-Tk is a taxonomic classification tool that uses the Genome Database Taxonom
 <summary>Output files</summary>
 
 - `Summaries/`
-  - `Summary.GTDB-Tk.[tsv,xlsx]`: Summary of the GTDB-Tk taxonomic classification for each sample.
+  - `Summary.GTDB-Tk.tsv`: Summary of the GTDB-Tk taxonomic classification for each sample.
 
 </details>
 
@@ -407,26 +438,37 @@ GTDB-Tk is a taxonomic classification tool that uses the Genome Database Taxonom
 Concatenation of output metrics for all samples.
 
 > [!NOTE]
-> The Summary-Report excel file is only created when the parameter `--create_excel_outputs` is used.
+> The first column for **all** "Summary" files contains the sample name.
 >
-> The Summary-Report excel file has the date and time appended to the filename using the following shorthand notation: year (yyyy), month (MM), day (dd), hour (HH), minute (mm), second (ss).
+> Each Summary file is sorted based on sample names for easy cross-comparisons.
 
 <details markdown="1">
 <summary>Output files</summary>
 
 - `Summaries/`
-  - `Summary.16S.[tsv,xlsx]`: Summary of the best BLAST alignment for each sample.
-  - `Summary.RDP.[tsv,xlsx]`: Summary of RDP Classifier on predicted 16S ribosomal RNA genes.
-  - `Summary.MLST.[tsv,xlsx]`: Summary of the MLST results for all samples.
-  - `Summary.Assemblies.[tsv,xlsx]`: Assembly metrics such as N50, cumulative length, longest contig length, and GC composition for each sample.
-  - `Summary.PhiX_Removal.[tsv,xlsx]`: Number of reads discarded and retained for each sample.
-  - `Summary.QC_File_Checks.[tsv,xlsx]`: Summary of all QC file checks detailing if a sample passes or fails each process.
-  - `Summary.GenomeCoverage.[tsv,xlsx]`: Summary of the overall genome coverage for each sample.
-  - `Summary.CleanedReads-Bases.[tsv,xlsx]`: Summary of the number of cleaned bases for each sample.
-  - `Summary.Clean_and_Overlapping_Reads.[tsv,xlsx]`: Summary of the merging of overlapping sister reads.
-  - `Summary.CleanedReads-AlignmentStats.[tsv,xlsx]`: Summary of the genome size and coverages of the paired-end and single-end reads for each sample.
-  - `Summary-[fastp,trimmomatic].Adapter_and_QC_Trimming.[tsv,xlsx]`:  Summary of adapter clipping and quality trimming for each sample.
-  - `Summary-Report_yyyy-MM-dd_HH-mm-ss.xlsx`: Excel workbook where each file in the Summaries directory is added to a separate worksheet within the workbook.
+  - `Summary.16S_Genus_RDP.tsv`: RDP Classifier best matches from predicted 16S ribosomal RNA genes (to genus-level)
+  - `Summary.16S_Species_BLAST.tsv`: Top bitscore BLASTn alignments for each 16S rRNA gene (to species-level)
+  - `Summary.Adapter_QC_Trim_Reads.Metrics.tsv`: Sequence metrics after adapter clipping and quality trimming
+  - `Summary.Annotation_Checksums.tsv`: Checksum (hash) values for annotated GenBank output files
+  - `Summary.Assembly_Checksums.tsv`: Checksum (hash) values for final output assembly FastA output files
+  - `Summary.Assembly_Depth.tsv`: Assembly depth of coverage mean and standard deviation values (units in "x")
+  - `Summary.Assembly_Metrics.tsv`: Assembly metrics (e.g., N50, cumulative length, longest contig length, and GC composition)
+  - `Summary.CheckM2.tsv`: Estimation percentages on completeness and contamination of each genome assembly
+  - `Summary.Clean_and_Overlapped.tsv`: Counts and percentages from overlapping sister reads
+  - `Summary.Clean_Reads_Aligned.tsv`: Paired, singleton, and total cleaned reads mapped onto the assembly statistics (e.g., mean and standard deviation depths, basepairs mapped, assembly size)
+  - `Summary.Clean_Reads_Checksums.tsv`: Checksum (hash) values for final output cleaned reads FastQ output files
+  - `Summary.Clean_Reads.Metrics.tsv`: Sequence metrics after all read cleaning steps
+  - `Summary.Downsampled_Reads.Metrics.tsv`: Sequence metrics after subsampling the read set (if performed)
+  - `Summary-[Fastp,Trimmomatic].Adapter_and_QC_Trim.tsv`: Number of discarded reads and singleton reads that remain after adapter clipping and quality trimming
+  - `Summary.Input_Checksums.tsv`: Checksum (hash) values for FastQ input files
+  - `Summary.Input_Reads.Metrics.tsv`: Sequence metrics on the initial user-provided input sequences
+  - `Summary.Kraken2.tsv`: Counts and proportions of unclassified, top 3 genera, top 3 species with k-mer matches with the cleaned reads
+  - `Summary.Kraken.tsv`: Counts and proportions of unclassified, top 3 genera, top 3 species with k-mer matches with the cleaned reads
+  - `Summary.MLST.tsv`: MLST genotyping results
+  - `Summary.PhiX_Removal.tsv`: Number of reads discarded and retained after PhiX k-mer match removal
+  - `Summary.PhiX_Removed_Reads.Metrics.tsv`: Sequence metrics after PhiX was removed from the reads
+  - `Summary.QC_File_Checks.tsv`: All QC file checks detailing if a sample passes or fails after each process
+  - `Summary-Report.xlsx`: Microsoft Excel workbook where each file in the Summaries directory is added to a separate worksheet within the workbook
 
 </details>
 
@@ -441,7 +483,7 @@ Information about the pipeline execution, output logs, error logs, and QC file c
 <summary>Pipeline information</summary>
 
 - `pipeline_info/`
-  - `software_versions.yml`: Summary of the software packages used in each process and their version information.
+  - `software_versions.yml`: All software packages used and their version information
   - `nextflow_log.[job_id].txt`: Execution log file produced by Nextflow.
   - `ASM_[num_of_samples].o[job_id]`: Output log file produced by the job scheduler.
   - `ASM_[num_of_samples].e[job_id]`: Error log file produced by the job scheduler.
@@ -466,25 +508,25 @@ Information about the pipeline execution, output logs, error logs, and QC file c
 <summary>QC file checks</summary>
 
 - `pipeline_info/qc_file_checks/`
-  - `[sample].Raw_Initial_FastQ_Files.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria for the pipeline `[Default: 25M]`.
-  - `[sample].Summary.Hostile-Removal.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria for after host removal using Hostile `[Default: 25M]`.
-  - `[sample].SRA_Human_Scrubber_FastQ_File.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria for after host removal using SRA-Human-Scrubber `[Default: 25M]`.
-  - `[sample].BBTools-Repair-removed_FastQ_Files.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria after repairing broken sister reads from SRA-Human-Scrubber `[Default: 25M]`.
-  - `[sample].PhiX_Genome.[tsv,xlsx]`: Details if the input PhiX reference genome meets the minimum file size criteria `[Default: 5k]`.
-  - `[sample].PhiX-removed_FastQ_Files.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria after PhiX reads have been removed `[Default: 25M]`.
-  - `[sample].Adapters_FastA.[tsv,xlsx]`: Details if the input adapters reference file meets the minimum file size criteria `[Default: 10k]`.
-  - `[sample].Adapter-removed_FastQ_Files.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria after adapter sequences have been removed `[Default: 25M]`.
-  - `[sample].Non-overlapping_FastQ_Files.[tsv,xlsx]`: Details if both reads (R1,R2) meet the minimum file size criteria after removing overlapping reads `[Default: 20M]`.
-  - `[sample].Raw_Assembly_File.[tsv,xlsx]`: Details if the genome assembly file produced by an assembler software package meets the minimum file size criteria `[Default: 1M]`.
-  - `[sample].Filtered_Assembly_File.[tsv,xlsx]`: Details if the genome assembly file meets the minimum file size criteria after low compositional complexity contigs are discarded `[Default: 1M]`.
-  - `[sample].Binary_PE_Alignment_Map_File.[tsv,xlsx]`: Details if the binary paired-end (PE) alignment file meets the minimum file size criteria after the cleaned paired-end reads are mapped onto the filtered genome assembly `[Default: 25M]`.
-  - `[sample].Polished_Assembly_File.[tsv,xlsx]`: Details if the genome assembly file meets the minimum file size criteria after SNP and InDel corrections are performed `[Default: 1M]`.
-  - `[sample].Final_Corrected_Assembly_FastA_File.[tsv,xlsx]`: Details if the final error-corrected genome assembly file meets the minimum file size criteria `[Default: 1M]`.
-  - `[sample].Binary_SE_Alignment_Map_File.[tsv,xlsx]`: Details if the single-end (SE) alignment file meets the minimum file size criteria after the cleaned singleton reads are mapped onto the final genome assembly file `[Default: 1k]`.
-  - `[sample].Annotated_GenBank_File.[tsv,xlsx]`: Details if the annotated GenBank file meets the minimum file size criteria `[Default: 3M]`.
-  - `[sample].SSU_Extracted_File.[tsv,xlsx]`: Details if the extracted 16S rRNA gene sequence file meets the minimum file size criteria `[Default: 500b]`.
-  - `[sample]-[assembler].SSU_Renamed_File.[tsv,xlsx]`: Details if the 16S rRNA gene sequence file meets the minimum file size criteria after sample identifiers are added to each sequence `[Default: 500b]`.
-  - `[sample].16S_BLASTn_Output_File.[tsv,xlsx]`: Details if the BLASTn output file meets the minimum file size criteria `[Default: 10b]`.
-  - `[sample].Filtered_16S_BLASTn_File.[tsv,xlsx]`: Details if the best BLASTn alignment sequence meets the minimum file size criteria `[Default: 10b]`.
+  - `[sample].Raw_Initial_FastQ_Files.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria for the pipeline `[Default: 25M]`.
+  - `[sample].Summary.Hostile.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria for after host removal using Hostile `[Default: 25M]`.
+  - `[sample].SRA_Human_Scrubber_FastQ_File.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria for after host removal using SRA-Human-Scrubber `[Default: 25M]`.
+  - `[sample].BBTools-Repair-removed_FastQ_Files.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria after repairing broken sister reads from SRA-Human-Scrubber `[Default: 25M]`.
+  - `[sample].PhiX_Genome.tsv`: Details if the input PhiX reference genome meets the minimum file size criteria `[Default: 5k]`.
+  - `[sample].PhiX-removed_FastQ_Files.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria after PhiX reads have been removed `[Default: 25M]`.
+  - `[sample].Adapters_FastA.tsv`: Details if the input adapters reference file meets the minimum file size criteria `[Default: 10k]`.
+  - `[sample].Adapter-removed_FastQ_Files.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria after adapter sequences have been removed `[Default: 25M]`.
+  - `[sample].Non-overlapping_FastQ_Files.tsv`: Details if both reads (R1,R2) meet the minimum file size criteria after removing overlapping reads `[Default: 20M]`.
+  - `[sample].Raw_Assembly_File.tsv`: Details if the genome assembly file produced by an assembler software package meets the minimum file size criteria `[Default: 1M]`.
+  - `[sample].Filtered_Assembly_File.tsv`: Details if the genome assembly file meets the minimum file size criteria after low compositional complexity contigs are discarded `[Default: 1M]`.
+  - `[sample].Binary_PE_Alignment_Map_File.tsv`: Details if the binary paired-end (PE) alignment file meets the minimum file size criteria after the cleaned paired-end reads are mapped onto the filtered genome assembly `[Default: 6M]`.
+  - `[sample].Polished_Assembly_File.tsv`: Details if the genome assembly file meets the minimum file size criteria after SNP and InDel corrections are performed `[Default: 1M]`.
+  - `[sample].Final_Corrected_Assembly_FastA_File.tsv`: Details if the final error-corrected genome assembly file meets the minimum file size criteria `[Default: 1M]`.
+  - `[sample].Binary_SE_Alignment_Map_File.tsv`: Details if the single-end (SE) alignment file meets the minimum file size criteria after the cleaned singleton reads are mapped onto the final genome assembly file `[Default: 1k]`.
+  - `[sample].Annotated_GenBank_File.tsv`: Details if the annotated GenBank file meets the minimum file size criteria `[Default: 3M]`.
+  - `[sample].SSU_Extracted_File.tsv`: Details if the extracted 16S rRNA gene sequence file meets the minimum file size criteria `[Default: 500b]`.
+  - `[sample]-[assembler].SSU_Renamed_File.tsv`: Details if the 16S rRNA gene sequence file meets the minimum file size criteria after sample identifiers are added to each sequence `[Default: 500b]`.
+  - `[sample].16S_BLASTn_Output_File.tsv`: Details if the BLASTn output file meets the minimum file size criteria `[Default: 10b]`.
+  - `[sample].Filtered_16S_BLASTn_File.tsv`: Details if the best BLASTn alignment sequence meets the minimum file size criteria `[Default: 10b]`.
 
 </details>

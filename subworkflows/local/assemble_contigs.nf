@@ -56,13 +56,15 @@ workflow ASSEMBLE_CONTIGS {
     var_assembler_name  // var (str): assembler_name
 
     main:
-    ch_versions      = Channel.empty()
-    ch_qc_filechecks = Channel.empty()
+    ch_versions       = Channel.empty()
+    ch_checksums_file = Channel.empty()
+    ch_qc_filechecks  = Channel.empty()
 
     // Update meta to include meta.assembler
     if ( var_assembler_name == "SKESA" ) {
         // SKESA assembler
         // PROCESS: Run SKESA to assemble contigs with cleaned paired reads and cleaned singletons
+        //          which skips post-assembly mapping for SNP and InDel corrections too for speed.
         ASSEMBLE_CONTIGS_SKESA (
             ch_cleaned_reads
         )
@@ -79,7 +81,7 @@ workflow ASSEMBLE_CONTIGS {
         )
         ch_versions = ch_versions.mix(FILTER_CONTIGS_BIOPYTHON.out.versions)
 
-        // PROCESS: Create BAM file
+        // PROCESS: Create BAM file for depth of coverage calculations
         MAP_CONTIGS_BWA (
             ch_cleaned_reads.join(FILTER_CONTIGS_BIOPYTHON.out.uncorrected_contigs)
         )
@@ -98,9 +100,11 @@ workflow ASSEMBLE_CONTIGS {
                             )
 
         // Collect QC File Checks
-        ch_qc_filechecks = ch_qc_filechecks
+        ch_checksums_file = ch_checksums_file.mix(MAP_CONTIGS_BWA.out.checksums)
+        ch_qc_filechecks  = ch_qc_filechecks
                                 .mix(ASSEMBLE_CONTIGS_SKESA.out.qc_filecheck)
                                 .mix(MAP_CONTIGS_BWA.out.qc_filecheck)
+
     } else {
         // Defaulting to SPAdes assembler
         // PROCESS: Run SPAdes to assemble contigs with cleaned paired reads and cleaned singletons
@@ -108,8 +112,6 @@ workflow ASSEMBLE_CONTIGS {
             ch_cleaned_reads
         )
         ch_versions = ch_versions.mix(ASSEMBLE_CONTIGS_SPADES.out.versions)
-
-        // ch_contigs = ASSEMBLE_CONTIGS_SPADES.out.contigs.map{ meta, file -> [ meta, [file] ] }
         ch_contigs = qcfilecheck(
                         "ASSEMBLE_CONTIGS_SPADES",
                         ASSEMBLE_CONTIGS_SPADES.out.qc_filecheck,
@@ -122,7 +124,10 @@ workflow ASSEMBLE_CONTIGS {
         )
         ch_versions = ch_versions.mix(FILTER_CONTIGS_BIOPYTHON.out.versions)
 
-        // PROCESS: Use BWA/Samtools/Pilon to correct contigs with cleaned PE reads
+        // PROCESS: Use BWA/Samtools/Pilon to SNP and InDel correct contigs with cleaned PE reads
+        // NOTE:  The "path(cleaned_fastq_files)" is already input to this POLISH channel, but
+        //        currently just the meta.id is used for the readset. Should be using the
+        //        path(cleaned_fastq_files) items though.
         POLISH_ASSEMBLY_BWA_PILON (
             ch_cleaned_reads.join(FILTER_CONTIGS_BIOPYTHON.out.uncorrected_contigs)
         )
@@ -141,7 +146,8 @@ workflow ASSEMBLE_CONTIGS {
                             )
 
         // Collect QC File Checks
-        ch_qc_filechecks = ch_qc_filechecks
+        ch_checksums_file = ch_checksums_file.mix(POLISH_ASSEMBLY_BWA_PILON.out.checksums)
+        ch_qc_filechecks  = ch_qc_filechecks
                                 .mix(ASSEMBLE_CONTIGS_SPADES.out.qc_filecheck)
                                 .mix(POLISH_ASSEMBLY_BWA_PILON.out.qc_filecheck)
     }
@@ -150,5 +156,6 @@ workflow ASSEMBLE_CONTIGS {
     bam_files     = ch_bam_files            // channel: [ val(meta), [{paired,single}.bam] ]
     assembly_file = ch_assembly_file        // channel: [ val(meta), [assembly.fna] ]
     qc_filecheck  = ch_qc_filechecks
+    checksums     = ch_checksums_file       // channel: [ val(meta), [assembly.fna] ]
     versions      = ch_versions
 }

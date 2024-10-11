@@ -3,6 +3,26 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v2.4.0 - August 28, 2024
+
+### `Added`
+
+- Statistics output files during the downsampling routine are all stored as output files under their CleanedReads/<package name>/ (@chrisgulvik)
+- FastQ outputs for individual steps are now saved (perhaps temporary and to a non-default option) (@chrisgulvik)
+- SeqKit downsampling option (already had Seqtk) (@chrisgulvik)
+- Use of a default seed value for both SeqKit and Seqtk subsampling (@chrisgulvik)
+
+### `Fixed`
+
+- RDP Classifier always failed once before succeeding on retry, so a higher RAM request was given as label to make it succeed on first attempt for speed (@chrisgulvik)
+- RDP Classifier data output are not tab-delimited instead of space-delimited (@chrisgulvik)
+
+### `Updated`
+
+- TSV output data files have header names with no spaces, all underscores replaced them
+
+### `Deprecated`
+
 ## v2.3.1 - August 23, 2024
 
 ### `Added`

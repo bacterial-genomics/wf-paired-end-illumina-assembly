@@ -1,7 +1,8 @@
 process CLASSIFY_16S_RDP {
 
+    label "process_medium"  // single CPU but needs the RAM boost
     tag { "${meta.id}" }
-    container "tpaisie/rdp@sha256:ee388dff2e17c567946b7f2bf326765586d30f4ea0a203800616c44f599d53cc"
+    container "staphb/rdp@sha256:c1e9882d51cdbcf8293fc2a0740679c2f630185bb7604f9c1a375ba3b6643802"
 
     input:
     tuple val(meta), path(barnapp_extracted_rna)
@@ -14,36 +15,43 @@ process CLASSIFY_16S_RDP {
 
     shell:
     // WARN: RDP does not report version information. This variable must be updated when container is updated.
-    VERSION = '2.14'
+    VERSION='2.14'
     '''
     source bash_functions.sh
 
-    msg "INFO: Performing RDP 16S Classification"
+    msg "INFO: Performing RDP 16S Classification of !{meta.id} ..."
 
     classifier \
       classify \
       --format "!{params.rdp_output_format}" \
       --gene "!{params.rdp_phylomarker}" \
-      --outputFile "!{meta.id}.RDP.tsv" \
+      --outputFile "!{meta.id}.RDP-raw.tsv" \
       "!{barnapp_extracted_rna}"
 
-    if [[ "!{params.rdp_output_format}" == "fixrank" ]]; then
-      # Drop unnecessary columns
-      awk -F '\t' '{print $1,$3,$5,$6,$8,$9,$11,$12,$14,$15,$17,$18,$20}' \
-        "!{meta.id}.RDP.tsv" \
-        > "!{meta.id}.RDP_tmp.tsv"
+    msg "INFO: Completed RDP 16S Classification of !{meta.id}"
 
-      mv -f "!{meta.id}.RDP_tmp.tsv" "!{meta.id}.RDP.tsv"
+  if [[ "!{params.rdp_output_format}" == "fixrank" ]]; then
+      # Split up the first column "<Sample_name>_<int>"; add header;
+      #   discard some columns that are now stored as headers
+      #   (e.g., "domain", "phylum", "class", "order", "family", "genus")
+      # NOTE: a[length(a)] is used to take the last item in cases where
+      #       samplename is Name_S1_L001_1 so it would get the final "1"
+      awk 'BEGIN {
+        FS=OFS="\t";
+        print "Sample_name\tUnique_16S_rRNA_extraction_count\tDomain_result\tPhylum_result\tClass_result\tOrder_result\tFamily_result\tGenus_result"
+      }
+      {
+        split($1, a, "_");
+        print a[1], a[length(a)], $3, $6, $9, $12, $15, $18
+      }' "!{meta.id}.RDP-raw.tsv" \
+      > "!{meta.id}.RDP.tsv"
 
-      # Add header
-      sed -i \
-        '1i Domain\tDomain result\tPhylum\tPhylum result\tClass\tClass result\tOrder\tOrder result\tFamily\tFamily result\tGenus\tGenus result' \
-        "!{meta.id}.RDP.tsv"
     else
-      # Add RDP format as a header for file collection
-      sed -i "1i !{params.rdp_output_format}" "!{meta.id}.RDP.tsv"
+      # Other `--format <arg>` options have varying numbers and names for header, so avoid adding any for now
+      msg "WARN: RDP Classifier with `--format !{params.rdp_output_format}` unknown header column names might prevent downstream XLSX summary conversion"
     fi
 
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.RDP_Classification_File.tsv"
     if verify_minimum_file_size "!{meta.id}.RDP.tsv" '16S Classification Output File' "!{params.min_filesize_rdp_output}"; then
       echo -e "!{meta.id}\t16S RDP Output File\tPASS" >> !{meta.id}.RDP_Classification_File.tsv
     else

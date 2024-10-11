@@ -2,67 +2,51 @@ process QA_ASSEMBLY_QUAST {
 
     label "process_low"
     tag { "${meta.id}-${meta.assembler}" }
-    container "snads/quast@sha256:c8147a279feafbc88bafeeda3817ff32d43db87d31dd0978df1cd2f8022d324c"
+    container "staphb/quast@sha256:83ea0fd6c28ca01508fd7a93c0942b19089e6de25c9b8a496a34e138d240e0e8"
 
     input:
-    tuple val(meta), path(cleaned_fastq_files), path(assembly)
+    tuple val(meta), path(assembly)
 
     output:
-    tuple val(meta), path("${meta.id}-${meta.assembler}.QuastSummary.tsv"), path("${meta.id}-${meta.assembler}.CleanedReads-Bases.tsv"), emit: qa_summaries
-    path("${meta.id}-${meta.assembler}.QuastSummary.tsv")                                                                              , emit: summary_assemblies
-    path("${meta.id}-${meta.assembler}.CleanedReads-Bases.tsv")                                                                        , emit: summary_reads
+    tuple val(meta), path("${meta.id}-${meta.assembler}.QuastSummary.tsv"), emit: qa_summaries
+    path("${meta.id}-${meta.assembler}.QuastSummary.tsv")                 , emit: summary_assemblies
     path(".command.{out,err}")
-    path("versions.yml")                                                                                                               , emit: versions
+    path("versions.yml")                                                  , emit: versions
 
     shell:
     '''
     source bash_functions.sh
 
     # Run Quast
-    msg "INFO: Evaluating assembly using QUAST"
+    msg "INFO: Evaluating !{meta.id} assembly using QUAST ..."
 
     quast.py \
       --silent \
       --no-html \
-      --strict-NA \
-      --gene-finding \
+      --no-plots \
       --min-contig 100 \
       --output-dir quast \
-      --gene-thresholds 300 \
-      --ambiguity-usage one \
       --threads !{task.cpus} \
       --contig-thresholds 500,1000 \
-      "!{assembly}" >&2
+      "!{assembly}"
+
+    msg "INFO: Completed QUAST evaluation of !{meta.id} assembly"
 
     mv -f quast/transposed_report.tsv "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
 
     # Quast modifies basename. Need to check and modify if needed.
     assemblies_name=$(awk '{print $1}' "!{meta.id}-!{meta.assembler}.QuastSummary.tsv" | awk 'NR!=1 {print}')
     if [ ${assemblies_name} != !{meta.id} ]; then
-      sed -i "s|${assemblies_name}|!{meta.id}|g" "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
+      sed -i "s|${assemblies_name}|!{meta.id}|1" "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
     fi
 
-    # TO-DO: move this unix-only component to separate QA_READS_BASEPAIR_COUNT_UNIX
-    # Count nucleotides per read set
-    echo -n '' > "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
-    for (( i=0; i<3; i+=3 )); do
-      R1=$(basename "!{meta.id}_R1.paired.fq.gz" _R1.paired.fq.gz)
-      R2=$(basename "!{meta.id}_R2.paired.fq.gz" _R2.paired.fq.gz)
-      single=$(basename "!{meta.id}_single.fq.gz" _single.fq.gz)
+    # Keep same first column header column name as all others -- "Sample_name"
+    sed -i '1s/^Assembly/Sample_name/1' "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
 
-      # Verify each set of reads groups properly
-      nr_uniq_str=$(echo -e "${R1}\\n${R2}\\n${single}" | sort -u | wc -l)
-      if [ "${nr_uniq_str}" -ne 1 ]; then
-        msg "ERROR: improperly grouped ${R1} ${R2} ${single}" >&2
-        exit 1
-      fi
-      echo -ne "${R1}\t" >> "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
-      zcat "!{meta.id}_R1.paired.fq.gz" "!{meta.id}_R2.paired.fq.gz" "!{meta.id}_single.fq.gz" | \
-        awk 'BEGIN{SUM=0} {if(NR%4==2){SUM+=length($0)}} END{OFMT="%f"; print SUM}' \
-          >> "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
+    # Replace space characters in header line with underscores
+    sed -i '1s/ /_/g' "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
 
-      sed -i '1i Sample name\t# cleaned bases' "!{meta.id}-!{meta.assembler}.CleanedReads-Bases.tsv"
-    done
+    msg "INFO: Completed QUAST output renaming for !{meta.id}"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

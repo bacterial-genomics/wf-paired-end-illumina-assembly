@@ -4,38 +4,34 @@ process CREATE_EXCEL_RUN_SUMMARY_PYTHON {
 
     input:
     path(list_of_files)
+    path(tab_colors)
+    val(wf_version)
 
     output:
-    path("Summary-Report_*.xlsx"), emit: summary
+    path("Summary-Report.xlsx"), emit: summary
     path(".command.{out,err}")
-    path("versions.yml")         , emit: versions
+    path("versions.yml")       , emit: versions
 
     shell:
     '''
-    python3 <<-END_PYTHON
-    import glob
-    import datetime
-    import pandas as pd
+    source bash_functions.sh
 
-    def create_summary_workbook(output_file, tsv_file):
-        sheet_name = tsv_file.split(".")[1]
-        data = pd.read_csv(tsv_file, sep="\t")
-        data.to_excel(output_file, sheet_name=sheet_name, index=False)
+    msg "INFO: Converting summary TSV files: !{list_of_files} into single XLSX workbook..."
 
-    date = datetime.datetime.now()
-    date_format = date.strftime("%Y-%b-%d_%H-%M-%S")
+    # Default outfile is "Summary-Report.xlsx" in python script
+    tsv_to_excel.py \
+      !{list_of_files} \
+      --color-dict !{tab_colors} \
+      -t "wf-paired-end-illumina-assembly_v!{wf_version}" \
+      -s "genome_assembly" \
+      -c "bacterial-genomics"
 
-    list_of_files = glob.glob("*.tsv")
-
-    with pd.ExcelWriter(f"Summary-Report_{date_format}.xlsx") as output_file:
-        for file in list_of_files:
-            create_summary_workbook(output_file, file)
-
-    END_PYTHON
+    msg "INFO: Converted summary TSV files into single XLSX workbook."
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
     "!{task.process}":
+        pandas: $(python3 -c "import pandas as pd; print(pd.__version__)")
         python: $(python3 --version 2>&1 | awk '{print $2}')
         ubuntu: $(awk -F ' ' '{print $2, $3}' /etc/issue | tr -d '\\n')
     END_VERSIONS

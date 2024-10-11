@@ -27,8 +27,8 @@ process UPDATE_DB_SRA_HUMAN_SCRUBBER {
     #   which contains a date, then makes a generalized symlink, e.g.,
     #   .
     #   └── data
-    #       ├── human_filter.db -> human_filter.db.20231218v2
-    #       └── human_filter.db.20231218v2
+    #       ├── human_filter.db -> human_filter.db.20240718v2
+    #       └── human_filter.db.20240718v2
 
     mkdir -p data
     init_db.sh

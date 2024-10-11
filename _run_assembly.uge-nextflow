@@ -4,47 +4,52 @@ SCRIPT_NAME="$(basename ${0#_} .uge-nextflow)"
 
 # Set profile
 # Get node number - <=230 = biolinux, >=231 = rosalind
-NODE_NUM=$(echo ${HOSTNAME%%.*} | sed 's/node//1')
+NODE_NUM"=$(echo ${HOSTNAME%%.*} | sed 's/node//1')"
 if [[ ${NODE_NUM} -ge 231 ]]; then
   HPC='rosalind_hpc'
 else
   HPC='aspen_hpc'
 fi
 
+time_stamp="$(date '+%Y-%b-%d_%a_%H-%M-%S')"
+
 module load nextflow
 nextflow \
-  -log ${OUT}/pipeline_info/nextflow_log.${SCRIPT_NAME}.txt \
+  -log "${OUT}/pipeline_info/nextflow_log.${SCRIPT_NAME}.txt" \
   run \
-  ${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf \
-  -profile ${HPC} \
-  --input ${IN} \
-  --outdir ${OUT} \
+  "${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf" \
+  -profile "${HPC}" \
+  --input "${IN}" \
+  --outdir "${OUT}" \
   -ansi-log false \
-  -N ${USER}@cdc.gov \
-  -w ${OUT}/.work \
-  --blast_db ${LAB_HOME}/.databases/ncbi \
-  --kraken1_db ${LAB_HOME}/.databases/kraken1-db-v1.0.0 \
-  --kraken2_db ${LAB_HOME}/.databases/kraken2 \
+  -N "${USER}@cdc.gov" \
+  -w "${OUT}/.work" \
+  -with-dag "${OUT}/pipeline_info/dag.${time_stamp}.html" \
+  --blast_db "${LAB_HOME}/.databases/ncbi" \
+  --checkm2_db "${LAB_HOME}/.databases/checkm2" \
+  --kraken1_db "${LAB_HOME}/.databases/kraken1-db-v1.0.0" \
+  --kraken2_db "${LAB_HOME}/.databases/kraken2" \
+  --sra_scrubber_db "${LAB_HOME}/.databases/sra-human-scrubber/data/human_filter.db" \
+  --subsample_tool seqkit \
+  --create_excel_outputs \
   -resume
 
 # Check for errors and add to errors.tsv
 # Get nextflow run name
-run_name=$(grep "Launching" ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME} | cut -d '[' -f 2 | cut -d ']' -f 1)
-
-time_stamp=$(date '+%Y-%b-%d %a %H:%M:%S')
+run_name=$(grep Launching "${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME}" | cut -d '[' -f 2 | cut -d ']' -f 1)
 
 # Read each line from nextflow log, find info, and add to errors.tsv
 while read -r line; do
   # If process is already running, clean up error
   if [[ "${line}" =~ ^Unable[[:space:]]to[[:space:]]acquire[[:space:]]lock.* ]]; then
     error="You are trying to resume the execution of an already running pipeline."
-    ASM_OUT=$(realpath ${OUT}/pipeline_info/ASM_*.o*)
-    echo -e "-\t-\t${error}\t${ASM_OUT}\t${time_stamp}\t${run_name}" >> ${OUT}/pipeline_info/errors.tsv
+    ASM_OUT="$(realpath ${OUT}/pipeline_info/ASM_*.o*)"
+    echo -e "-\t-\t${error}\t${ASM_OUT}\t${time_stamp}\t${run_name}" >> "${OUT}/pipeline_info/errors.tsv"
   else
     # Workflow ran some processes
-    sample_name=$(grep "nf-" ${line}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
-    process=$(grep "NEXTFLOW TASK" ${line}/.command.run | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
-    error=$(tail -n 1 ${line}/.command.err | sed -e 's/\[[^][]*\] //g')
+    sample_name=$(grep "nf-" "${line}/.command.run" | cut -d '(' -f 2 | cut -d ')' -f 1)
+    process=$(grep 'NEXTFLOW TASK' "${line}/.command.run" | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
+    error=$(tail -n 1 "${line}/.command.err" | sed -e 's/\[[^][]*\] //g')
 
     # Kraken 2 places "Loading database information... done." in error log
     if [[ ${process} =~ .*READ_CLASSIFY_KRAKEN_TWO$ ]] \
@@ -55,13 +60,13 @@ while read -r line; do
     # BBDuk java errors
     if [[ ${process} =~ .*REMOVE_PHIX_BBDUK$ ]] \
       && [[ "${error}" =~ .*at.* ]]; then
-      error=$(grep -A1 "java.lang" ${line}/.command.err | head -n 2 | tail -n 1)
-      if [[ ! ${error} ]]; then
+      error=$(grep -A1 'java.lang' "${line}/.command.err" | head -n 2 | tail -n 1)
+      if [[ ! "${error}" ]]; then
         continue
       elif [[ ${error} =~ ^Mismatch.* ]]; then
-        error=${error}
+        error="${error}"
       else
-        error=$(grep "java.lang" ${line}/.command.err | awk -F ': ' 'END {print $2}')
+        error=$(grep 'java.lang' "${line}/.command.err" | awk -F ': ' 'END {print $2}')
       fi
     elif [[ ${process} =~ .*REMOVE_PHIX_BBDUK$ ]] \
       && [[ "${error}" =~ "Input is being processed as unpaired" ]]; then
@@ -75,74 +80,74 @@ while read -r line; do
 
     # Check if error is from file checks
     if [[ ${error} =~ .+Check[[:space:]]failed$ ]]; then
-      get_previous_process_workdir=$(dirname $(grep "ln -s" ${line}/.command.run | grep "work" | awk 'END {print $(NF-1)}' ))
-      process=$(grep "nf-" ${get_previous_process_workdir}/.command.run | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
+      get_previous_process_workdir=$(dirname $(grep "ln -s" "${line}/.command.run" | grep "work" | awk 'END {print $(NF-1)}' ))
+      process=$(grep "nf-" "${get_previous_process_workdir}/.command.run" | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
       line="${get_previous_process_workdir}"
     fi
 
     # If process for sample retried and succeeded, ignore
     if [[ $(find "${OUT}/pipeline_info/process_logs/" -type f -name "${sample_name}.*${process}*.command.out") ]] \
-      && [[ $(cat ${line}/.exitcode) = @(0|71|104|134|137|139|140|143|245|250|255) ]]; then
+      && [[ $(cat "${line}/.exitcode") = @(0|71|104|134|137|139|140|143|245|250|255) ]]; then
       continue
     else
-      echo -e "${sample_name}\t${process}\t${error}\t${line}\t${time_stamp}\t${run_name}" >> ${OUT}/pipeline_info/errors.tsv
+      echo -e "${sample_name}\t${process}\t${error}\t${line}\t${time_stamp}\t${run_name}" >> "${OUT}/pipeline_info/errors.tsv"
     fi
   fi
-done < <(nextflow log ${run_name} -filter 'status == "FAILED"')
+done < <(nextflow log "${run_name}" -filter 'status == "FAILED"')
 
 # Look for errors from process EXTRACT_16S_BIOPYTHON
-biopython_rna_errors=( $(find ${OUT}/.work -type f -name ".command.err" -exec grep -l "ERROR: \['16S ribosomal RNA'\]" '{}' \;) )
-if [[ $biopython_rna_errors ]]; then
-  for line in ${biopython_rna_errors[@]}; do
-    work_dir=$(dirname ${line})
-    error=$(tail -n 1 ${line} | sed -e 's/[][]//g' | awk -F '/' '{print $1 $NF}')
-    sample_name=$(grep "nf-" ${work_dir}/.command.run | cut -d '(' -f 2 | cut -d ')' -f 1)
-    process=$(grep "NEXTFLOW TASK" ${work_dir}/.command.run | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
+biopython_rna_errors=( $(find "${OUT}/.work" -type f -name ".command.err" -exec grep -l "ERROR: \['16S ribosomal RNA'\]" '{}' \;) )
+if [[ "${biopython_rna_errors}" ]]; then
+  for line in "${biopython_rna_errors[@]}"; do
+    work_dir=$(dirname "${line}")
+    error=$(tail -n 1 "${line}" | sed -e 's/[][]//g' | awk -F '/' '{print $1 $NF}')
+    sample_name=$(grep "nf-" "${work_dir}/.command.run" | cut -d '(' -f 2 | cut -d ')' -f 1)
+    process=$(grep "NEXTFLOW TASK" "${work_dir}/.command.run" | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
 
     # Append to errors.tsv
-    echo -e "${sample_name}\t${process}\t${error}\t${work_dir}\t${time_stamp}\t${run_name}" >> ${OUT}/pipeline_info/errors.tsv
+    echo -e "${sample_name}\t${process}\t${error}\t${work_dir}\t${time_stamp}\t${run_name}" >> "${OUT}/pipeline_info/errors.tsv"
   done
 fi
 
 # Parse HPC stdout file for QC check failures
 QC_FAILURES=()
 while read -r line; do
-  QC_FAILURES+=("$line")
-done < <(awk '/QC check failed/ {print $(NF-3), "("$NF")"}' ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME})
+  QC_FAILURES+=("${line}")
+done < <(awk '/QC check failed/ {print $(NF-3), "("$NF")"}' "${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME}")
 
-if [[ $QC_FAILURES ]]; then
+if [[ "${QC_FAILURES}" ]]; then
   # Loop over each QC failure
   for f in "${QC_FAILURES[@]}"; do
     # Get work directory
-    short_wd=$(grep "$f" ${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME} | awk -F '[][]' '{print $2}')
-    wd_path=$(realpath ${OUT}/.work/${short_wd}*)
+    short_wd=$(grep "$f" "${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME}" | awk -F '[][]' '{print $2}')
+    wd_path=$(realpath "${OUT}/.work/${short_wd}"*)
 
     # Get first error
-    error=$(grep "ERROR" ${wd_path}/.command.err | head -n 1 | sed -e 's/\[[^][]*\] //g')
+    error=$(grep "ERROR" "${wd_path}/.command.err" | head -n 1 | sed -e 's/\[[^][]*\] //g')
 
-    process=$(grep "NEXTFLOW TASK" ${wd_path}/.command.run | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
-    sample_name=$(echo "$f" | awk -F "[()]" '{print $2}')
+    process=$(grep "NEXTFLOW TASK" "${wd_path}/.command.run" | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
+    sample_name=$(echo "${f}" | awk -F "[()]" '{print $2}')
 
     # Append to errors.tsv
-    echo -e "${sample_name}\t${process}\t${error}\t${wd_path}\t${time_stamp}\t${run_name}" >> ${OUT}/pipeline_info/errors.tsv
+    echo -e "${sample_name}\t${process}\t${error}\t${wd_path}\t${time_stamp}\t${run_name}" >> "${OUT}/pipeline_info/errors.tsv"
   done
 fi
 
-# If errors.tsv found..
+# If errors.tsv found ...
 if [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   # Add column headers
-  sed -i '1i Sample Name\tProcess\tError\tError Directory\tTimestamp\tRun Name' ${OUT}/pipeline_info/errors.tsv
+  sed -i '1i Sample Name\tProcess\tError\tError Directory\tTimestamp\tRun Name' "${OUT}/pipeline_info/errors.tsv"
 
   # Remove duplicate lines and lines that have an empty first column
-  awk -F '\t' '!_[$1,$2,$3,$6]++' ${OUT}/pipeline_info/errors.tsv \
-    | awk -F '\t' '$1{print $0}' \
-    > ${OUT}/pipeline_info/errors_new.tsv
+  awk -F $'\t' '!_[$1,$2,$3,$6]++' "${OUT}/pipeline_info/errors.tsv" \
+    | awk -F $'\t' '$1{print $0}' \
+    > "${OUT}/pipeline_info/errors_new.tsv"
 
   # Delete original errors.tsv and rename errors_new.tsv
-  rm ${OUT}/pipeline_info/errors.tsv
+  rm "${OUT}/pipeline_info/errors.tsv"
 
-  mv ${OUT}/pipeline_info/errors_new.tsv \
-    ${OUT}/pipeline_info/errors.tsv
+  mv "${OUT}/pipeline_info/errors_new.tsv" \
+    "${OUT}/pipeline_info/errors.tsv"
 fi
 
 # Count lines in Summary.GenomeCoverage.tsv

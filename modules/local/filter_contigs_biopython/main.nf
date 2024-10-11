@@ -8,34 +8,43 @@ process FILTER_CONTIGS_BIOPYTHON {
 
     output:
     tuple val(meta), path("${meta.id}-${meta.assembler}.uncorrected.fna"), emit: uncorrected_contigs
+    path("${meta.id}-${meta.assembler}.discarded-contigs.fa.gz")         , emit: discarded_contigs
+    path("${meta.id}-${meta.assembler}.filter-contigs-stats.txt")        , emit: filter_stats
     path(".command.{out,err}")
     path("versions.yml")                                                 , emit: versions
 
     shell:
-    gcskew = params.filter_contigs_gcskew ? "" : "-g"
-    keep_low_complexity = params.filter_contigs_keep_low_complexity ? "" : "-m"
+    gcskew = params.filter_contigs_gcskew ? "" : "--gcskew"
+    keep_low_complexity = params.filter_contigs_keep_low_complexity ? "" : "--complex"
     no_sort = params.filter_contigs_no_sort ? "--no-sort" : ""
 
-    if (params.filter_contigs_discard_file) {
-      discard_file = "-d ${params.filter_contigs_discard_file}"
-    } else {
-      discard_file = ""
-    }
     '''
     source bash_functions.sh
 
+    msg "INFO: Filtering contigs from !{contigs} ..."
+
     # Remove junk contigs
     filter.contigs.py \
-      -i !{contigs} \
-      -b "!{meta.id}-!{meta.assembler}" \
-      -o "!{meta.id}-!{meta.assembler}.uncorrected.fna" \
-      -l !{params.filter_contigs_length} \
-      -c !{params.filter_contigs_coverage} \
+      --infile !{contigs} \
+      --baseheader "!{meta.id}-!{meta.assembler}" \
+      --outfile "!{meta.id}-!{meta.assembler}.uncorrected.fna" \
+      --len !{params.filter_contigs_length} \
+      --cov !{params.filter_contigs_coverage} \
       --deflines !{params.filter_contigs_deflines} \
+      --discarded "!{meta.id}-!{meta.assembler}.discarded-contigs.fa" \
       !{no_sort} \
       !{gcskew} \
-      !{discard_file} \
-      !{keep_low_complexity}
+      !{keep_low_complexity} \
+      2> "!{meta.id}-!{meta.assembler}.filter-contigs-stats.txt"
+
+    msg "INFO: Completed contig filtering for !{meta.id}"
+
+    if [ -s "!{meta.id}-!{meta.assembler}.discarded-contigs.fa" ]; then
+      gzip -9f "!{meta.id}-!{meta.assembler}.discarded-contigs.fa"
+      msg "INFO: discarded contigs saved as !{meta.id}-!{meta.assembler}.discarded-contigs.fa.gz"
+    else
+      msg "INFO: no contigs were discarded, therefore not storing empty !{meta.id}-!{meta.assembler}.discarded-contigs.fa.gz file"
+    fi
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml

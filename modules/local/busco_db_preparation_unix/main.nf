@@ -25,7 +25,7 @@ process BUSCO_DB_PREPARATION_UNIX {
     if [[ !{meta.id} =~ odb10 ]]; then
       for directory in info hmms; do
         if [[ ! -d "!{output_dir}/${directory}" ]]; then
-          msg "ERROR: BUSCO dataset is missing required directory: `${directory}`."
+          msg "ERROR: BUSCO dataset is missing required directory: `${directory}`." >&2
           exit 1
         fi
       done
@@ -36,7 +36,7 @@ process BUSCO_DB_PREPARATION_UNIX {
       num_info_dirs=$(find !{output_dir}/ -maxdepth 3 -type d -name "info" | wc -l)
 
       if [[ $num_odb10_dirs != $num_hmms_dirs ]] && [[ $num_odb10_dirs != $num_info_dirs ]]; then
-        msg "ERROR: BUSCO database does not have the required directories `hmms` and `info` in each lineage dataseet."
+        msg "ERROR: BUSCO database does not have the required directories `hmms` and `info` in each lineage dataseet." >&2
         exit 1
       fi
     fi
