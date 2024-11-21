@@ -67,13 +67,15 @@
                     "hidden": true,
                     "description": "Prefix path to hostile bowtie2 index files to use for removal"
                 },
-                "sra_scrubber_db": {
+                "sra_scrubber_db,update_sra_human_scrubber_db": {
                     "type": "string",
+                    "hidden": true,
                     "description": "Database for NCBI's SRA Human Scrubber .db file",
                     "help_text": "Path to a local file, or a URL to .DB file format that contains NCBI's STAT k-mers to remove from reads."
                 },
                 "update_sra_human_scrubber_db": {
                     "type": "boolean",
+                    "hidden": true,
                     "description": "Automatically update SRA-Human-Scrubber database file."
                 },
                 "min_filesize_broken_pairs_bbtools_repair_removed": {
@@ -134,6 +136,7 @@
                 "assembler": {
                     "type": "string",
                     "default": "spades",
+                    "hidden": true,
                     "description": "Specify which assembler to execute.",
                     "enum": ["spades", "skesa"]
                 },
@@ -190,6 +193,7 @@
                     "type": "string",
                     "description": "Data type flags to add to SPAdes when assembling contigs.",
                     "default": "--isolate",
+                    "hidden": true,
                     "enum": [
                         "",
                         "--isolate",
@@ -205,6 +209,7 @@
                 "spades_kmer_sizes": {
                     "type": "string",
                     "default": "auto",
+                    "hidden": true,
                     "description": "K-mer length values."
                 },
                 "spades_polish_corrections": {
@@ -270,6 +275,7 @@
             "properties": {
                 "phix_reference": {
                     "type": "string",
+                    "hidden": true,
                     "description": "File containing PhiX sequences in FastA format.",
                     "help_text": "Path to PhiX reference file in FastA format. A PhiX reference file is required to run this pipeline. Recognized extensions are: {.fasta, .fas, .fa, .fna}."
                 },
@@ -287,6 +293,7 @@
                 },
                 "adapter_reference": {
                     "type": "string",
+                    "hidden": true,
                     "description": "File containing adapters in FastA format that need to be removed from input FastQ files.",
                     "help_text": "Path to adapter reference file in FastA format. Standard Illumina adapter sequences are strongly recommended. Recognized extensions are: {.fasta, .fas, .fa, .fna}."
                 },
@@ -306,12 +313,14 @@
                 "kraken1_db": {
                     "type": "string",
                     "default": "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_8GB.tgz",
+                    "hidden": true,
                     "description": "Database for taxonomic profiling with kraken.",
                     "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contain files `database.{idx,kdb}` and `taxonomy/{names,nodes}.dmp`."
                 },
                 "kraken2_db": {
                     "type": "string",
                     "default": "https://genome-idx.s3.amazonaws.com/kraken/k2_standard_08gb_20231009.tar.gz",
+                    "hidden": true,
                     "description": "Database for taxonomic profiling with kraken2.",
                     "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contain `{hash,opts,taxo}.k2d` files."
                 }
@@ -476,6 +485,7 @@
                 "blast_db": {
                     "type": "string",
                     "default": "https://ftp.ncbi.nlm.nih.gov/blast/db/16S_ribosomal_RNA.tar.gz",
+                    "hidden": true,
                     "description": "Database for 16S ribosomal RNA analysis with BLAST's 16S ribosomal RNA database.",
                     "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contains BLAST 16S ribosomal RNA files."
                 },
@@ -587,17 +597,20 @@
             "properties": {
                 "gtdb_db": {
                     "type": "string",
+                    "hidden": true,
                     "description": "Database for taxonomic classification with GTDB-Tk.",
                     "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contains GTDB-Tk database."
                 },
                 "mash_db": {
                     "type": "string",
+                    "hidden": true,
                     "description": "Database using within GTDB-Tk for ANI screening.",
                     "default": "https://gembox.cbcb.umd.edu/mash/refseq.genomes.k21s1000.msh",
                     "help_text": "Path to a local file or a URL a file that contains the Mash database that ends in `.msh`."
                 },
                 "skip_gtdbtk": {
                     "type": "boolean",
+                    "hidden": true,
                     "description": "Skip GTDB-Tk classification of assembly."
                 },
                 "gtdbtk_pplacer_scratch": {
@@ -613,11 +626,13 @@
                 },
                 "busco_db": {
                     "type": "string",
+                    "hidden": true,
                     "description": "Database for intra-contig gene analysis with BUSCO.",
                     "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contains BUSCO lineages. Can either be a lineage dataset or entire BUSCO database."
                 },
                 "skip_busco": {
                     "type": "boolean",
+                    "hidden": true,
                     "description": "Skip BUSCO classification of each contig."
                 },
                 "busco_config": {
@@ -647,6 +662,7 @@
                 "checkm2_model": {
                     "type": "string",
                     "default": "--allmodels",
+                    "hidden": true,
                     "enum": ["--allmodels", "--general", "--specific"],
                     "description": "quality prediction model to choose",
                     "help_text": "prediction model for genome completeness estimations"
@@ -730,11 +746,13 @@
             "properties": {
                 "prokka_curated_proteins": {
                     "type": "string",
+                    "hidden": true,
                     "description": "Additional protein encoding genes to use with Prokka."
                 },
                 "prokka_evalue": {
                     "type": "string",
                     "default": "1e-08",
+                    "hidden": true,
                     "description": "Similarity e-value cut-off."
                 },
                 "min_filesize_annotated_genbank": {
@@ -752,6 +770,7 @@
             "properties": {
                 "merge_lanes": {
                     "type": "boolean",
+                    "hidden": true,
                     "description": "SAMPLESHEET ONLY: Merges multiple lane files from an Illumina HiSeq instrument."
                 },
                 "excel_sheet_name": {
@@ -879,8 +898,9 @@
                 },
                 "create_excel_outputs": {
                     "type": "boolean",
-                    "description": "Convert tab-separated value (TSV) files to Excel spreadsheet files (XLSX) while retaining TSV files. Also creates a summary workbook where each summary output is placed into a separate sheet within the workbook.",
-                    "hidden": true
+                    "default": true,
+                    "description": "Converts all tab-separated value (TSV) files in the Summaries/ outpath into a single Excel spreadsheet file (XLSX) while retaining TSV files.",
+                    "hidden": false
                 },
                 "publish_dir_mode": {
                     "type": "string",
@@ -1038,7 +1058,7 @@
     "properties": {
         "schema_ignore_params": {
             "type": "string",
-            "default": "filter_blast_bitscore,filter_blast_column,min_filesize_filtered_blastn,min_filesize_blastn_output,min_filesize_blastn_db,min_filesize_extracted_ssu_file,min_filesize_renamed_ssu_file,genbank_search_type,genbank_query_qualifier,genbank_query_feature,genbank_query,min_filesize_annotated_genbank,min_filesize_binary_se_alignment,min_filesize_final_assembly,min_filesize_polished_assembly,min_filesize_binary_pe_alignment,min_filesize_filtered_assembly,filter_contigs_no_sort,filter_contigs_deflines,filter_contigs_keep_low_complexity,filter_contigs_length,filter_contigs_gcskew,filter_contigs_coverage,min_filesize_raw_assembly,min_filesize_non_overlapping_fastq,min_filesize_fastq_adapters_removed,min_filesize_adapters,min_filesize_fastq_phix_removed,min_filesize_phix_genome,min_filesize_fastq_input,workflows,available_workflows,max_retry,bigdata,logpath,qc_filecheck_log_dir,process_log_dir,kraken1_db,kraken2_db,blast_db,polish_corrections,skesa_allow_snps,skesa_min_contig_length,skesa_max_snp_length,skesa_fraction,skesa_steps,skesa_vector_percent,skesa_kmer_length,excel_sheet_name,merge_lanes,sge_high_memory,sge_options,sge_queue_size,sge_queue,sge_penv,singularity_cache,sge_process_time,gtdbtk_pplacer_scratch,gtdbtk_pplacer_cpus,depth,genome_size,busco_config,adapter_reference,phix_reference,spades_mode,spades_kmer_sizes,validationSchemaIgnoreParams,validationShowHiddenParams,validation-schema-ignore-params,validation-show-hidden-params,mash_db,min_filesize_sra_human_scrubber_db_file,trimmomatic_keep_both_reads,trimmomatic_palindrome_clip_threshold,trimmomatic_simple_clip_threshold,trimmomatic_required_quality,trimmomatic_trailing_quality,trimmomatic_leading_quality,trimmomatic_min_length,trimmomatic_min_adapter_length,trimmomatic_seed_mismatches,trimmomatic_window_size,trimmomatic_phred,create_excel_outputs,rdp_phylomarker,rdp_output_format,min_filesize_rdp_output,ASSEMBLY:READ_CLASSIFY_KRAKEN_ONE,ASSEMBLY:ASSEMBLE_CONTIGS:ASSEMBLE_CONTIGS_SPADES,ASSEMBLY:READ_CLASSIFY_KRAKEN_ONE,ASSEMBLY:ASSEMBLE_CONTIGS:ASSEMBLE_CONTIGS_SKESA,min_filesize_checkm2_report,cat_db,min_filesize_cat_output,download_cat_db,trim_reads_tool,subsample_tool,seqtk_seed,seqkit_seed",
+            "default": "filter_blast_bitscore,filter_blast_column,min_filesize_filtered_blastn,min_filesize_blastn_output,min_filesize_blastn_db,min_filesize_extracted_ssu_file,min_filesize_renamed_ssu_file,genbank_search_type,genbank_query_qualifier,genbank_query_feature,genbank_query,min_filesize_annotated_genbank,min_filesize_binary_se_alignment,min_filesize_final_assembly,min_filesize_polished_assembly,min_filesize_binary_pe_alignment,min_filesize_filtered_assembly,filter_contigs_no_sort,filter_contigs_deflines,filter_contigs_keep_low_complexity,filter_contigs_length,filter_contigs_gcskew,filter_contigs_coverage,min_filesize_raw_assembly,min_filesize_non_overlapping_fastq,min_filesize_fastq_adapters_removed,min_filesize_adapters,min_filesize_fastq_phix_removed,min_filesize_phix_genome,min_filesize_fastq_input,workflows,available_workflows,max_retry,bigdata,logpath,qc_filecheck_log_dir,process_log_dir,polish_corrections,skesa_allow_snps,skesa_min_contig_length,skesa_max_snp_length,skesa_fraction,skesa_steps,skesa_vector_percent,skesa_kmer_length,excel_sheet_name,merge_lanes,sge_high_memory,sge_options,sge_queue_size,sge_queue,sge_penv,singularity_cache,sge_process_time,gtdbtk_pplacer_scratch,gtdbtk_pplacer_cpus,depth,genome_size,busco_config,validationSchemaIgnoreParams,validationShowHiddenParams,validation-schema-ignore-params,validation-show-hidden-params,min_filesize_sra_human_scrubber_db_file,trimmomatic_keep_both_reads,trimmomatic_palindrome_clip_threshold,trimmomatic_simple_clip_threshold,trimmomatic_required_quality,trimmomatic_trailing_quality,trimmomatic_leading_quality,trimmomatic_min_length,trimmomatic_min_adapter_length,trimmomatic_seed_mismatches,trimmomatic_window_size,trimmomatic_phred,rdp_phylomarker,rdp_output_format,min_filesize_rdp_output,ASSEMBLY:READ_CLASSIFY_KRAKEN_ONE,ASSEMBLY:ASSEMBLE_CONTIGS:ASSEMBLE_CONTIGS_SPADES,ASSEMBLY:READ_CLASSIFY_KRAKEN_ONE,ASSEMBLY:ASSEMBLE_CONTIGS:ASSEMBLE_CONTIGS_SKESA,min_filesize_checkm2_report,cat_db,min_filesize_cat_output,download_cat_db,trim_reads_tool,subsample_tool,seqtk_seed,seqkit_seed,sra_scrubber_db,update_sra_human_scrubber_db,assembler,spades_mode,spades_kmer_sizes,adapter_reference,phix_reference,kraken1_db,kraken2_db,blast_db,gtdb_db,mash_db,busco_db",
             "hidden": true
         }
     }
