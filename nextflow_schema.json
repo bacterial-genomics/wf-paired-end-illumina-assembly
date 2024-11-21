@@ -711,6 +711,7 @@
             "properties": {
                 "mlst_scheme": {
                     "type": "string",
+                    "hidden": true,
                     "description": "Use specified mlst scheme on all inputs (no autodection)."
                 },
                 "mlst_ignore_scheme": {
