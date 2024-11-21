@@ -20,6 +20,9 @@ process ANNOTATE_PROKKA {
     '''
     source bash_functions.sh
 
+    # Attempt to fix Perl issue with error message "'assembly-filename.fna' is not a readable non-empty FASTA file" in $workDir/.command.err
+    export LC_ALL=en_US.UTF-8
+
     # Remove seperator characters from basename for future processes
     short_base=$(echo !{meta.id} | sed 's/[-._].*//g')
     sed -i "s/!{meta.id}/${short_base}/g" !{assembly}
