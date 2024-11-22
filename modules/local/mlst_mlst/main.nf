@@ -1,7 +1,7 @@
 process MLST_MLST {
 
     tag { "${meta.id}-${meta.assembler}" }
-    container "staphb/mlst@sha256:17e78a25fc5171706b22c8c3d4b1ca2352593b56fef8f28401dd5da3e2e7abe8"  // staphb/mlst:2.23.0-2024-09-01
+    container "staphb/mlst@sha256:d92baaccc6531151566d8626013550de3cafc890933bfabc482089693b65c20d"  // staphb/mlst:2.23.0-2024-11-01
 
     input:
     tuple val(meta), path(assembly)
