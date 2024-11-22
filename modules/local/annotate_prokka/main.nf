@@ -2,7 +2,7 @@ process ANNOTATE_PROKKA {
 
     label "process_high"
     tag { "${meta.id}-${meta.assembler}" }
-    container "staphb/prokka@sha256:6bb2522e077ef08a8be7a3856fe80372ede3b832becba0728e1ddbe83d89a042"
+    container "snads/prokka@sha256:ef7ee0835819dbb35cf69d1a2c41c5060691e71f9138288dd79d4922fa6d0050"
 
     input:
     tuple val(meta), path(assembly)
@@ -19,9 +19,6 @@ process ANNOTATE_PROKKA {
     curated_proteins = params.prokka_curated_proteins ? "--proteins ${params.prokka_curated_proteins}" : ""
     '''
     source bash_functions.sh
-
-    # Attempt to fix Perl issue with error message "'assembly-filename.fna' is not a readable non-empty FASTA file" in $workDir/.command.err
-    export LC_ALL=en_US.UTF-8
 
     # Remove seperator characters from basename for future processes
     short_base=$(echo !{meta.id} | sed 's/[-._].*//g')

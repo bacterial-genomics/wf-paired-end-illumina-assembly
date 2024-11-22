@@ -1,7 +1,7 @@
 process MLST_MLST {
 
     tag { "${meta.id}-${meta.assembler}" }
-    container "staphb/mlst@sha256:d92baaccc6531151566d8626013550de3cafc890933bfabc482089693b65c20d"  // staphb/mlst:2.23.0-2024-11-01
+    container "gregorysprenger/mlst@sha256:69c8c8027474b8f361ef4a579df171702f3ed52f45e3fb388a41ccbf4542706f"  // staphb/mlst:2.23.0-2024-11-01
 
     input:
     tuple val(meta), path(assembly)
@@ -19,9 +19,6 @@ process MLST_MLST {
     min_coverage = params.mlst_min_coverage  ? "--mincov ${params.mlst_min_coverage}"      : "--mincov '10'"
     '''
     source bash_functions.sh
-
-    # Test to fix 'Unable to read from <assembly-filename>' in $workDir/.command.err
-    export LC_ALL=en_US.UTF-8
 
     msg "INFO: Looking for MLST schemes to exclude ..."
 
