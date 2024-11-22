@@ -312,7 +312,7 @@
             "properties": {
                 "kraken1_db": {
                     "type": "string",
-                    "default": "https://ccb.jhu.edu/software/kraken/dl/minikraken_20171019_8GB.tgz",
+                    "default": "",
                     "hidden": true,
                     "description": "Database for taxonomic profiling with kraken.",
                     "help_text": "Path to a local directory, archive file, or a URL to compressed tar archive that contain files `database.{idx,kdb}` and `taxonomy/{names,nodes}.dmp`."
@@ -901,7 +901,7 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Converts all tab-separated value (TSV) files in the Summaries/ outpath into a single Excel spreadsheet file (XLSX) while retaining TSV files.",
-                    "hidden": false
+                    "hidden": true
                 },
                 "publish_dir_mode": {
                     "type": "string",
