@@ -1,6 +1,7 @@
 process MLST_MLST {
 
     tag { "${meta.id}-${meta.assembler}" }
+    stageInMode 'copy'
     container "gregorysprenger/mlst@sha256:69c8c8027474b8f361ef4a579df171702f3ed52f45e3fb388a41ccbf4542706f"  // staphb/mlst:2.23.0-2024-11-01
 
     input:
