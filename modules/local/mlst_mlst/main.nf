@@ -20,6 +20,9 @@ process MLST_MLST {
     '''
     source bash_functions.sh
 
+    # Test to fix 'Unable to read from <assembly-filename>' in $workDir/.command.err
+    export LC_ALL=en_US.UTF-8
+
     msg "INFO: Looking for MLST schemes to exclude ..."
 
     # Check if input scheme is in mlst's database
