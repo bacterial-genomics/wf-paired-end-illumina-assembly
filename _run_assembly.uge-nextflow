@@ -3,12 +3,12 @@
 SCRIPT_NAME="$(basename ${0#_} .uge-nextflow)"
 
 # Set profile
-# Get node number - <=230 = biolinux, >=231 = rosalind
+# Get node number - <=230 = nebula (formerly aspen), >=231 = rosalind
 NODE_NUM"=$(echo ${HOSTNAME%%.*} | sed 's/node//1')"
 if [[ ${NODE_NUM} -ge 231 ]]; then
   HPC='rosalind_hpc'
 else
-  HPC='aspen_hpc'
+  HPC='nebula_hpc'
 fi
 
 time_stamp="$(date '+%Y-%b-%d_%a_%H-%M-%S')"
