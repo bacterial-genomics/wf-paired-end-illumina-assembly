@@ -3,7 +3,9 @@
 SCRIPT_NAME="$(basename ${0#_} .uge-nextflow)"
 
 # Set profile
-# Get node number - <=230 = nebula (formerly aspen), >=231 = rosalind
+# Get node number - <=12 = nebula (formerly aspen), >=95 = rosalind
+echo "hostname:  ${HOSTNAME}"
+echo "system:  $(uname -a)"
 NODE_NUM"=$(echo ${HOSTNAME%%.*} | sed 's/node//1')"
 if [[ ${NODE_NUM} -ge 95 ]]; then
   HPC='rosalind_hpc'
