@@ -6,12 +6,13 @@ SCRIPT_NAME="$(basename ${0#_} .uge-nextflow)"
 # Get node number - <=12 = nebula (formerly aspen), >=95 = rosalind
 echo "hostname:  ${HOSTNAME}"
 echo "system:  $(uname -a)"
-NODE_NUM"=$(echo ${HOSTNAME%%.*} | sed 's/node//1')"
-if [[ ${NODE_NUM} -ge 95 ]]; then
+NODE_NUM="$(echo ${HOSTNAME%%.*} | sed 's/node//1')"
+if [[ "${NODE_NUM:-0}" -ge 95 ]]; then
   HPC='rosalind_hpc'
 else
   HPC='nebula_hpc'
 fi
+echo "${NODE_NUM:-0} using ${HPC} config"
 
 time_stamp="$(date '+%Y-%b-%d_%a_%H-%M-%S')"
 
