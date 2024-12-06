@@ -38,7 +38,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
       #   and split up the first column "<Sample_name>_<int>"; add header.
       # NOTE: a[length(a)] is used to take the last item in cases where
       #       samplename is Name_S1_L001_1 so it would get the final "1"
-      awk 'BEGIN { FS=OFS="\t"; print "Sample_name\tUnique_16S_rRNA_extraction_count\tIdentity_(%)\tAlignment_(%)\tSpecies_match" }
+      awk 'BEGIN { FS=OFS="\t"; print "Sample_name\tUnique_16S_rRNA_extraction_count\tNucleotide_Identity_(%)\tAlignment_(%)\tSpecies_match" }
         { split($1, a, "_"); print a[1], a[length(a)], $3, $13, $14 }' \
         "!{meta.id}-!{meta.assembler}.top-blast-bitscore.tsv" \
         > tmp.tsv \
@@ -56,7 +56,7 @@ process BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON {
     SUMMARY_HEADER=(
       "Query_Name"
       "Reference_Name"
-      "Identity_(%)"
+      "Nucleotide_Identity_(%)"
       "Alignment_length_(bp)"
       "Mismatches_(#)"
       "Gap_openings_(#)"
