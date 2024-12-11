@@ -81,7 +81,7 @@ while read -r line; do
 
     # Check if error is from file checks
     if [[ ${error} =~ .+Check[[:space:]]failed$ ]]; then
-      get_previous_process_workdir=$(dirname $(grep "ln -s" "${line}/.command.run" | grep "work" | awk 'END {print $(NF-1)}' ))
+      get_previous_process_workdir=$(dirname $(grep "ln -s" "${line}/.command.run" | grep "work" | awk 'END {print $(NF-1)}'))
       process=$(grep "nf-" "${get_previous_process_workdir}/.command.run" | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
       line="${get_previous_process_workdir}"
     fi
@@ -137,7 +137,7 @@ fi
 # If errors.tsv found ...
 if [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   # Add column headers
-  sed -i '1i Sample Name\tProcess\tError\tError Directory\tTimestamp\tRun Name' "${OUT}/pipeline_info/errors.tsv"
+  sed -i '1i Sample_Name\tProcess\tError\tError_Directory\tTimestamp\tRun_Name' "${OUT}/pipeline_info/errors.tsv"
 
   # Remove duplicate lines and lines that have an empty first column
   awk -F $'\t' '!_[$1,$2,$3,$6]++' "${OUT}/pipeline_info/errors.tsv" \
@@ -157,18 +157,34 @@ if [[ -f "${OUT}/Summaries/Summary.Assembly_Depth.tsv" ]]; then
 fi
 
 # E-mail completion status
-if [[ -f "${OUT}/Summaries/Summary.Assembly_Depth.tsv" ]] \
+if [[ -f "${OUT}/Summaries/Summary-Report.xlsx" ]] \
   && [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
-  -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
+  -s "${num_assemblies:-'unknown quantity of'} assembled $(basename "${OUT}") [HPC]" \
+  -S smtp="smtpgw.cdc.gov" \
+  -a "${OUT}/Summaries/Summary-Report.xlsx" \
+  -a "${OUT}/pipeline_info/errors.tsv" \
+  "${USER}@cdc.gov"
+
+elif [[ -f "${OUT}/Summaries/Summary.Assembly_Depth.tsv" ]] \
+  && [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
+  echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
+  -s "${num_assemblies:-'unknown quantity of'} assembled $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
   -a "${OUT}/Summaries/Summary.Assembly_Depth.tsv" \
   -a "${OUT}/pipeline_info/errors.tsv" \
   "${USER}@cdc.gov"
 
+elif [[ -f "${OUT}/Summaries/Summary-Report.xlsx" ]]; then
+  echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
+  -s "${num_assemblies:-'unknown quantity of'} assembled $(basename "${OUT}") [HPC]" \
+  -S smtp="smtpgw.cdc.gov" \
+  -a "${OUT}/Summaries/Summary-Report.xlsx" \
+  "${USER}@cdc.gov"
+
 elif [[ -f "${OUT}/Summaries/Summary.Assembly_Depth.tsv" ]]; then
   echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
-  -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
+  -s "${num_assemblies:-'unknown quantity of'} assembled $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
   -a "${OUT}/Summaries/Summary.Assembly_Depth.tsv" \
   "${USER}@cdc.gov"
