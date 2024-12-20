@@ -26,7 +26,7 @@ process FILTER_CONTIGS_BIOPYTHON {
     # Remove junk contigs
     filter.contigs.py \
       --infile !{contigs} \
-      --baseheader "!{meta.id}-!{meta.assembler}" \
+      --baseheader "!{meta.id}" \
       --outfile "!{meta.id}-!{meta.assembler}.uncorrected.fna" \
       --len !{params.filter_contigs_length} \
       --cov !{params.filter_contigs_coverage} \
