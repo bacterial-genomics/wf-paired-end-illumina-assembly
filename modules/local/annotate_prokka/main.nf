@@ -20,6 +20,9 @@ process ANNOTATE_PROKKA {
     '''
     source bash_functions.sh
 
+    # Remove assembler name in contig deflines to shorten
+    sed -i "s/-!{meta.assembler}//g" !{assembly}
+
     # Remove seperator characters from basename for future processes
     short_base=$(echo !{meta.id} | sed 's/[-._].*//g')
     sed -i "s/!{meta.id}/${short_base}/g" !{assembly}
