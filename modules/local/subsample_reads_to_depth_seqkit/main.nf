@@ -30,6 +30,11 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
       msg "ERROR: Unable to calculate a fraction to subsample; ${fraction_of_reads_to_use} not a floating point value" >&2
       exit 1
     fi
+    if [[ ${fraction_of_reads_to_use} -ge 1 ]]; then
+      msg "INFO: Subsample fraction is 1.0 (100%) or more. Skipping downsampling routine."
+      touch "!{meta.id}.Subsampled_FastQ.SHA512-checksums.tsv" versions.yml
+      exit 0
+    fi
     if [ ${depth%.*} -gt 0 ] && [ ${initial_depth%.*} -gt ${depth%.*} ]; then
       msg "INFO: Subsampling !{meta.id} R1 with seqkit using seed:!{params.seqkit_seed} ..."
 
