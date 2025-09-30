@@ -215,7 +215,7 @@ if (params.kraken2_db) {
 if (params.blast_db) {
     ch_blast_db_file = file(params.blast_db, checkIfExists: true)
 } else {
-    ch_blast_db_file = Channel.empty()
+    ch_blast_db_file = []
 }
 
 /*
@@ -640,7 +640,7 @@ workflow ASSEMBLY {
         }
 
     } else {
-        log.warn("Kraken could not be performed - database not specified using --kraken1_db!")
+        log.warn("Kraken could not be performed - database not specified using --kraken1_db")
         ch_db_for_kraken1 = Channel.empty()
     }
 
@@ -704,7 +704,7 @@ workflow ASSEMBLY {
         }
 
     } else {
-        log.warn("Kraken2 could not be performed - database not specified using --kraken2_db!")
+        log.warn("Kraken2 could not be performed - database not specified using --kraken2_db")
         ch_db_for_kraken2 = Channel.empty()
     }
 
@@ -870,7 +870,7 @@ workflow ASSEMBLY {
             // println "#### DEBUG: ch_db_for_bakta type: ${ch_db_for_bakta?.getClass()} | value: ${ch_db_for_bakta}"
         } else {
             // println "#### DEBUG: ch_bakta_db_file is falsy (start)"
-            log.warn("WARN: Bakta could not be performed - database not specified using --bakta_db!")
+            log.warn("WARN: Bakta could not be performed - database not specified using --bakta_db")
             ch_db_for_bakta = Channel.empty()
             // println "#### DEBUG: ch_bakta_db_file is falsy (end)"
             // println "#### DEBUG: ch_db_for_bakta type: ${ch_db_for_bakta?.getClass()} | value: ${ch_db_for_bakta}"
@@ -1010,7 +1010,8 @@ workflow ASSEMBLY {
         }
 
     } else {
-        error("Missing 16S ribosomal RNA database! Database must be supplied to `--blast_db` as either a directory or a .tar.gz file!")
+        log.warn("16S rRNA gene BLASTn will not be performed - database not specified using --blast_db")
+        ch_db_for_blast = Channel.empty()
     }
 
     // PROCESS: Run Blast on predicted 16S ribosomal RNA genes
@@ -1032,7 +1033,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes
     CLASSIFY_16S_RDP (
-        EXTRACT_16S_BARRNAP.out.extracted_rna
+        ch_extracted_rna
     )
     // CLASSIFY_16S_RDP
     //     .view { file -> println "DEBUG: From CLASSIFY_16S_RDP, emitting file: ${file}" }
