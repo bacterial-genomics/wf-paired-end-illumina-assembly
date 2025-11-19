@@ -7,7 +7,7 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQKIT {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("${meta.id}.input_total_bp.txt"), emit: input_total_bp
+    tuple val(meta), path("${meta.id}.Raw_Phred30_Input.tsv"), emit: input_total_bp_file
     path(".command.{out,err}")
     path("versions.yml")                                  , emit: versions
 
@@ -46,7 +46,8 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQKIT {
         msg "ERROR: total bp size not counted with seqkit" >&2
         exit 1
       else
-        echo -n "${total_bp}" > "!{meta.id}.input_total_bp.txt"
+        echo -e "Sample_name\tRaw_Phred30_Input_[bp]" > "!{meta.id}.Raw_Phred30_Input.tsv"
+        echo -e "!{meta.id}\t${total_bp}" >> "!{meta.id}.Raw_Phred30_Input.tsv"
         msg "INFO: found ${total_bp}bp for !{meta.id}"
       fi
     else
