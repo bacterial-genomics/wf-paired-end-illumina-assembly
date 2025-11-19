@@ -5,7 +5,7 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
     container "staphb/seqkit@sha256:8eb09a52ae932f7c25cfbb8db0df7110567087a187c7e90d46f499962d1c82c9"
 
     input:
-    tuple val(meta), path(reads), path(depth), path(fraction_of_reads)
+    tuple val(meta), path(reads), path(estimated_depth_file), path(downsample_fraction_file)
 
     output:
     tuple val(meta), path("*.{fastq,fq}.gz", includeInputs: true), emit: reads
@@ -19,8 +19,8 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
     '''
     source bash_functions.sh
 
-    fraction_of_reads_to_use=$(cat !{fraction_of_reads})
-    initial_depth=$(cat !{depth})
+    fraction_of_reads_to_use=$(awk 'NR==2 { print ($2 != "" ? $2 : 0) }' !{downsample_fraction_file})
+    initial_depth=$(awk 'NR==2 { print ($2 != "" ? $2 : 0) }' !{estimated_depth_file})
 
     depth="!{params.depth}"
 
@@ -55,6 +55,10 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
         --rand-seed "!{params.seqkit_seed}" \
         --out-file "!{meta.id}_R2.subsampled.fastq.gz" \
         2> seqkit.R2.stderr.txt
+
+      # Form the status TSV output to denote the sample has been downsampled
+      echo -e "Sample_name\tDownsampled_[Yes|No]" > "!{meta.id}.Downsample_Status.tsv"
+      echo -e "!{meta.id}\tYes" >> "!{meta.id}.Downsample_Status.tsv"
 
       msg "INFO: Completed subsampling of R1 and R2 by seqkit"
 
