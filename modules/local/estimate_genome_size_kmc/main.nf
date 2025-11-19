@@ -8,9 +8,9 @@ process ESTIMATE_GENOME_SIZE_KMC {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("${meta.id}.genome_size.txt"), emit: genome_size
+    tuple val(meta), path("${meta.id}.Estimated_Genome_Size.tsv"), emit: genome_size
     path(".command.{out,err}")
-    path("versions.yml")                               , emit: versions
+    path("versions.yml")                                         , emit: versions
 
     shell:
     '''
@@ -24,12 +24,12 @@ process ESTIMATE_GENOME_SIZE_KMC {
       "!{reads[0]}" \
       kmc-binary-output-prefix.!{meta.id} \
       kmc-tmp-dir.!{meta.id} \
-      1> kmc.!{meta.id}.stdout.log \
+      1> !{meta.id}.K-mer_Counts.txt \
       2> kmc.!{meta.id}.stderr.log
 
     # Extract just the integer of unique kmers identified in the R1 FastQ
-    if [ -s kmc.!{meta.id}.stdout.log ] ; then
-      genome_size=$(grep 'unique counted k' kmc.!{meta.id}.stdout.log \
+    if [ -s !{meta.id}.K-mer_Counts.txt ] ; then
+      genome_size=$(grep 'unique counted k' !{meta.id}.K-mer_Counts.txt \
         | cut -d ':' -f 2 \
         | sed 's/[[:space:]]//g')
 
@@ -41,13 +41,13 @@ process ESTIMATE_GENOME_SIZE_KMC {
       msg "ERROR: kmer count output logfile by kmc is empty" >&2
       exit 1
     fi
-    rmdir --ignore-fail-on-non-empty kmc-tmp-dir.!{meta.id}
-    rm -rf kmc-binary-output-prefix.!{meta.id}*
+    rm -rf kmc-tmp-dir.!{meta.id} kmc-binary-output-prefix.!{meta.id}*
 
     # Report the estimated genome size
     msg "INFO: Estimated genome size of !{meta.id}: ${genome_size}"
 
-    echo -n "${genome_size}" > "!{meta.id}.genome_size.txt"
+    echo -e "Sample_name\tEstimated_Genome_Size_[bp]" > "!{meta.id}.Estimated_Genome_Size.tsv"
+    echo -e "!{meta.id}\t${genome_size}" >> "!{meta.id}.Estimated_Genome_Size.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
