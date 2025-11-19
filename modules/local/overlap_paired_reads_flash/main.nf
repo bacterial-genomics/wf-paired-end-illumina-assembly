@@ -58,18 +58,23 @@ process OVERLAP_PAIRED_READS_FLASH {
 
       CNT_READS_OVERLAPPED=0
 
-      if [ -f flash.extendedFrags.fastq ] && \
-      [ -s flash.extendedFrags.fastq ]; then
+      # Append the overlapped reads to the singletons files
+      if [ -s flash.extendedFrags.fastq ]; then
         CNT_READS_OVERLAPPED=$(awk '{lines++} END{print lines/4}' \
         flash.extendedFrags.fastq)
 
         cat flash.extendedFrags.fastq >> "!{meta.id}_single.fq"
       else
         # Hack to ensure there's a legit singleton read to pass along to the next steps
-        echo "$(tail -n 4 !{meta.id}_R2.paired.fq)" >> "!{meta.id}_single.fq"
+        echo "$(head -n 4 !{meta.id}_R2.paired.fq)" >> "!{meta.id}_single.fq"
       fi
 
       msg "INFO: ${CNT_READS_OVERLAPPED:-0} pairs overlapped into singleton reads"
+
+      # Store the overlap histogram with header
+      if [ -s flash.hist ]; then
+        sed -i '1iOverlap_Length_[bp]\tCount_of_Reads_[#]' flash.hist
+      fi
     fi
 
     # Summarize final read set counts
