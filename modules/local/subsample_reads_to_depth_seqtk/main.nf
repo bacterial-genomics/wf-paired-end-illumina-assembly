@@ -24,7 +24,7 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQTK {
 
     depth="!{params.depth}"
 
-    echo "!{params.seqkit_seed}" > seed-value.txt
+    echo "!{params.seqtk_seed}" > seed-value.txt
 
     if ! [[ ${fraction_of_reads_to_use} =~ ^[0-9.]+$ ]]; then
       msg "ERROR: Unable to calculate a fraction to subsample; ${fraction_of_reads_to_use} not a floating point value" >&2
