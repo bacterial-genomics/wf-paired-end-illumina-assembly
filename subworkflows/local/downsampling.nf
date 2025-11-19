@@ -73,7 +73,7 @@ workflow DOWNSAMPLE {
 
         // Subsample with seqtk
         if ( toLower(params.subsample_tool) == "seqtk" ) {
-            
+
             // Use the genome size to figure out the expected depth
             COUNT_TOTAL_BP_INPUT_READS_SEQTK (
                 ch_raw_reads
@@ -82,14 +82,14 @@ workflow DOWNSAMPLE {
             ch_versions = ch_versions.mix(COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.versions)
 
             ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX (
-                COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.input_total_bp
+                COUNT_TOTAL_BP_INPUT_READS_SEQTK.out.input_total_bp_file
                         .join(ESTIMATE_GENOME_SIZE_KMC.out.genome_size)
             )
 
             ch_versions = ch_versions.mix(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.versions)
 
             SUBSAMPLE_READS_TO_DEPTH_SEQTK (
-                ch_raw_reads.join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use)
+                ch_raw_reads.join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use_file)
             )
 
             ch_versions = ch_versions.mix(SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.versions)
@@ -133,7 +133,7 @@ workflow DOWNSAMPLE {
             ch_versions = ch_versions.mix(COUNT_TOTAL_BP_INPUT_READS_SEQKIT.out.versions)
 
             ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX (
-                COUNT_TOTAL_BP_INPUT_READS_SEQKIT.out.input_total_bp
+                COUNT_TOTAL_BP_INPUT_READS_SEQKIT.out.input_total_bp_file
                         .join(ESTIMATE_GENOME_SIZE_KMC.out.genome_size)
             )
 
@@ -141,7 +141,7 @@ workflow DOWNSAMPLE {
 
             // Subsample with seqkit
             SUBSAMPLE_READS_TO_DEPTH_SEQKIT (
-                ch_raw_reads.join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use)
+                ch_raw_reads.join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use_file)
             )
 
             ch_versions = ch_versions.mix(SUBSAMPLE_READS_TO_DEPTH_SEQKIT.out.versions)
