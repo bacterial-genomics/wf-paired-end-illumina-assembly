@@ -16,7 +16,7 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
     '''
     source bash_functions.sh
 
-    # Calculate total bp input for R1 FastQ file
+    # Calculate total bp input for R1 and R2 FastQ files
     # NOTE: specified quality to trim param depends on user-supplied read
     #       trimmer selected (e.g., Fastp or Trimmomatic) and each have
     #       different variables for minimum quality score to use:
@@ -34,8 +34,7 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
 
     msg "INFO: Calculated !{meta.id} basepairs above Phred 30 with Seqtk"
 
-    # Extract just the total bp count of the R1 input FastQ file, then
-    #  double it to estimate total R1 and R2 input
+    # Extract just the total bp count of the R1 and R2 input FastQ files
     if [ -s seqtk-fqchk.!{meta.id}.stdout.log ] ; then
       total_bp=$(grep '^ALL' seqtk-fqchk.!{meta.id}.stdout.log | awk '{printf $2}')
       if ! [[ $total_bp =~ ^[0-9]+$ ]]; then
