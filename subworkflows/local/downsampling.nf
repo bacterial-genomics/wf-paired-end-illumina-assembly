@@ -17,6 +17,7 @@ include { COUNT_TOTAL_BP_INPUT_READS_SEQKIT  } from "../../modules/local/count_t
 include { ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX } from "../../modules/local/estimate_original_input_depth_unix/main"
 include { SUBSAMPLE_READS_TO_DEPTH_SEQTK     } from "../../modules/local/subsample_reads_to_depth_seqtk/main"
 include { SUBSAMPLE_READS_TO_DEPTH_SEQKIT    } from "../../modules/local/subsample_reads_to_depth_seqkit/main"
+include { SUMMARIZE_SUBSAMPLING              } from "../../modules/local/summarize_subsampling/main"
 include { CALCULATE_METRICS_FASTQ_SEQTK  as CALC_STATS_DOWNSAMPLE_FQ_SEQTK  } from "../../modules/local/calculate_metrics_fastq_seqtk/main"
 include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_DOWNSAMPLE_FQ_SEQKIT } from "../../modules/local/calculate_metrics_fastq_seqkit/main"
 
@@ -94,12 +95,22 @@ workflow DOWNSAMPLE {
 
             ch_versions = ch_versions.mix(SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.versions)
 
-            // Collect subsampled reads
-            ch_downsampled_reads = SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.reads
+            // Collect subsampled reads and create meta.downsampled (boolean)
+            ch_subsampled_reads = SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.reads
+                .map { meta, reads, flag_file ->
+                    def flag = flag_file.text.trim() // read "true" or "false" from the "downsampled.flag" file
+                    def bool = (flag == 'true')      // convert string to boolean
+                    tuple(meta + [ downsampled: bool ], reads)
+                }
+
+            // Make a channel of only the downsampled reads for metrics calculation
+            ch_downsampled_only = ch_subsampled_reads
+                .filter { meta, reads -> meta.downsampled }
 
             // PROCESS: Calculate downsampled FastQ metrics for each sample with Seqtk
+            // NOTE: this will only run for downsampled samples; no stats necessary for others
             CALC_STATS_DOWNSAMPLE_FQ_SEQTK (
-                SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.reads,
+                ch_downsampled_only,
                 "Downsampled_Reads"
             )
 
@@ -116,16 +127,30 @@ workflow DOWNSAMPLE {
 
             ch_output_summary_files = ch_output_summary_files.mix(ch_downsampled_reads_metrics_summary)
 
+            // PROCESS: Create TSV summary file of downsampling status (Yes/No)
+            SUMMARIZE_SUBSAMPLING (
+                ch_subsampled_reads
+            )
+
+            ch_versions = ch_versions.mix(SUMMARIZE_SUBSAMPLING.out.versions)
+
+            // Collect cleaned read/base summaries and concatenate into one file
+            ch_downsampled_status_summary = SUMMARIZE_SUBSAMPLING.out.output
+                                                        .collectFile(
+                                                            name:       "Summary.Downsampled_Status.tsv",
+                                                            keepHeader: true,
+                                                            sort:       { file -> file.text },
+                                                            storeDir:   "${params.outdir}/Summaries"
+                                                        )
+
+            ch_output_summary_files = ch_output_summary_files.mix(ch_downsampled_status_summary)
+
+            ch_downsampled_reads = SUMMARIZE_SUBSAMPLING.out.reads
+
         // Subsample with SeqKit
         } else if ( toLower(params.subsample_tool) == "seqkit" ) {
 
-            // // Use the genome size to figure out the expected depth
-            // CALC_STATS_INPUT_FQ_SEQKIT (
-            //     ch_raw_reads,
-            //     "Input_for_Subsampling_Reads"
-            // )
-            // ch_versions = ch_versions.mix(CALC_STATS_INPUT_FQ_SEQKIT.out.versions)
-
+            // Use the genome size to figure out the expected depth
             COUNT_TOTAL_BP_INPUT_READS_SEQKIT (
                 ch_raw_reads
             )
@@ -139,19 +164,28 @@ workflow DOWNSAMPLE {
 
             ch_versions = ch_versions.mix(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.versions)
 
-            // Subsample with seqkit
             SUBSAMPLE_READS_TO_DEPTH_SEQKIT (
                 ch_raw_reads.join(ESTIMATE_ORIGINAL_INPUT_DEPTH_UNIX.out.fraction_of_reads_to_use_file)
             )
 
             ch_versions = ch_versions.mix(SUBSAMPLE_READS_TO_DEPTH_SEQKIT.out.versions)
 
-            // Collect subsampled reads
-            ch_downsampled_reads = SUBSAMPLE_READS_TO_DEPTH_SEQKIT.out.reads
+            // Collect subsampled reads and create meta.downsampled (boolean)
+            ch_subsampled_reads = SUBSAMPLE_READS_TO_DEPTH_SEQKIT.out.reads
+                .map { meta, reads, flag_file ->
+                    def flag = flag_file.text.trim() // read "true" or "false" from the "downsampled.flag" file
+                    def bool = (flag == 'true')      // convert string to boolean
+                    tuple(meta + [ downsampled: bool ], reads)
+                }
 
-            // PROCESS: Calculate downsampled FastQ metrics for each sample with SeqKit
+            // Make a channel of only the downsampled reads for metrics calculation
+            ch_downsampled_only = ch_subsampled_reads
+                .filter { meta, reads -> meta.downsampled }
+
+            // PROCESS: Calculate downsampled FastQ metrics for each sample with seqkit
+            // NOTE: this will only run for downsampled samples; no stats necessary for others
             CALC_STATS_DOWNSAMPLE_FQ_SEQKIT (
-                SUBSAMPLE_READS_TO_DEPTH_SEQKIT.out.reads,
+                ch_downsampled_only,
                 "Downsampled_Reads"
             )
 
@@ -167,6 +201,26 @@ workflow DOWNSAMPLE {
                                                         )
 
             ch_output_summary_files = ch_output_summary_files.mix(ch_downsampled_reads_metrics_summary)
+
+            // PROCESS: Create TSV summary file of downsampling status (Yes/No)
+            SUMMARIZE_SUBSAMPLING (
+                ch_subsampled_reads
+            )
+
+            ch_versions = ch_versions.mix(SUMMARIZE_SUBSAMPLING.out.versions)
+
+            // Collect cleaned read/base summaries and concatenate into one file
+            ch_downsampled_status_summary = SUMMARIZE_SUBSAMPLING.out.output
+                                                        .collectFile(
+                                                            name:       "Summary.Downsampled_Status.tsv",
+                                                            keepHeader: true,
+                                                            sort:       { file -> file.text },
+                                                            storeDir:   "${params.outdir}/Summaries"
+                                                        )
+
+            ch_output_summary_files = ch_output_summary_files.mix(ch_downsampled_status_summary)
+
+            ch_downsampled_reads = SUMMARIZE_SUBSAMPLING.out.reads
         }
     } else {
         // Skip subsampling and pass raw reads to PhiX removal
