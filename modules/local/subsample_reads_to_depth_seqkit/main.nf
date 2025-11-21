@@ -8,8 +8,8 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
     tuple val(meta), path(reads), path(estimated_depth_file), path(downsample_fraction_file)
 
     output:
-    tuple val(meta), path("*.{fastq,fq}.gz", includeInputs: true), emit: reads
-    path("${meta.id}.Subsampled_FastQ.SHA512-checksums.tsv")     , emit: checksums
+    tuple val(meta), path("*.{fastq,fq}.gz", includeInputs: true), path("downsampled.flag"), emit: reads
+    path("${meta.id}.Subsampled_FastQ.SHA512-checksums.tsv"), optional: true               , emit: checksums
     path(".command.{out,err}")
     path("versions.yml")                                         , emit: versions
 
@@ -19,8 +19,8 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
     '''
     source bash_functions.sh
 
-    fraction_of_reads_to_use=$(awk 'NR==2 { print ($2 != "" ? $2 : 0) }' !{downsample_fraction_file})
-    initial_depth=$(awk 'NR==2 { print ($2 != "" ? $2 : 0) }' !{estimated_depth_file})
+    fraction_of_reads_to_use=$(awk 'NR==2 {print ($2 != "" ? $2 : 0)}' !{downsample_fraction_file})
+    initial_depth=$(awk 'NR==2 {print ($2 != "" ? $2 : 0)}' !{estimated_depth_file})
 
     depth="!{params.depth}"
 
@@ -68,6 +68,7 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
 
       number_output_R1_sequences=$(grep 'sequences outputted' seqkit.R1.stderr.txt | awk '{print $2}')
       number_output_R2_sequences=$(grep 'sequences outputted' seqkit.R2.stderr.txt | awk '{print $2}')
+      echo 'true' > downsampled.flag
 
       msg "INFO: Subsampled reads contain: ${number_output_R1_sequences} and ${number_output_R2_sequences} sequences"
 
@@ -75,7 +76,8 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
       # The input FastQ files that were never subsampled will get passed on
       #   as outputs here with the 'includeInputs: true'
       msg "INFO: Subsampling not requested or required for !{meta.id}"
-      touch "!{meta.id}.Subsampled_FastQ.SHA512-checksums.tsv" versions.yml
+      touch versions.yml
+      echo 'false' > downsampled.flag
       exit 0
     fi
 
