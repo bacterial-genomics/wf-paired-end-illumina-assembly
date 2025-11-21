@@ -145,6 +145,17 @@ workflow DOWNSAMPLE {
 
             ch_output_summary_files = ch_output_summary_files.mix(ch_downsampled_status_summary)
 
+            // Collect checksums if downsampled and present, and concatenate into one file
+            ch_downsampled_checksum_summary = SUBSAMPLE_READS_TO_DEPTH_SEQTK.out.checksums
+                                                        .collectFile(
+                                                            name:       "Summary.Downsampled_Checksums.tsv",
+                                                            keepHeader: true,
+                                                            sort:       { file -> file.text },
+                                                            storeDir:   "${params.outdir}/Summaries"
+                                                        )
+
+            ch_output_summary_files = ch_output_summary_files.mix(ch_downsampled_checksum_summary)
+
             ch_downsampled_reads = SUMMARIZE_SUBSAMPLING.out.reads
 
         // Subsample with SeqKit
@@ -219,6 +230,17 @@ workflow DOWNSAMPLE {
                                                         )
 
             ch_output_summary_files = ch_output_summary_files.mix(ch_downsampled_status_summary)
+
+            // Collect checksums if downsampled and present, and concatenate into one file
+            ch_downsampled_checksum_summary = SUBSAMPLE_READS_TO_DEPTH_SEQKIT.out.checksums
+                                                        .collectFile(
+                                                            name:       "Summary.Downsampled_Checksums.tsv",
+                                                            keepHeader: true,
+                                                            sort:       { file -> file.text },
+                                                            storeDir:   "${params.outdir}/Summaries"
+                                                        )
+
+            ch_output_summary_files = ch_output_summary_files.mix(ch_downsampled_checksum_summary)
 
             ch_downsampled_reads = SUMMARIZE_SUBSAMPLING.out.reads
         }
