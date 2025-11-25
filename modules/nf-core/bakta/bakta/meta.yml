@@ -102,8 +102,7 @@ output:
             e.g. [ id:'test', single_end:false ]
       - ${prefix}.hypotheticals.tsv:
           type: file
-          description:
-            additional information on hypothetical protein CDS as simple human
+          description: additional information on hypothetical protein CDS as simple human
             readable tab separated values
           pattern: "*.hypotheticals.tsv"
   - hypotheticals_faa:
