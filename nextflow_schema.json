@@ -447,14 +447,28 @@
                     "default": "rRNA",
                     "hidden": true,
                     "description": "GenBank feature type to search in genbank file for extraction.",
-                    "enum": ["CDS", "gene", "rRNA", "source", "tRNA", "misc_feature"]
+                    "enum": [
+                        "CDS",
+                        "gene",
+                        "rRNA",
+                        "source",
+                        "tRNA",
+                        "misc_feature"
+                    ]
                 },
                 "genbank_query_qualifier": {
                     "type": "string",
                     "default": "product",
                     "hidden": true,
                     "description": "Qualifier term within each genbank feature to search in genbank file for extraction.",
-                    "enum": ["gene", "inference", "locus_tag", "old_locus_tag", "product", "translation"]
+                    "enum": [
+                        "gene",
+                        "inference",
+                        "locus_tag",
+                        "old_locus_tag",
+                        "product",
+                        "translation"
+                    ]
                 },
                 "genbank_search_type": {
                     "type": "string",
@@ -909,7 +923,14 @@
                     "description": "Method used to save pipeline results to output directory.",
                     "help_text": "The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.",
                     "fa_icon": "fas fa-copy",
-                    "enum": ["symlink", "rellink", "link", "copy", "copyNoFollow", "move"],
+                    "enum": [
+                        "symlink",
+                        "rellink",
+                        "link",
+                        "copy",
+                        "copyNoFollow",
+                        "move"
+                    ],
                     "hidden": true
                 },
                 "email": {

@@ -54,7 +54,7 @@ CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
 ```
 
 | Column    | Description                                                                                                                                                                            |
-|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sample`  | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
 | `fastq_1` | Full path to FastQ file for Illumina short reads 1. File must be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                               |
 | `fastq_2` | Full path to FastQ file for Illumina short reads 2. File must be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                               |
@@ -238,7 +238,6 @@ The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementatio
 1. Check the default version used by the pipeline in the module file for [Pangolin](https://github.com/nf-core/viralrecon/blob/a85d5969f9025409e3618d6c280ef15ce417df65/modules/nf-core/software/pangolin/main.nf#L14-L19)
 2. Find the latest version of the Biocontainer available on [Quay.io](https://quay.io/repository/biocontainers/pangolin?tag=latest&tab=tags)
 3. Create the custom config accordingly:
-
    - For Docker:
 
    ```nextflow

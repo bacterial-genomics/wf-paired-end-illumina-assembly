@@ -1,5 +1,6 @@
 name: gtdbtk_classifywf
-description: GTDB-Tk is a software toolkit for assigning objective taxonomic classifications
+description:
+  GTDB-Tk is a software toolkit for assigning objective taxonomic classifications
   to bacterial and archaeal genomes based on the Genome Database Taxonomy GTDB.
 keywords:
   - GTDB taxonomy
@@ -11,7 +12,8 @@ keywords:
   - archaea
 tools:
   - gtdbtk:
-      description: GTDB-Tk is a software toolkit for assigning objective taxonomic classifications
+      description:
+        GTDB-Tk is a software toolkit for assigning objective taxonomic classifications
         to bacterial and archaeal genomes based on the Genome Database Taxonomy GTDB.
       homepage: https://ecogenomics.github.io/GTDBTk/
       documentation: https://ecogenomics.github.io/GTDBTk/
@@ -39,7 +41,8 @@ input:
         description: Set to true to reduce pplacer memory usage by writing to disk (slower)
   - - mash_db:
         type: file
-        description: The local copy of the Mash sketch database used by GTDB-tk if `ani_screen`
+        description:
+          The local copy of the Mash sketch database used by GTDB-tk if `ani_screen`
           mode is used (optional)
         pattern: "*.msh"
 output:
@@ -61,7 +64,8 @@ output:
             e.g. [ id:'test', single_end:false ]
       - gtdbtk.${prefix}.*.classify.tree.gz:
           type: file
-          description: NJ or UPGMA tree in Newick format produced from a multiple sequence
+          description:
+            NJ or UPGMA tree in Newick format produced from a multiple sequence
             alignment
           pattern: "*.{classify.tree.gz}"
   - markers:
@@ -102,7 +106,8 @@ output:
             e.g. [ id:'test', single_end:false ]
       - gtdbtk.${prefix}.*.filtered.tsv:
           type: file
-          description: A list of genomes with an insufficient number of amino acids in
+          description:
+            A list of genomes with an insufficient number of amino acids in
             MSA..
           pattern: "*.{filtered.tsv}"
   - failed:

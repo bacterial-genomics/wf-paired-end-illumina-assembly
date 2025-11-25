@@ -73,7 +73,6 @@ Please see the [host removal using Hostile documentation](../modules/local/remov
 <summary>Output files</summary>
 
 - `Clean_Reads/Hostile/`
-
   - `[sample].fastq.gz`: Human host-removed FastQ files.
   - `[sample].Summary.Hostile.tsv`: Summary of the number of reads discarded and retained from Hostile.
   - `[sample].Hostile_FastQ.SHA512-checksums.tsv`: Checksum values for each FastQ output from Hostile.
@@ -181,7 +180,6 @@ Overlapping content between sister reads that are at least 80% similar are colla
 <summary>Output files</summary>
 
 - `Clean_Reads/`
-
   - `[sample]_single.fq.gz`: Final cleaned singleton reads.
   - `[sample]_R[1/2].paired.fq.gz`: Final cleaned paired reads.
 
@@ -344,7 +342,7 @@ The final assembly file is scanned against PubMLST typing schemes to determine t
 <summary>MLST output interpretation</summary>
 
 | Symbol | Meaning                               | Length          | Identity       |
-|--------|---------------------------------------|-----------------|----------------|
+| ------ | ------------------------------------- | --------------- | -------------- |
 | `n`    | exact intact allele                   | 100%            | 100%           |
 | `~n`   | novel full length allele similar to n | 100%            | &ge; `--minid` |
 | `n?`   | partial match to known allele         | &ge; `--mincov` | &ge; `--minid` |
@@ -408,13 +406,11 @@ The GenBank file is parsed for 16S rRNA gene records (with BioPython). If there 
 <summary>Output files</summary>
 
 - `SSU/`
-
   - `16S.[sample]-[assembler].fa`: 16S rRNA gene sequence of the best BLAST alignment in FastA format.
   - `[assembler].16S_top_genus_RDP.tsv`: Summary of the best RDP match for each sample.
   - `[assembler].16S_top_species_BLAST.tsv`: Summary of the best BLAST alignment for each sample.
 
 - `SSU/BLAST/`
-
   - `[sample]-[assembler].blast.tsv.gz`: Full, not yet bitscore sorted, BLASTn output for each 16S rRNA gene record in tab-separated value (TSV) format using the BLAST outfmt 6 standard with additional taxonomy fields
 
 - `SSU/RDP/`
