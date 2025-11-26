@@ -45,9 +45,9 @@ if(params.busco_config){
 include { INFILE_HANDLING_UNIX                    } from "../modules/local/infile_handling_unix/main"
 include { VALIDATE_FASTQ_SEQFU                    } from "../modules/local/validate_fastq_seqfu/main.nf"
 
-include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_INPUT_FQ_SEQKIT } from "../modules/local/calculate_metrics_fastq_seqkit/main"
-include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_NOPHIX_FQ_SEQKIT } from "../modules/local/calculate_metrics_fastq_seqkit/main"
-include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_TRIM_FQ_SEQKIT } from "../modules/local/calculate_metrics_fastq_seqkit/main"
+include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_INPUT_FQ_SEQKIT        } from "../modules/local/calculate_metrics_fastq_seqkit/main"
+include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_NOPHIX_FQ_SEQKIT       } from "../modules/local/calculate_metrics_fastq_seqkit/main"
+include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_TRIM_FQ_SEQKIT         } from "../modules/local/calculate_metrics_fastq_seqkit/main"
 include { CALCULATE_METRICS_FASTQ_SEQKIT as CALC_STATS_CLEANEDREADS_FQ_SEQKIT } from "../modules/local/calculate_metrics_fastq_seqkit/main"
 include { CALCULATE_METRICS_FASTQ_SEQTK           } from "../modules/local/calculate_metrics_fastq_seqtk/main"
 
@@ -61,9 +61,9 @@ include { KRAKEN1_DB_PREPARATION_UNIX             } from "../modules/local/krake
 include { READ_CLASSIFY_KRAKEN_ONE                } from "../modules/local/read_classify_kraken/main"
 include { KRAKEN2_DB_PREPARATION_UNIX             } from "../modules/local/kraken2_db_preparation_unix/main"
 include { READ_CLASSIFY_KRAKEN_TWO                } from "../modules/local/read_classify_kraken2/main"
-// include { READ_CLASSIFY_CENTRIFUGE                } from "../modules/local/read_classify_centrifuge/main"
-// include { READ_CLASSIFY_KRAKENUNIQ                } from "../modules/local/read_classify_krakenuniq/main"
-// include { READ_CLASSIFY_METAPHLAN                 } from "../modules/local/read_classify_metaphlan/main"
+// include { READ_CLASSIFY_CENTRIFUGE             } from "../modules/local/read_classify_centrifuge/main"
+// include { READ_CLASSIFY_KRAKENUNIQ             } from "../modules/local/read_classify_krakenuniq/main"
+// include { READ_CLASSIFY_METAPHLAN              } from "../modules/local/read_classify_metaphlan/main"
 
 include { EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS  } from "../modules/local/extract_read_alignment_depths_bedtools/main"
 
@@ -71,7 +71,10 @@ include { MLST_MLST                               } from "../modules/local/mlst_
 //include { MLST_SRST2                            } from "../modules/local/mlst_srst2/main"
 
 include { ANNOTATE_PROKKA                         } from "../modules/local/annotate_prokka/main"
-//include { ANNOTATE_BAKTA                        } from "../modules/local/annotate_bakta/main"
+include { BAKTA_DB_PREPARATION_UNIX               } from "../modules/local/bakta_db_preparation_unix/main"
+include { BAKTA_BAKTADBDOWNLOAD                   } from '../modules/nf-core/bakta/baktadbdownload/main'
+include { BAKTA_BAKTA as ANNOTATE_BAKTA           } from "../modules/nf-core/bakta/bakta/main"
+include { POST_BAKTA_QC                           } from "../modules/local/annotate_bakta/main"
 
 include { EXTRACT_16S_BIOPYTHON                   } from "../modules/local/extract_16S_biopython/main"
 include { EXTRACT_16S_BARRNAP                     } from "../modules/local/extract_16S_barrnap/main"
@@ -148,6 +151,17 @@ if (params.adapter_reference) {
     ch_adapter_reference = []
 }
 
+// Bakta
+if (params.bakta_db) {
+    ch_bakta_db_file = file(params.bakta_db, checkIfExists: true)
+} else if (toLower(params.annotation) == "bakta") {
+    // Automatically download Bakta DB if missing and Bakta is selected
+    BAKTA_BAKTADBDOWNLOAD()
+    ch_bakta_db_file = BAKTA_BAKTADBDOWNLOAD.out.db
+} else {
+    ch_bakta_db_file = []
+}
+
 // CAT
 if (params.cat_db) {
     ch_cat_db_file = file(params.cat_db, checkIfExists: true)
@@ -201,7 +215,7 @@ if (params.kraken2_db) {
 if (params.blast_db) {
     ch_blast_db_file = file(params.blast_db, checkIfExists: true)
 } else {
-    ch_blast_db_file = Channel.empty()
+    ch_blast_db_file = []
 }
 
 /*
@@ -219,6 +233,7 @@ def toLower(it) {
 def qcfilecheck(process, qcfile, inputfile) {
     qcfile.map{ meta, file -> [ meta, [file] ] }
             .join(inputfile)
+            .collect()
             .map{ meta, qc, input ->
                 data = []
                 qc.flatten().each{ data += it.readLines() }
@@ -287,7 +302,7 @@ workflow ASSEMBLY {
                                 sort:       { file -> file.text },
                                 storeDir:   "${params.outdir}/Summaries"
                             )
-                            .view { collectedFiles -> println "DEBUG: From INFILE_HANDLING_UNIX.out.checksums, collected files: ${collectedFiles}" }
+                            // .view { collectedFiles -> println "DEBUG: From INFILE_HANDLING_UNIX.out.checksums, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_infile_checksum)
 
     // PROCESS: Calculate input FastQ metrics for each sample with SeqKit
@@ -363,7 +378,7 @@ workflow ASSEMBLY {
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
-                                .view { collectedFiles -> println "DEBUG: From REMOVE_PHIX_BBDUK.out.summary, collected files: ${collectedFiles}" }
+                                // .view { collectedFiles -> println "DEBUG: From REMOVE_PHIX_BBDUK.out.summary, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_phix_removal_summary)
 
     // PROCESS: Calculate PhiX-free FastQ metrics for each sample with SeqKit
@@ -383,6 +398,12 @@ workflow ASSEMBLY {
                                         )
     ch_output_summary_files = ch_output_summary_files.mix(ch_nophix_reads_metrics_summary)
 
+    // ch_removed_phix
+    //     .map { meta, reads ->
+    //         println "DEBUG: REMOVE_PHIX_BBDUK -> TRIMMOMATIC input hash: ${meta.hashCode()} :: ${reads.hashCode()} :: ${reads}"
+    //         [meta, reads]
+    //     }
+
     if ( toLower(params.trim_reads_tool) == "trimmomatic" ) {
         // PROCESS: Run trimmomatic to clip adapters and do quality trimming
         TRIM_READS_TRIMMOMATIC (
@@ -400,6 +421,8 @@ workflow ASSEMBLY {
                             TRIM_READS_TRIMMOMATIC.out.qc_filecheck,
                             TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed
                             )
+        // TRIM_READS_TRIMMOMATIC.out.fastq_adapters_removed
+        //     .view { "DEBUG: TRIMMOMATIC out.fastq_adapters_removed: ${it.toString()}" }
 
         // Collect read trimming summaries and concatenate into one file
         ch_trimmomatic_summary = TRIM_READS_TRIMMOMATIC.out.summary
@@ -409,7 +432,7 @@ workflow ASSEMBLY {
                                         sort:       { file -> file.text },
                                         storeDir:   "${params.outdir}/Summaries"
                                     )
-                                    .view { collectedFiles -> println "DEBUG: From TRIM_READS_TRIMMOMATIC.out.summary, collected files: ${collectedFiles}" }
+                                    // .view { collectedFiles -> println "DEBUG: From TRIM_READS_TRIMMOMATIC.out.summary, collected files: ${collectedFiles}" }
         ch_output_summary_files = ch_output_summary_files.mix(ch_trimmomatic_summary)
 
         // PROCESS: Calculate adapter-and-quality-trimmed FastQ metrics for each sample with SeqKit
@@ -450,6 +473,8 @@ workflow ASSEMBLY {
                             TRIM_READS_FASTP.out.qc_filecheck,
                             TRIM_READS_FASTP.out.fastq_adapters_removed
                           )
+        TRIM_READS_FASTP.out.fastq_adapters_removed
+            .view { "DEBUG: FASTP out.fastq_adapters_removed: ${it.toString()}" }
 
         ch_fastp_summary = TRIM_READS_FASTP.out.summary
                                 .collectFile(
@@ -458,7 +483,7 @@ workflow ASSEMBLY {
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
-                                .view { collectedFiles -> println "DEBUG: From TRIM_READS_FASTP.out.summary, collected files: ${collectedFiles}" }
+                                // .view { collectedFiles -> println "DEBUG: From TRIM_READS_FASTP.out.summary, collected files: ${collectedFiles}" }
         ch_output_summary_files = ch_output_summary_files.mix(ch_fastp_summary)
 
         // PROCESS: Calculate adapter-and-quality-trimmed FastQ metrics for each sample with SeqKit
@@ -479,10 +504,12 @@ workflow ASSEMBLY {
         ch_output_summary_files = ch_output_summary_files.mix(ch_trim_reads_metrics_summary)
     }
 
+
     // PROCESS: Run flash to merge overlapping sister reads into singleton reads
     OVERLAP_PAIRED_READS_FLASH (
         ch_trim_reads
     )
+    // OVERLAP_PAIRED_READS_FLASH.out.cleaned_fastq_files.view { println "~~~~~~~~~~ DEBUG: OUTPUT FROM FLASH: ${it}" }
     // OVERLAP_PAIRED_READS_FLASH
     //     .view { file -> println "DEBUG: From OVERLAP_PAIRED_READS_FLASH, emitting file: ${file}" }
     // OVERLAP_PAIRED_READS_FLASH
@@ -502,7 +529,7 @@ workflow ASSEMBLY {
                                 sort:       { file -> file.text },
                                 storeDir:   "${params.outdir}/Summaries"
                             )
-                            .view { collectedFiles -> println "DEBUG: From OVERLAP_PAIRED_READS_FLASH.out.checksums, collected files: ${collectedFiles}" }
+                            // .view { collectedFiles -> println "DEBUG: From OVERLAP_PAIRED_READS_FLASH.out.checksums, collected files: ${collectedFiles}" }
     ch_output_summary_files  = ch_output_summary_files.mix(ch_cleanedreads_checksum)
 
     // Collect singleton read summaries and concatenate into one file
@@ -513,7 +540,7 @@ workflow ASSEMBLY {
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
-                                .view { collectedFiles -> println "DEBUG: From OVERLAP_PAIRED_READS_FLASH.out.summary, collected files: ${collectedFiles}" }
+                                // .view { collectedFiles -> println "DEBUG: From OVERLAP_PAIRED_READS_FLASH.out.summary, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_overlap_summary)
 
     /*
@@ -613,7 +640,7 @@ workflow ASSEMBLY {
         }
 
     } else {
-        log.warn("Kraken could not be performed - database not specified using --kraken1_db!")
+        log.warn("Kraken could not be performed - database not specified using --kraken1_db")
         ch_db_for_kraken1 = Channel.empty()
     }
 
@@ -636,7 +663,7 @@ workflow ASSEMBLY {
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
-                                .view { collectedFiles -> println "DEBUG: From READ_CLASSIFY_KRAKEN_ONE.out.summary, collected files: ${collectedFiles}" }
+                                // .view { collectedFiles -> println "DEBUG: From READ_CLASSIFY_KRAKEN_ONE.out.summary, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_kraken_one_summary)
 
     // Prepare kraken2 database for use
@@ -677,7 +704,7 @@ workflow ASSEMBLY {
         }
 
     } else {
-        log.warn("Kraken2 could not be performed - database not specified using --kraken2_db!")
+        log.warn("Kraken2 could not be performed - database not specified using --kraken2_db")
         ch_db_for_kraken2 = Channel.empty()
     }
 
@@ -700,7 +727,7 @@ workflow ASSEMBLY {
                                     sort:       { file -> file.text },
                                     storeDir:   "${params.outdir}/Summaries"
                                 )
-                                .view { collectedFiles -> println "DEBUG: From READ_CLASSIFY_KRAKEN_TWO.out.summary, collected files: ${collectedFiles}" }
+                                // .view { collectedFiles -> println "DEBUG: From READ_CLASSIFY_KRAKEN_TWO.out.summary, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_kraken_two_summary)
 
 
@@ -728,7 +755,7 @@ workflow ASSEMBLY {
                                 sort:       { file -> file.text },
                                 storeDir:   "${params.outdir}/Summaries"
                             )
-                            .view { collectedFiles -> println "DEBUG: From OVERLAP_PAIRED_READS_FLASH.out.checksums, collected files: ${collectedFiles}" }
+                            // .view { collectedFiles -> println "DEBUG: From ASSEMBLE_CONTIGS.out.checksums, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_assembly_checksum)
 
     /*
@@ -753,10 +780,10 @@ workflow ASSEMBLY {
                                     .collectFile(
                                         name:     "Summary.Clean_Reads_Aligned.tsv",
                                         keepHeader: true,
-                                        sort:      { file -> file.text },
+                                        sort:       { file -> file.text },
                                         storeDir: "${params.outdir}/Summaries"
                                     )
-                                .view { collectedFiles -> println "DEBUG: From EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary, collected files: ${collectedFiles}" }
+                                // .view { collectedFiles -> println "DEBUG: From EXTRACT_READ_ALIGNMENT_DEPTHS_BEDTOOLS.out.summary, collected files: ${collectedFiles}" }
     ch_output_summary_files    = ch_output_summary_files.mix(ch_alignment_stats_summary)
 
     // PROCESS: Run MLST to find MLST for each polished assembly
@@ -777,34 +804,140 @@ workflow ASSEMBLY {
                             sort:      { file -> file.text },
                             storeDir: "${params.outdir}/Summaries"
                         )
-                        .view { collectedFiles -> println "DEBUG: From MLST_MLST.out.summary, collected files: ${collectedFiles}" }
+                        // .view { collectedFiles -> println "DEBUG: From MLST_MLST.out.summary, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_mlst_summary)
 
-    // PROCESS: Annotate the polished assembly using Prokka
-    ANNOTATE_PROKKA (
-        ASSEMBLE_CONTIGS.out.assembly_file
-    )
-    // ANNOTATE_PROKKA
-    //     .view { file -> println "DEBUG: From ANNOTATE_PROKKA, emitting file: ${file}" }
-    // ANNOTATE_PROKKA
-    //     .view { item -> println "DEBUG: From ANNOTATE_PROKKA, channel item: ${item}" }
-    ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
-    ch_genbank  = qcfilecheck(
-                    "ANNOTATE_PROKKA",
-                    ANNOTATE_PROKKA.out.qc_filecheck,
-                    ANNOTATE_PROKKA.out.prokka_genbank_file
+    /*
+    ===============================================================================
+              PROCESS: Annotate the polished assembly using Bakta or Prokka
+    ===============================================================================
+    */
+    // Annotation input
+    if ( toLower(params.annotation) == "bakta" ) {
+        var_annotation_name = "BAKTA"
+    } else {
+        var_annotation_name = "PROKKA"
+    }
+    // println "~~~~ DEBUG: After set, var_annotation_name = '${var_annotation_name}'"
+
+    // Use bakta for annotation
+    if ( var_annotation_name == "BAKTA" ) {
+        // println "~~~~ DEBUG: Entered BAKTA annotation block"
+        // Prepare bakta database for use
+        // println "#### DEBUG: Entered BAKTA annotation block (start)"
+        if ( ch_bakta_db_file ) {
+            // println "#### DEBUG: ch_bakta_db_file is truthy (start)"
+            // println "#### DEBUG: ch_bakta_db_file = '${ch_bakta_db_file}' | isDirectory: ${ch_bakta_db_file.isDirectory()} | isFile: ${ch_bakta_db_file.isFile()} | class: ${ch_bakta_db_file.getClass()}"
+            if ( ch_bakta_db_file.extension in ['xz', 'txz'] ) {
+                // println "#### DEBUG: ch_bakta_db_file is .xz or .txz (start)"
+                // Add meta information
+                ch_bakta_db = Channel.of(ch_bakta_db_file)
+                                    .map{
+                                        db ->
+                                            def meta = [:]
+                                            meta['id'] = db.getSimpleName()
+                                            [ meta, db ]
+                                    }
+                // Expects to be .tar.xz!
+                BAKTA_DB_PREPARATION_UNIX (
+                    ch_bakta_db
                 )
+                ch_versions     = ch_versions.mix(BAKTA_DB_PREPARATION_UNIX.out.versions)
+                ch_db_for_bakta = BAKTA_DB_PREPARATION_UNIX.out.db.collect()
+                // println "#### DEBUG: ch_bakta_db_file is .xz or .txz (end)"
+                // println "#### DEBUG: ch_db_for_bakta type: ${ch_db_for_bakta?.getClass()} | value: ${ch_db_for_bakta}"
+            } else if ( ch_bakta_db_file.isDirectory() ) {
+                // println "#### DEBUG: ch_bakta_db_file is directory (start)"
+                // println "#### DEBUG: Looking for bakta.db at: ${ch_bakta_db_file}/bakta.db"
+                Channel.fromPath("${ch_bakta_db_file}/bakta.db").view { println "#### DEBUG: Channel.fromPath emits: ${it}" }
+                ch_db_for_bakta = Channel
+                    .fromPath("${ch_bakta_db_file}/bakta.db")
+                    .ifEmpty {
+                        log.error("ERROR: Bakta requires a bakta.db file in the specified directory!")
+                        ch_db_for_bakta = Channel.empty()
+                    }
+                    .map { file -> file.getParent() }
+                // println "#### DEBUG: ch_bakta_db_file is directory (end)"
+                // println "#### DEBUG: ch_db_for_bakta type: ${ch_db_for_bakta?.getClass()} | value: ${ch_db_for_bakta}"
+            } else {
+                // println "#### DEBUG: ch_bakta_db_file is unsupported (start)"
+                log.error("ERROR: Unsupported object given to --bakta_db, database must be supplied as either a directory or a .tar.xz file!")
+                ch_db_for_bakta = Channel.empty()
+                // println "#### DEBUG: ch_bakta_db_file is unsupported (end)"
+                // println "#### DEBUG: ch_db_for_bakta type: ${ch_db_for_bakta?.getClass()} | value: ${ch_db_for_bakta}"
+            }
+            // println "#### DEBUG: ch_bakta_db_file is truthy (end)"
+            // println "#### DEBUG: ch_db_for_bakta type: ${ch_db_for_bakta?.getClass()} | value: ${ch_db_for_bakta}"
+        } else {
+            // println "#### DEBUG: ch_bakta_db_file is falsy (start)"
+            log.warn("WARN: Bakta could not be performed - database not specified using --bakta_db")
+            ch_db_for_bakta = Channel.empty()
+            // println "#### DEBUG: ch_bakta_db_file is falsy (end)"
+            // println "#### DEBUG: ch_db_for_bakta type: ${ch_db_for_bakta?.getClass()} | value: ${ch_db_for_bakta}"
+        }
+        // println "#### DEBUG: Entered BAKTA annotation block (end)"
+        // println "#### DEBUG: ch_db_for_bakta type: ${ch_db_for_bakta?.getClass()} | value: ${ch_db_for_bakta}"
 
-    ch_annotation_checksum = ANNOTATE_PROKKA.out.checksums
-                            .collectFile(
-                                name:       "Summary.Annotation_Checksums.tsv",
-                                keepHeader: true,
-                                sort:       { file -> file.text },
-                                storeDir:   "${params.outdir}/Summaries"
-                            )
-                            .view { collectedFiles -> println "DEBUG: From ANNOTATE_PROKKA.out.checksums, collected files: ${collectedFiles}" }
-    ch_output_summary_files = ch_output_summary_files.mix(ch_annotation_checksum)
+        // Print debug info for each input to ANNOTATE_BAKTA
+        // ASSEMBLE_CONTIGS.out.assembly_file.view { println "#### DEBUG: assembly_file emits: $it" }
+        // ch_db_for_bakta.view { println "#### DEBUG: ch_db_for_bakta emits: $it" }
 
+        // Only run Bakta for annotation (comment out Prokka for now)
+        ANNOTATE_BAKTA(
+            ASSEMBLE_CONTIGS.out.assembly_file, // emits (meta, fasta)
+            ch_db_for_bakta,                    // emits db directory
+            [],                                 // curated proteins fasta db (optional, skip)
+            []                                  // prodigal_tf (optional, skip)
+        )
+        ANNOTATE_BAKTA.out.gbff.view { println "#### DEBUG: ANNOTATE_BAKTA.out.gbff emits: $it" }
+        ANNOTATE_BAKTA.out.txt.view { println "#### DEBUG: ANNOTATE_BAKTA.out.txt emits: $it" }
+
+        // Rename to GBK, compress logfile, QC file check, and checksum calculation
+        POST_BAKTA_QC (
+            ANNOTATE_BAKTA.out.gbff
+        )
+
+        ch_genbank  = qcfilecheck(
+                        "ANNOTATE_BAKTA",
+                        POST_BAKTA_QC.out.qc_filecheck,
+                        POST_BAKTA_QC.out.bakta_genbank_file
+                    )
+
+        ch_annotation_checksum = POST_BAKTA_QC.out.checksums
+                                .collectFile(
+                                    name:       "Summary.Annotation_Checksums.tsv",
+                                    keepHeader: true,
+                                    sort:       { file -> file.text },
+                                    storeDir:   "${params.outdir}/Summaries"
+                                )
+                                // .view { collectedFiles -> println "DEBUG: From POST_BAKTA_QC.out.checksums, collected files: ${collectedFiles}" }
+        ch_output_summary_files = ch_output_summary_files.mix(ch_annotation_checksum)
+    } else {
+        // println "~~~~ DEBUG: Entered PROKKA annotation block"
+        ANNOTATE_PROKKA (
+            ASSEMBLE_CONTIGS.out.assembly_file
+        )
+        // ANNOTATE_PROKKA
+        //     .view { file -> println "DEBUG: From ANNOTATE_PROKKA, emitting file: ${file}" }
+        // ANNOTATE_PROKKA
+        //     .view { item -> println "DEBUG: From ANNOTATE_PROKKA, channel item: ${item}" }
+        ch_versions = ch_versions.mix(ANNOTATE_PROKKA.out.versions)
+        ch_genbank  = qcfilecheck(
+                        "ANNOTATE_PROKKA",
+                        ANNOTATE_PROKKA.out.qc_filecheck,
+                        ANNOTATE_PROKKA.out.prokka_genbank_file
+                    )
+
+        ch_annotation_checksum = ANNOTATE_PROKKA.out.checksums
+                                .collectFile(
+                                    name:       "Summary.Annotation_Checksums.tsv",
+                                    keepHeader: true,
+                                    sort:       { file -> file.text },
+                                    storeDir:   "${params.outdir}/Summaries"
+                                )
+                                // .view { collectedFiles -> println "DEBUG: From ANNOTATE_PROKKA.out.checksums, collected files: ${collectedFiles}" }
+        ch_output_summary_files = ch_output_summary_files.mix(ch_annotation_checksum)
+    }
 
     /*
     ================================================================================
@@ -877,7 +1010,8 @@ workflow ASSEMBLY {
         }
 
     } else {
-        error("Missing 16S ribosomal RNA database! Database must be supplied to `--blast_db` as either a directory or a .tar.gz file!")
+        log.warn("16S rRNA gene BLASTn will not be performed - database not specified using --blast_db")
+        ch_db_for_blast = Channel.empty()
     }
 
     // PROCESS: Run Blast on predicted 16S ribosomal RNA genes
@@ -899,7 +1033,7 @@ workflow ASSEMBLY {
 
     // PROCESS: Run RDP Classifier on predicted 16S ribosomal RNA genes
     CLASSIFY_16S_RDP (
-        EXTRACT_16S_BARRNAP.out.extracted_rna
+        ch_extracted_rna
     )
     // CLASSIFY_16S_RDP
     //     .view { file -> println "DEBUG: From CLASSIFY_16S_RDP, emitting file: ${file}" }
@@ -922,7 +1056,7 @@ workflow ASSEMBLY {
                                 error "File does not exist or empty size: ${file}"
                             }
                         }
-                        .view { file -> println "DEBUG: From ch_rdp_summary, File to be collected: ${file}" }
+                        // .view { file -> println "DEBUG: From ch_rdp_summary, File to be collected: ${file}" }
                         .collectFile(
                             name:       "${var_assembler_name}.16S_top_genus_RDP.tsv",
                             keepHeader: true,
@@ -935,17 +1069,17 @@ workflow ASSEMBLY {
                             sort:       { file -> file.text },
                             storeDir:   "${params.outdir}/Summaries"
                         )
-                        .view { collectedFiles -> println "DEBUG: From ch_rdp_summary, collected files: ${collectedFiles}" }
+                        // .view { collectedFiles -> println "DEBUG: From ch_rdp_summary, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_rdp_summary)
 
     // PROCESS: Filter Blast output for best alignment, based on bitscore
     BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON (
         ch_blast_output
     )
-    BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
-        .view { file -> println "DEBUG: From BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary, emitting file: ${file}" }
-    BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
-        .view { item -> println "DEBUG: From BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary, channel item: ${item}" }
+    // BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
+    //     .view { file -> println "DEBUG: From BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary, emitting file: ${file}" }
+    // BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary
+    //     .view { item -> println "DEBUG: From BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.summary, channel item: ${item}" }
     ch_versions  = ch_versions.mix(BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON.out.versions)
     ch_top_blast = qcfilecheck(
                         "BEST_16S_BLASTN_BITSCORE_TAXON_PYTHON",
@@ -974,7 +1108,7 @@ workflow ASSEMBLY {
                             sort:       { file -> file.text },
                             storeDir:   "${params.outdir}/Summaries"
                         )
-                        .view { collectedFiles -> println "DEBUG: From ch_top_blast, collected files: ${collectedFiles}" }
+                        // .view { collectedFiles -> println "DEBUG: From ch_top_blast, collected files: ${collectedFiles}" }
     ch_output_summary_files = ch_output_summary_files.mix(ch_top_blast)
 
     /*
@@ -1063,20 +1197,20 @@ workflow ASSEMBLY {
         // Collect summary files into the list_of_files variable
         list_of_files = ch_output_summary_files
             .view { item ->
-                println "DEBUG: From ch_output_summary_files, Received item: ${item.getClass().getName()} - ${item}"
+                // println "DEBUG: From ch_output_summary_files, Received item: ${item.getClass().getName()} - ${item}"
             }
             .filter { item ->
                 // Extract the file if it's a tuple or list
                 def file = (item instanceof List) ? item[1] : item  // Assuming file is the second element in the tuple
                 def fileName = file.getName()  // Convert Path to String
                 if (fileName.startsWith("Summary") && file.size() > 0) {
-                    println "DEBUG: From ch_output_summary_files, Valid summary file found: ${fileName} (Size: ${file.size()} bytes)"
+                    // println "DEBUG: From ch_output_summary_files, Valid summary file found: ${fileName} (Size: ${file.size()} bytes)"
                     return true
                 } else {
                     if (file.size() == 0) {
-                        println "DEBUG: From ch_output_summary_files, Skipping empty summary file: ${fileName}"
+                        // println "DEBUG: From ch_output_summary_files, Skipping empty summary file: ${fileName}"
                     } else {
-                        println "DEBUG: From ch_output_summary_files, Skipping non-summary file: ${fileName}"
+                        // println "DEBUG: From ch_output_summary_files, Skipping non-summary file: ${fileName}"
                     }
                     return false
                 }

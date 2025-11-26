@@ -134,6 +134,10 @@
 
   > Prjibelski A, Antipov D, Meleshko D, Lapidus A, Korobeynikov A. Using SPAdes De Novo Assembler. Curr Protoc Bioinformatics. Jun 2020;70(1):e102. doi: 10.1002/cpbi.102
 
+- [SRA Human Scrubber](https://pubmed.ncbi.nlm.nih.gov/34544477/)
+
+  > Katz KS, Shutov O, Lapoint R, KimelmanM , Brister JR, O'Sullivan C. STAT: a fast, scalable, MinHash-based k-mer tool to assess Sequence Read Archive next-generation sequence submissions. Genome Biol. Sep 20 2021;22: 270. doi: 10.1186/s13059-021-02490-0
+
 - [Trimmomatic](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4103590/)
 
   > Bolger AM, Lohse M, Usadel B. Trimmomatic: a flexible trimmer for Illumina sequence data. Bioinformatics. Aug 1 2014;30(15):2114-20. doi:10.1093/bioinformatics/btu170

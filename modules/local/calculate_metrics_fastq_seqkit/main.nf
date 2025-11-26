@@ -1,5 +1,6 @@
 process CALCULATE_METRICS_FASTQ_SEQKIT {
 
+    label "process_low"
     tag { "${meta.id}" }
     container "staphb/seqkit@sha256:8eb09a52ae932f7c25cfbb8db0df7110567087a187c7e90d46f499962d1c82c9"
 
@@ -51,7 +52,7 @@ process CALCULATE_METRICS_FASTQ_SEQKIT {
 
     NR == 1 {
         # Change header row item from "file" into "Sample_name"
-        $1 = "Sample_name"  
+        $1 = "Sample_name"
 
         # Rename specific header names
         for (i = 1; i <= NF; i++) {

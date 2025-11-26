@@ -3,19 +3,35 @@
 SCRIPT_NAME="$(basename ${0#_} .uge-nextflow)"
 
 # Set profile
-# Get node number - <=230 = biolinux, >=231 = rosalind
-NODE_NUM"=$(echo ${HOSTNAME%%.*} | sed 's/node//1')"
-if [[ ${NODE_NUM} -ge 231 ]]; then
+# Get node number: >=231 = old rosalind, <=230 = biolinux/aspen
+# The new Rosalind RHEL8 uses "rosalind-<INT>" node names not "node<int>" instead
+echo "jobid:  ${SCRIPT_NAME}"
+echo "hostname:  ${HOSTNAME}"
+echo "system:  $(uname -a)"
+echo -e "distro and version:\n$(lsb_release -a | sed 's/^/    /')"
+
+NODE_NUM="$(echo ${HOSTNAME%%.*} | sed 's/node//1')"
+echo "node_num:  $NODE_NUM"
+if [[ "${NODE_NUM}" =~ ^rosalind-[0-9]+$ ]]; then
+  echo "INFO: using rosalind_hpc_age profile ..."
+  HPC='rosalind_hpc_age'
+elif [[ "${NODE_NUM}" =~ ^?[0-9]+$ ]] && [[ ${NODE_NUM} -ge 95 ]]; then
+  echo "INFO: using rosalind_hpc profile ..."
   HPC='rosalind_hpc'
-else
+elif [[ "${NODE_NUM}" =~ ^?[0-9]+$ ]] && [[ ${NODE_NUM} -lt 95 ]]; then
+  echo "INFO: using aspen_hpc profile ..."
   HPC='aspen_hpc'
+else
+  # No regex matches to node<int> Aspen, Biolinux, Rosalind or to rosalind-<INT>
+  echo -e "\n${RED_TXT}Biolinux/Aspen/Rosalind HPC is not detected.\nSubmission cancelled. ${COLOR_OFF}"
+  exit 1
 fi
 
 time_stamp="$(date '+%Y-%b-%d_%a_%H-%M-%S')"
 
-module load nextflow
+module --ignore-cache load nextflow/24.04.2
 nextflow \
-  -log "${OUT}/pipeline_info/nextflow_log.${SCRIPT_NAME}.txt" \
+  -log "${OUT}/pipeline_info/nextflow_log.${time_stamp}.txt" \
   run \
   "${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/main.nf" \
   -profile "${HPC}" \
@@ -27,149 +43,132 @@ nextflow \
   -with-dag "${OUT}/pipeline_info/dag.${time_stamp}.html" \
   --blast_db "${LAB_HOME}/.databases/ncbi" \
   --checkm2_db "${LAB_HOME}/.databases/checkm2" \
-  --kraken1_db "${LAB_HOME}/.databases/kraken1-db-v1.0.0" \
   --kraken2_db "${LAB_HOME}/.databases/kraken2" \
   --sra_scrubber_db "${LAB_HOME}/.databases/sra-human-scrubber/data/human_filter.db" \
-  --subsample_tool seqkit \
   --create_excel_outputs \
   -resume
 
+# Give 15 sec for stdout file to contain the info we wanna parse
+sleep 15
+
 # Check for errors and add to errors.tsv
 # Get nextflow run name
-run_name=$(grep Launching "${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME}" | cut -d '[' -f 2 | cut -d ']' -f 1)
+run_name=$(grep "^Launching" "${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME}" \
+  | cut -d '[' -f 2 | cut -d ']' -f 1)
 
-# Read each line from nextflow log, find info, and add to errors.tsv
-while read -r line; do
-  # If process is already running, clean up error
-  if [[ "${line}" =~ ^Unable[[:space:]]to[[:space:]]acquire[[:space:]]lock.* ]]; then
-    error="You are trying to resume the execution of an already running pipeline."
-    ASM_OUT="$(realpath ${OUT}/pipeline_info/ASM_*.o*)"
-    echo -e "-\t-\t${error}\t${ASM_OUT}\t${time_stamp}\t${run_name}" >> "${OUT}/pipeline_info/errors.tsv"
+# Regex for validating "string_string" pattern
+if [[ ! "$run_name" =~ ^[a-zA-Z0-9]+_[a-zA-Z0-9]+$ ]]; then
+    echo "INFO: extracted nextflow run_name is invalid: $run_name"
+    exit 0
+fi
+
+###
+# Report exit status codes if they exist in the stdout
+###
+mapfile -t error_lines < <(grep "terminated with an error exit status" "${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME}")
+
+# Hopefully no errors and we can just skip
+if [ ${#error_lines[@]} -eq 0 ]; then
+  echo "No errors found, so no errors.tsv created"
+  echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
+    -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
+    -S smtp="smtpgw.cdc.gov" \
+    "${USER}@cdc.gov"
+  exit 0
+fi
+
+# Otherwise, create the errors.tsv file and write headers
+error_file="errors.tsv"
+echo -e "Sample_name\tProcess_name\tExit_node\tError_path\tTime\tRun_name\tRetry_number" > errors.tsv
+
+# Extract Nextflow's single workDir for the entire run (painful due to ASCII chars!)
+work_path=$(grep -P '\x1b\[0;34mworkDir' "${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME}" \
+  | cut -d : -f 2 | sed 's/\x1b\[[0-9;]*m//g' \
+  | sed 's/^[[:space:]]*://; s/^[[:space:]]*//')
+
+# Extract Nextflow's special run name for the entire run (painful due to ASCII chars!)
+run_name=$(grep -P '\x1b\[0;34mrunName' "${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME}" \
+  | cut -d : -f 2 | sed 's/\x1b\[[0-9;]*m//g' \
+  | sed 's/^[[:space:]]*://; s/^[[:space:]]*//')
+
+# Loop through the lines
+for ln in "${error_lines[@]}"; do
+  # Extract process_id (example: [b5/d89f89])
+  process_id=$(echo "$ln" | grep -oP '\[\K[^]]+' || echo "")
+
+  # If process_id is empty, set it to "."
+  if [ -z "$process_id" ]; then
+      error_path='.'
+      time_stamp=''
+  # If process_id is not empty, combine with work_path
   else
-    # Workflow ran some processes
-    sample_name=$(grep "nf-" "${line}/.command.run" | cut -d '(' -f 2 | cut -d ')' -f 1)
-    process=$(grep 'NEXTFLOW TASK' "${line}/.command.run" | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
-    error=$(tail -n 1 "${line}/.command.err" | sed -e 's/\[[^][]*\] //g')
-
-    # Kraken 2 places "Loading database information... done." in error log
-    if [[ ${process} =~ .*READ_CLASSIFY_KRAKEN_TWO$ ]] \
-      && [[ "${error}" =~ Loading[[:space:]]database[[:space:]]information.*$ ]]; then
-      continue
-    fi
-
-    # BBDuk java errors
-    if [[ ${process} =~ .*REMOVE_PHIX_BBDUK$ ]] \
-      && [[ "${error}" =~ .*at.* ]]; then
-      error=$(grep -A1 'java.lang' "${line}/.command.err" | head -n 2 | tail -n 1)
-      if [[ ! "${error}" ]]; then
-        continue
-      elif [[ ${error} =~ ^Mismatch.* ]]; then
-        error="${error}"
-      else
-        error=$(grep 'java.lang' "${line}/.command.err" | awk -F ': ' 'END {print $2}')
+      error_path="${work_path}/${process_id}"
+      time_stamp=$(ls -ld "${error_path}" 2> /dev/null \
+        | awk '{print $6, $7, $8}' \
+        | xargs -I {} date -d "{}" '+%Y-%b-%d %a %H:%M:%S')
+      if [ -z "$time_stamp" ]; then
+          time_stamp='.'
       fi
-    elif [[ ${process} =~ .*REMOVE_PHIX_BBDUK$ ]] \
-      && [[ "${error}" =~ "Input is being processed as unpaired" ]]; then
-      continue
-    fi
-
-    # SPAdes errors - typically ran out of memory
-    if [[ ${process} =~ .*ASSEMBLE_CONTIGS_SPADES$ ]]; then
-      error="ERROR: SPAdes failed. Did it run out of memory?"
-    fi
-
-    # Check if error is from file checks
-    if [[ ${error} =~ .+Check[[:space:]]failed$ ]]; then
-      get_previous_process_workdir=$(dirname $(grep "ln -s" "${line}/.command.run" | grep "work" | awk 'END {print $(NF-1)}' ))
-      process=$(grep "nf-" "${get_previous_process_workdir}/.command.run" | awk -F 'nf-' '{print $2}' | sed -e 's/_(.*//')
-      line="${get_previous_process_workdir}"
-    fi
-
-    # If process for sample retried and succeeded, ignore
-    if [[ $(find "${OUT}/pipeline_info/process_logs/" -type f -name "${sample_name}.*${process}*.command.out") ]] \
-      && [[ $(cat "${line}/.exitcode") = @(0|71|104|134|137|139|140|143|245|250|255) ]]; then
-      continue
-    else
-      echo -e "${sample_name}\t${process}\t${error}\t${line}\t${time_stamp}\t${run_name}" >> "${OUT}/pipeline_info/errors.tsv"
-    fi
   fi
-done < <(nextflow log "${run_name}" -filter 'status == "FAILED"')
 
-# Look for errors from process EXTRACT_16S_BIOPYTHON
-biopython_rna_errors=( $(find "${OUT}/.work" -type f -name ".command.err" -exec grep -l "ERROR: \['16S ribosomal RNA'\]" '{}' \;) )
-if [[ "${biopython_rna_errors}" ]]; then
-  for line in "${biopython_rna_errors[@]}"; do
-    work_dir=$(dirname "${line}")
-    error=$(tail -n 1 "${line}" | sed -e 's/[][]//g' | awk -F '/' '{print $1 $NF}')
-    sample_name=$(grep "nf-" "${work_dir}/.command.run" | cut -d '(' -f 2 | cut -d ')' -f 1)
-    process=$(grep "NEXTFLOW TASK" "${work_dir}/.command.run" | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
+  # Extract Sample_Name (inside the parentheses within the backticks)
+  sample_name=$(echo "$ln" | grep -oP '\`[^`]*\(\K[^\)]+(?=\))' | head -n 1)
 
-    # Append to errors.tsv
-    echo -e "${sample_name}\t${process}\t${error}\t${work_dir}\t${time_stamp}\t${run_name}" >> "${OUT}/pipeline_info/errors.tsv"
-  done
-fi
+  # Extract the exit code (number after 'exit status')
+  exit_code=$(echo "$ln" | grep -oP 'exit status \(\K[0-9]+')
 
-# Parse HPC stdout file for QC check failures
-QC_FAILURES=()
-while read -r line; do
-  QC_FAILURES+=("${line}")
-done < <(awk '/QC check failed/ {print $(NF-3), "("$NF")"}' "${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME}")
+  # Extract Process ID from the square brackets (if present)
+  process_id=$(echo "$ln" | grep -oP '\[([^\]]+)\]' | tr -d '[]')
 
-if [[ "${QC_FAILURES}" ]]; then
-  # Loop over each QC failure
-  for f in "${QC_FAILURES[@]}"; do
-    # Get work directory
-    short_wd=$(grep "$f" "${OUT}/pipeline_info/ASM_*.o${SCRIPT_NAME}" | awk -F '[][]' '{print $2}')
-    wd_path=$(realpath "${OUT}/.work/${short_wd}"*)
+  # Extract Process_Name (remove everything before the colon and also remove parentheses)
+  process_name=$(echo "$ln" | sed -E 's/.*:([^(]*)\(.*/\1/')
 
-    # Get first error
-    error=$(grep "ERROR" "${wd_path}/.command.err" | head -n 1 | sed -e 's/\[[^][]*\] //g')
+  # Extract Retries (number after '-- Execution is retried')
+  retries=$(echo "$ln" | grep -oP 'Execution is retried \(\K[0-9]+')
+  if [ -z "$retries" ]; then
+      retries='.'
+  fi
 
-    process=$(grep "NEXTFLOW TASK" "${wd_path}/.command.run" | awk -F ':' '{print $NF}' | cut -d ' ' -f 1)
-    sample_name=$(echo "${f}" | awk -F "[()]" '{print $2}')
+  echo -e "$sample_name\t$process_name\t$exit_code\t$error_path\t$time_stamp\t$run_name\t$retries" >> errors.tsv
+done
 
-    # Append to errors.tsv
-    echo -e "${sample_name}\t${process}\t${error}\t${wd_path}\t${time_stamp}\t${run_name}" >> "${OUT}/pipeline_info/errors.tsv"
-  done
-fi
-
-# If errors.tsv found ...
-if [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
-  # Add column headers
-  sed -i '1i Sample Name\tProcess\tError\tError Directory\tTimestamp\tRun Name' "${OUT}/pipeline_info/errors.tsv"
-
-  # Remove duplicate lines and lines that have an empty first column
-  awk -F $'\t' '!_[$1,$2,$3,$6]++' "${OUT}/pipeline_info/errors.tsv" \
-    | awk -F $'\t' '$1{print $0}' \
-    > "${OUT}/pipeline_info/errors_new.tsv"
-
-  # Delete original errors.tsv and rename errors_new.tsv
-  rm "${OUT}/pipeline_info/errors.tsv"
-
-  mv "${OUT}/pipeline_info/errors_new.tsv" \
-    "${OUT}/pipeline_info/errors.tsv"
-fi
-
-# Count lines in Summary.GenomeCoverage.tsv
-if [[ -f "${OUT}/Summaries/Summary.GenomeCoverage.tsv" ]]; then
-  num_assemblies=$(awk 'END {print NR-1}' "${OUT}/Summaries/Summary.GenomeCoverage.tsv")
+# Count samples (total lines - 1 header line) in Summary.Assembly_Depth.tsv
+num_assemblies=0
+if [[ -f "${OUT}/Summaries/Summary.Assembly_Depth.tsv" ]]; then
+  num_assemblies=$(awk 'END {print NR-1}' "${OUT}/Summaries/Summary.Assembly_Depth.tsv")
 fi
 
 # E-mail completion status
-if [[ -f "${OUT}/Summaries/Summary.GenomeCoverage.tsv" ]] \
+if [[ -f "${OUT}/Summaries/Summary-Report.xlsx" ]] \
   && [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
   -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
-  -a "${OUT}/Summaries/Summary.GenomeCoverage.tsv" \
+  -a "${OUT}/Summaries/Summary-Report.xlsx" \
   -a "${OUT}/pipeline_info/errors.tsv" \
   "${USER}@cdc.gov"
 
-elif [[ -f "${OUT}/Summaries/Summary.GenomeCoverage.tsv" ]]; then
+elif [[ -f "${OUT}/Summaries/Summary.Assembly_Depth.tsv" ]] \
+  && [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then
   echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
   -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
   -S smtp="smtpgw.cdc.gov" \
-  -a "${OUT}/Summaries/Summary.GenomeCoverage.tsv" \
+  -a "${OUT}/Summaries/Summary.Assembly_Depth.tsv" \
+  -a "${OUT}/pipeline_info/errors.tsv" \
+  "${USER}@cdc.gov"
+
+elif [[ -f "${OUT}/Summaries/Summary-Report.xlsx" ]]; then
+  echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
+  -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
+  -S smtp="smtpgw.cdc.gov" \
+  -a "${OUT}/Summaries/Summary-Report.xlsx" \
+  "${USER}@cdc.gov"
+
+elif [[ -f "${OUT}/Summaries/Summary.Assembly_Depth.tsv" ]]; then
+  echo -e "Assembly and QA finished on $(date)\n${OUT}" | mail \
+  -s "${num_assemblies} assembled $(basename "${OUT}") [HPC]" \
+  -S smtp="smtpgw.cdc.gov" \
+  -a "${OUT}/Summaries/Summary.Assembly_Depth.tsv" \
   "${USER}@cdc.gov"
 
 elif [[ -f "${OUT}/pipeline_info/errors.tsv" ]]; then

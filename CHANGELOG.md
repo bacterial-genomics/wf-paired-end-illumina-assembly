@@ -3,6 +3,32 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v3.1.0 - November 26, 2025
+
+### `Added`
+
+- Consistent metrics in TSV formatted reports for each downsampling/subsampling step (@chrisgulvik)
+- Summary file now explicitly lists whether a sample was downsampled or not (@chrisgulvik)
+- Added support for HPC job scheduler AGE v8.9.0 (@chrisgulvik)
+- [#99] Bakta for annotation tool added (@bhavani-patel)
+
+### `Changed`
+
+- Kraken1 no longer by default runs, only Kraken2 (@chrisgulvik)
+- Turn off species-level SSU BLASTn-based classification by default (@chrisgulvik)
+
+### `Fixed`
+
+- MLST TSV bugfix for column names with unassigned ST-# (@chrisgulvik)
+- Avoid upsampling when subsample fraction is 1.0 (100%) or more (@chrisgulvik)
+- Use seqtk seed val for subsampling rather than seqkit seed val (@chrisgulvik)
+
+### `Updated`
+
+- Updated the nextflow_schema.json file; tested working with most options hidden by default on Seqera Platform, formerly Nextflow Tower (@chrisgulvik)
+
+### `Deprecated`
+
 ## v3.0.0 - November 15, 2024
 
 ### `Added`

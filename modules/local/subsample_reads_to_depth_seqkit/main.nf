@@ -5,11 +5,11 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
     container "staphb/seqkit@sha256:8eb09a52ae932f7c25cfbb8db0df7110567087a187c7e90d46f499962d1c82c9"
 
     input:
-    tuple val(meta), path(reads), path(depth), path(fraction_of_reads)
+    tuple val(meta), path(reads), path(estimated_depth_file), path(downsample_fraction_file)
 
     output:
-    tuple val(meta), path("*.{fastq,fq}.gz", includeInputs: true), emit: reads
-    path("${meta.id}.Subsampled_FastQ.SHA512-checksums.tsv")     , emit: checksums
+    tuple val(meta), path("*.{fastq,fq}.gz", includeInputs: true), path("downsampled.flag"), emit: reads
+    path("${meta.id}.Subsampled_FastQ.SHA512-checksums.tsv"), optional: true               , emit: checksums
     path(".command.{out,err}")
     path("versions.yml")                                         , emit: versions
 
@@ -19,8 +19,8 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
     '''
     source bash_functions.sh
 
-    fraction_of_reads_to_use=$(cat !{fraction_of_reads})
-    initial_depth=$(cat !{depth})
+    fraction_of_reads_to_use=$(awk 'NR==2 {print ($2 != "" ? $2 : 0)}' !{downsample_fraction_file})
+    initial_depth=$(awk 'NR==2 {print ($2 != "" ? $2 : 0)}' !{estimated_depth_file})
 
     depth="!{params.depth}"
 
@@ -29,6 +29,11 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
     if ! [[ ${fraction_of_reads_to_use} =~ ^[0-9.]+$ ]]; then
       msg "ERROR: Unable to calculate a fraction to subsample; ${fraction_of_reads_to_use} not a floating point value" >&2
       exit 1
+    fi
+    if [[ ${fraction_of_reads_to_use} -ge 1 ]]; then
+      msg "INFO: Subsample fraction is 1.0 (100%) or more. Skipping downsampling routine."
+      touch "!{meta.id}.Subsampled_FastQ.SHA512-checksums.tsv" versions.yml
+      exit 0
     fi
     if [ ${depth%.*} -gt 0 ] && [ ${initial_depth%.*} -gt ${depth%.*} ]; then
       msg "INFO: Subsampling !{meta.id} R1 with seqkit using seed:!{params.seqkit_seed} ..."
@@ -51,6 +56,10 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
         --out-file "!{meta.id}_R2.subsampled.fastq.gz" \
         2> seqkit.R2.stderr.txt
 
+      # Form the status TSV output to denote the sample has been downsampled
+      echo -e "Sample_name\tDownsampled_[Yes|No]" > "!{meta.id}.Downsample_Status.tsv"
+      echo -e "!{meta.id}\tYes" >> "!{meta.id}.Downsample_Status.tsv"
+
       msg "INFO: Completed subsampling of R1 and R2 by seqkit"
 
       # Discard symlink infiles to avoid them being passed as outfiles when
@@ -59,6 +68,7 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
 
       number_output_R1_sequences=$(grep 'sequences outputted' seqkit.R1.stderr.txt | awk '{print $2}')
       number_output_R2_sequences=$(grep 'sequences outputted' seqkit.R2.stderr.txt | awk '{print $2}')
+      echo 'true' > downsampled.flag
 
       msg "INFO: Subsampled reads contain: ${number_output_R1_sequences} and ${number_output_R2_sequences} sequences"
 
@@ -66,7 +76,8 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
       # The input FastQ files that were never subsampled will get passed on
       #   as outputs here with the 'includeInputs: true'
       msg "INFO: Subsampling not requested or required for !{meta.id}"
-      touch "!{meta.id}.Subsampled_FastQ.SHA512-checksums.tsv" versions.yml
+      touch versions.yml
+      echo 'false' > downsampled.flag
       exit 0
     fi
 

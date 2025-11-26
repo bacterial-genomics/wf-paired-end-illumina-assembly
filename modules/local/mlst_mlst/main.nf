@@ -1,7 +1,7 @@
 process MLST_MLST {
 
     tag { "${meta.id}-${meta.assembler}" }
-    container "staphb/mlst@sha256:17e78a25fc5171706b22c8c3d4b1ca2352593b56fef8f28401dd5da3e2e7abe8"  // staphb/mlst:2.23.0-2024-09-01
+    container "gregorysprenger/mlst@sha256:69c8c8027474b8f361ef4a579df171702f3ed52f45e3fb388a41ccbf4542706f"  // staphb/mlst:2.23.0-2024-11-01
 
     input:
     tuple val(meta), path(assembly)
@@ -72,9 +72,15 @@ process MLST_MLST {
         }
         {$1=id; print}' \
         "!{meta.id}-!{meta.assembler}.MLST.tsv" \
-        > tmp \
+        > tmp
+
+      # Ensure column number is consistent by adding extra \t- to unassigned MLST.
+      # Unassigned MLST currently has n=3 ("2009999999_S2_L001\t-\t-") whereas
+      #   the header is n=4 ("Sample_name\tPubMLST_scheme_name\tSequence_type_(ST-#)\tAllele_numbers")
+      awk '{if ($0 ~ /\t-\t-$/) $0 = $0 "\t-"; print}' \
+        tmp > tmp.tsv \
         && \
-        mv tmp "!{meta.id}-!{meta.assembler}.MLST.tsv"
+        mv tmp.tsv "!{meta.id}-!{meta.assembler}.MLST.tsv"
 
       msg "INFO: Appended header to MLST summary output file"
 

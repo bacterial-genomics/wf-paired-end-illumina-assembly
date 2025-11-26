@@ -2,7 +2,7 @@ process CLASSIFY_CONTIGS_CAT {
 
     label "process_high"
     tag { "${meta.id}" }
-    container "tpaisie/cat:latest"
+    container "staphb/cat@sha256:fa60e685cc316bab300f82562ea3efd02302b084c67d5b10b1762526860c6192"
 
     input:
     tuple val(meta), path(assembly)
@@ -55,7 +55,6 @@ process CLASSIFY_CONTIGS_CAT {
     if [[ "${CREATE_SUMMARY}" ]] && \
       [[ ! $(grep "__" *.txt) ]]; then
       msg "INFO: Adding names to CAT ORF2LCA output file for !{meta.id} ..."
-
       CAT \
         add_names \
         --only_official \
@@ -64,7 +63,6 @@ process CLASSIFY_CONTIGS_CAT {
         --taxonomy_folder tax
 
       msg "INFO: Adding names to CAT contig2classification output file for !{meta.id} ..."
-
       CAT \
         add_names \
         --only_official \
@@ -78,9 +76,9 @@ process CLASSIFY_CONTIGS_CAT {
         --input_file !{meta.id}.CAT-Classification.names.tsv \
         --output_file !{meta.id}.CAT-Classification.names.summary.tsv \
         --contigs_fasta "!{assembly}"
-      
+
       # Custom simplified TSV reports
-      msg "INFO: Creating custom simpler CAT summary file for !{meta.id} ..."
+      msg "INFO: Creating custom simpler CAT contig summary file for !{meta.id} ..."
       grep '^# rank' !{meta.id}.CAT-Classification.names.summary.tsv \
         | sed "s/^# /Sample_name\t/1;s/ /_/g" \
         > Contigs.header_line.tsv
@@ -91,6 +89,7 @@ process CLASSIFY_CONTIGS_CAT {
         Contigs.only-supported-data.tsv \
         > !{meta.id}.Contigs.tsv
 
+      msg "INFO: Creating custom simpler CAT unique-lineages summary file for !{meta.id} ..."
       grep '^# ORF' !{meta.id}.CAT-Classification.ORF2LCA.names.tsv \
         | sed "s/^# /Sample_name\t/1;s/ /_/g" \
         | awk -v var=!{meta.id} '{print var "\t" $0}' \

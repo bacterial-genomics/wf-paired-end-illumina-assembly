@@ -43,7 +43,8 @@ process FILTER_CONTIGS_BIOPYTHON {
       gzip -9f "!{meta.id}-!{meta.assembler}.discarded-contigs.fa"
       msg "INFO: discarded contigs saved as !{meta.id}-!{meta.assembler}.discarded-contigs.fa.gz"
     else
-      msg "INFO: no contigs were discarded, therefore not storing empty !{meta.id}-!{meta.assembler}.discarded-contigs.fa.gz file"
+      msg "INFO: no contigs were discarded, therefore storing empty !{meta.id}-!{meta.assembler}.discarded-contigs.fa.gz file"
+      touch "!{meta.id}-!{meta.assembler}.discarded-contigs.fa.gz"
     fi
 
     # Get process version information

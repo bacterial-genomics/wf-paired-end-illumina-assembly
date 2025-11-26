@@ -70,6 +70,18 @@ nextflow run main.nf \
   --assembler <spades|skesa>
 ```
 
+## Fetching singularity images (convert Dockerfile to singularity)
+
+On an HPC shared environment, you will find significant speed up on run times by locally storing the images and pointing the workflow to them instead of relying on Nextflow to download for each run executed. For example, the Rosalind_HPC config file `singularity.cacheDir   = "${LAB_HOME}/workflows/singularity.cache"` expects them to be placed into a single directory. To manually fetch a singularity image, using CAT as an example, this can be done:
+
+```bash
+cd "${LAB_HOME}/workflows/singularity.cache"
+singularity \
+  pull \
+  --name "staphb-cat@sha256:fa60e685cc316bab300f82562ea3efd02302b084c67d5b10b1762526860c6192.img" \
+  docker://staphb/cat@sha256:fa60e685cc316bab300f82562ea3efd02302b084c67d5b10b1762526860c6192
+```
+
 ## Help menu of all options
 
 ```bash

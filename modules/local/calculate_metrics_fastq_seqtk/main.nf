@@ -1,5 +1,6 @@
 process CALCULATE_METRICS_FASTQ_SEQTK {
 
+    label "process_low"
     tag { "${meta.id}" }
     container "staphb/seqtk@sha256:82797114adb664ba939b4f6dfcb822483a4af827def4288e5207be559055f2cc"
 

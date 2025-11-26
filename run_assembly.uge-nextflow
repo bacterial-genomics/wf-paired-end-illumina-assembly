@@ -100,6 +100,8 @@ fi
 if [ "${HOSTNAME%%.*}" == 'biolinux' ] || \
   [ "${HOSTNAME%%.*}" == 'login02' ] || \
   [ "${HOSTNAME%%.*}" == 'rosalind01' ] || \
+  [ "${HOSTNAME%%.*}" == 'rosalind02' ] || \
+  [ "$(echo ${HOSTNAME%%.*} | sed 's/[0-9]//g')" == 'rosalind-' ] || \
   [ "$(echo ${HOSTNAME%%.*} | sed 's/[0-9]//g')" == 'node' ]; then
   :
 else
@@ -294,14 +296,15 @@ fi
 # Set up log directory in OUT directory
 mkdir -p "${OUT}/pipeline_info"
 
-# Get node number - <=230 = biolinux, >=231 = rosalind
+# Get node number: <=230 = biolinux/aspen, >=231 = rosalind
+# The new Rosalind RHEL8 uses "rosalind-<INT>" node names not "node<int>" instead
 NODE_NUM="$(echo ${HOSTNAME%%.*} | sed 's/node//1')"
 
 # If FastQ files are able to be submitted, submit and display basenames
-if [[ ${#submitted[@]} -ge 1 ]] && \
-  [[ ${HOSTNAME%%.*} == 'biolinux' || 'login02' ]] || \
-  [[ ${NODE_NUM} -le 230 ]]; then
-  # Submit Nextflow pipeline to Aspen HPC
+if [[ ${HOSTNAME%%.*} == 'rosalind02' ]] || \
+  [[ "${HOSTNAME%%.*}" =~ ^rosalind-[0-9]+$ ]]; then
+  # Submit Nextflow pipeline to Rosalind HPC with AGE 2024.1.0 (v8.9.0)
+  # Red Hat Enterprise Linux release 8.10 (Ootpa)
   qsub \
     -m ba \
     -q all.q \
@@ -317,10 +320,10 @@ if [[ ${#submitted[@]} -ge 1 ]] && \
     -v NXF_SINGULARITY_CACHEDIR="${SINGULARITY_CACHEDIR}" \
     "${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow"
 
-elif [[ ${#submitted[@]} -ge 1 ]] && \
-  [[ ${HOSTNAME%%.*} == 'rosalind01' ]] || \
-  [[ ${NODE_NUM} -ge 231 ]]; then
-  # Submit Nextflow pipeline to Rosalind HPC
+elif [[ ${HOSTNAME%%.*} == 'rosalind01' ]] || \
+  [[ "${HOSTNAME%%.*}" =~ ^node[0-9]+$ ]]; then
+  # Submit Nextflow pipeline to Rosalind HPC with AGE Sep 2021 (v8.7.0)
+  # CentOS Linux release 7.9.2009 (Core)
   qsub \
     -m ba \
     -q all.q \
@@ -331,12 +334,56 @@ elif [[ ${#submitted[@]} -ge 1 ]] && \
     -M "${USER}@cdc.gov" \
     -v LAB_HOME="${LAB_HOME}" \
     -N "ASM_${#submitted[@]}" \
-    -l max_runtime=72:00:00 \
     -v SINGULARITY_TMPDIR="${SINGULARITY_TMPDIR}" \
     -v SINGULARITY_CACHEDIR="${SINGULARITY_CACHEDIR}" \
     -v NXF_SINGULARITY_CACHEDIR="${SINGULARITY_CACHEDIR}" \
     "${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow"
 
+# Get node number: <=230 = biolinux/aspen, >=231 = rosalind
+elif [[ "${NODE_NUM}" =~ ^?[0-9]+$ ]]; then
+
+  if [[ ${#submitted[@]} -ge 1 ]] && \
+    [[ ${HOSTNAME%%.*} == 'rosalind01' ]] || \
+    [[ ${NODE_NUM} -ge 231 ]]; then
+    # Submit Nextflow pipeline to old Rosalind HPC with AGE v8.7.0 (Sep 2021) scheduler
+    # CentOS Linux release 7.9.2009 (Core)
+    qsub \
+      -m ba \
+      -q all.q \
+      -v IN="${IN}" \
+      -v OUT="${OUT}" \
+      -o "${OUT}/pipeline_info" \
+      -e "${OUT}/pipeline_info" \
+      -M "${USER}@cdc.gov" \
+      -v LAB_HOME="${LAB_HOME}" \
+      -N "ASM_${#submitted[@]}" \
+      -l h_vmem=50G,h_rt=600:00:00 \
+      -v SINGULARITY_TMPDIR="${SINGULARITY_TMPDIR}" \
+      -v SINGULARITY_CACHEDIR="${SINGULARITY_CACHEDIR}" \
+      -v NXF_SINGULARITY_CACHEDIR="${SINGULARITY_CACHEDIR}" \
+      "${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow"
+
+  elif [[ ${#submitted[@]} -ge 1 ]] && \
+    [[ ${HOSTNAME%%.*} == 'biolinux' || 'login02' ]] || \
+    [[ ${NODE_NUM} -le 230 ]]; then
+    # Submit Nextflow pipeline to Aspen HPC with UGE v8.4.3 scheduler
+    qsub \
+      -m ba \
+      -q all.q \
+      -v IN="${IN}" \
+      -v OUT="${OUT}" \
+      -o "${OUT}/pipeline_info" \
+      -e "${OUT}/pipeline_info" \
+      -M "${USER}@cdc.gov" \
+      -v LAB_HOME="${LAB_HOME}" \
+      -N "ASM_${#submitted[@]}" \
+      -v SINGULARITY_TMPDIR="${SINGULARITY_TMPDIR}" \
+      -v SINGULARITY_CACHEDIR="${SINGULARITY_CACHEDIR}" \
+      -v NXF_SINGULARITY_CACHEDIR="${SINGULARITY_CACHEDIR}" \
+      "${LAB_HOME}/workflows/wf-paired-end-illumina-assembly/_run_assembly.uge-nextflow"
+  fi
+
+# No regex matches to node<int> Aspen, Biolinux, Rosalind or to rosalind-<INT>
 else
   echo -e "${RED_TXT}Biolinux/Aspen/Rosalind HPC is not detected.\nSubmission cancelled. ${COLOR_OFF}"
   exit 1

@@ -6,6 +6,65 @@ import org.yaml.snakeyaml.Yaml
 
 class Utils {
 
+/*
+NOTE: These can't be used in a config file to handle job submission in a better
+way, but I'm just keeping them here for reference.
+
+    // Extract numeric value and suffix from a string
+    static def extract_number_and_suffix(value) {
+        def match = (value =~ /([\d.]+)([a-zA-Z]+)/)
+        if (match) {
+            return [match[0][1] as double, match[0][2]]
+        } else {
+            throw new IllegalArgumentException("Invalid format: $value")
+        }
+    }
+
+    // Adjust resources dynamically based on exit codes
+    static def adjust_resources(base_value, resource_type, task) {
+        if (task.attempt == 1) return base_value  // Keep defaults on first attempt
+
+        def scale_factor = 1.0  // Initialize scale factor
+
+        if ([71, 134, 137, 139, 140].contains(task.exitStatus) && resource_type == 'memory') {
+            scale_factor = 1.5
+        } else if ([143, 250].contains(task.exitStatus) && resource_type == 'time') {
+            scale_factor = 1.5
+        } else if ([104, 255].contains(task.exitStatus) && (resource_type == 'cpu' || resource_type == 'memory')) {
+            scale_factor = 1.2
+        }
+
+        return base_value * scale_factor  // Return adjusted value
+    }
+
+    // Check if a queue has available CPU slots
+    static def is_queue_available(queue_name, required_cpus) {
+        def cmd = "qstat -g c | awk '\$1 == \"$queue_name\" {print \$3, \$4}'"
+        def output = cmd.execute().text.trim()
+        if (!output) return false
+        def (used, total) = output.tokenize()*.toInteger()
+        return (total - used) >= required_cpus
+    }
+
+    // Select the best queue based on CPU, memory, and time requirements
+    static def select_queue(required_cpus, required_memory, required_time, params) {
+        def (memory_value, memory_suffix) = extract_number_and_suffix(required_memory)
+        def (time_value, time_suffix) = extract_number_and_suffix(required_time)
+        for (queue in params.sge_queues.keySet()) {
+            def resources = params.sge_queues[queue]
+            def (queue_memory_value, _) = extract_number_and_suffix(resources.memory)
+            def (queue_time_value, _unused_var) = extract_number_and_suffix(resources.time)
+            if (resources.cpus >= required_cpus &&
+                queue_memory_value >= memory_value &&
+                queue_time_value >= time_value &&
+                is_queue_available(queue, required_cpus)) {
+                return queue
+            }
+        }
+        return 'short.q'
+    }
+*/
+
     //
     // When running with -profile conda, warn if channels have not been set-up appropriately
     //
