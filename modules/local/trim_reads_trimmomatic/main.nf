@@ -16,7 +16,7 @@ process TRIM_READS_TRIMMOMATIC {
     path(".command.{out,err}")
     path("versions.yml")                                       , emit: versions
 
-    shell:
+    script:
     keep_both_reads           = params.trimmomatic_keep_both_reads                                                      ? 'TRUE'                                       : 'FALSE'
     phred                     = (params.trimmomatic_phred == 64)                                                        ? '-phred64'                                   : '-phred33'
     min_length                = (params.trimmomatic_min_length >= 1)                                                    ? params.trimmomatic_min_length                : 50
@@ -30,67 +30,67 @@ process TRIM_READS_TRIMMOMATIC {
     palindrome_clip_threshold = (params.trimmomatic_palindrome_clip_threshold >= 1)                                     ? params.trimmomatic_palindrome_clip_threshold : 20
 
     illumina_clip_params      = "${seed_mismatches}:${palindrome_clip_threshold}:${simple_clip_threshold}:${min_adapter_length}:${keep_both_reads}"
-    '''
+    """
     source bash_functions.sh
 
     # Verify adapter reference file size
-    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.Adapters_FastA_File.tsv"
-    if verify_minimum_file_size "!{adapter_reference_file}" 'Adapters FastA' "!{params.min_filesize_adapters}"; then
-      echo -e "!{meta.id}\tAdapters FastA File\tPASS" >> "!{meta.id}.Adapters_FastA_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "${meta.id}.Adapters_FastA_File.tsv"
+    if verify_minimum_file_size "${adapter_reference_file}" 'Adapters FastA' "${params.min_filesize_adapters}"; then
+      echo -e "${meta.id}\tAdapters FastA File\tPASS" >> "${meta.id}.Adapters_FastA_File.tsv"
     else
-      echo -e "!{meta.id}\tAdapters FastA File\tFAIL" >> "!{meta.id}.Adapters_FastA_File.tsv"
+      echo -e "${meta.id}\tAdapters FastA File\tFAIL" >> "${meta.id}.Adapters_FastA_File.tsv"
     fi
 
     # Adapter clip and quality trim
-    msg "INFO: Performing read trimming on !{meta.id} with Trimmomatic ..."
+    msg "INFO: Performing read trimming on ${meta.id} with Trimmomatic ..."
 
     # NOTE: *order* matters on trimming here with Trimmomatic!!!
     trimmomatic PE \
-      "!{phred}" \
-      -threads "!{task.cpus}" \
-      "!{reads[0]}" "!{reads[1]}" \
-      "!{meta.id}_R1.paired.fq" "!{meta.id}_R1.unpaired.fq" \
-      "!{meta.id}_R2.paired.fq" "!{meta.id}_R2.unpaired.fq" \
-      ILLUMINACLIP:"!{adapter_reference_file}":"!{illumina_clip_params}" \
-      SLIDINGWINDOW:"!{window_size}":"!{req_quality}" \
-      LEADING:"!{leading_quality}" \
-      TRAILING:"!{trailing_quality}" \
-      MINLEN:"!{min_length}"
+      "${phred}" \
+      -threads "${task.cpus}" \
+      "${reads[0]}" "${reads[1]}" \
+      "${meta.id}_R1.paired.fq" "${meta.id}_R1.unpaired.fq" \
+      "${meta.id}_R2.paired.fq" "${meta.id}_R2.unpaired.fq" \
+      ILLUMINACLIP:"${adapter_reference_file}":"${illumina_clip_params}" \
+      SLIDINGWINDOW:"${window_size}":"${req_quality}" \
+      LEADING:"${leading_quality}" \
+      TRAILING:"${trailing_quality}" \
+      MINLEN:"${min_length}"
 
-    msg "INFO: Completed read trimming on !{meta.id} with Trimmomatic"
+    msg "INFO: Completed read trimming on ${meta.id} with Trimmomatic"
 
-    cat !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq > "!{meta.id}_single.fq"
+    cat ${meta.id}_R1.unpaired.fq ${meta.id}_R2.unpaired.fq > "${meta.id}_single.fq"
 
-    rm -f !{meta.id}_R1.unpaired.fq !{meta.id}_R2.unpaired.fq
+    rm -f ${meta.id}_R1.unpaired.fq ${meta.id}_R2.unpaired.fq
 
     # Parse input, discard, and output counts
-    NUM_INPUT_READS=$(grep '^Input Read Pairs: ' .command.err \
-      | awk '{print $4}')
+    NUM_INPUT_READS=\$(grep '^Input Read Pairs: ' .command.err \
+      | awk '{print \$4}')
 
     ### NUM_INPUT_BASES=  **missing**; skip slow calc; SeqKit does this on previous process output
 
-    NUM_REMOVED_READS=$(grep '^Input Read Pairs: ' .command.err \
-      | grep ' Dropped: ' | awk '{print $20}')
+    NUM_REMOVED_READS=\$(grep '^Input Read Pairs: ' .command.err \
+      | grep ' Dropped: ' | awk '{print \$20}')
 
-    PERCENT_REMOVED_READS=$(grep '^Input Read Pairs: ' .command.err \
-      | grep ' Dropped: ' | awk '{print $21}' | tr -d '()%')
+    PERCENT_REMOVED_READS=\$(grep '^Input Read Pairs: ' .command.err \
+      | grep ' Dropped: ' | awk '{print \$21}' | tr -d '()%')
 
-    NUM_OUTPUT_PAIRED_READS=$(wc -l "!{meta.id}_R1.paired.fq" | awk '{print $1/2}')
+    NUM_OUTPUT_PAIRED_READS=\$(wc -l "${meta.id}_R1.paired.fq" | awk '{print \$1/2}')
 
-    NUM_OUTPUT_SINGLE_READS=$(wc -l "!{meta.id}_single.fq" | awk '{print $1/4}')
+    NUM_OUTPUT_SINGLE_READS=\$(wc -l "${meta.id}_single.fq" | awk '{print \$1/4}')
 
-    NUM_OUTPUT_READS=$((${NUM_OUTPUT_PAIRED_READS} + ${NUM_OUTPUT_SINGLE_READS}))
+    NUM_OUTPUT_READS=\$((\${NUM_OUTPUT_PAIRED_READS} + \${NUM_OUTPUT_SINGLE_READS}))
 
     ### NUM_REMOVED_BASES=  **missing**; skip slow calc
     ### PERCENT_REMOVED_BASES=  **missing**; skip slow calc
 
-    PERCENT_OUTPUT_READS=$(echo "${NUM_REMOVED_READS}" "${NUM_INPUT_READS}" \
-      | awk '{proportion=$1/$2} END{printf("%.6f", 100-(proportion*100))}')
+    PERCENT_OUTPUT_READS=\$(echo "\${NUM_REMOVED_READS}" "\${NUM_INPUT_READS}" \
+      | awk '{proportion=\$1/\$2} END{printf("%.6f", 100-(proportion*100))}')
 
     ### NUM_OUTPUT_BASES=  **missing**; skip slow calc; SeqKit does this in next process input
     ### PERCENT_OUTPUT_BASES=  **missing**; skip slow calc; SeqKit does this in next process input
 
-    msg "INFO: ${NUM_REMOVED_READS} reads (${PERCENT_REMOVED_READS}% of input) were discarded"
+    msg "INFO: \${NUM_REMOVED_READS} reads (\${PERCENT_REMOVED_READS}% of input) were discarded"
 
     # Form and create a summary file of input, discarded, and output
     SUMMARY_HEADER=(
@@ -109,63 +109,63 @@ process TRIM_READS_TRIMMOMATIC {
       # "Output_basepairs_(%)"
 
     SUMMARY_OUTPUT=(
-      "!{meta.id}"
-      "${NUM_INPUT_READS}"
-      "${NUM_REMOVED_READS}"
-      "${PERCENT_REMOVED_READS}"
-      "${NUM_OUTPUT_READS}"
-      "${PERCENT_OUTPUT_READS}"
+      "${meta.id}"
+      "\${NUM_INPUT_READS}"
+      "\${NUM_REMOVED_READS}"
+      "\${PERCENT_REMOVED_READS}"
+      "\${NUM_OUTPUT_READS}"
+      "\${PERCENT_OUTPUT_READS}"
     )
       # Skipped these slow calcs (fastp provides these but not trimmomatic)
-      # "${NUM_INPUT_BASES}"
-      # "${NUM_REMOVED_BASES}"
-      # "${PERCENT_REMOVED_BASES}"
-      # "${NUM_OUTPUT_BASES}"
-      # "${PERCENT_OUTPUT_BASES}"
+      # "\${NUM_INPUT_BASES}"
+      # "\${NUM_REMOVED_BASES}"
+      # "\${PERCENT_REMOVED_BASES}"
+      # "\${NUM_OUTPUT_BASES}"
+      # "\${PERCENT_OUTPUT_BASES}"
 
-    SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//1')
-    SUMMARY_OUTPUT=$(printf "%s\t" "${SUMMARY_OUTPUT[@]}" | sed 's/\t$//1')
+    SUMMARY_HEADER=\$(printf "%s\t" "\${SUMMARY_HEADER[@]}" | sed 's/\t\$//1')
+    SUMMARY_OUTPUT=\$(printf "%s\t" "\${SUMMARY_OUTPUT[@]}" | sed 's/\t\$//1')
 
-    echo "${SUMMARY_HEADER}" > "!{meta.id}.Trimmomatic.tsv"
-    echo "${SUMMARY_OUTPUT}" >> "!{meta.id}.Trimmomatic.tsv"
+    echo "\${SUMMARY_HEADER}" > "${meta.id}.Trimmomatic.tsv"
+    echo "\${SUMMARY_OUTPUT}" >> "${meta.id}.Trimmomatic.tsv"
 
     # Test/verify paired FastQ outfiles sizes are reasonable to continue
-    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.Adapter_and_QC_Trimmed_FastQ_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "${meta.id}.Adapter_and_QC_Trimmed_FastQ_File.tsv"
     for suff in R1.paired.fq R2.paired.fq; do
-      if verify_minimum_file_size "!{meta.id}_${suff}" 'Adapter-removed FastQ Files' "!{params.min_filesize_fastq_adapters_removed}"; then
-        echo -e "!{meta.id}\tAdapter-removed ($suff) FastQ File\tPASS" \
-          >> "!{meta.id}.Adapter_and_QC_Trimmed_FastQ_File.tsv"
+      if verify_minimum_file_size "${meta.id}_\${suff}" 'Adapter-removed FastQ Files' "${params.min_filesize_fastq_adapters_removed}"; then
+        echo -e "${meta.id}\tAdapter-removed (\$suff) FastQ File\tPASS" \
+          >> "${meta.id}.Adapter_and_QC_Trimmed_FastQ_File.tsv"
       else
-        echo -e "!{meta.id}\tAdapter-removed ($suff) FastQ File\tFAIL" \
-          >> "!{meta.id}.Adapter_and_QC_Trimmed_FastQ_File.tsv"
+        echo -e "${meta.id}\tAdapter-removed (\$suff) FastQ File\tFAIL" \
+          >> "${meta.id}.Adapter_and_QC_Trimmed_FastQ_File.tsv"
       fi
     done
 
     ### Calculate SHA-512 Checksums of each FastQ file ###
-    msg "INFO: Calculating checksums for !{meta.id}_R1.paired.fq and !{meta.id}_R2.paired.fq !{meta.id}_single.fq ..."
+    msg "INFO: Calculating checksums for ${meta.id}_R1.paired.fq and ${meta.id}_R2.paired.fq ${meta.id}_single.fq ..."
 
     SUMMARY_HEADER=(
       "Sample_name"
       "Checksum_(SHA-512)"
       "File"
     )
-    SUMMARY_HEADER=$(printf "%s\t" "${SUMMARY_HEADER[@]}" | sed 's/\t$//')
+    SUMMARY_HEADER=\$(printf "%s\t" "\${SUMMARY_HEADER[@]}" | sed 's/\t\$//')
 
-    echo "${SUMMARY_HEADER}" > "!{meta.id}.Trim_FastQ.SHA512-checksums.tsv"
+    echo "\${SUMMARY_HEADER}" > "${meta.id}.Trim_FastQ.SHA512-checksums.tsv"
 
     # Calculate checksums
-    for f in "!{meta.id}_R1.paired.fq" "!{meta.id}_R2.paired.fq" "!{meta.id}_single.fq"; do
-      echo -ne "!{meta.id}\t" >> "!{meta.id}.Trim_FastQ.SHA512-checksums.tsv"
-      awk 'NR%2==0'  "${f}" | paste - - | sort -k1,1 | sha512sum | awk '{print $1 "\t" "'"${f}"'"}'
-    done >> "!{meta.id}.Trim_FastQ.SHA512-checksums.tsv"
+    for f in "${meta.id}_R1.paired.fq" "${meta.id}_R2.paired.fq" "${meta.id}_single.fq"; do
+      echo -ne "${meta.id}\t" >> "${meta.id}.Trim_FastQ.SHA512-checksums.tsv"
+      awk 'NR%2==0'  "\${f}" | paste - - | sort -k1,1 | sha512sum | awk '{print \$1 "\t" "'"\${f}"'"}'
+    done >> "${meta.id}.Trim_FastQ.SHA512-checksums.tsv"
 
-    msg "INFO: Calculated checksums for !{meta.id}_R1.paired.fq and !{meta.id}_R2.paired.fq !{meta.id}_single.fq"
+    msg "INFO: Calculated checksums for ${meta.id}_R1.paired.fq and ${meta.id}_R2.paired.fq ${meta.id}_single.fq"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        sha512sum: $(sha512sum --version | grep ^sha512sum | sed 's/sha512sum //1')
-        trimmomatic: $(trimmomatic -version)
+    "${task.process}":
+        sha512sum: \$(sha512sum --version | grep ^sha512sum | sed 's/sha512sum //1')
+        trimmomatic: \$(trimmomatic -version)
     END_VERSIONS
-    '''
+    """
 }

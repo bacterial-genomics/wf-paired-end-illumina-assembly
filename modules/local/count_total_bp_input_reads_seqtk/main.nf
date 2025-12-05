@@ -11,9 +11,9 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
     path(".command.{out,err}")
     path("versions.yml")                                  , emit: versions
 
-    shell:
+    script:
     total_bp = 0
-    '''
+    """
     source bash_functions.sh
 
     # Calculate total bp input for R1 and R2 FastQ files
@@ -25,26 +25,26 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
     #       but we'll just use Phred30 cutoff to be conservative for the
     #       downsampling step here (`-q 30`).
 
-    msg "INFO: Calculating !{meta.id} basepairs above Phred 30 with Seqtk for subsampling calculations..."
+    msg "INFO: Calculating ${meta.id} basepairs above Phred 30 with Seqtk for subsampling calculations..."
 
     seqtk fqchk \
       -q 30 \
-      !{reads[0]} !{reads[1]} \
-      > seqtk-fqchk.!{meta.id}.stdout.log \
+      ${reads[0]} ${reads[1]} \
+      > seqtk-fqchk.${meta.id}.stdout.log \
 
-    msg "INFO: Calculated !{meta.id} basepairs above Phred 30 with Seqtk"
+    msg "INFO: Calculated ${meta.id} basepairs above Phred 30 with Seqtk"
 
     # Extract just the total bp count of the R1 and R2 input FastQ files
-    if [ -s seqtk-fqchk.!{meta.id}.stdout.log ] ; then
-      total_bp=$(grep '^ALL' seqtk-fqchk.!{meta.id}.stdout.log | awk '{printf $2}')
-      if ! [[ $total_bp =~ ^[0-9]+$ ]]; then
-        msg "ERROR: total bp = $total_bp" >&2
+    if [ -s seqtk-fqchk.${meta.id}.stdout.log ] ; then
+      total_bp=\$(grep '^ALL' seqtk-fqchk.${meta.id}.stdout.log | awk '{printf \$2}')
+      if ! [[ \$total_bp =~ ^[0-9]+\$ ]]; then
+        msg "ERROR: total bp = \$total_bp" >&2
         msg "ERROR: total bp size not counted with seqtk fqchk" >&2
         exit 1
       else
-        echo -e "Sample_name\tRaw_Phred30_Input_[bp]" > "!{meta.id}.Raw_Phred30_Input.tsv"
-        echo -e "!{meta.id}\t${total_bp}" >> "!{meta.id}.Raw_Phred30_Input.tsv"
-        msg "INFO: found ${total_bp}bp for !{meta.id}"
+        echo -e "Sample_name\tRaw_Phred30_Input_[bp]" > "${meta.id}.Raw_Phred30_Input.tsv"
+        echo -e "${meta.id}\t\${total_bp}" >> "${meta.id}.Raw_Phred30_Input.tsv"
+        msg "INFO: found \${total_bp}bp for ${meta.id}"
       fi
     else
       msg "ERROR: nucleotide count output logfile by seqtk fqchk is empty" >&2
@@ -53,8 +53,8 @@ process COUNT_TOTAL_BP_INPUT_READS_SEQTK {
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        seqtk: $(seqtk 2>&1 | grep "^Version: " | sed 's/^Version: //1')
+    "${task.process}":
+        seqtk: \$(seqtk 2>&1 | grep "^Version: " | sed 's/^Version: //1')
     END_VERSIONS
-    '''
+    """
 }
