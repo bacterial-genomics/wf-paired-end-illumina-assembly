@@ -233,7 +233,6 @@ def toLower(it) {
 def qcfilecheck(process, qcfile, inputfile) {
     qcfile.map{ meta, file -> [ meta, [file] ] }
             .join(inputfile)
-            .collect()
             .map{ meta, qc, input ->
                 data = []
                 qc.flatten().each{ data += it.readLines() }
