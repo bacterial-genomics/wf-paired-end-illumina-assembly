@@ -14,8 +14,8 @@ process BAKTA_DB_PREPARATION_UNIX {
     path(".command.{out,err}")
     path("versions.yml")      , emit: versions
 
-    shell:
-    '''
+    script:
+    """
     source bash_functions.sh
 
     if command -v xz >/dev/null 2>&1; then
@@ -24,7 +24,7 @@ process BAKTA_DB_PREPARATION_UNIX {
       msg "ERROR: xz is not installed for bakta database uncompressing" >&2
     fi
     mkdir database
-    tar -xf !{database} -C database
+    tar -xf ${database} -C database
 
     # We need a bunch more files than this, but
     # at least confirm the largest one exists before moving on.
@@ -32,10 +32,10 @@ process BAKTA_DB_PREPARATION_UNIX {
       msg "INFO: bakta database uncompressed"
 
       # Get the parent dirname for the database (e.g., database/db-light/)
-      db=$(find database -type f -name "bakta.db" | head -n 1 | xargs dirname)
+      db=\$(find database -type f -name "bakta.db" | head -n 1 | xargs dirname)
       mkdir found_db_dir
-      cp -r "$db"/* found_db_dir/
-      msg "INFO: using ${db} as the bakta database..."
+      cp -r "\$db"/* found_db_dir/
+      msg "INFO: using \${db} as the bakta database..."
     else
       msg "ERROR: bakta database lacking bakta.db" >&2
       exit 1
@@ -45,8 +45,8 @@ process BAKTA_DB_PREPARATION_UNIX {
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
+    "${task.process}":
+        ubuntu: \$(awk -F ' ' '{print \$2,\$3}' /etc/issue | tr -d '\\n')
     END_VERSIONS
-    '''
+    """
 }

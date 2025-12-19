@@ -12,15 +12,15 @@ process VALIDATE_FASTQ_SEQFU {
     path(".command.{out,err}")
     path("versions.yml")                                                            , emit: versions
 
-    shell:
-    '''
+    script:
+    """
     source bash_functions.sh
 
-    msg "INFO: Validating !{meta.id} FastQ input with SeqFu..."
+    msg "INFO: Validating ${meta.id} FastQ input with SeqFu..."
 
-    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}.Raw_Initial_FastQ_Format_Validation_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "${meta.id}.Raw_Initial_FastQ_Format_Validation_File.tsv"
 
-    msg "INFO: Checking for FastQ valid format in R1: !{reads[0]} and R2: !{reads[1]}"
+    msg "INFO: Checking for FastQ valid format in R1: ${reads[0]} and R2: ${reads[1]}"
 
     # https://telatin.github.io/seqfu2/tools/check.html#integrity-check
     # A single FASTQ file is considered valid if:
@@ -37,23 +37,23 @@ process VALIDATE_FASTQ_SEQFU {
     seqfu check \
       --deep \
       --verbose \
-      !{reads[0]} !{reads[1]}
+      ${reads[0]} ${reads[1]}
 
     # Retain the exit code status by exiting the exit value after error message
-    retVal=$?
-    if [ $retVal -ne 0 ]; then
-      msg "ERROR: FastQ format validation tests with SeqFu failed for: !{meta.id} with exit status code: ${retVal}" >&2
-      echo -e "!{meta.id}\tRaw Initial FastQ (R1 and R2) Valid Format\tFAIL" >> "!{meta.id}.Raw_Initial_FastQ_Format_Validation_File.tsv"
-      exit $retVal
+    retVal=\$?
+    if [ \$retVal -ne 0 ]; then
+      msg "ERROR: FastQ format validation tests with SeqFu failed for: ${meta.id} with exit status code: \${retVal}" >&2
+      echo -e "${meta.id}\tRaw Initial FastQ (R1 and R2) Valid Format\tFAIL" >> "${meta.id}.Raw_Initial_FastQ_Format_Validation_File.tsv"
+      exit \$retVal
     fi
 
-    msg "INFO: SeqFu check on !{reads[0]} !{reads[1]} completed without errors, suggesting the pair is a valid read set."
-    echo -e "!{meta.id}\tRaw Initial FastQ (R1 and R2) Valid Format\tPASS" >> "!{meta.id}.Raw_Initial_FastQ_Format_Validation_File.tsv"
+    msg "INFO: SeqFu check on ${reads[0]} ${reads[1]} completed without errors, suggesting the pair is a valid read set."
+    echo -e "${meta.id}\tRaw Initial FastQ (R1 and R2) Valid Format\tPASS" >> "${meta.id}.Raw_Initial_FastQ_Format_Validation_File.tsv"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        seqfu: $(seqfu --version)
+    "${task.process}":
+        seqfu: \$(seqfu --version)
     END_VERSIONS
-    '''
+    """
 }

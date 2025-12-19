@@ -12,15 +12,15 @@ process GTDBTK_DB_PREPARATION_UNIX {
     path(".command.{out,err}")
     path("versions.yml")                       , emit: versions
 
-    shell:
-    '''
+    script:
+    """
     mkdir database
-    tar -xzf !{database} -C database --strip 1
+    tar -xzf ${database} -C database --strip 1
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
+    "${task.process}":
+        ubuntu: \$(awk -F ' ' '{print \$2,\$3}' /etc/issue | tr -d '\\n')
     END_VERSIONS
-    '''
+    """
 }

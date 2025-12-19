@@ -12,8 +12,8 @@ process UPDATE_DB_SRA_HUMAN_SCRUBBER {
     path(".command.{out,err}")
     path("versions.yml")        , emit: versions
 
-    shell:
-    '''
+    script:
+    """
     source bash_functions.sh
 
     # NOTE: For now, only support the pre-formatted human db file NCBI
@@ -34,7 +34,7 @@ process UPDATE_DB_SRA_HUMAN_SCRUBBER {
     init_db.sh
 
     # Make sure we fetched the *.db file
-    if ! verify_minimum_file_size "data/human_filter.db" 'SRA Human Scrubber DB file' "!{params.min_filesize_sra_human_scrubber_db_file}"; then
+    if ! verify_minimum_file_size "data/human_filter.db" 'SRA Human Scrubber DB file' "${params.min_filesize_sra_human_scrubber_db_file}"; then
         msg "ERROR: Missing human_filter.db file for SRA Human Scrubber" >&2
         exit 1
     fi
@@ -43,8 +43,8 @@ process UPDATE_DB_SRA_HUMAN_SCRUBBER {
     # NOTE: currently no option to print the software version number, but
     #       track this issue https://github.com/ncbi/sra-human-scrubber/issues/28
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
+    "${task.process}":
         sra-human-scrubber: 2.2.1
     END_VERSIONS
-    '''
+    """
 }

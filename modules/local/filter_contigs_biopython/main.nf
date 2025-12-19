@@ -13,45 +13,45 @@ process FILTER_CONTIGS_BIOPYTHON {
     path(".command.{out,err}")
     path("versions.yml")                                                 , emit: versions
 
-    shell:
+    script:
     gcskew = params.filter_contigs_gcskew ? "" : "--gcskew"
     keep_low_complexity = params.filter_contigs_keep_low_complexity ? "" : "--complex"
     no_sort = params.filter_contigs_no_sort ? "--no-sort" : ""
 
-    '''
+    """
     source bash_functions.sh
 
-    msg "INFO: Filtering contigs from !{contigs} ..."
+    msg "INFO: Filtering contigs from ${contigs} ..."
 
     # Remove junk contigs
     filter.contigs.py \
-      --infile !{contigs} \
-      --baseheader "!{meta.id}-!{meta.assembler}" \
-      --outfile "!{meta.id}-!{meta.assembler}.uncorrected.fna" \
-      --len !{params.filter_contigs_length} \
-      --cov !{params.filter_contigs_coverage} \
-      --deflines !{params.filter_contigs_deflines} \
-      --discarded "!{meta.id}-!{meta.assembler}.discarded-contigs.fa" \
-      !{no_sort} \
-      !{gcskew} \
-      !{keep_low_complexity} \
-      2> "!{meta.id}-!{meta.assembler}.filter-contigs-stats.txt"
+      --infile ${contigs} \
+      --baseheader "${meta.id}-${meta.assembler}" \
+      --outfile "${meta.id}-${meta.assembler}.uncorrected.fna" \
+      --len ${params.filter_contigs_length} \
+      --cov ${params.filter_contigs_coverage} \
+      --deflines ${params.filter_contigs_deflines} \
+      --discarded "${meta.id}-${meta.assembler}.discarded-contigs.fa" \
+      ${no_sort} \
+      ${gcskew} \
+      ${keep_low_complexity} \
+      2> "${meta.id}-${meta.assembler}.filter-contigs-stats.txt"
 
-    msg "INFO: Completed contig filtering for !{meta.id}"
+    msg "INFO: Completed contig filtering for ${meta.id}"
 
-    if [ -s "!{meta.id}-!{meta.assembler}.discarded-contigs.fa" ]; then
-      gzip -9f "!{meta.id}-!{meta.assembler}.discarded-contigs.fa"
-      msg "INFO: discarded contigs saved as !{meta.id}-!{meta.assembler}.discarded-contigs.fa.gz"
+    if [ -s "${meta.id}-${meta.assembler}.discarded-contigs.fa" ]; then
+      gzip -9f "${meta.id}-${meta.assembler}.discarded-contigs.fa"
+      msg "INFO: discarded contigs saved as ${meta.id}-${meta.assembler}.discarded-contigs.fa.gz"
     else
-      msg "INFO: no contigs were discarded, therefore storing empty !{meta.id}-!{meta.assembler}.discarded-contigs.fa.gz file"
-      touch "!{meta.id}-!{meta.assembler}.discarded-contigs.fa.gz"
+      msg "INFO: no contigs were discarded, therefore storing empty ${meta.id}-${meta.assembler}.discarded-contigs.fa.gz file"
+      touch "${meta.id}-${meta.assembler}.discarded-contigs.fa.gz"
     fi
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        python: $(python --version 2>&1 | awk '{print $2}')
-        biopython: $(python -c 'import Bio; print(Bio.__version__)' 2>&1)
+    "${task.process}":
+        python: \$(python --version 2>&1 | awk '{print \$2}')
+        biopython: \$(python -c 'import Bio; print(Bio.__version__)' 2>&1)
     END_VERSIONS
-    '''
+    """
 }

@@ -14,34 +14,34 @@ process ASSEMBLE_CONTIGS_SPADES {
     path(".command.{out,err}")
     path("versions.yml")                                                       , emit: versions
 
-    shell:
+    script:
     mode_list  = ["--isolate", "--sc", "--meta", "--plasmid", "--rna", "--metaviral", "--metaplasmid", "--corona"]
     mode       = (params.spades_mode !in mode_list) ? "" : params.spades_mode
     memory     = Math.round(Math.floor(task.memory.toString().replaceAll("[GB]", "").toFloat()))
-    '''
+    """
     source bash_functions.sh
 
     # Run SPAdes assembler; try up to 3 times
     msg "INFO: Assembling contigs using SPAdes"
 
     spades.py \
-      -1 "!{meta.id}_R1.paired.fq.gz" \
-      -2 "!{meta.id}_R2.paired.fq.gz" \
-      -s "!{meta.id}_single.fq.gz" \
+      -1 "${meta.id}_R1.paired.fq.gz" \
+      -2 "${meta.id}_R2.paired.fq.gz" \
+      -s "${meta.id}_single.fq.gz" \
       -o SPAdes \
-      -k !{params.spades_kmer_sizes} \
-      !{mode} \
-      --memory !{memory} \
-      --threads !{task.cpus}
+      -k ${params.spades_kmer_sizes} \
+      ${mode} \
+      --memory ${memory} \
+      --threads ${task.cpus}
 
     # Verify file output
-    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
-    if verify_minimum_file_size "SPAdes/contigs.fasta" 'Raw Assembly FastA File' "!{params.min_filesize_raw_assembly}"; then
-      echo -e "!{meta.id}\tRaw Assembly FastA File\tPASS"  \
-        >> "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
+    echo -e "Sample_name\tQC_step\tOutcome_(Pass/Fail)" > "${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"
+    if verify_minimum_file_size "SPAdes/contigs.fasta" 'Raw Assembly FastA File' "${params.min_filesize_raw_assembly}"; then
+      echo -e "${meta.id}\tRaw Assembly FastA File\tPASS"  \
+        >> "${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"
     else
-      echo -e "!{meta.id}\tRaw Assembly FastA File\tFAIL" \
-        >> "!{meta.id}-!{meta.assembler}.Raw_Assembly_File.tsv"
+      echo -e "${meta.id}\tRaw Assembly FastA File\tFAIL" \
+        >> "${meta.id}-${meta.assembler}.Raw_Assembly_File.tsv"
     fi
 
     if grep -E -q 'N{60}' "SPAdes/contigs.fasta"; then
@@ -55,20 +55,20 @@ process ASSEMBLE_CONTIGS_SPADES {
       SPAdes/params.txt
 
     # Move and rename files
-    mv SPAdes/spades.log.gz "!{meta.id}-!{meta.assembler}.log.gz"
-    mv SPAdes/params.txt.gz "!{meta.id}-!{meta.assembler}_params.txt.gz"
-    mv SPAdes/contigs.fasta "!{meta.id}-!{meta.assembler}_contigs.fasta"
-    mv SPAdes/assembly_graph_with_scaffolds.gfa "!{meta.id}-!{meta.assembler}_graph.gfa"
+    mv SPAdes/spades.log.gz "${meta.id}-${meta.assembler}.log.gz"
+    mv SPAdes/params.txt.gz "${meta.id}-${meta.assembler}_params.txt.gz"
+    mv SPAdes/contigs.fasta "${meta.id}-${meta.assembler}_contigs.fasta"
+    mv SPAdes/assembly_graph_with_scaffolds.gfa "${meta.id}-${meta.assembler}_graph.gfa"
 
     # Move extra logfiles if exist
     if [ -f SPAdes/warnings.log ]; then
-      mv SPAdes/warnings.log "!{meta.id}-!{meta.assembler}_warnings.log"
+      mv SPAdes/warnings.log "${meta.id}-${meta.assembler}_warnings.log"
     fi
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        spades: $(spades.py --version 2>&1 | awk 'NF>1{print $NF}')
+    "${task.process}":
+        spades: \$(spades.py --version 2>&1 | awk 'NF>1{print \$NF}')
     END_VERSIONS
-    '''
+    """
 }

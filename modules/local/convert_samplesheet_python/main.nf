@@ -10,10 +10,10 @@ process CONVERT_SAMPLESHEET_PYTHON {
     path(".command.{out,err}")
     path("versions.yml")      , emit: versions
 
-    shell:
-    '''
-    samplesheet="!{excel_samplesheet}"
-    sheet_name="!{params.excel_sheet_name}"
+    script:
+    """
+    samplesheet="${excel_samplesheet}"
+    sheet_name="${params.excel_sheet_name}"
 
     export samplesheet sheet_name
 
@@ -36,9 +36,9 @@ process CONVERT_SAMPLESHEET_PYTHON {
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        python: $(python3 --version 2>&1 | awk '{print $2}')
-        ubuntu: $(awk -F ' ' '{print $2, $3}' /etc/issue | tr -d '\\n')
+    "${task.process}":
+        python: \$(python3 --version 2>&1 | awk '{print \$2}')
+        ubuntu: \$(awk -F ' ' '{print \$2, \$3}' /etc/issue | tr -d '\\n')
     END_VERSIONS
-    '''
+    """
 }
