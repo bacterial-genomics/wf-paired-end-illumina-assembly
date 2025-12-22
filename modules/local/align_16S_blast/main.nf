@@ -5,7 +5,7 @@ process ALIGN_16S_BLAST {
 
     input:
     tuple val(meta), path(barnapp_extracted_rna)
-    tuple val(db_name), path("database/*")
+    tuple val(meta2), path(database)
 
     output:
     tuple val(meta), path("${meta.id}-${meta.assembler}.16S_BLASTn_Output_File.tsv"), emit: qc_filecheck
@@ -19,12 +19,12 @@ process ALIGN_16S_BLAST {
 
     msg "INFO: Performing BLASTn alignments"
 
-    export BLASTDB=database
+    export BLASTDB=!{database}
 
     blastn \
       -word_size 10 \
       -task blastn \
-      -db "!{db_name}" \
+      -db "!{meta2}" \
       -num_threads "!{task.cpus}" \
       -query "!{barnapp_extracted_rna}" \
       -out "!{meta.id}-!{meta.assembler}.blast.tsv" \

@@ -991,18 +991,21 @@ workflow ASSEMBLY {
             ch_db_for_blast = BLAST_DB_PREPARATION_UNIX.out.db.collect()
 
         } else if ( ch_blast_db_file.isDirectory() ) {
-            ch_db_for_blast = Channel
-                                    .fromPath( "${ch_blast_db_file}/{16S_ribosomal_RNA.n*,taxdb.b*}" )
-                                    .collect()
-                                    .map{
-                                        file ->
-                                            if (file.size() >= 3) {
-                                                [ file[0].getSimpleName(), file ]
-                                            } else {
-                                                error("16S_ribosomal_RNA BLAST database requires at least '16S_ribosomal_RNA.{nin,nsq,nhr}' files.")
-                                            }
-                                    }
-                                    .collect()
+            // ch_db_for_blast = Channel
+            //                         .fromPath( "${ch_blast_db_file}/{16S_ribosomal_RNA.n*,taxdb.b*}" )
+            //                         .collect()
+            //                         .map{
+            //                             file ->
+            //                                 if (file.size() >= 3) {
+            //                                     file
+            //                                 } else {
+            //                                     error("16S_ribosomal_RNA BLAST database requires at least '16S_ribosomal_RNA.{nin,nsq,nhr}' files.")
+            //                                 }
+            //                         }
+            //                         .collect()
+            ch_db_for_blast = ["16S_ribosomal_RNA","${params.blast_db}"]
+
+            //ch_db_for_blast = [ "16S_ribosomal_RNA", ch_db_for_blast ]
 
         } else {
             error("Unsupported object given to --blast_db, database must be supplied as either a directory or a .tar.gz file!")
