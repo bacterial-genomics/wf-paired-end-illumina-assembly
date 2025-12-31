@@ -13,19 +13,19 @@ process SUMMARIZE_SUBSAMPLING {
     path(".command.{out,err}")
     path("versions.yml")                    , emit: versions
 
-    shell:
-    '''
-    echo -e "Sample_name\tDownsampled_[Yes|No]" > "!{meta.id}.Downsample_Status.tsv"
-    if [[ "!{meta.downsampled}" == "true" ]]; then
-      echo -e "!{meta.id}\tYes" >> "!{meta.id}.Downsample_Status.tsv"
+    script:
+    """
+    echo -e "Sample_name\tDownsampled_[Yes|No]" > "${meta.id}.Downsample_Status.tsv"
+    if [[ "${meta.downsampled}" == "true" ]]; then
+      echo -e "${meta.id}\tYes" >> "${meta.id}.Downsample_Status.tsv"
     else
-      echo -e "!{meta.id}\tNo" >> "!{meta.id}.Downsample_Status.tsv"
+      echo -e "${meta.id}\tNo" >> "${meta.id}.Downsample_Status.tsv"
     fi
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
+    "${task.process}":
+        ubuntu: \$(awk -F ' ' '{print \$2,\$3}' /etc/issue | tr -d '\\n')
     END_VERSIONS
-    '''
+    """
 }

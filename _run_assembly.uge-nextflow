@@ -29,7 +29,7 @@ fi
 
 time_stamp="$(date '+%Y-%b-%d_%a_%H-%M-%S')"
 
-module --ignore-cache load nextflow/24.04.2
+module --ignore-cache load nextflow/25.04.7
 nextflow \
   -log "${OUT}/pipeline_info/nextflow_log.${time_stamp}.txt" \
   run \

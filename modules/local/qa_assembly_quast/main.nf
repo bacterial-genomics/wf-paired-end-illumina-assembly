@@ -13,12 +13,12 @@ process QA_ASSEMBLY_QUAST {
     path(".command.{out,err}")
     path("versions.yml")                                                  , emit: versions
 
-    shell:
-    '''
+    script:
+    """
     source bash_functions.sh
 
     # Run Quast
-    msg "INFO: Evaluating !{meta.id} assembly using QUAST ..."
+    msg "INFO: Evaluating ${meta.id} assembly using QUAST ..."
 
     quast.py \
       --silent \
@@ -26,32 +26,32 @@ process QA_ASSEMBLY_QUAST {
       --no-plots \
       --min-contig 100 \
       --output-dir quast \
-      --threads !{task.cpus} \
+      --threads ${task.cpus} \
       --contig-thresholds 500,1000 \
-      "!{assembly}"
+      "${assembly}"
 
-    msg "INFO: Completed QUAST evaluation of !{meta.id} assembly"
+    msg "INFO: Completed QUAST evaluation of ${meta.id} assembly"
 
-    mv -f quast/transposed_report.tsv "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
+    mv -f quast/transposed_report.tsv "${meta.id}-${meta.assembler}.QuastSummary.tsv"
 
     # Quast modifies basename. Need to check and modify if needed.
-    assemblies_name=$(awk '{print $1}' "!{meta.id}-!{meta.assembler}.QuastSummary.tsv" | awk 'NR!=1 {print}')
-    if [ ${assemblies_name} != !{meta.id} ]; then
-      sed -i "s|${assemblies_name}|!{meta.id}|1" "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
+    assemblies_name=\$(awk '{print \$1}' "${meta.id}-${meta.assembler}.QuastSummary.tsv" | awk 'NR!=1 {print}')
+    if [ \${assemblies_name} != ${meta.id} ]; then
+      sed -i "s|\${assemblies_name}|${meta.id}|1" "${meta.id}-${meta.assembler}.QuastSummary.tsv"
     fi
 
     # Keep same first column header column name as all others -- "Sample_name"
-    sed -i '1s/^Assembly/Sample_name/1' "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
+    sed -i '1s/^Assembly/Sample_name/1' "${meta.id}-${meta.assembler}.QuastSummary.tsv"
 
     # Replace space characters in header line with underscores
-    sed -i '1s/ /_/g' "!{meta.id}-!{meta.assembler}.QuastSummary.tsv"
+    sed -i '1s/ /_/g' "${meta.id}-${meta.assembler}.QuastSummary.tsv"
 
-    msg "INFO: Completed QUAST output renaming for !{meta.id}"
+    msg "INFO: Completed QUAST output renaming for ${meta.id}"
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        quast: $(quast.py --version | awk 'NF>1{print $NF}')
+    "${task.process}":
+        quast: \$(quast.py --version | awk 'NF>1{print \$NF}')
     END_VERSIONS
-    '''
+    """
 }
