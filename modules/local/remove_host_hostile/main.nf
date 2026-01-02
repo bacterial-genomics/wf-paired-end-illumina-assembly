@@ -2,7 +2,7 @@ process REMOVE_HOST_HOSTILE {
 
     label "process_high"
     tag { "${meta.id}" }
-    container "quay.io/biocontainers/hostile:0.2.0--pyhdfd78af_0"
+    container "quay.io/biocontainers/hostile@sha256:6bd59d49795a567cffc3cf47366e5c4bc494dc4eabb216efa7637d1690572f09"
 
     input:
     tuple val(meta), path(reads)
@@ -56,7 +56,7 @@ process REMOVE_HOST_HOSTILE {
         clean \
         --fastq1 "${reads[0]}" \
         --fastq2 "${reads[1]}" \
-        --out-dir hostile \
+        --output hostile \
         --force \
         "\${HOST_INDEX_ARGUMENT}" \
         --threads ${task.cpus}
@@ -65,7 +65,7 @@ process REMOVE_HOST_HOSTILE {
         clean \
         --fastq1 "${reads[0]}" \
         --fastq2 "${reads[1]}" \
-        --out-dir hostile \
+        --output hostile \
         --force \
         --threads ${task.cpus}
     fi

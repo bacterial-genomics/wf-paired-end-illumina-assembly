@@ -33,6 +33,7 @@ process SUBSAMPLE_READS_TO_DEPTH_SEQKIT {
     if [[ \${fraction_of_reads_to_use} -ge 1 ]]; then
       msg "INFO: Subsample fraction is 1.0 (100%) or more. Skipping downsampling routine."
       touch "${meta.id}.Subsampled_FastQ.SHA512-checksums.tsv" versions.yml
+      echo 'false' > downsampled.flag
       exit 0
     fi
     if [ \${depth%.*} -gt 0 ] && [ \${initial_depth%.*} -gt \${depth%.*} ]; then
