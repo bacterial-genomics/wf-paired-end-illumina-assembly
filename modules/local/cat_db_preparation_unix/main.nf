@@ -12,17 +12,17 @@ process CAT_DB_PREPARATION_UNIX {
     path(".command.{out,err}")
     path("versions.yml")      , emit: versions
 
-    shell:
-    '''
+    script:
+    """
     mkdir -p tmp_db database
-    tar -xzf !{database} --strip 1 -C tmp_db
+    tar -xzf ${database} --strip 1 -C tmp_db
 
     mv `find tmp_db -type d -name "db" -o -name "tax"` database/
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        ubuntu: $(awk -F ' ' '{print $2,$3}' /etc/issue | tr -d '\\n')
+    "${task.process}":
+        ubuntu: \$(awk -F ' ' '{print \$2,\$3}' /etc/issue | tr -d '\\n')
     END_VERSIONS
-    '''
+    """
 }

@@ -11,76 +11,76 @@ process MLST_MLST {
     path(".command.{out,err}")
     path("versions.yml")                         , emit: versions
 
-    shell:
+    script:
     scheme       = params.mlst_scheme        ? "${params.mlst_scheme.toLowerCase()}"       : ''
     exclude      = params.mlst_ignore_scheme ? "${params.mlst_ignore_scheme.toLowerCase()}": ''
     min_score    = params.mlst_min_score     ? "--minscore ${params.mlst_min_score}"       : "--minscore '50'"
     min_identity = params.mlst_min_identity  ? "--minid ${params.mlst_min_identity}"       : "--minid '95'"
     min_coverage = params.mlst_min_coverage  ? "--mincov ${params.mlst_min_coverage}"      : "--mincov '10'"
-    '''
+    """
     source bash_functions.sh
 
     msg "INFO: Looking for MLST schemes to exclude ..."
 
     # Check if input scheme is in mlst's database
-    mlst_scheme="!{scheme}"
-    if [[ "!{scheme}" != '' ]] && \
-      [[ ! $(mlst --list 2>&1 | tail -n 1 | grep -w "${mlst_scheme}") ]]; then
+    mlst_scheme="${scheme}"
+    if [[ "${scheme}" != '' ]] && \
+      [[ ! \$(mlst --list 2>&1 | tail -n 1 | grep -w "\${mlst_scheme}") ]]; then
       msg "WARN: Specified MLST scheme is not valid. Defaulting to auto detecting the scheme."
       mlst_scheme=''
     fi
 
     # Check if scheme to ignore is in mlst's database
     exclude_list=()
-    for e in $(echo "!{exclude}" | tr ',' ' '); do
-      if [[ "${e}" != '' ]] && \
-        [[ $(mlst --list 2>&1 | tail -n 1 | grep -w "${e}") ]]; then
-        exclude_list+=( "${e}" )
+    for e in \$(echo "${exclude}" | tr ',' ' '); do
+      if [[ "\${e}" != '' ]] && \
+        [[ \$(mlst --list 2>&1 | tail -n 1 | grep -w "\${e}") ]]; then
+        exclude_list+=( "\${e}" )
       fi
     done
 
     # Reformat exclude list
-    if [[ -z ${exclude_list[@]} ]]; then
+    if [[ -z \${exclude_list[@]} ]]; then
       exclude_list=''
     else
-      exclude_list=$(echo ${exclude_list[@]} | tr ' ' ',')
+      exclude_list=\$(echo \${exclude_list[@]} | tr ' ' ',')
     fi
 
-    msg "INFO: Excluding MLST schemes: ${exclude_list}"
+    msg "INFO: Excluding MLST schemes: \${exclude_list}"
 
-    if [[ -s !{assembly} ]]; then
+    if [[ -s ${assembly} ]]; then
       msg "INFO: Performing MLST ..."
 
       mlst \
-        "!{assembly}" \
-        !{min_score} \
-        !{min_identity} \
-        !{min_coverage} \
-        --novel "!{meta.id}-!{meta.assembler}.MLST.novel.fasta" \
-        --threads !{task.cpus} \
-        --scheme "${mlst_scheme}" \
-        --exclude "${exclude_list}" \
-        > "!{meta.id}-!{meta.assembler}.MLST.tsv"
+        "${assembly}" \
+        ${min_score} \
+        ${min_identity} \
+        ${min_coverage} \
+        --novel "${meta.id}-${meta.assembler}.MLST.novel.fasta" \
+        --threads ${task.cpus} \
+        --scheme "\${mlst_scheme}" \
+        --exclude "\${exclude_list}" \
+        > "${meta.id}-${meta.assembler}.MLST.tsv"
 
       msg "INFO: Completed MLST genotyping"
 
       # Print header line and add in Sample_name identifier to data row
-      awk -F $'\t' -v id="!{meta.id}" \
+      awk -F \$'\t' -v id="${meta.id}" \
         'BEGIN{
           OFS=FS
           print "Sample_name" OFS "PubMLST_scheme_name" OFS "Sequence_type_(ST-#)" OFS "Allele_numbers"
         }
-        {$1=id; print}' \
-        "!{meta.id}-!{meta.assembler}.MLST.tsv" \
+        {\$1=id; print}' \
+        "${meta.id}-${meta.assembler}.MLST.tsv" \
         > tmp
 
       # Ensure column number is consistent by adding extra \t- to unassigned MLST.
       # Unassigned MLST currently has n=3 ("2009999999_S2_L001\t-\t-") whereas
       #   the header is n=4 ("Sample_name\tPubMLST_scheme_name\tSequence_type_(ST-#)\tAllele_numbers")
-      awk '{if ($0 ~ /\t-\t-$/) $0 = $0 "\t-"; print}' \
+      awk '{if (\$0 ~ /\t-\t-\$/) \$0 = \$0 "\t-"; print}' \
         tmp > tmp.tsv \
         && \
-        mv tmp.tsv "!{meta.id}-!{meta.assembler}.MLST.tsv"
+        mv tmp.tsv "${meta.id}-${meta.assembler}.MLST.tsv"
 
       msg "INFO: Appended header to MLST summary output file"
 
@@ -88,8 +88,8 @@ process MLST_MLST {
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        mlst: $(mlst --version | awk '{print $2}')
+    "${task.process}":
+        mlst: \$(mlst --version | awk '{print \$2}')
     END_VERSIONS
-    '''
+    """
 }

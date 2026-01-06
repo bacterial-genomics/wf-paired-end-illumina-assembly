@@ -11,29 +11,29 @@ process SPLIT_MULTIFASTA_ASSEMBLY_BIOPYTHON {
     path(".command.{out,err}")
     path("versions.yml")           , emit: versions
 
-    shell:
+    script:
     no_gaps = params.split_multifasta_remove_gaps ? "--nogaps" : ""
-    '''
+    """
     source bash_functions.sh
 
     # Split assembly multi-record FastA into individual FastA files for each contig
-    if [[ -s "!{assembly}" ]]; then
+    if [[ -s "${assembly}" ]]; then
       split.multifasta.py \
-        --ext "!{params.split_multifasta_extension}" \
-        --infile "!{assembly}" \
+        --ext "${params.split_multifasta_extension}" \
+        --infile "${assembly}" \
         --outdir "bins" \
         --suffix '' \
-        !{no_gaps} \
+        ${no_gaps} \
 
     else
-      msg "ERROR: ${assembly} absent" >&2
+      msg "ERROR: \${assembly} absent" >&2
     fi
 
     # Get process version information
     cat <<-END_VERSIONS > versions.yml
-    "!{task.process}":
-        biopython: $(python -c 'import Bio; print(Bio.__version__)' 2>&1)
-        python: $(python --version 2>&1 | awk '{print $2}')
+    "${task.process}":
+        biopython: \$(python -c 'import Bio; print(Bio.__version__)' 2>&1)
+        python: \$(python --version 2>&1 | awk '{print \$2}')
     END_VERSIONS
-    '''
+    """
 }
