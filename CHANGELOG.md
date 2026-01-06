@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [#103](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/103) Updated `hostile` container from v0.2.0 to v2.0.2 (@kitkatm16)
 
 ### `Deprecated`
+
 - [#103](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/103) Removed `collect()` from qcfile (@kitkatm16)
 
 ## v3.1.0 - November 26, 2025

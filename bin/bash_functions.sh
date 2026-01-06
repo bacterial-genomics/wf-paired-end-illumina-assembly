@@ -36,7 +36,7 @@ check_if_file_exists_allow_seconds() {
   return 0
 }
 
-expandsi () {
+expandsi() {
   #https://stackoverflow.com/a/52799497
   # Yzmir Ramirez: CC BY-SA 4.0
   ## expanded by WAO for case insensitivity
@@ -61,7 +61,7 @@ verify_minimum_file_size() {
 
   #updated by WAO to remove 'find -size' that is not posix-standard
   min_size=$(expandsi ${3})
-  file_size=$(wc -c < "${1}")
+  file_size=$(wc -c <"${1}")
   if [ -f "${1}" ]; then
     if [ -s "${1}" ]; then
       if [[ "${file_size}" -gt "${min_size}" ]]; then
