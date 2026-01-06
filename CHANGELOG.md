@@ -3,6 +3,28 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v3.1.1 - January 6, 2026
+
+### `Added`
+
+### `Changed`
+
+- [#102](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/102) Converted all module shell blocks into script blocks (@waoverholt)
+- [#103](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/103) Changed how the 16S rRNA gene BLASTDB is passed to the module and how it is declared within the module (@kitkatm16)
+
+### `Fixed`
+
+- [#103](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/103) Bugfix added `echo false > downsampled.flag` for when downsampling is skipped to continue processing the reads instead of failing/halting at the subsampling step (@kitkatm16)
+
+### `Updated`
+
+- [#102](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/102) Updated 'verify_minimum_file_size' bash function so it does not rely on GNU `find` (@waoverholt)
+- [#102](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/102) Updated wrapper script from v24.04.2 to v25.04.7 nextflow (@waoverholt)
+- [#103](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/103) Updated `hostile` container from v0.2.0 to v2.0.2 (@kitkatm16)
+
+### `Deprecated`
+- [#103](https://github.com/bacterial-genomics/wf-paired-end-illumina-assembly/pull/103) Removed `collect()` from qcfile (@kitkatm16)
+
 ## v3.1.0 - November 26, 2025
 
 ### `Added`
